@@ -283,7 +283,7 @@ class SalesOrderController extends Controller
         $companyId = active_company_id();
 
         $customers = Customer::where('company_id', $companyId)
-            ->with(['paymentTerm', 'addresses'])
+            ->with(['paymentTerm', 'addresses', 'country', 'state'])
             ->when($term, function ($q) use ($term) {
                 $q->where(function ($x) use ($term) {
                     $x->where('display_name', 'like', "%{$term}%")
@@ -309,6 +309,14 @@ class SalesOrderController extends Controller
                 'initials' => $initials ?: '??',
                 'email' => $customer->email,
                 'phone' => $customer->phone,
+                'type' => $customer->type,
+                'legal_name' => $customer->legal_name,
+                'tax_number' => $customer->tax_number,
+                'notes' => $customer->notes,
+                'address' => $customer->address,
+                'postal_code' => $customer->postal_code,
+                'country_name' => $customer->country->name ?? null,
+                'state_name' => $customer->state->name ?? null,
                 'payment_term_id' => $customer->payment_term_id,
                 'payment_term_name' => $customer->paymentTerm->name ?? null,
                 'payment_due_days' => $customer->paymentTerm->due_days ?? null,

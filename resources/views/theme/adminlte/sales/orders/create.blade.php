@@ -546,6 +546,102 @@
         <div class="tab-pane fade" id="step4" role="tabpanel" aria-labelledby="step4-tab">
           <div class="row">
             <div class="col-md-7">
+              <!-- Customer Details Card -->
+              <div class="card shadow-lg border-0 mb-4" style="border-radius: 20px;">
+                <div class="card-header bg-gradient-info text-white py-3" style="border-radius: 20px 20px 0 0;">
+                  <h5 class="card-title mb-0"><i class="fas fa-user-circle mr-2"></i> Customer Details</h5>
+                </div>
+                <div class="card-body p-4">
+                  <div class="row">
+                    <!-- Customer Info Column -->
+                    <div class="col-md-5 border-right">
+                      <div class="d-flex align-items-center mb-3">
+                        <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center mr-3"
+                             id="preview-customer-avatar"
+                             style="width: 70px; height: 70px; font-size: 1.6rem; font-weight: bold;">
+                          ??
+                        </div>
+                        <div>
+                          <h5 class="mb-0 font-weight-bold" id="preview-customer-name">-</h5>
+                          <small class="text-muted" id="preview-customer-type-badge"></small>
+                        </div>
+                      </div>
+                      
+                      <!-- Contact Info -->
+                      <div class="mt-3 mb-3">
+                        <div class="mb-2">
+                          <i class="fas fa-envelope text-muted mr-2" style="width: 16px;"></i>
+                          <span id="preview-customer-email" class="small">-</span>
+                        </div>
+                        <div class="mb-2">
+                          <i class="fas fa-phone text-muted mr-2" style="width: 16px;"></i>
+                          <span id="preview-customer-phone" class="small">-</span>
+                        </div>
+                        <div class="mb-2" id="preview-customer-legal-row" style="display: none;">
+                          <i class="fas fa-building text-muted mr-2" style="width: 16px;"></i>
+                          <span id="preview-customer-legal" class="small">-</span>
+                        </div>
+                        <div class="mb-2" id="preview-customer-tax-row" style="display: none;">
+                          <i class="fas fa-id-card text-muted mr-2" style="width: 16px;"></i>
+                          <span id="preview-customer-tax" class="small">-</span>
+                        </div>
+                      </div>
+
+                      <!-- Payment Terms Badge -->
+                      <div class="mt-3">
+                        <span class="badge badge-primary px-3 py-2">
+                          <i class="fas fa-credit-card mr-1"></i> <span id="preview-customer-terms">-</span>
+                        </span>
+                      </div>
+                    </div>
+
+                    <!-- Address Column -->
+                    <div class="col-md-7">
+                      <div class="row">
+                        <!-- Primary Address -->
+                        <div class="col-12 mb-3">
+                          <label class="small text-muted text-uppercase font-weight-bold d-block mb-2">
+                            <i class="fas fa-map-marker-alt mr-1"></i> Primary Address
+                          </label>
+                          <div id="preview-primary-address" class="small text-dark p-3 bg-light rounded" style="line-height: 1.7;">
+                            -
+                          </div>
+                        </div>
+
+                        <!-- Billing & Shipping Addresses -->
+                        <div class="col-6">
+                          <label class="small text-muted text-uppercase font-weight-bold d-block mb-2">
+                            <i class="fas fa-file-invoice mr-1"></i> Billing
+                          </label>
+                          <div id="preview-billing-address" class="small text-dark" style="line-height: 1.6;">
+                            -
+                          </div>
+                        </div>
+                        <div class="col-6">
+                          <label class="small text-muted text-uppercase font-weight-bold d-block mb-2">
+                            <i class="fas fa-truck mr-1"></i> Shipping
+                          </label>
+                          <div id="preview-shipping-address" class="small text-dark" style="line-height: 1.6;">
+                            -
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- Notes -->
+                      <div class="mt-3" id="preview-customer-notes-row" style="display: none;">
+                        <label class="small text-muted text-uppercase font-weight-bold d-block mb-2">
+                          <i class="fas fa-sticky-note mr-1"></i> Customer Notes
+                        </label>
+                        <div id="preview-customer-notes" class="small text-dark p-2 bg-warning-light rounded" style="background: #fff8e1; line-height: 1.5;">
+                          -
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Order Breakdown Card -->
               <div class="card shadow-lg border-0 mb-4" style="border-radius: 20px;">
                 <div class="card-header bg-dark text-white py-3" style="border-radius: 20px 20px 0 0;">
                   <h5 class="card-title mb-0"><i class="fas fa-list-ul mr-2"></i> Order Breakdown</h5>
@@ -693,6 +789,17 @@
     uuid: null,
     customerId: null,
     customerName: '',
+    customerEmail: '',
+    customerPhone: '',
+    customerInitials: '',
+    customerType: '',
+    customerLegalName: '',
+    customerTaxNumber: '',
+    customerNotes: '',
+    customerAddress: '',
+    customerPostalCode: '',
+    customerCountry: '',
+    customerState: '',
     billingAddress: null,
     shippingAddress: null,
 
@@ -1028,17 +1135,17 @@
             <div class="col-xl-6 col-lg-6 col-md-12">
               <div class="variant-card js-select-variant d-flex align-items-center p-3 h-100"
                    data-variant="${encoded}">
-                   
+
                 <div class="flex-grow-1">
                     <h6 class="font-weight-bold text-dark mb-1">${_.escape(v.name || '')}</h6>
                     <small class="text-muted d-block">SKU: ${_.escape(v.sku || '')}</small>
                 </div>
-                
+
                 <div class="text-right pl-3">
                     <div class="h5 font-weight-bold text-primary mb-0">${money(v.price)}</div>
                     <small class="text-muted">Click to Add</small>
                 </div>
-                
+
               </div>
             </div>
           `;
@@ -1081,7 +1188,95 @@
   // -----------------------------
   function updatePreview() {
     $('#preview-notes').text($('#order_notes').val() || 'No notes added.');
-    $('#preview-due').text(orderState.dueDate || '');
+    $('#preview-due').text(orderState.dueDate || 'Not set');
+
+    // Update Customer Details
+    $('#preview-customer-avatar').text(orderState.customerInitials || '??');
+    $('#preview-customer-name').text(orderState.customerName || '-');
+    $('#preview-customer-email').text(orderState.customerEmail || '-');
+    $('#preview-customer-phone').text(orderState.customerPhone || '-');
+    $('#preview-customer-terms').text(orderState.paymentTermName || 'No payment terms');
+
+    // Customer Type Badge
+    if (orderState.customerType) {
+      let typeClass = orderState.customerType === 'BUSINESS' ? 'badge-info' : 'badge-secondary';
+      let typeLabel = orderState.customerType === 'BUSINESS' ? 'Business' : 'Individual';
+      $('#preview-customer-type-badge').html(`<span class="badge ${typeClass}">${typeLabel}</span>`);
+    } else {
+      $('#preview-customer-type-badge').html('');
+    }
+
+    // Legal Name (for business customers)
+    if (orderState.customerLegalName) {
+      $('#preview-customer-legal').text(orderState.customerLegalName);
+      $('#preview-customer-legal-row').show();
+    } else {
+      $('#preview-customer-legal-row').hide();
+    }
+
+    // Tax Number
+    if (orderState.customerTaxNumber) {
+      $('#preview-customer-tax').text(orderState.customerTaxNumber);
+      $('#preview-customer-tax-row').show();
+    } else {
+      $('#preview-customer-tax-row').hide();
+    }
+
+    // Customer Notes
+    if (orderState.customerNotes) {
+      $('#preview-customer-notes').text(orderState.customerNotes);
+      $('#preview-customer-notes-row').show();
+    } else {
+      $('#preview-customer-notes-row').hide();
+    }
+
+    // Primary Address (from customer profile)
+    let primaryHtml = '';
+    if (orderState.customerAddress) {
+      primaryHtml = `${_.escape(orderState.customerAddress)}<br>`;
+      if (orderState.customerState) primaryHtml += `${_.escape(orderState.customerState)}, `;
+      if (orderState.customerPostalCode) primaryHtml += `${_.escape(orderState.customerPostalCode)}<br>`;
+      if (orderState.customerCountry) primaryHtml += `${_.escape(orderState.customerCountry)}`;
+    } else {
+      primaryHtml = '<span class="text-muted"><em>No primary address on file</em></span>';
+    }
+    $('#preview-primary-address').html(primaryHtml);
+
+    // Update Billing Address
+    if (orderState.billingAddress) {
+      let b = orderState.billingAddress;
+      let billHtml = '';
+      if (b.address_line_1) {
+        billHtml = `<strong>${_.escape(b.contact_name || orderState.customerName)}</strong><br>`;
+        billHtml += `${_.escape(b.address_line_1)}<br>`;
+        if (b.address_line_2) billHtml += `${_.escape(b.address_line_2)}<br>`;
+        billHtml += `${_.escape(b.city || '')}${b.city ? ', ' : ''}${_.escape(b.postal_code || '')}<br>`;
+        billHtml += `${_.escape(b.country || '')}`;
+      } else {
+        billHtml = '<span class="text-muted"><em>No address on file</em></span>';
+      }
+      $('#preview-billing-address').html(billHtml);
+    } else {
+      $('#preview-billing-address').html('<span class="text-muted"><em>No address on file</em></span>');
+    }
+
+    // Update Shipping Address
+    if (orderState.shippingAddress) {
+      let s = orderState.shippingAddress;
+      let shipHtml = '';
+      if (s.address_line_1) {
+        shipHtml = `<strong>${_.escape(s.contact_name || orderState.customerName)}</strong><br>`;
+        shipHtml += `${_.escape(s.address_line_1)}<br>`;
+        if (s.address_line_2) shipHtml += `${_.escape(s.address_line_2)}<br>`;
+        shipHtml += `${_.escape(s.city || '')}${s.city ? ', ' : ''}${_.escape(s.postal_code || '')}<br>`;
+        shipHtml += `${_.escape(s.country || '')}`;
+      } else {
+        shipHtml = '<span class="text-muted"><em>Same as billing</em></span>';
+      }
+      $('#preview-shipping-address').html(shipHtml);
+    } else {
+      $('#preview-shipping-address').html('<span class="text-muted"><em>Same as billing</em></span>');
+    }
 
     let html = '';
     let subtotal = 0;
@@ -1212,6 +1407,17 @@
     $('#customer_id').val(null).trigger('change');
     orderState.customerId = null;
     orderState.customerName = '';
+    orderState.customerEmail = '';
+    orderState.customerPhone = '';
+    orderState.customerInitials = '';
+    orderState.customerType = '';
+    orderState.customerLegalName = '';
+    orderState.customerTaxNumber = '';
+    orderState.customerNotes = '';
+    orderState.customerAddress = '';
+    orderState.customerPostalCode = '';
+    orderState.customerCountry = '';
+    orderState.customerState = '';
     orderState.billingAddress = null;
     orderState.shippingAddress = null;
 
@@ -1266,8 +1472,20 @@
     }).on('select2:select', function(e) {
       let data = e.params.data;
 
+      // Store all customer data in state
       orderState.customerId = data.id;
       orderState.customerName = data.display_name || '';
+      orderState.customerEmail = data.email || '';
+      orderState.customerPhone = data.phone || '';
+      orderState.customerInitials = data.initials || '??';
+      orderState.customerType = data.type || '';
+      orderState.customerLegalName = data.legal_name || '';
+      orderState.customerTaxNumber = data.tax_number || '';
+      orderState.customerNotes = data.notes || '';
+      orderState.customerAddress = data.address || '';
+      orderState.customerPostalCode = data.postal_code || '';
+      orderState.customerCountry = data.country_name || '';
+      orderState.customerState = data.state_name || '';
 
       // UI
       $('#customer-search-mode').hide();
@@ -1296,6 +1514,7 @@
       // Optional: auto-set payment term from customer
       if (data.payment_term_id) {
         $('#payment_term_id').val(data.payment_term_id).trigger('change');
+        orderState.paymentTermName = data.payment_term_name || '';
       }
 
       $('#step2-tab').removeClass('disabled');
