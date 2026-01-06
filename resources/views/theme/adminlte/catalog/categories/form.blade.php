@@ -7,7 +7,7 @@
     </div>
     <div class="col-sm-6">
       <div class="float-sm-right">
-        <a href="{{ company_route('company.catalog.categories.index') }}" class="btn btn-default">
+        <a href="{{ company_route('catalog.categories.index') }}" class="btn btn-default">
           <i class="fas fa-arrow-left"></i> Back
         </a>
       </div>
@@ -18,7 +18,7 @@
 @section('content')
   <div class="card card-primary">
     <form
-      action="{{ isset($category) ? company_route('company.catalog.categories.update', ['category' => $category->id]) : company_route('company.catalog.categories.store') }}"
+      action="{{ isset($category) ? company_route('catalog.categories.update', ['category' => $category->id]) : company_route('catalog.categories.store') }}"
       method="POST">
       @csrf
       @if (isset($category))

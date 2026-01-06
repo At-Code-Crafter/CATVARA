@@ -39,7 +39,7 @@ class TransferController extends Controller
                 ->addColumn('status_badge', fn ($r) => '<span class="badge badge-'.$this->statusColor($r->status->code).'">'.$r->status->name.'</span>')
                 ->addColumn('items_count', fn ($r) => $r->items->count())
                 ->addColumn('actions', function ($r) {
-                    return '<a href="'.company_route('company.inventory.transfers.show', $r).'" class="btn btn-xs btn-info"><i class="fas fa-eye"></i></a>';
+                    return '<a href="'.company_route('inventory.transfers.show', $r).'" class="btn btn-xs btn-info"><i class="fas fa-eye"></i></a>';
                 })
                 ->rawColumns(['status_badge', 'actions'])
                 ->make(true);
@@ -98,7 +98,7 @@ class TransferController extends Controller
             ]);
         }
 
-        return redirect(company_route('company.inventory.transfers.show', ['transfer' => $transfer]))
+        return redirect(company_route('inventory.transfers.show', ['transfer' => $transfer]))
             ->with('success', 'Transfer created successfully.');
     }
 

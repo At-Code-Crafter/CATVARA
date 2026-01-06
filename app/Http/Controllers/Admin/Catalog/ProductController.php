@@ -51,8 +51,8 @@ class ProductController extends Controller
                     return '<span class="badge badge-info">'.$row->variants->count().' Variants</span>';
                 })
                 ->addColumn('action', function ($row) {
-                    $compact['editUrl'] = company_route('company.catalog.products.edit', ['product' => $row->id]);
-                    $compact['deleteUrl'] = company_route('company.catalog.products.destroy', ['product' => $row->id]);
+                    $compact['editUrl'] = company_route('catalog.products.edit', ['product' => $row->id]);
+                    $compact['deleteUrl'] = company_route('catalog.products.destroy', ['product' => $row->id]);
 
                     return view('theme.adminlte.components._table-actions', $compact)->render();
                 })
@@ -101,23 +101,62 @@ class ProductController extends Controller
             'category_id' => 'required|exists:categories,id',
             'variants' => 'nullable|array',
             'prices' => 'nullable|array',
+            'primary_image' => 'nullable|image|max:2048',
+            'images' => 'nullable|array',
+            'images.*' => 'image|max:2048',
         ]);
 
         try {
+            DB::beginTransaction();
+
             $product = Product::where('company_id', $company->id)->findOrFail($id);
 
-            // Use the Service
+            // 1. Update Core & Variants & Prices via Service
             $this->productService->updateProduct($product, $request->all());
 
-            // Image Upload (Simple replacement) - kept in controller or moved to service.
-            // For pure logic separation, file handling usually stays in controller or dedicated media service.
-            if ($request->hasFile('image')) {
-                // ... image logic ...
+            // 2. Handle Primary Image Upload
+            if ($request->hasFile('primary_image')) {
+                // Reset old primary
+                \App\Models\Common\Attachment::where('company_id', $company->id)
+                    ->where('attachable_id', $product->id)
+                    ->where('attachable_type', Product::class)
+                    ->update(['is_primary' => false]);
+
+                $path = $request->file('primary_image')->store('products', 'public');
+                
+                $product->attachments()->create([
+                    'company_id' => $company->id,
+                    'disk' => 'public',
+                    'path' => $path,
+                    'file_name' => $request->file('primary_image')->getClientOriginalName(),
+                    'mime_type' => $request->file('primary_image')->getMimeType(),
+                    'size' => $request->file('primary_image')->getSize(),
+                    'is_primary' => true,
+                ]);
             }
+
+            // 3. Handle Additional Images
+            if ($request->hasFile('images')) {
+                foreach ($request->file('images') as $file) {
+                    $path = $file->store('products', 'public');
+                    $product->attachments()->create([
+                        'company_id' => $company->id,
+                        'disk' => 'public',
+                        'path' => $path,
+                        'file_name' => $file->getClientOriginalName(),
+                        'mime_type' => $file->getMimeType(),
+                        'size' => $file->getSize(),
+                        'is_primary' => false,
+                    ]);
+                }
+            }
+
+            DB::commit();
 
             return redirect()->back()->with('success', 'Product updated successfully.');
 
         } catch (\Exception $e) {
+            DB::rollBack();
             return redirect()->back()->with('error', 'Error updating product: '.$e->getMessage());
         }
     }
@@ -195,7 +234,7 @@ class ProductController extends Controller
 
             DB::commit();
 
-            return response()->json(['success' => true, 'redirect' => company_route('company.catalog.products.index')]);
+            return response()->json(['success' => true, 'redirect' => company_route('catalog.products.index')]);
 
         } catch (\Exception $e) {
             DB::rollBack();

@@ -7,7 +7,7 @@
     </div>
     <div class="col-sm-6">
       <div class="float-sm-right">
-        <a href="{{ company_route('company.catalog.categories.create') }}" class="btn btn-primary">
+        <a href="{{ company_route('catalog.categories.create') }}" class="btn btn-primary">
           <i class="fas fa-plus"></i> Add Category
         </a>
       </div>
@@ -48,11 +48,11 @@
                 @endif
               </td>
               <td>
-                <a href="{{ company_route('company.catalog.categories.edit', ['category' => $category->id]) }}"
+                <a href="{{ company_route('catalog.categories.edit', ['category' => $category->id]) }}"
                   class="btn btn-sm btn-info">
                   <i class="fas fa-edit"></i>
                 </a>
-                <form action="{{ company_route('company.catalog.categories.destroy', ['category' => $category->id]) }}"
+                <form action="{{ company_route('catalog.categories.destroy', ['category' => $category->id]) }}"
                   method="POST" class="d-inline" onsubmit="return confirm('Are you sure?')">
                   @csrf
                   @method('DELETE')

@@ -15,6 +15,8 @@ class OrderItem extends Model
         'quantity',
         'fulfilled_quantity',
         'line_total',
-        'tax_amount'
+        'tax_amount',
+        'discount_amount',
+        'tax_rate'
     ];
 }

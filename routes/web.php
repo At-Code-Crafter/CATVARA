@@ -162,6 +162,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::post('quotes/{quote}/accept', [\App\Http\Controllers\Admin\QuoteController::class, 'accept'])->name('quotes.accept');
             Route::post('quotes/{quote}/cancel', [\App\Http\Controllers\Admin\QuoteController::class, 'cancel'])->name('quotes.cancel');
             Route::post('quotes/{quote}/convert-to-order', [\App\Http\Controllers\Admin\QuoteController::class, 'convertToOrder'])->name('quotes.convertToOrder');
+
+            /**
+             * Sales Orders Management
+             */
+            Route::resource('sales-orders', \App\Http\Controllers\Admin\Sales\SalesOrderController::class);
+            Route::post('sales-orders/draft', [\App\Http\Controllers\Admin\Sales\SalesOrderController::class, 'storeDraft'])->name('sales-orders.storeDraft');
+            Route::get('sales-orders/search/customers', [\App\Http\Controllers\Admin\Sales\SalesOrderController::class, 'searchCustomers'])->name('sales-orders.searchCustomers');
+            Route::get('sales-orders/search/products', [\App\Http\Controllers\Admin\Sales\SalesOrderController::class, 'searchProducts'])->name('sales-orders.searchProducts');
+            Route::get('sales/products/{product}/variants', [\App\Http\Controllers\Admin\Sales\SalesOrderController::class, 'getProductVariants'])->name('sales-orders.getVariants');
+            Route::get('sales-orders/{order}/print', [\App\Http\Controllers\Admin\Sales\SalesOrderController::class, 'print'])->name('sales-orders.print');
         });
 });
 

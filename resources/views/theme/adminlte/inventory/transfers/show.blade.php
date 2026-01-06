@@ -7,7 +7,7 @@
     </div>
     <div class="col-sm-6">
       <div class="float-sm-right">
-        <a href="{{ company_route('company.inventory.transfers.index') }}" class="btn btn-default">
+        <a href="{{ company_route('inventory.transfers.index') }}" class="btn btn-default">
           <i class="fas fa-arrow-left"></i> Back
         </a>
       </div>
@@ -96,7 +96,7 @@
         </div>
         <div class="card-body">
           @if ($transfer->status->code == 'DRAFT')
-            <form action="{{ company_route('company.inventory.transfers.approve', ['transfer' => $transfer]) }}"
+            <form action="{{ company_route('inventory.transfers.approve', ['transfer' => $transfer]) }}"
               method="POST">
               @csrf
               <button type="submit" class="btn btn-primary btn-block">
@@ -105,7 +105,7 @@
             </form>
           @endif
           @if ($transfer->status->code == 'APPROVED')
-            <form action="{{ company_route('company.inventory.transfers.ship', ['transfer' => $transfer]) }}"
+            <form action="{{ company_route('inventory.transfers.ship', ['transfer' => $transfer]) }}"
               method="POST">
               @csrf
               <button type="submit" class="btn btn-primary btn-block">
@@ -114,7 +114,7 @@
             </form>
           @endif
           @if ($transfer->status->code == 'SHIPPED')
-            <form action="{{ company_route('company.inventory.transfers.receive', ['transfer' => $transfer]) }}"
+            <form action="{{ company_route('inventory.transfers.receive', ['transfer' => $transfer]) }}"
               method="POST">
               @csrf
               <button type="submit" class="btn btn-primary btn-block">

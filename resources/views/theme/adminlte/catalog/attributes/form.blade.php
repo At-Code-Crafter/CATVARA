@@ -7,7 +7,7 @@
     </div>
     <div class="col-sm-6">
       <div class="float-sm-right">
-        <a href="{{ company_route('company.catalog.attributes.index') }}" class="btn btn-default">
+        <a href="{{ company_route('catalog.attributes.index') }}" class="btn btn-default">
           <i class="fas fa-arrow-left"></i> Back
         </a>
       </div>
@@ -18,7 +18,7 @@
 @section('content')
   <div class="card card-primary">
     <form
-      action="{{ isset($attribute) ? company_route('company.catalog.attributes.update', ['attribute' => $attribute->id]) : company_route('company.catalog.attributes.store') }}"
+      action="{{ isset($attribute) ? company_route('catalog.attributes.update', ['attribute' => $attribute->id]) : company_route('catalog.attributes.store') }}"
       method="POST">
       @csrf
       @if (isset($attribute))

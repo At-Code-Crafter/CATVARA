@@ -9,7 +9,7 @@
 @endsection
 
 @section('content')
-  <form action="{{ company_route('company.settings.general.update') }}" method="POST" enctype="multipart/form-data">
+  <form action="{{ company_route('settings.general.update') }}" method="POST" enctype="multipart/form-data">
     @csrf
     @method('PUT')
 

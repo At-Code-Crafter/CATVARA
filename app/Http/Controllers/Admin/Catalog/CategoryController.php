@@ -58,7 +58,7 @@ class CategoryController extends Controller
             $category->attributes()->sync($request->attributes);
         }
 
-        return redirect(company_route('company.catalog.categories.index'))
+        return redirect(company_route('catalog.categories.index'))
             ->with('success', 'Category created successfully.');
     }
 
@@ -106,7 +106,7 @@ class CategoryController extends Controller
             $category->attributes()->detach(); // If no attributes are selected, remove all
         }
 
-        return redirect(company_route('company.catalog.categories.index'))
+        return redirect(company_route('catalog.categories.index'))
             ->with('success', 'Category updated successfully.');
     }
 

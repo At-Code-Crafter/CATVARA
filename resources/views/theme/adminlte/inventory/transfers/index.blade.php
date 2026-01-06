@@ -7,7 +7,7 @@
     </div>
     <div class="col-sm-6">
       <div class="float-sm-right">
-        <a href="{{ company_route('company.inventory.transfers.create') }}" class="btn btn-success">
+        <a href="{{ company_route('inventory.transfers.create') }}" class="btn btn-success">
           <i class="fas fa-plus"></i> New Transfer
         </a>
       </div>
@@ -35,13 +35,13 @@
   </div>
 @endsection
 
-@section('scripts')
+@push('scripts')
   <script>
     $(function() {
       $('#transfers-table').DataTable({
         processing: true,
         serverSide: true,
-        ajax: '{{ company_route('company.inventory.transfers.index') }}',
+        ajax: '{{ company_route('inventory.transfers.index') }}',
         columns: [{
             data: 'reference',
             name: 'reference'
@@ -75,4 +75,4 @@
       });
     });
   </script>
-@endsection
+@endpush

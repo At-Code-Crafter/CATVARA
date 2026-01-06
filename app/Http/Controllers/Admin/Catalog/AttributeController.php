@@ -49,7 +49,7 @@ class AttributeController extends Controller
             }
         }
 
-        return redirect(company_route('company.catalog.attributes.index'))
+        return redirect(company_route('catalog.attributes.index'))
             ->with('success', 'Attribute saved successfully.');
     }
 
@@ -105,7 +105,7 @@ class AttributeController extends Controller
             }
         }
 
-        return redirect(company_route('company.catalog.attributes.index'))
+        return redirect(company_route('catalog.attributes.index'))
             ->with('success', 'Attribute updated successfully.');
     }
 }

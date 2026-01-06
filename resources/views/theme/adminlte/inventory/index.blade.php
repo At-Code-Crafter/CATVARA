@@ -7,10 +7,10 @@
     </div>
     <div class="col-sm-6">
       <div class="float-sm-right">
-        <a href="{{ company_route('company.inventory.transfers.create') }}" class="btn btn-success">
+        <a href="{{ company_route('inventory.transfers.create') }}" class="btn btn-success">
           <i class="fas fa-exchange-alt"></i> New Transfer
         </a>
-        <a href="{{ company_route('company.inventory.inventory.create') }}" class="btn btn-primary">
+        <a href="{{ company_route('inventory.inventory.create') }}" class="btn btn-primary">
           <i class="fas fa-plus-minus"></i> Adjust Stock
         </a>
       </div>
@@ -93,7 +93,7 @@
     <div class="card-header">
       <h3 class="card-title">Recent Transfers</h3>
       <div class="card-tools">
-        <a href="{{ company_route('company.inventory.transfers.index') }}" class="btn btn-sm btn-default">View All</a>
+        <a href="{{ company_route('inventory.transfers.index') }}" class="btn btn-sm btn-default">View All</a>
       </div>
     </div>
     <div class="card-body p-0">
@@ -111,7 +111,7 @@
           @forelse($recentTransfers as $transfer)
             <tr>
               <td><a
-                  href="{{ company_route('company.inventory.transfers.show', ['transfer' => $transfer]) }}">{{ $transfer->transfer_no }}</a>
+                  href="{{ company_route('inventory.transfers.show', ['transfer' => $transfer]) }}">{{ $transfer->transfer_no }}</a>
               </td>
               <td>{{ $transfer->fromLocation->locatable->name ?? '-' }}</td>
               <td>{{ $transfer->toLocation->locatable->name ?? '-' }}</td>
@@ -131,25 +131,25 @@
   </div>
 @endsection
 
-@section('scripts')
+@push('scripts')
   <script>
     $(function() {
       var table = $('#balances-table').DataTable({
         processing: true,
         serverSide: true,
         ajax: {
-          url: '{{ company_route('company.inventory.balances.data') }}',
+          url: '{{ company_route('inventory.balances.data') }}',
           data: function(d) {
             d.location_id = $('#location-filter').val();
           }
         },
         columns: [{
             data: 'sku',
-            name: 'productVariant.sku'
+            name: 'variant.sku'
           },
           {
             data: 'product_name',
-            name: 'productVariant.product.name'
+            name: 'variant.product.name'
           },
           {
             data: 'location_name',
@@ -178,4 +178,4 @@
       });
     });
   </script>
-@endsection
+@endpush

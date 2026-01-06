@@ -7,7 +7,7 @@
     </div>
     <div class="col-sm-6">
       <div class="float-sm-right">
-        <a href="{{ company_route('company.inventory.transfers.index') }}" class="btn btn-default">
+        <a href="{{ company_route('inventory.transfers.index') }}" class="btn btn-default">
           <i class="fas fa-arrow-left mr-1"></i> Back to Transfers
         </a>
       </div>
@@ -16,7 +16,7 @@
 @endsection
 
 @section('content')
-  <form action="{{ company_route('company.inventory.transfers.store') }}" method="POST">
+  <form action="{{ company_route('inventory.transfers.store') }}" method="POST">
     @csrf
     <div class="row">
       <div class="col-md-12">

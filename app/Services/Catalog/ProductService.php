@@ -22,6 +22,7 @@ class ProductService
                 'name' => $data['name'],
                 'category_id' => $data['category_id'],
                 'description' => $data['description'] ?? $product->description,
+                'is_active' => isset($data['is_active']),
             ]);
 
             // 2. Variants Update
@@ -32,7 +33,7 @@ class ProductService
                         $variant->update([
                             'sku' => $vData['sku'],
                             'cost_price' => $vData['cost_price'] ?? 0,
-                            // 'barcode' => ...
+                            'is_active' => isset($vData['is_active']) || !isset($data['variants'][$vid]), // Fallback if needed
                         ]);
                     }
                 }

@@ -7,7 +7,7 @@
     </div>
     <div class="col-sm-6">
       <div class="float-sm-right">
-        <a href="{{ company_route('company.inventory.stores.index') }}" class="btn btn-default">
+        <a href="{{ company_route('inventory.stores.index') }}" class="btn btn-default">
           <i class="fas fa-arrow-left"></i> Back
         </a>
       </div>
@@ -22,7 +22,7 @@
         <div class="card-header">
           <h3 class="card-title">Store Details</h3>
         </div>
-        <form action="{{ company_route('company.inventory.stores.update', ['store' => $store->id]) }}" method="POST">
+        <form action="{{ company_route('inventory.stores.update', ['store' => $store->id]) }}" method="POST">
           @csrf
           @method('PUT')
           <div class="card-body">

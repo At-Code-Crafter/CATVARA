@@ -46,7 +46,7 @@ class StoreController extends Controller
         $location->is_active = $store->is_active;
         $location->save();
 
-        return redirect(company_route('company.inventory.stores.index'))
+        return redirect(company_route('inventory.stores.index'))
             ->with('success', 'Store created successfully.');
     }
 
@@ -77,7 +77,7 @@ class StoreController extends Controller
             $store->inventoryLocation->save();
         }
 
-        return redirect(company_route('company.inventory.stores.index'))
+        return redirect(company_route('inventory.stores.index'))
             ->with('success', 'Store updated successfully.');
     }
 

@@ -45,7 +45,7 @@ class WarehouseController extends Controller
         $location->is_active = $warehouse->is_active;
         $location->save();
 
-        return redirect(company_route('company.inventory.warehouses.index'))
+        return redirect(company_route('inventory.warehouses.index'))
             ->with('success', 'Warehouse created successfully.');
     }
 
@@ -76,7 +76,7 @@ class WarehouseController extends Controller
             $warehouse->inventoryLocation->save();
         }
 
-        return redirect(company_route('company.inventory.warehouses.index'))
+        return redirect(company_route('inventory.warehouses.index'))
             ->with('success', 'Warehouse updated successfully.');
     }
 

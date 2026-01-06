@@ -7,7 +7,7 @@
     </div>
     <div class="col-sm-6">
       <div class="float-sm-right">
-        <a href="{{ company_route('company.catalog.products.create') }}" class="btn btn-primary">
+        <a href="{{ company_route('catalog.products.create') }}" class="btn btn-primary">
           <i class="fas fa-plus"></i> Add Product
         </a>
       </div>
@@ -52,7 +52,7 @@
         processing: true,
         serverSide: true,
         ajax: {
-          url: "{{ company_route('company.catalog.products.index') }}",
+          url: "{{ company_route('catalog.products.index') }}",
           data: function(d) {
             d.category_id = $('#filter_category').val();
           }

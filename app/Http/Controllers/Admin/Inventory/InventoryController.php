@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin\Inventory;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests;
 use App\Models\Catalog\ProductVariant;
 use App\Models\Company\Company;
 use App\Models\Inventory\InventoryBalance;
@@ -11,7 +12,7 @@ use App\Models\Inventory\InventoryMovement;
 use App\Models\Inventory\InventoryReason;
 use App\Models\Inventory\InventoryTransfer;
 use Illuminate\Http\Request;
-use App\Http\Requests;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Yajra\DataTables\Facades\DataTables;
@@ -56,23 +57,24 @@ class InventoryController extends Controller
      */
     public function balancesData(Request $request)
     {
-        $query = InventoryBalance::where('company_id', $request->company->id)
-            ->with(['productVariant.product', 'location.locatable']);
+        $query = InventoryBalance::where('ec_inventory_balances.company_id', $request->company->id)
+            ->with(['variant.product', 'location.locatable']);
 
         if ($request->filled('location_id')) {
-            $query->where('inventory_location_id', $request->location_id);
+            $query->where('ec_inventory_balances.inventory_location_id', $request->location_id);
         }
 
         return DataTables::of($query)
-            ->addColumn('sku', fn($r) => $r->productVariant->sku ?? '-')
-            ->addColumn('product_name', fn($r) => $r->productVariant->product->name ?? '-')
-            ->addColumn('location_name', fn($r) => $r->location->locatable->name ?? $r->location->type)
-            ->editColumn('quantity', fn($r) => '<span class="badge badge-' . ($r->quantity > 0 ? 'success' : 'danger') . '">' . (float)$r->quantity . '</span>')
-            ->addColumn('last_movement', fn($r) => $r->last_movement_at ? $r->last_movement_at->diffForHumans() : '-')
-            ->addColumn('actions', function($r) {
+            ->addColumn('sku', fn ($r) => $r->variant->sku ?? '-')
+            ->addColumn('product_name', fn ($r) => $r->variant->product->name ?? '-')
+            ->addColumn('location_name', fn ($r) => $r->location->locatable->name ?? $r->location->type)
+            ->editColumn('quantity', fn ($r) => '<span class="badge badge-'.($r->quantity > 0 ? 'success' : 'danger').'">'.(float) $r->quantity.'</span>')
+            ->addColumn('last_movement', fn ($r) => $r->last_movement_at ? $r->last_movement_at->diffForHumans() : '-')
+            ->addColumn('actions', function ($r) {
                 // Link to Variant Details
-                $url = company_route('company.inventory.variant.details', ['id' => $r->product_variant_id]);
-                return '<a href="' . $url . '" class="btn btn-xs btn-primary"><i class="fas fa-eye"></i> Manage</a>';
+                $url = company_route('inventory.variant.details', ['id' => $r->product_variant_id]);
+
+                return '<a href="'.$url.'" class="btn btn-xs btn-primary"><i class="fas fa-eye"></i> Manage</a>';
             })
             ->rawColumns(['quantity', 'actions'])
             ->make(true);
@@ -130,7 +132,7 @@ class InventoryController extends Controller
                 'reason_code' => $reasonCode,
                 'quantity' => $request->quantity, // Service takes abs via reason logic
                 'unit_cost' => ProductVariant::find($request->product_variant_id)->cost_price ?? 0,
-                'performed_by' => auth()->id(),
+                'performed_by' => Auth::id(),
                 'reference_type' => 'manual_adjustment',
                 'reference_id' => null, // Could ideally store a ManualAdjustment record ID but simple movement is OK for now
                 'idempotency_key' => Str::uuid(), // Unique per request
@@ -144,7 +146,7 @@ class InventoryController extends Controller
                 return redirect($request->redirect_to)->with('success', 'Stock adjusted successfully.');
             }
 
-            return redirect(company_route('company.inventory.index'))
+            return redirect(company_route('inventory.index'))
                 ->with('success', 'Stock adjusted successfully.');
 
         } catch (\Exception $e) {
@@ -178,7 +180,7 @@ class InventoryController extends Controller
                 'product_variant_id' => $request->product_variant_id,
                 'quantity' => $request->quantity,
                 'transfer_id' => uniqid('qt_'), // Quick Transfer Reference
-                'performed_by' => auth()->id(),
+                'performed_by' => Auth::id(),
             ]);
 
             if ($request->has('redirect_to')) {
@@ -198,31 +200,32 @@ class InventoryController extends Controller
     public function movements(Request $request)
     {
         if ($request->ajax()) {
-            $query = InventoryMovement::where('company_id', $request->company->id)
+            $query = InventoryMovement::where('ec_inventory_movements.company_id', $request->company->id)
                 ->with(['variant.product', 'location.locatable', 'reason', 'performer']);
 
             if ($request->filled('location_id')) {
-                $query->where('inventory_location_id', $request->location_id);
+                $query->where('ec_inventory_movements.inventory_location_id', $request->location_id);
             }
-            
+
             if ($request->filled('product_variant_id')) {
-                $query->where('product_variant_id', $request->product_variant_id);
+                $query->where('ec_inventory_movements.product_variant_id', $request->product_variant_id);
             }
 
             return DataTables::of($query)
-                ->addColumn('sku', fn($r) => $r->variant->sku ?? '-')
-                ->addColumn('location_name', fn($r) => $r->location->locatable->name ?? $r->location->type ?? '-')
-                ->addColumn('reason_name', fn($r) => $r->reason->name ?? '-')
-                ->addColumn('reference', function($r) {
-                     // Basic formatting of reference
-                     if($r->reference_type === 'inventory_transfer') {
-                         return 'Transfer'; // Could link to it if we had the ID easily or loaded relation
-                     }
-                     return $r->reference_type ? class_basename($r->reference_type) : '-';
+                ->addColumn('sku', fn ($r) => $r->variant->sku ?? '-')
+                ->addColumn('location_name', fn ($r) => $r->location->locatable->name ?? $r->location->type ?? '-')
+                ->addColumn('reason_name', fn ($r) => $r->reason->name ?? '-')
+                ->addColumn('reference', function ($r) {
+                    // Basic formatting of reference
+                    if ($r->reference_type === 'inventory_transfer') {
+                        return 'Transfer'; // Could link to it if we had the ID easily or loaded relation
+                    }
+
+                    return $r->reference_type ? class_basename($r->reference_type) : '-';
                 })
-                ->editColumn('quantity', fn($r) => '<span class="badge badge-' . ($r->quantity > 0 ? 'success' : 'danger') . '">' . ($r->quantity > 0 ? '+' : '') . (float)$r->quantity . '</span>')
-                ->addColumn('performed_by_name', fn($r) => $r->performer->name ?? '-')
-                ->addColumn('date', fn($r) => $r->occurred_at ? $r->occurred_at->format('M d, Y H:i') : '-')
+                ->editColumn('quantity', fn ($r) => '<span class="badge badge-'.($r->quantity > 0 ? 'success' : 'danger').'">'.($r->quantity > 0 ? '+' : '').(float) $r->quantity.'</span>')
+                ->addColumn('performed_by_name', fn ($r) => $r->performer->name ?? '-')
+                ->addColumn('date', fn ($r) => $r->occurred_at ? $r->occurred_at->format('M d, Y H:i') : '-')
                 ->rawColumns(['quantity'])
                 ->make(true);
         }
@@ -243,7 +246,7 @@ class InventoryController extends Controller
             ->findOrFail($id);
 
         $locations = InventoryLocation::where('company_id', $company->id)->with('locatable')->get();
-        
+
         // Balances
         $balances = InventoryBalance::where('product_variant_id', $variant->id)
             ->where('company_id', $company->id)
@@ -251,12 +254,12 @@ class InventoryController extends Controller
             ->get();
 
         // One-time flash data for breadcrumbs or context if needed?
-        
+
         // Audit Trail Count
         $movementCount = InventoryMovement::where('product_variant_id', $variant->id)
             ->where('company_id', $company->id)
             ->count();
-        
+
         // Pass to view
         return view('theme.adminlte.inventory.variant_details', compact('variant', 'locations', 'balances', 'movementCount'));
     }

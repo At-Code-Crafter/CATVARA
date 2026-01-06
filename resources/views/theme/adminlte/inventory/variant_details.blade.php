@@ -10,7 +10,7 @@
     </div>
     <div class="col-sm-6">
       <div class="float-sm-right">
-        <a href="{{ company_route('company.catalog.products.edit', ['product' => $variant->product_id]) }}"
+        <a href="{{ company_route('catalog.products.edit', ['product' => $variant->product_id]) }}"
           class="btn btn-outline-secondary mr-2">
           <i class="fas fa-arrow-left mr-1"></i> Back to Product
         </a>
@@ -184,7 +184,7 @@
   {{-- ADJUSTMENT MODAL --}}
   <div class="modal fade" id="adjustStockModal">
     <div class="modal-dialog">
-      <form action="{{ company_route('company.inventory.store') }}" method="POST" class="modal-content">
+      <form action="{{ company_route('inventory.store') }}" method="POST" class="modal-content">
         @csrf
         <input type="hidden" name="redirect_to" value="{{ url()->current() }}">
         <input type="hidden" name="product_variant_id" value="{{ $variant->id }}"> <!-- Fixed for this page -->
@@ -239,7 +239,7 @@
   {{-- TRANSFER MODAL --}}
   <div class="modal fade" id="transferStockModal">
     <div class="modal-dialog">
-      <form action="{{ company_route('company.inventory.transfer') }}" method="POST" class="modal-content">
+      <form action="{{ company_route('inventory.transfer') }}" method="POST" class="modal-content">
         @csrf
         <input type="hidden" name="redirect_to" value="{{ url()->current() }}">
         <input type="hidden" name="product_variant_id" value="{{ $variant->id }}">
@@ -292,7 +292,7 @@
           lengthChange: false,
           pageLength: 10,
           ajax: {
-            url: "{{ company_route('company.inventory.movements') }}",
+            url: "{{ company_route('inventory.movements') }}",
             data: function(d) {
               d.product_variant_id = "{{ $variant->id }}";
             }

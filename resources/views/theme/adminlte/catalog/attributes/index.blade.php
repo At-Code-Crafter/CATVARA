@@ -7,7 +7,7 @@
     </div>
     <div class="col-sm-6">
       <div class="float-sm-right">
-        <a href="{{ company_route('company.catalog.attributes.create') }}" class="btn btn-primary">
+        <a href="{{ company_route('catalog.attributes.create') }}" class="btn btn-primary">
           <i class="fas fa-plus"></i> Add Attribute
         </a>
       </div>
@@ -38,7 +38,7 @@
                 @endforeach
               </td>
               <td>
-                <a href="{{ company_route('company.catalog.attributes.edit', ['attribute' => $attribute->id]) }}"
+                <a href="{{ company_route('catalog.attributes.edit', ['attribute' => $attribute->id]) }}"
                   class="btn btn-sm btn-info">
                   <i class="fas fa-edit"></i>
                 </a>

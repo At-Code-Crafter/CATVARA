@@ -7,7 +7,7 @@
     </div>
     <div class="col-sm-6">
       <div class="float-sm-right">
-        <a href="{{ company_route('company.inventory.inventory.index') }}" class="btn btn-default">
+        <a href="{{ company_route('inventory.inventory.index') }}" class="btn btn-default">
           <i class="fas fa-arrow-left"></i> Back to Dashboard
         </a>
       </div>
@@ -45,7 +45,7 @@
   </div>
 @endsection
 
-@section('scripts')
+@push('scripts')
   <script>
     $(function() {
       var table = $('#movements-table').DataTable({
@@ -55,7 +55,7 @@
           [0, 'desc']
         ],
         ajax: {
-          url: '{{ company_route('company.inventory.movements') }}',
+          url: '{{ company_route('inventory.movements') }}',
           data: function(d) {
             d.location_id = $('#location-filter').val();
           }
@@ -66,15 +66,15 @@
           },
           {
             data: 'sku',
-            name: 'sku'
+            name: 'variant.sku'
           },
           {
             data: 'location_name',
-            name: 'location_name'
+            name: 'location.locatable.name'
           },
           {
             data: 'reason_name',
-            name: 'reason_name'
+            name: 'reason.name'
           },
           {
             data: 'quantity',
@@ -82,7 +82,7 @@
           },
           {
             data: 'performed_by_name',
-            name: 'performed_by_name'
+            name: 'performer.name'
           }
         ]
       });
@@ -92,4 +92,4 @@
       });
     });
   </script>
-@endsection
+@endpush

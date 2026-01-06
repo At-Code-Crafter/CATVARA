@@ -7,7 +7,7 @@
     </div>
     <div class="col-sm-6">
       <div class="float-sm-right">
-        <a href="{{ company_route('company.inventory.reasons.create') }}" class="btn btn-primary">
+        <a href="{{ company_route('inventory.reasons.create') }}" class="btn btn-primary">
           <i class="fas fa-plus"></i> Add Reason
         </a>
       </div>
@@ -45,7 +45,7 @@
                   </span>
                 </td>
                 <td>
-                  <a href="{{ company_route('company.inventory.reasons.edit', ['reason' => $reason->id]) }}"
+                  <a href="{{ company_route('inventory.reasons.edit', ['reason' => $reason->id]) }}"
                     class="btn btn-xs btn-info">
                     <i class="fas fa-edit"></i> Edit
                   </a>

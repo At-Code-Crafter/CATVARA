@@ -7,7 +7,7 @@
     </div>
     <div class="col-sm-6">
       <div class="float-sm-right">
-        <a href="{{ company_route('company.catalog.products.index') }}" class="btn btn-default">
+        <a href="{{ company_route('catalog.products.index') }}" class="btn btn-default">
           <i class="fas fa-arrow-left"></i> Back
         </a>
       </div>
@@ -16,7 +16,7 @@
 @endsection
 
 @section('content')
-  <form id="productForm" action="{{ company_route('company.catalog.products.store') }}" method="POST">
+  <form id="productForm" action="{{ company_route('catalog.products.store') }}" method="POST">
     @csrf
 
     <div class="row">
@@ -118,7 +118,7 @@
         var catId = $(this).val();
         if (!catId) return;
 
-        var url = "{{ company_route('company.catalog.categories.attributes', ['category' => ':id']) }}";
+        var url = "{{ company_route('catalog.categories.attributes', ['category' => ':id']) }}";
         url = url.replace(':id', catId);
 
         $.get(url, function(data) {

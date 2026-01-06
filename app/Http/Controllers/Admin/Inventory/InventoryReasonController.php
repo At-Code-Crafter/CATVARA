@@ -31,7 +31,7 @@ class InventoryReasonController extends Controller
         $reason->is_active = $request->has('is_active');
         $reason->save();
 
-        return redirect(company_route('company.inventory.reasons.index'))
+        return redirect(company_route('inventory.reasons.index'))
             ->with('success', 'Reason created successfully.');
     }
 
@@ -55,7 +55,7 @@ class InventoryReasonController extends Controller
         $reason->is_active = $request->has('is_active');
         $reason->save();
 
-        return redirect(company_route('company.inventory.reasons.index'))
+        return redirect(company_route('inventory.reasons.index'))
             ->with('success', 'Reason updated successfully.');
     }
 
