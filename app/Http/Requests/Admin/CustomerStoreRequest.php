@@ -42,6 +42,10 @@ class CustomerStoreRequest extends FormRequest
             'legal_name' => ['nullable', 'string', 'max:255'],
             'tax_number' => ['nullable', 'string', 'max:100'],
             'notes' => ['nullable', 'string', 'max:2000'],
+            'country_id' => ['nullable', 'exists:countries,id'],
+            'state_id' => ['nullable', 'exists:states,id'],
+            'postal_code' => ['nullable', 'string', 'max:20'],
+            'address' => ['nullable', 'string', 'max:1000'],
             'is_active' => ['nullable', 'boolean'],
         ];
     }

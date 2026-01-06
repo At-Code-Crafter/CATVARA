@@ -462,17 +462,39 @@
 
         {{-- Future items --}}
         <li class="nav-item">
-          <a href="#" class="nav-link">
+          <a href="{{ safe_route('currencies.index') }}" class="nav-link {{ $isActive('currencies.*') ? 'active' : '' }}">
             <i class="nav-icon fas fa-money-bill-wave"></i>
             <p>Currencies</p>
           </a>
         </li>
 
         <li class="nav-item">
-          <a href="#" class="nav-link">
+          <a href="{{ safe_route('payment-terms.index') }}" class="nav-link {{ $isActive('payment-terms.*') ? 'active' : '' }}">
             <i class="nav-icon fas fa-file-invoice"></i>
             <p>Payment Terms</p>
           </a>
+        </li>
+
+        {{-- Countries & States --}}
+        <li class="nav-item has-treeview {{ $isActive(['countries.*', 'states.*']) ? 'menu-open' : '' }}">
+          <a href="#" class="nav-link {{ $isActive(['countries.*', 'states.*']) ? 'active' : '' }}">
+            <i class="nav-icon fas fa-globe-americas"></i>
+            <p>Locations <i class="right fas fa-angle-left"></i></p>
+          </a>
+          <ul class="nav nav-treeview">
+            <li class="nav-item">
+              <a href="{{ safe_route('countries.index') }}" class="nav-link {{ $isActive('countries.*') ? 'active' : '' }}">
+                <i class="far fa-circle nav-icon"></i>
+                <p>Countries</p>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="{{ safe_route('states.index') }}" class="nav-link {{ $isActive('states.*') ? 'active' : '' }}">
+                <i class="far fa-circle nav-icon"></i>
+                <p>States / Provinces</p>
+              </a>
+            </li>
+          </ul>
         </li>
 
       </ul>

@@ -73,6 +73,22 @@
                                 <td>{{ $customer->tax_number ?? '—' }}</td>
                             </tr>
                             <tr>
+                                <th>Address</th>
+                                <td>{{ $customer->address ?? '—' }}</td>
+                            </tr>
+                            <tr>
+                                <th>Country</th>
+                                <td>{{ $customer->country?->name ?? '—' }}</td>
+                            </tr>
+                            <tr>
+                                <th>State / Province</th>
+                                <td>{{ $customer->state?->name ?? '—' }}</td>
+                            </tr>
+                            <tr>
+                                <th>Postal Code</th>
+                                <td>{{ $customer->postal_code ?? '—' }}</td>
+                            </tr>
+                            <tr>
                                 <th>Status</th>
                                 <td>
                                     @if($customer->is_active)

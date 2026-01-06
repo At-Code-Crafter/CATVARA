@@ -6,6 +6,8 @@ use App\Http\Controllers\Admin\CMS\TinyMCEController;
 use App\Http\Controllers\Admin\CompanyContextController;
 use App\Http\Controllers\Admin\Settings\ModuleController;
 use App\Http\Controllers\Admin\Settings\CompanyController;
+use App\Http\Controllers\Admin\Settings\CountryController;
+use App\Http\Controllers\Admin\Settings\StateController;
 use App\Http\Controllers\Admin\Settings\PermissionController;
 use App\Http\Controllers\Admin\Settings\RoleController;
 use App\Http\Controllers\Admin\Settings\RolePermissionController;
@@ -60,6 +62,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         Route::resource('currencies', \App\Http\Controllers\Admin\Settings\CurrencyController::class)->except(['destroy']);
         Route::resource('payment-terms', \App\Http\Controllers\Admin\Settings\PaymentTermController::class)->except(['destroy']);
+
+        // Countries & States (Global Settings)
+        Route::resource('countries', CountryController::class);
+        Route::get('countries/load/stats', [CountryController::class, 'stats'])->name('countries.stats');
+        Route::get('countries/{country}/states', [CountryController::class, 'getStates'])->name('countries.states');
+
+        Route::resource('states', StateController::class);
+        Route::get('states/load/stats', [StateController::class, 'stats'])->name('states.stats');
 
         Route::resource('users', UserController::class)->except(['destroy'])->names('users');
 

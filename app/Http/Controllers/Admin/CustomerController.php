@@ -7,6 +7,7 @@ use App\Http\Requests\Admin\CustomerStoreRequest;
 use App\Http\Requests\Admin\CustomerUpdateRequest;
 use App\Models\Customer\Customer;
 use App\Models\Company\Company;
+use App\Models\Common\Country;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -137,7 +138,9 @@ class CustomerController extends Controller
      */
     public function create(Company $company)
     {
-        return view('theme.adminlte.customers.create', compact('company'));
+        $countries = Country::active()->ordered()->get();
+
+        return view('theme.adminlte.customers.create', compact('company', 'countries'));
     }
 
     /**
@@ -160,6 +163,10 @@ class CustomerController extends Controller
                 'legal_name' => $data['legal_name'] ?? null,
                 'tax_number' => $data['tax_number'] ?? null,
                 'notes' => $data['notes'] ?? null,
+                'country_id' => $data['country_id'] ?? null,
+                'state_id' => $data['state_id'] ?? null,
+                'postal_code' => $data['postal_code'] ?? null,
+                'address' => $data['address'] ?? null,
                 'is_active' => $data['is_active'] ?? true,
             ]);
 
@@ -195,7 +202,7 @@ class CustomerController extends Controller
     public function show(Company $company, string $id)
     {
         $customer = Customer::where('company_id', $company->id)
-            ->with('addresses')
+            ->with(['addresses', 'country', 'state'])
             ->findOrFail($id);
 
         return view('theme.adminlte.customers.show', compact('company', 'customer'));
@@ -207,8 +214,9 @@ class CustomerController extends Controller
     public function edit(Company $company, string $id)
     {
         $customer = Customer::where('company_id', $company->id)->findOrFail($id);
+        $countries = Country::active()->ordered()->get();
 
-        return view('theme.adminlte.customers.edit', compact('company', 'customer'));
+        return view('theme.adminlte.customers.edit', compact('company', 'customer', 'countries'));
     }
 
     /**
@@ -230,6 +238,10 @@ class CustomerController extends Controller
                 'legal_name' => $data['legal_name'] ?? null,
                 'tax_number' => $data['tax_number'] ?? null,
                 'notes' => $data['notes'] ?? null,
+                'country_id' => $data['country_id'] ?? null,
+                'state_id' => $data['state_id'] ?? null,
+                'postal_code' => $data['postal_code'] ?? null,
+                'address' => $data['address'] ?? null,
                 'is_active' => $data['is_active'] ?? true,
             ]);
 

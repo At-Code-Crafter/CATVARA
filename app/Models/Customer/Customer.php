@@ -3,6 +3,8 @@
 namespace App\Models\Customer;
 
 use App\Models\Accounting\PaymentTerm;
+use App\Models\Common\Country;
+use App\Models\Common\State;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Customer\CustomerAddress;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -21,6 +23,10 @@ class Customer extends Model
         'legal_name',
         'tax_number',
         'notes',
+        'country_id',
+        'state_id',
+        'postal_code',
+        'address',
         'is_active',
     ];
 
@@ -45,5 +51,15 @@ class Customer extends Model
 
     public function paymentTerm(){
         return $this->belongsTo(PaymentTerm::class);
+    }
+
+    public function country()
+    {
+        return $this->belongsTo(Country::class);
+    }
+
+    public function state()
+    {
+        return $this->belongsTo(State::class);
     }
 }

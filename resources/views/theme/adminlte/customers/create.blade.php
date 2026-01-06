@@ -123,6 +123,69 @@
                     </div>
                 </div>
 
+                {{-- Address Card --}}
+                <div class="card card-outline card-secondary">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-map-marker-alt mr-1"></i> Address Information</h3>
+                    </div>
+
+                    <div class="card-body">
+                        <div class="form-group">
+                            <label>Address</label>
+                            <textarea name="address" rows="3" class="form-control @error('address') is-invalid @enderror"
+                                placeholder="Street address, building, floor, etc.">{{ old('address') }}</textarea>
+                            @error('address')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Country</label>
+                                    <select name="country_id" id="country_id" class="form-control @error('country_id') is-invalid @enderror">
+                                        <option value="">-- Select Country --</option>
+                                        @foreach ($countries as $country)
+                                            <option value="{{ $country->id }}" data-uuid="{{ $country->uuid }}" {{ old('country_id') == $country->id ? 'selected' : '' }}>
+                                                {{ $country->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    @error('country_id')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>State / Province</label>
+                                    <select name="state_id" id="state_id" class="form-control @error('state_id') is-invalid @enderror">
+                                        <option value="">-- Select State --</option>
+                                    </select>
+                                    @error('state_id')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Postal Code</label>
+                                    <input type="text" name="postal_code" value="{{ old('postal_code') }}"
+                                        class="form-control @error('postal_code') is-invalid @enderror"
+                                        placeholder="e.g. 10001">
+                                    @error('postal_code')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
             </div>
 
             {{-- RIGHT: NOTES + STATUS --}}
@@ -168,3 +231,28 @@
         </div>
     </form>
 @endsection
+
+@push('scripts')
+<script>
+$(function() {
+    // Load states when country changes
+    $('#country_id').on('change', function() {
+        const $selected = $(this).find('option:selected');
+        const countryUuid = $selected.data('uuid');
+        const $stateSelect = $('#state_id');
+
+        $stateSelect.html('<option value="">-- Select State --</option>');
+
+        if (countryUuid) {
+            $.get('/settings/countries/' + countryUuid + '/states', function(states) {
+                states.forEach(function(state) {
+                    $stateSelect.append(
+                        $('<option>', { value: state.id, text: state.name })
+                    );
+                });
+            });
+        }
+    });
+});
+</script>
+@endpush
