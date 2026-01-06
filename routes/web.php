@@ -167,6 +167,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
              * Sales Orders Management
              */
             Route::resource('sales-orders', \App\Http\Controllers\Admin\Sales\SalesOrderController::class);
+            Route::get('sales-orders-data', [\App\Http\Controllers\Admin\Sales\SalesOrderController::class, 'data'])->name('sales-orders.data');
             Route::post('sales-orders/draft', [\App\Http\Controllers\Admin\Sales\SalesOrderController::class, 'storeDraft'])->name('sales-orders.storeDraft');
             Route::get('sales-orders/search/customers', [\App\Http\Controllers\Admin\Sales\SalesOrderController::class, 'searchCustomers'])->name('sales-orders.searchCustomers');
             Route::get('sales-orders/search/products', [\App\Http\Controllers\Admin\Sales\SalesOrderController::class, 'searchProducts'])->name('sales-orders.searchProducts');

@@ -15,18 +15,75 @@ use App\Models\Sales\OrderStatus;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Yajra\DataTables\Facades\DataTables;
 
 class SalesOrderController extends Controller
 {
     public function index()
     {
         $companyId = active_company_id();
-        $orders = Order::where('company_id', $companyId)
-            ->with(['customer', 'status'])
-            ->latest()
-            ->paginate(20);
+        $statuses = OrderStatus::all();
+        $customers = Customer::where('company_id', $companyId)->orderBy('display_name')->get();
 
-        return view('theme.adminlte.sales.orders.index', compact('orders'));
+        return view('theme.adminlte.sales.orders.index', compact('statuses', 'customers'));
+    }
+
+    public function data(Request $request)
+    {
+        $companyId = active_company_id();
+        $query = Order::where('orders.company_id', $companyId)
+            ->with(['customer', 'status']);
+
+        // Filters
+        if ($request->filled('status_id')) {
+            $query->where('orders.status_id', $request->status_id);
+        }
+
+        if ($request->filled('customer_id')) {
+            $query->where('orders.customer_id', $request->customer_id);
+        }
+
+        if ($request->filled('date_from')) {
+            $query->whereDate('orders.created_at', '>=', $request->date_from);
+        }
+
+        if ($request->filled('date_to')) {
+            $query->whereDate('orders.created_at', '<=', $request->date_to);
+        }
+
+        return DataTables::of($query)
+            ->editColumn('order_number', function ($order) {
+                return '<span class="font-weight-bold">' . $order->order_number . '</span>';
+            })
+            ->editColumn('created_at', function ($order) {
+                return $order->created_at->format('M d, Y');
+            })
+            ->addColumn('customer_name', function ($order) {
+                return $order->customer->display_name ?? 'N/A';
+            })
+            ->editColumn('status', function ($order) {
+                $color = 'secondary';
+                if ($order->status->code === 'CONFIRMED') $color = 'success';
+                if ($order->status->code === 'DRAFT') $color = 'warning';
+                
+                return '<span class="badge badge-' . $color . '">' . $order->status->name . '</span>';
+            })
+            ->editColumn('grand_total', function ($order) {
+                return '<span class="font-weight-bold text-dark">' . number_format($order->grand_total, 2) . '</span>';
+            })
+            ->addColumn('actions', function ($order) {
+                $printUrl = company_route('sales-orders.print', ['order' => $order->uuid]);
+                $showUrl = company_route('sales-orders.show', ['sales_order' => $order->id]); // Assuming show exists
+                
+                return '
+                    <div class="btn-group">
+                        <a href="' . $showUrl . '" class="btn btn-xs btn-outline-info" title="View"><i class="fas fa-eye"></i></a>
+                        <a href="' . $printUrl . '" class="btn btn-xs btn-outline-primary" title="Print" target="_blank"><i class="fas fa-print"></i></a>
+                    </div>
+                ';
+            })
+            ->rawColumns(['order_number', 'status', 'grand_total', 'actions'])
+            ->make(true);
     }
 
     public function create()
@@ -203,6 +260,12 @@ class SalesOrderController extends Controller
         }
     }
 
+    public function show($id)
+    {
+        $order = Order::with(['items', 'customer', 'status', 'paymentTerm', 'company', 'currency'])->findOrFail($id);
+        return view('theme.adminlte.sales.orders.show', compact('order'));
+    }
+
     public function print($uuid)
     {
         $order = Order::with(['items', 'customer', 'paymentTerm', 'company', 'currency'])->where('uuid', $uuid)->firstOrFail();
@@ -212,8 +275,8 @@ class SalesOrderController extends Controller
 
     public function searchCustomers(Request $request)
     {
-        $term = $request->get('q');
         $query = $request->get('q');
+        dd($query);
         $customers = Customer::where('company_id', active_company_id())
             ->with(['paymentTerm', 'addresses'])
             ->where(function ($q) use ($query) {
@@ -222,7 +285,7 @@ class SalesOrderController extends Controller
                     ->orWhere('phone', 'like', "%{$query}%");
             })
             ->limit(10)
-            ->get();
+            ->get()->dd();
 
         $results = [];
         foreach ($customers as $customer) {

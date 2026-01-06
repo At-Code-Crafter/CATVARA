@@ -111,7 +111,7 @@
   <!-- Select2 -->
   <script src="{{ asset('theme/adminlte/plugins/select2/js/select2.full.min.js') }}"></script>
 
-  <script src="https://cdn.tiny.cloud/1/{{ setting('tiny_mc_key', env('TINY_MC_KEY')) }}/tinymce/7/tinymce.min.js"
+  {{-- <script src="https://cdn.tiny.cloud/1/{{ setting('tiny_mc_key', env('TINY_MC_KEY')) }}/tinymce/7/tinymce.min.js"
     referrerpolicy="origin"></script>
   <script>
     tinymce.init({
@@ -128,7 +128,14 @@
       promotion: false
       // Use the default TinyMCE handler (no need for custom images_upload_handler!)
     });
+  </script> --}}
+  <script>
+    $('.select2').select2({
+      theme: 'bootstrap4',
+      width: '100%'
+    });
   </script>
+
   {{--
   <script>
     setInterval(() => {

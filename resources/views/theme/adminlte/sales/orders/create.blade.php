@@ -739,11 +739,11 @@
     function nextStep(step) {
       if (step === 2 && !orderState.customerId) {
         Swal.fire('Error', 'Please select a customer first', 'error');
-        return;
+        return true;
       }
       if (step === 3 && orderState.items.length === 0) {
         Swal.fire('Error', 'Please add at least one product', 'error');
-        return;
+        return true;
       }
 
       const tabEl = document.querySelector('#step' + step + '-tab');
@@ -796,7 +796,6 @@
       $('#cart-count').text('0 Items');
       $('#cart-subtotal').text('$0.00');
       $('#cart-total').text('$0.00');
-      return;
     }
 
     orderState.items.forEach((item, index) => {

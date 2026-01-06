@@ -111,32 +111,23 @@
           {{-- Sales --}}
           @if ($hasSales)
             <li
-              class="nav-item has-treeview {{ $isActive(['orders.*', 'quotes.*', 'invoices.*', 'credit-notes.*']) ? 'menu-open' : '' }}">
+              class="nav-item has-treeview {{ $isActive(['sales-orders.*', 'quotes.*', 'invoices.*', 'credit-notes.*']) ? 'menu-open' : '' }}">
               <a href="#"
-                class="nav-link {{ $isActive(['orders.*', 'quotes.*', 'invoices.*', 'credit-notes.*']) ? 'active' : '' }}">
+                class="nav-link {{ $isActive(['sales-orders.*', 'quotes.*', 'invoices.*', 'credit-notes.*']) ? 'active' : '' }}">
                 <i class="nav-icon fas fa-shopping-cart"></i>
                 <p>Sales <i class="right fas fa-angle-left"></i></p>
               </a>
               <ul class="nav nav-treeview">
 
-
-                @if (Route::has('orders.index'))
+                @if (Route::has('sales-orders.index'))
                   <li class="nav-item">
-                    <a href="{{ company_route('orders.index') }}"
-                      class="nav-link {{ $isActive('orders.*') ? 'active' : '' }}">
+                    <a href="{{ company_route('sales-orders.index') }}"
+                      class="nav-link {{ $isActive('sales-orders.index') ? 'active' : '' }}">
                       <i class="far fa-circle nav-icon"></i>
                       <p>Orders</p>
                     </a>
                   </li>
                 @endif
-                {{-- NEW SALES ORDER SYSTEM --}}
-                <li class="nav-item">
-                  <a href="{{ company_route('sales-orders.create') }}"
-                    class="nav-link {{ $isActive('sales-orders.*') ? 'active' : '' }}">
-                    <i class="far fa-circle nav-icon"></i>
-                    <p>New Sales Order</p>
-                  </a>
-                </li>
 
                 @if (Route::has('quotes.index'))
                   <li class="nav-item">

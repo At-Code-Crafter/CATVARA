@@ -57,11 +57,11 @@ class InventoryController extends Controller
      */
     public function balancesData(Request $request)
     {
-        $query = InventoryBalance::where('ec_inventory_balances.company_id', $request->company->id)
+        $query = InventoryBalance::where('inventory_balances.company_id', $request->company->id)
             ->with(['variant.product', 'location.locatable']);
 
         if ($request->filled('location_id')) {
-            $query->where('ec_inventory_balances.inventory_location_id', $request->location_id);
+            $query->where('inventory_balances.inventory_location_id', $request->location_id);
         }
 
         return DataTables::of($query)
@@ -200,15 +200,15 @@ class InventoryController extends Controller
     public function movements(Request $request)
     {
         if ($request->ajax()) {
-            $query = InventoryMovement::where('ec_inventory_movements.company_id', $request->company->id)
+            $query = InventoryMovement::where('inventory_movements.company_id', $request->company->id)
                 ->with(['variant.product', 'location.locatable', 'reason', 'performer']);
 
             if ($request->filled('location_id')) {
-                $query->where('ec_inventory_movements.inventory_location_id', $request->location_id);
+                $query->where('inventory_movements.inventory_location_id', $request->location_id);
             }
 
             if ($request->filled('product_variant_id')) {
-                $query->where('ec_inventory_movements.product_variant_id', $request->product_variant_id);
+                $query->where('inventory_movements.product_variant_id', $request->product_variant_id);
             }
 
             return DataTables::of($query)
