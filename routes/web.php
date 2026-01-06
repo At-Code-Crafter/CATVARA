@@ -7,7 +7,9 @@ use App\Http\Controllers\Admin\CompanyContextController;
 use App\Http\Controllers\Admin\Settings\ModuleController;
 use App\Http\Controllers\Admin\Settings\CompanyController;
 use App\Http\Controllers\Admin\Settings\PermissionController;
+use App\Http\Controllers\Admin\Settings\RoleController;
 use App\Http\Controllers\Admin\Settings\RolePermissionController;
+use App\Http\Controllers\Admin\Settings\UserController;
 
 /**
  * Bind {company} by UUID (Laravel 12 compatible)
@@ -166,6 +168,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
             /**
              * Sales Orders Management
              */
+            Route::get('sales-orders/wizard/step1/{uuid?}', [\App\Http\Controllers\Admin\Sales\SalesOrderWizardController::class, 'step1'])->name('sales-orders.wizard.step1');
+            Route::post('sales-orders/wizard/step1', [\App\Http\Controllers\Admin\Sales\SalesOrderWizardController::class, 'storeStep1'])->name('sales-orders.wizard.storeStep1');
+            Route::get('sales-orders/wizard/step2/{uuid}', [\App\Http\Controllers\Admin\Sales\SalesOrderWizardController::class, 'step2'])->name('sales-orders.wizard.step2');
+            Route::post('sales-orders/wizard/step2/{uuid}', [\App\Http\Controllers\Admin\Sales\SalesOrderWizardController::class, 'storeStep2'])->name('sales-orders.wizard.storeStep2');
+            Route::get('sales-orders/wizard/step3/{uuid}', [\App\Http\Controllers\Admin\Sales\SalesOrderWizardController::class, 'step3'])->name('sales-orders.wizard.step3');
+            Route::post('sales-orders/wizard/step3/{uuid}', [\App\Http\Controllers\Admin\Sales\SalesOrderWizardController::class, 'storeStep3'])->name('sales-orders.wizard.storeStep3');
+
             Route::resource('sales-orders', \App\Http\Controllers\Admin\Sales\SalesOrderController::class);
             Route::get('sales-orders-data', [\App\Http\Controllers\Admin\Sales\SalesOrderController::class, 'data'])->name('sales-orders.data');
             Route::post('sales-orders/draft', [\App\Http\Controllers\Admin\Sales\SalesOrderController::class, 'storeDraft'])->name('sales-orders.storeDraft');

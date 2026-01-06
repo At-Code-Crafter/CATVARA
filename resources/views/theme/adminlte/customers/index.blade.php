@@ -158,20 +158,31 @@
   <script>
     $(function() {
 
+      // Select2 (bootstrap4 skin)
+      if ($.fn.select2) {
+        $('#filterType').select2({
+          theme: 'bootstrap4',
+          width: '100%'
+        });
+      }
+
       function getFilters() {
         return {
-          type: $('#filterType').val(),
-          is_active: $('#filterStatus').val()
+          type: $('#filterType').val() || '',
+          is_active: $('#filterStatus').val() || '',
+          date_from: $('#filter_date_from').val() || '',
+          date_to: $('#filter_date_to').val() || ''
         };
       }
 
       function loadStats() {
-        $.get('{{ route('customers.stats', $company->uuid) }}', getFilters(), function(res) {
-          $('#statAllCustomers').text(res.all_customers ?? 0);
-          $('#statActiveCustomers').text(res.active_customers ?? 0);
-          $('#statCompanyCustomers').text(res.company_customers ?? 0);
-          $('#statIndividualCustomers').text(res.individual_customers ?? 0);
-        });
+        $.get('{{ route('customers.stats', $company->uuid) }}', getFilters())
+          .done(function(res) {
+            $('#statAllCustomers').text(res.all_customers ?? 0);
+            $('#statActiveCustomers').text(res.active_customers ?? 0);
+            $('#statCompanyCustomers').text(res.company_customers ?? 0);
+            $('#statIndividualCustomers').text(res.individual_customers ?? 0);
+          });
       }
 
       const table = $('#customers-table').DataTable({
@@ -180,24 +191,32 @@
         responsive: true,
         autoWidth: false,
         pageLength: 25,
+
+        // single source of truth
         order: [
           [5, 'desc']
-        ], // Created
+        ], // Created column index 5
+
         ajax: {
           url: '{{ route('customers.index', $company->uuid) }}',
           data: function(d) {
             const f = getFilters();
             d.type = f.type;
             d.is_active = f.is_active;
+            d.date_from = f.date_from;
+            d.date_to = f.date_to;
           }
         },
+
         columns: [{
             data: 'display_name',
             name: 'customers.display_name'
           },
           {
             data: 'type_badge',
-            name: 'customers.type'
+            name: 'customers.type',
+            orderable: false,
+            searchable: false
           },
           {
             data: 'email',
@@ -221,11 +240,9 @@
             name: 'action',
             orderable: false,
             searchable: false
-          },
+          }
         ],
-        order: [
-          [1, 'desc']
-        ],
+
         dom: '<"row p-3"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>rt<"row p-3"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
         language: {
           searchPlaceholder: "Quick search...",
@@ -233,21 +250,41 @@
         }
       });
 
+      function applyFilters() {
+        table.ajax.reload(null, true);
+        loadStats();
+      }
+
+      $('#btn_apply_filters').on('click', function(e) {
+        e.preventDefault();
+        applyFilters();
+      });
+
+      $('#btn_reset_filters').on('click', function(e) {
+        e.preventDefault();
+
+        $('#filterStatus').val('');
+        $('#filter_date_from').val('');
+        $('#filter_date_to').val('');
+
+        if ($.fn.select2) {
+          $('#filterType').val('').trigger('change');
+        } else {
+          $('#filterType').val('');
+        }
+
+        applyFilters();
+      });
+
+      // Optional: auto-apply on Enter for quick UX
+      $(document).on('keydown', function(e) {
+        if (e.key === 'Enter') {
+          applyFilters();
+        }
+      });
+
       // Initial load
       loadStats();
-
-      $('#btn_apply_filters').on('click', function() {
-        table.ajax.reload();
-        loadStats();
-      });
-
-      $('#btn_reset_filters').on('click', function() {
-        $('#filterType').val('');
-        $('#filterStatus').val('');
-        table.ajax.reload();
-        loadStats();
-      });
-
     });
   </script>
 @endpush

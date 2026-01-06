@@ -2,6 +2,7 @@
 
 namespace App\Models\Customer;
 
+use App\Models\Accounting\PaymentTerm;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Customer\CustomerAddress;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -40,5 +41,9 @@ class Customer extends Model
     public function shippingAddresses()
     {
         return $this->hasMany(CustomerAddress::class)->where('type', 'SHIPPING');
+    }
+
+    public function paymentTerm(){
+        return $this->belongsTo(PaymentTerm::class);
     }
 }

@@ -53,7 +53,7 @@ class SalesOrderController extends Controller
 
         return DataTables::of($query)
             ->editColumn('order_number', function ($order) {
-                return '<span class="font-weight-bold">' . $order->order_number . '</span>';
+                return '<span class="font-weight-bold">'.$order->order_number.'</span>';
             })
             ->editColumn('created_at', function ($order) {
                 return $order->created_at->format('M d, Y');
@@ -63,22 +63,26 @@ class SalesOrderController extends Controller
             })
             ->editColumn('status', function ($order) {
                 $color = 'secondary';
-                if ($order->status->code === 'CONFIRMED') $color = 'success';
-                if ($order->status->code === 'DRAFT') $color = 'warning';
-                
-                return '<span class="badge badge-' . $color . '">' . $order->status->name . '</span>';
+                if ($order->status->code === 'CONFIRMED') {
+                    $color = 'success';
+                }
+                if ($order->status->code === 'DRAFT') {
+                    $color = 'warning';
+                }
+
+                return '<span class="badge badge-'.$color.'">'.$order->status->name.'</span>';
             })
             ->editColumn('grand_total', function ($order) {
-                return '<span class="font-weight-bold text-dark">' . number_format($order->grand_total, 2) . '</span>';
+                return '<span class="font-weight-bold text-dark">'.number_format($order->grand_total, 2).'</span>';
             })
             ->addColumn('actions', function ($order) {
                 $printUrl = company_route('sales-orders.print', ['order' => $order->uuid]);
                 $showUrl = company_route('sales-orders.show', ['sales_order' => $order->id]); // Assuming show exists
-                
+
                 return '
                     <div class="btn-group">
-                        <a href="' . $showUrl . '" class="btn btn-xs btn-outline-info" title="View"><i class="fas fa-eye"></i></a>
-                        <a href="' . $printUrl . '" class="btn btn-xs btn-outline-primary" title="Print" target="_blank"><i class="fas fa-print"></i></a>
+                        <a href="'.$showUrl.'" class="btn btn-xs btn-outline-info" title="View"><i class="fas fa-eye"></i></a>
+                        <a href="'.$printUrl.'" class="btn btn-xs btn-outline-primary" title="Print" target="_blank"><i class="fas fa-print"></i></a>
                     </div>
                 ';
             })
@@ -146,7 +150,7 @@ class SalesOrderController extends Controller
             if (isset($validated['shipping_address'])) {
                 $order->shipping_address = $validated['shipping_address'];
             }
-            
+
             if (isset($validated['shipping_total'])) {
                 $order->shipping_total = $validated['shipping_total'];
             }
@@ -168,24 +172,23 @@ class SalesOrderController extends Controller
                     $orderItem->quantity = $item['qty'];
                     $orderItem->discount_amount = $item['discount'] ?? 0;
                     $orderItem->tax_rate = $item['tax_rate'] ?? 20; // Default VAT or from logic
-                    
+
                     $lineTotal = ($item['price'] * $item['qty']) - ($item['discount'] ?? 0);
                     $orderItem->line_total = $lineTotal;
-                    
+
                     // Basic Tax Calc
                     $orderItem->tax_amount = $lineTotal * ($orderItem->tax_rate / 100);
-                    
+
                     $orderItem->save();
-                    
+
                     $subtotal += ($item['price'] * $item['qty']);
                     $discountTotal += ($item['discount'] ?? 0);
                     $taxTotal += $orderItem->tax_amount;
                 }
-                
-                
+
                 $shipping = $order->shipping_total ?? 0;
                 $shippingTax = $shipping * 0.20; // 20% VAT on shipping
-                
+
                 $order->subtotal = $subtotal;
                 $order->discount_total = $discountTotal;
                 $order->shipping_tax_total = $shippingTax;
@@ -223,14 +226,14 @@ class SalesOrderController extends Controller
             $statusConfirmed = OrderStatus::where('code', 'CONFIRMED')->first();
 
             // Security: Recalculate totals from items
-            $subtotal = $order->items->sum(function($item) {
+            $subtotal = $order->items->sum(function ($item) {
                 return $item->unit_price * $item->quantity;
             });
             $discountTotal = $order->items->sum('discount_amount');
             $taxTotal = $order->items->sum('tax_amount');
             $shipping = $order->shipping_total ?? 0;
             $shippingTax = $shipping * 0.20;
-            
+
             $order->status_id = $statusConfirmed->id;
             $order->confirmed_at = now();
             $order->subtotal = $subtotal;
@@ -263,6 +266,7 @@ class SalesOrderController extends Controller
     public function show($id)
     {
         $order = Order::with(['items', 'customer', 'status', 'paymentTerm', 'company', 'currency'])->findOrFail($id);
+
         return view('theme.adminlte.sales.orders.show', compact('order'));
     }
 
@@ -275,34 +279,47 @@ class SalesOrderController extends Controller
 
     public function searchCustomers(Request $request)
     {
-        $query = $request->get('q');
-        dd($query);
-        $customers = Customer::where('company_id', active_company_id())
-            ->with(['paymentTerm', 'addresses'])
-            ->where(function ($q) use ($query) {
-                $q->where('display_name', 'like', "%{$query}%")
-                    ->orWhere('email', 'like', "%{$query}%")
-                    ->orWhere('phone', 'like', "%{$query}%");
-            })
-            ->limit(10)
-            ->get()->dd();
+        $term = $request->get('q', $request->get('term', '')); // Select2 sends term by default
+        $companyId = active_company_id();
 
-        $results = [];
-        foreach ($customers as $customer) {
-            $results[] = [
+        $customers = Customer::where('company_id', $companyId)
+            ->with(['paymentTerm', 'addresses'])
+            ->when($term, function ($q) use ($term) {
+                $q->where(function ($x) use ($term) {
+                    $x->where('display_name', 'like', "%{$term}%")
+                        ->orWhere('email', 'like', "%{$term}%")
+                        ->orWhere('phone', 'like', "%{$term}%");
+                });
+            })
+            ->orderBy('display_name')
+            ->limit(20)
+            ->get();
+
+        $results = $customers->map(function ($customer) {
+            $initials = collect(preg_split('/\s+/', trim((string) $customer->display_name)))
+                ->filter()
+                ->map(fn ($p) => mb_substr($p, 0, 1))
+                ->take(2)
+                ->implode('');
+
+            return [
                 'id' => $customer->id,
-                'text' => $customer->display_name . ($customer->email ? " ({$customer->email})" : ""),
+                'text' => $customer->display_name.($customer->email ? " ({$customer->email})" : ''),
                 'display_name' => $customer->display_name,
+                'initials' => $initials ?: '??',
                 'email' => $customer->email,
                 'phone' => $customer->phone,
                 'payment_term_id' => $customer->payment_term_id,
-                'payment_term_name' => $customer->paymentTerm->name ?? 'Net 30',
-                'payment_due_days' => $customer->paymentTerm->due_days ?? 30,
-                'addresses' => $customer->addresses
+                'payment_term_name' => $customer->paymentTerm->name ?? null,
+                'payment_due_days' => $customer->paymentTerm->due_days ?? null,
+                'addresses' => $customer->addresses, // keep as array/collection
             ];
-        }
+        });
 
-        return response()->json($results);
+        return response()->json([
+            'results' => $results,
+            'pagination' => ['more' => false],
+        ]);
     }
 
     public function searchProducts(Request $request)
