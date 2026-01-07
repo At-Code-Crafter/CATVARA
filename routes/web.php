@@ -1,17 +1,19 @@
 <?php
 
-use App\Models\Company\Company;
-use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\CMS\TinyMCEController;
 use App\Http\Controllers\Admin\CompanyContextController;
-use App\Http\Controllers\Admin\Settings\ModuleController;
+use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\Settings\CompanyController;
 use App\Http\Controllers\Admin\Settings\CountryController;
-use App\Http\Controllers\Admin\Settings\StateController;
+use App\Http\Controllers\Admin\Settings\CurrencyController;
+use App\Http\Controllers\Admin\Settings\ModuleController;
+use App\Http\Controllers\Admin\Settings\PaymentTermController;
 use App\Http\Controllers\Admin\Settings\PermissionController;
 use App\Http\Controllers\Admin\Settings\RoleController;
 use App\Http\Controllers\Admin\Settings\RolePermissionController;
+use App\Http\Controllers\Admin\Settings\StateController;
 use App\Http\Controllers\Admin\Settings\UserController;
+use App\Models\Company\Company;
 
 /**
  * Bind {company} by UUID (Laravel 12 compatible)
@@ -57,11 +59,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
      */
     Route::prefix('settings')->group(function () {
 
-        Route::resource('companies', CompanyController::class)->except(['destroy']);
-        Route::get('companies/load/stats', [CompanyController::class, 'stats'])->name('companies.stats');
+        Route::resource('tenants', CompanyController::class)->except(['destroy']);
+        Route::get('tenants/load/stats', [CompanyController::class, 'stats'])->name('tenants.stats');
 
-        Route::resource('currencies', \App\Http\Controllers\Admin\Settings\CurrencyController::class)->except(['destroy']);
-        Route::resource('payment-terms', \App\Http\Controllers\Admin\Settings\PaymentTermController::class)->except(['destroy']);
+        Route::resource('currencies', CurrencyController::class);
+        Route::resource('payment-terms', PaymentTermController::class);
 
         // Countries & States (Global Settings)
         Route::resource('countries', CountryController::class);
@@ -150,7 +152,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::prefix('settings')->as('settings.')->group(function () {
 
                 Route::resource('roles', RoleController::class)->except(['show', 'destroy']);
-
 
                 // Route::get('roles/{role}/permissions', [RolePermissionController::class, 'edit'])
                 //     ->name('roles.permissions.edit');

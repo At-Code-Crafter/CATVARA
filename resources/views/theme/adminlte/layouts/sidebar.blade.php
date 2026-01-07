@@ -453,8 +453,8 @@
 
         {{-- Companies --}}
         <li class="nav-item">
-          <a href="{{ safe_route('companies.index') }}"
-            class="nav-link {{ $isActive('companies.*') ? 'active' : '' }}">
+          <a href="{{ safe_route('tenants.index') }}"
+            class="nav-link {{ $isActive('tenants.*') ? 'active' : '' }}">
             <i class="nav-icon fas fa-building"></i>
             <p>Companies</p>
           </a>

@@ -104,7 +104,7 @@ class CompanyController extends Controller
                 })
 
                 ->addColumn('action', function ($row) {
-                    $compact['editUrl'] = route('companies.edit', $row->id);
+                    $compact['editUrl'] = route('tenants.edit', $row->id);
                     $compact['deleteUrl'] = null;
                     $compact['editSidebar'] = false;
 
@@ -308,12 +308,12 @@ class CompanyController extends Controller
             if ($request->ajax()) {
                 return response()->json([
                     'message'  => 'Company Updated Successfully',
-                    'redirect' => route('companies.index'),
+                    'redirect' => route('tenants.index'),
                 ]);
             }
 
             return redirect()
-                ->route('companies.index')
+                ->route('tenants.index')
                 ->with('success', 'Company Updated Successfully');
         } catch (\Throwable $e) {
 

@@ -28,6 +28,7 @@ class Customer extends Model
         'postal_code',
         'address',
         'is_active',
+        'payment_term_id',
     ];
 
     protected $casts = [

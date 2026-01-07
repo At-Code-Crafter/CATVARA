@@ -45,6 +45,10 @@ class CustomerController extends Controller
                 $query->where('customers.is_active', $request->is_active);
             }
 
+            if ($request->filled('payment_term_id')) {
+                $query->where('customers.payment_term_id', $request->payment_term_id);
+            }
+
             return DataTables::of($query)
                 ->addIndexColumn()
 
@@ -139,8 +143,9 @@ class CustomerController extends Controller
     public function create(Company $company)
     {
         $countries = Country::active()->ordered()->get();
+        $paymentTerms = \App\Models\Accounting\PaymentTerm::where('is_active', true)->get();
 
-        return view('theme.adminlte.customers.create', compact('company', 'countries'));
+        return view('theme.adminlte.customers.create', compact('company', 'countries', 'paymentTerms'));
     }
 
     /**
@@ -168,6 +173,7 @@ class CustomerController extends Controller
                 'postal_code' => $data['postal_code'] ?? null,
                 'address' => $data['address'] ?? null,
                 'is_active' => $data['is_active'] ?? true,
+                'payment_term_id' => $data['payment_term_id'] ?? null,
             ]);
 
             DB::commit();
@@ -215,8 +221,9 @@ class CustomerController extends Controller
     {
         $customer = Customer::where('company_id', $company->id)->findOrFail($id);
         $countries = Country::active()->ordered()->get();
+        $paymentTerms = \App\Models\Accounting\PaymentTerm::where('is_active', true)->get();
 
-        return view('theme.adminlte.customers.edit', compact('company', 'customer', 'countries'));
+        return view('theme.adminlte.customers.edit', compact('company', 'customer', 'countries', 'paymentTerms'));
     }
 
     /**
@@ -242,7 +249,9 @@ class CustomerController extends Controller
                 'state_id' => $data['state_id'] ?? null,
                 'postal_code' => $data['postal_code'] ?? null,
                 'address' => $data['address'] ?? null,
+                'address' => $data['address'] ?? null,
                 'is_active' => $data['is_active'] ?? true,
+                'payment_term_id' => $data['payment_term_id'] ?? null,
             ]);
 
             DB::commit();

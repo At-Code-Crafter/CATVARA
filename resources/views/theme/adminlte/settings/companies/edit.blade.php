@@ -7,7 +7,7 @@
       <small class="text-muted">Update company record.</small>
     </div>
     <div class="col-sm-6 d-flex justify-content-end">
-      <a href="{{ route('companies.index') }}" class="btn btn-outline-secondary">
+      <a href="{{ route('tenants.index') }}" class="btn btn-outline-secondary">
         <i class="fas fa-arrow-left mr-1"></i> Back
       </a>
     </div>
@@ -16,7 +16,7 @@
 
 @section('content')
 
-  <form action="{{ route('companies.update', $company->id) }}" method="POST" class="ajax-form"
+  <form action="{{ route('tenants.update', $company->id) }}" method="POST" class="ajax-form"
     enctype="multipart/form-data">
     @csrf
     @method('PUT')
@@ -270,7 +270,7 @@
             <button type="submit" class="btn btn-primary">
               <i class="fas fa-save mr-1"></i> Update
             </button>
-            <a href="{{ route('companies.index') }}" class="btn btn-outline-secondary">
+            <a href="{{ route('tenants.index') }}" class="btn btn-outline-secondary">
               Cancel
             </a>
           </div>

@@ -7,7 +7,7 @@
       <small class="text-muted">Overview and management.</small>
     </div>
     <div class="col-sm-6 d-flex justify-content-end">
-      <a href="{{ route('companies.create') }}" class="btn btn-primary">
+      <a href="{{ route('tenants.create') }}" class="btn btn-primary">
         <i class="fas fa-plus mr-1"></i> Create Company
       </a>
     </div>
@@ -139,7 +139,7 @@
       }
 
       function loadStats() {
-        $.get('{{ route('companies.stats') }}', getFilters(), function(res) {
+        $.get('{{ route('tenants.stats') }}', getFilters(), function(res) {
           $('#statAllCompanies').text(res.all_companies ?? 0);
           $('#statActiveCompanies').text(res.active_companies ?? 0);
           $('#statSuspendedCompanies').text(res.suspended_companies ?? 0);
@@ -157,7 +157,7 @@
           [7, 'desc']
         ], // Created
         ajax: {
-          url: '{{ route('companies.index') }}',
+          url: '{{ route('tenants.index') }}',
           data: function(d) {
             const f = getFilters();
             d.company_status_id = f.company_status_id;

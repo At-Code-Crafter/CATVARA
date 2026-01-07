@@ -50,6 +50,7 @@ class CustomerUpdateRequest extends FormRequest
             'postal_code' => ['nullable', 'string', 'max:20'],
             'address' => ['nullable', 'string', 'max:1000'],
             'is_active' => ['nullable', 'boolean'],
+            'payment_term_id' => ['nullable', 'exists:payment_terms,id'],
         ];
     }
 

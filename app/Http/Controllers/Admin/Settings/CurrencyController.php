@@ -7,13 +7,31 @@ use App\Models\Pricing\Currency;
 use App\Http\Requests\Settings\StoreCurrencyRequest;
 use App\Http\Requests\Settings\UpdateCurrencyRequest;
 use Illuminate\Http\Request;
+use Yajra\DataTables\Facades\DataTables;
 
 class CurrencyController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $currencies = Currency::all();
-        return view('theme.adminlte.settings.currencies.index', compact('currencies'));
+        if ($request->ajax()) {
+            $data = Currency::query();
+
+            return \DataTables::of($data)
+                ->addIndexColumn()
+                ->addColumn('action', function ($row) {
+                    $btn = '<a href="' . route('currencies.edit', $row->id) . '" class="btn btn-primary btn-sm"><i class="fas fa-edit"></i></a>';
+                    return $btn;
+                })
+                ->editColumn('is_active', function ($row) {
+                    return $row->is_active 
+                        ? '<span class="badge badge-success">Active</span>' 
+                        : '<span class="badge badge-danger">Inactive</span>';
+                })
+                ->rawColumns(['action', 'is_active'])
+                ->make(true);
+        }
+
+        return view('theme.adminlte.settings.currencies.index');
     }
 
     public function create()
@@ -40,8 +58,6 @@ class CurrencyController extends Controller
 
     public function destroy(Currency $currency)
     {
-        // Add check if used? Most likely soft delete or restrict.
-        // For now simple delete
         $currency->delete();
         return redirect()->route('currencies.index')->with('success', 'Currency deleted successfully.');
     }
