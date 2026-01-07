@@ -114,20 +114,37 @@ class SalesOrderController extends Controller
             'shipping_total' => 'nullable|numeric',
         ]);
 
+        // Ensure company is selected
+        $companyId = active_company_id();
+        if (!$companyId) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No company selected. Please select a company first.'
+            ], 400);
+        }
+
         try {
             DB::beginTransaction();
 
-            $statusDraft = OrderStatus::where('code', 'DRAFT')->first();
+            // Get or create DRAFT status using firstOrCreate to handle race conditions
+            $statusDraft = OrderStatus::firstOrCreate(
+                ['code' => 'DRAFT'],
+                ['name' => 'Draft', 'is_active' => true, 'is_final' => false]
+            );
 
             if (! empty($validated['order_uuid'])) {
                 $order = Order::where('uuid', $validated['order_uuid'])->firstOrFail();
             } else {
+                // Get company's base currency or first available currency
+                $company = Company::find($companyId);
+                $currencyId = $company->base_currency_id ?? \App\Models\Pricing\Currency::first()?->id ?? 1;
+
                 $order = new Order;
                 $order->uuid = (string) Str::uuid();
-                $order->company_id = active_company_id();
+                $order->company_id = $companyId;
                 $order->order_number = 'DRAFT-'.strtoupper(Str::random(6)); // Temp number
                 $order->status_id = $statusDraft->id;
-                $order->currency_id = 1; // Default or fetch from Company
+                $order->currency_id = $currencyId;
                 $order->created_by = \Illuminate\Support\Facades\Auth::id();
             }
 
@@ -208,6 +225,11 @@ class SalesOrderController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
 
+            \Log::error('Draft save error: ' . $e->getMessage(), [
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ]);
+
             return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
     }
@@ -223,7 +245,17 @@ class SalesOrderController extends Controller
             DB::beginTransaction();
 
             $order = Order::where('uuid', $validated['order_uuid'])->with('items')->firstOrFail();
+
+            // Get or create CONFIRMED status
             $statusConfirmed = OrderStatus::where('code', 'CONFIRMED')->first();
+            if (!$statusConfirmed) {
+                $statusConfirmed = OrderStatus::create([
+                    'code' => 'CONFIRMED',
+                    'name' => 'Confirmed',
+                    'is_active' => true,
+                    'is_final' => false,
+                ]);
+            }
 
             // Security: Recalculate totals from items
             $subtotal = $order->items->sum(function ($item) {
