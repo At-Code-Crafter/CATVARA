@@ -218,6 +218,7 @@ class SalesOrderController extends Controller
 
             return response()->json([
                 'success' => true,
+                'order_id' => $order->id,
                 'order_uuid' => $order->uuid,
                 'message' => 'Draft saved successfully',
             ]);
@@ -302,9 +303,40 @@ class SalesOrderController extends Controller
         return view('theme.adminlte.sales.orders.show', compact('order'));
     }
 
-    public function print($uuid)
+    public function invoicePreview($company, $orderid)
     {
-        $order = Order::with(['items', 'customer', 'paymentTerm', 'company', 'currency'])->where('uuid', $uuid)->firstOrFail();
+        // Both parameters come as strings, no model binding due to whereUuid and whereNumber constraints
+        $order = Order::findOrFail($orderid);
+        $order->load(['items', 'customer', 'customer.country', 'customer.state', 'paymentTerm', 'company', 'currency']);
+        return view('theme.adminlte.sales.orders.print', compact('order'));
+    }
+
+    public function preview($uuid)
+    {
+        // Load order by UUID for preview route
+        $order = Order::with([
+            'items',
+            'customer.country',
+            'customer.state',
+            'paymentTerm',
+            'company',
+            'currency'
+        ])->where('uuid', $uuid)->firstOrFail();
+
+        return view('theme.adminlte.sales.orders.print', compact('order'));
+    }
+
+    public function print(Order $order)
+    {
+        // Order model is automatically resolved via route model binding
+        $order->load([
+            'items',
+            'customer.country',
+            'customer.state',
+            'paymentTerm',
+            'company',
+            'currency'
+        ]);
 
         return view('theme.adminlte.sales.orders.print', compact('order'));
     }

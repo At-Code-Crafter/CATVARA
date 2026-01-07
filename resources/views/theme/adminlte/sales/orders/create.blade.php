@@ -778,193 +778,37 @@
   </div>
 </div>
 
-<!-- Invoice Preview Modal - PDF Style -->
+<!-- Invoice Preview Modal - Using print.blade.php via iframe -->
 <div class="modal fade" id="invoicePreviewModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
   <div class="modal-dialog modal-dialog-centered" style="max-width: 900px;" role="document">
-    <div class="modal-content shadow-2xl" style="max-height: 95vh; display: flex; flex-direction: column; border-radius: 12px; overflow: hidden;">
+    <div class="modal-content shadow-lg" style="max-height: 95vh; display: flex; flex-direction: column; border-radius: 8px; overflow: hidden;">
 
       <!-- Header -->
       <div class="modal-header bg-dark text-white border-0 px-4 py-3 flex-shrink-0">
         <div class="d-flex align-items-center">
-          <div class="bg-danger rounded p-2 mr-3 d-flex align-items-center justify-content-center"
-            style="width: 40px; height: 40px;">
-            <i class="fas fa-file-pdf"></i>
+          <div class="bg-danger rounded p-2 mr-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+            <i class="fas fa-file-invoice fa-lg"></i>
           </div>
           <div>
-            <h5 class="modal-title font-weight-bold mb-0">Invoice Preview</h5>
-            <small class="text-white-50">PDF Document Preview</small>
+            <h5 class="modal-title font-weight-bold mb-0" style="font-size: 18px;">Invoice Preview</h5>
+            <small class="text-white-50">Review before confirming</small>
           </div>
         </div>
-        <div class="d-flex align-items-center">
-          <button type="button" class="btn btn-outline-light btn-sm mr-2" onclick="downloadInvoicePDF()">
-            <i class="fas fa-download mr-1"></i> Download PDF
-          </button>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
 
-      <!-- Body - PDF Style Invoice -->
-      <div class="modal-body p-0" style="overflow-y: auto; background: #525659;">
-        <!-- A4 Paper Style Container -->
-        <div id="invoice-pdf-container" style="padding: 30px;">
-          <div id="invoice-preview-content" style="
-            background: white;
-            width: 210mm;
-            min-height: 297mm;
-            margin: 0 auto;
-            box-shadow: 0 0 20px rgba(0,0,0,0.4);
-            font-family: 'Segoe UI', Arial, sans-serif;
-            font-size: 11pt;
-            color: #333;
-            position: relative;
-          ">
-
-            <!-- Page Content -->
-            <div style="padding: 40px;">
-
-              <!-- Header Section -->
-              <table style="width: 100%; margin-bottom: 30px;">
-                <tr>
-                  <td style="vertical-align: top; width: 50%;">
-                    <div id="inv-company-logo" style="font-size: 28pt; font-weight: 800; color: #1e293b; letter-spacing: -1px; line-height: 1;">
-                      INVOICE
-                    </div>
-                    <div style="margin-top: 5px; font-size: 9pt; color: #64748b;">
-                      Draft Preview - Subject to Confirmation
-                    </div>
-                  </td>
-                  <td style="vertical-align: top; text-align: right; width: 50%;">
-                    <table style="margin-left: auto;">
-                      <tr>
-                        <td style="padding: 3px 15px 3px 0; font-size: 9pt; color: #64748b; text-align: right;">Invoice Number</td>
-                        <td style="padding: 3px 0; font-weight: 600;" id="inv-number">-</td>
-                      </tr>
-                      <tr>
-                        <td style="padding: 3px 15px 3px 0; font-size: 9pt; color: #64748b; text-align: right;">Date of Issue</td>
-                        <td style="padding: 3px 0; font-weight: 600;" id="inv-date">-</td>
-                      </tr>
-                      <tr>
-                        <td style="padding: 3px 15px 3px 0; font-size: 9pt; color: #64748b; text-align: right;">Due Date</td>
-                        <td style="padding: 3px 0; font-weight: 600;" id="inv-due-date">-</td>
-                      </tr>
-                      <tr>
-                        <td style="padding: 3px 15px 3px 0; font-size: 9pt; color: #64748b; text-align: right;">Invoice Total</td>
-                        <td style="padding: 3px 0; font-weight: 700; font-size: 14pt; color: #4f46e5;" id="inv-header-total">$0.00</td>
-                      </tr>
-                    </table>
-                  </td>
-                </tr>
-              </table>
-
-              <!-- Company Branding -->
-              <div style="border-bottom: 2px solid #e2e8f0; padding-bottom: 25px; margin-bottom: 25px;">
-                <table style="width: 100%;">
-                  <tr>
-                    <td style="vertical-align: top; width: 40%;">
-                      <div id="inv-company-name" style="font-size: 18pt; font-weight: 700; color: #1e293b; margin-bottom: 5px;">
-                        Company Name
-                      </div>
-                      <div id="inv-company-address" style="font-size: 9pt; color: #64748b; line-height: 1.6;"></div>
-                    </td>
-                    <td style="vertical-align: top; text-align: right; width: 60%;">
-                      <div style="background: #f8fafc; padding: 15px; border-radius: 6px; display: inline-block; text-align: left;">
-                        <div style="font-size: 8pt; text-transform: uppercase; color: #94a3b8; font-weight: 600; margin-bottom: 5px;">Additional Details</div>
-                        <div style="font-size: 9pt; color: #64748b;">
-                          <span id="inv-uuid">-</span>
-                        </div>
-                      </div>
-                    </td>
-                  </tr>
-                </table>
-              </div>
-
-              <!-- Address Section -->
-              <table style="width: 100%; margin-bottom: 30px;">
-                <tr>
-                  <td style="vertical-align: top; width: 33%; padding-right: 20px;">
-                    <div style="font-size: 8pt; text-transform: uppercase; color: #94a3b8; font-weight: 700; margin-bottom: 8px;">Bill To</div>
-                    <div id="inv-billing-address" style="font-size: 10pt; line-height: 1.6; color: #334155;"></div>
-                  </td>
-                  <td style="vertical-align: top; width: 33%; padding-right: 20px;">
-                    <div style="font-size: 8pt; text-transform: uppercase; color: #94a3b8; font-weight: 700; margin-bottom: 8px;">Ship To</div>
-                    <div id="inv-shipping-address" style="font-size: 10pt; line-height: 1.6; color: #334155;"></div>
-                  </td>
-                  <td style="vertical-align: top; width: 33%; text-align: right;">
-                    <div style="font-size: 8pt; text-transform: uppercase; color: #94a3b8; font-weight: 700; margin-bottom: 8px;">Merchant</div>
-                    <div id="inv-merchant-address" style="font-size: 10pt; line-height: 1.6; color: #334155;"></div>
-                  </td>
-                </tr>
-              </table>
-
-              <!-- Items Table -->
-              <table style="width: 100%; border-collapse: collapse; margin-bottom: 30px;">
-                <thead>
-                  <tr style="border-bottom: 2px solid #1e293b;">
-                    <th style="padding: 12px 0; text-align: left; font-size: 9pt; text-transform: uppercase; font-weight: 700; color: #1e293b;">Description</th>
-                    <th style="padding: 12px 0; text-align: center; font-size: 9pt; text-transform: uppercase; font-weight: 700; color: #1e293b; width: 70px;">Qty</th>
-                    <th style="padding: 12px 0; text-align: right; font-size: 9pt; text-transform: uppercase; font-weight: 700; color: #1e293b; width: 90px;">Unit Price</th>
-                    <th style="padding: 12px 0; text-align: right; font-size: 9pt; text-transform: uppercase; font-weight: 700; color: #1e293b; width: 70px;">VAT</th>
-                    <th style="padding: 12px 0; text-align: right; font-size: 9pt; text-transform: uppercase; font-weight: 700; color: #1e293b; width: 100px;">Amount</th>
-                  </tr>
-                </thead>
-                <tbody id="inv-items-body">
-                  <!-- Items will be injected here -->
-                </tbody>
-              </table>
-
-              <!-- Summary Section -->
-              <table style="width: 100%;">
-                <tr>
-                  <td style="vertical-align: top; width: 50%; padding-right: 30px;">
-                    <div style="font-size: 8pt; text-transform: uppercase; color: #94a3b8; font-weight: 700; margin-bottom: 8px;">Additional Comments</div>
-                    <div id="inv-notes" style="font-size: 9pt; color: #64748b; line-height: 1.6; min-height: 60px;">
-                      -
-                    </div>
-                  </td>
-                  <td style="vertical-align: top; width: 50%;">
-                    <table style="width: 100%; border-collapse: collapse;">
-                      <tr>
-                        <td style="padding: 8px 0; font-size: 10pt; color: #64748b;">Subtotal (Net)</td>
-                        <td style="padding: 8px 0; text-align: right; font-size: 10pt;" id="inv-subtotal">$0.00</td>
-                      </tr>
-                      <tr>
-                        <td style="padding: 8px 0; font-size: 10pt; color: #dc2626;">Discount</td>
-                        <td style="padding: 8px 0; text-align: right; font-size: 10pt; color: #dc2626;" id="inv-discount">-$0.00</td>
-                      </tr>
-                      <tr>
-                        <td style="padding: 8px 0; font-size: 10pt; color: #64748b;">VAT (20%)</td>
-                        <td style="padding: 8px 0; text-align: right; font-size: 10pt;" id="inv-tax">$0.00</td>
-                      </tr>
-                      <tr>
-                        <td style="padding: 8px 0; font-size: 10pt; color: #64748b;">Shipping</td>
-                        <td style="padding: 8px 0; text-align: right; font-size: 10pt;" id="inv-shipping">$0.00</td>
-                      </tr>
-                      <tr style="border-top: 2px solid #1e293b;">
-                        <td style="padding: 12px 0; font-size: 13pt; font-weight: 700; color: #1e293b;">Total</td>
-                        <td style="padding: 12px 0; text-align: right; font-size: 13pt; font-weight: 700; color: #1e293b;" id="inv-total">$0.00</td>
-                      </tr>
-                    </table>
-                  </td>
-                </tr>
-              </table>
-
+      <!-- Body - Invoice Preview Container -->
+      <div class="modal-body p-0" style="overflow: auto; background: #fff; flex: 1; min-height: 500px; position: relative;">
+        <div id="preview-loading" class="d-flex justify-content-center align-items-center" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(248, 249, 250, 0.95); z-index: 100; margin: 0; padding: 0;">
+          <div class="text-center">
+            <div class="spinner-border spinner-border-lg mb-3" role="status">
+              <span class="sr-only">Loading...</span>
             </div>
-
-            <!-- Footer -->
-            <div style="position: absolute; bottom: 0; left: 0; right: 0; padding: 20px 40px; background: #f8fafc; border-top: 1px solid #e2e8f0;">
-              <table style="width: 100%;">
-                <tr>
-                  <td style="font-size: 8pt; color: #64748b;">
-                    <strong>Payment Terms:</strong> <span id="inv-payment-terms">-</span>
-                  </td>
-                  <td style="text-align: right; font-size: 8pt; color: #94a3b8;">
-                    Generated on <span id="inv-generated-date">-</span>
-                  </td>
-                </tr>
-              </table>
-            </div>
-
+            <div>Loading preview...</div>
           </div>
+        </div>
+        <div id="invoice-preview-content" style="padding: 20px;">
+          <!-- Invoice HTML will be injected here -->
         </div>
       </div>
 
@@ -973,11 +817,14 @@
         <button type="button" class="btn btn-outline-secondary px-4" data-bs-dismiss="modal">
           <i class="fas fa-arrow-left mr-2"></i> Back to Edit
         </button>
-        <button type="button" class="btn btn-outline-primary px-4 mr-2" onclick="downloadInvoicePDF()">
+        <button type="button" class="btn btn-info px-4" onclick="printInvoice()">
+          <i class="fas fa-print mr-2"></i> Print
+        </button>
+        <button type="button" class="btn btn-primary px-4" onclick="downloadInvoicePDF()">
           <i class="fas fa-file-pdf mr-2"></i> Download PDF
         </button>
-        <button type="button" class="btn btn-success btn-lg px-5 font-weight-bold" onclick="confirmAndPrint()">
-          <i class="fas fa-check-circle mr-2"></i> Confirm Order
+        <button type="button" class="btn btn-success px-4 font-weight-bold" onclick="confirmAndPrint()">
+          <i class="fas fa-check mr-2"></i> Confirm Order
         </button>
       </div>
 
@@ -994,6 +841,7 @@
   // STATE
   // -----------------------------
   let orderState = {
+    id: null,
     uuid: null,
     customerId: null,
     customerName: '',
@@ -1026,7 +874,8 @@
     searchProducts: @json(company_route('sales-orders.searchProducts')),
     getVariantsTemplate: @json(company_route('sales-orders.getVariants', ['product' => '__PRODUCT__'])),
     storeDraft: @json(company_route('sales-orders.storeDraft')),
-    storeOrder: @json(company_route('sales-orders.store'))
+    storeOrder: @json(company_route('sales-orders.store')),
+    invoicePreview: @json(company_route('invoice-preview', ['orderid' => '__ORDERID__']))
   };
 
   // -----------------------------
@@ -1251,6 +1100,7 @@
       shipping_address: orderState.shippingAddress
     }).done(function(res) {
       if (res && res.success && res.order_uuid) {
+        orderState.id = res.order_id;
         orderState.uuid = res.order_uuid;
       }
     });
@@ -1547,6 +1397,7 @@
   // FINAL SAVE - Show Invoice Preview Modal
   // -----------------------------
   function saveOrder() {
+    console.log(orderState);
     if (orderState.items.length === 0) {
       showToast('error', 'Missing line items');
       return;
@@ -1577,151 +1428,156 @@
   }
 
   // -----------------------------
-  // POPULATE INVOICE PREVIEW
+  // POPULATE INVOICE PREVIEW (Fetch and inject HTML)
   // -----------------------------
   function populateInvoicePreview() {
-    const today = new Date();
-    const dateStr = today.toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
-    const invoiceNum = 'DRAFT-' + (orderState.uuid ? orderState.uuid.substring(0, 8).toUpperCase() : 'PENDING');
+    const loader = document.getElementById('preview-loading');
+    const contentDiv = document.getElementById('invoice-preview-content');
 
-    // Invoice Header
-    $('#inv-number').text(invoiceNum);
-    $('#inv-date').text(dateStr);
-    $('#inv-due-date').text(orderState.dueDate || 'Upon Receipt');
-    $('#inv-uuid').text('ID: ' + (orderState.uuid || 'Pending'));
-    $('#inv-generated-date').text(dateStr);
+    // Build preview URL using order ID
+    const previewUrl = routes.invoicePreview.replace('__ORDERID__', orderState.id);
+    console.log('Loading invoice preview from URL:', previewUrl);
 
-    // Company Info
-    $('#inv-company-name').text('{{ config("app.name", "Your Company") }}');
-    $('#inv-company-address').html('{{ config("app.address", "Company Address") }}<br>{{ config("app.email", "") }}');
+    // Show loading state
+    loader.style.visibility = 'visible';
+    loader.style.opacity = '1';
+    contentDiv.innerHTML = ''; // Clear previous content
 
-    // Merchant Info (right side)
-    $('#inv-merchant-address').html('<strong>{{ config("app.name", "Your Company") }}</strong><br>{{ config("app.address", "Company Address") }}<br>{{ config("app.email", "") }}');
+    // Fetch the invoice HTML
+    fetch(previewUrl, {
+      method: 'GET',
+      headers: {
+        'Accept': 'text/html'
+      }
+    })
+      .then(response => {
+        console.log('Response status:', response.status, response.ok);
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.text();
+      })
+      .then(html => {
+        console.log('Invoice HTML received, length:', html.length);
+        // Inject the HTML into the content div
+        contentDiv.innerHTML = html;
 
-    // Billing Address
-    let billHtml = `<strong>${_.escape(orderState.customerName)}</strong><br>`;
-    if (orderState.customerEmail) billHtml += `${_.escape(orderState.customerEmail)}<br>`;
-    if (orderState.customerPhone) billHtml += `${_.escape(orderState.customerPhone)}<br>`;
+        // Hide loader with fade effect
+        console.log('Hiding loader');
+        loader.style.opacity = '0';
+        loader.style.transition = 'opacity 0.3s ease';
+        setTimeout(() => {
+          loader.style.visibility = 'hidden';
+        }, 300);
+      })
+      .catch(error => {
+        console.error('Error loading invoice:', error);
+        loader.innerHTML = `<div style="color: red; padding: 20px; text-align: center;">
+          <p><strong>Failed to load invoice preview</strong></p>
+          <p>${error.message}</p>
+          <p style="font-size: 12px; margin-top: 10px;">URL: ${previewUrl}</p>
+        </div>`;
+      });
+  }
 
-    if (orderState.billingAddress && orderState.billingAddress.address_line_1) {
-      let b = orderState.billingAddress;
-      billHtml += `${_.escape(b.address_line_1)}<br>`;
-      if (b.address_line_2) billHtml += `${_.escape(b.address_line_2)}<br>`;
-      billHtml += `${_.escape(b.city || '')}${b.city ? ', ' : ''}${_.escape(b.postal_code || '')}<br>`;
-      billHtml += `${_.escape(b.country || '')}`;
-    } else if (orderState.customerAddress) {
-      billHtml += `${_.escape(orderState.customerAddress)}<br>`;
-      if (orderState.customerState) billHtml += `${_.escape(orderState.customerState)}, `;
-      if (orderState.customerPostalCode) billHtml += `${_.escape(orderState.customerPostalCode)}<br>`;
-      if (orderState.customerCountry) billHtml += `${_.escape(orderState.customerCountry)}`;
+  // -----------------------------
+  // PRINT INVOICE
+  // -----------------------------
+  function printInvoice() {
+    const contentDiv = document.getElementById('invoice-preview-content');
+    if (!contentDiv || !contentDiv.innerHTML) {
+      showToast('error', 'Invoice not loaded yet');
+      return;
     }
-    $('#inv-billing-address').html(billHtml);
 
-    // Shipping Address
-    let shipHtml = '';
-    if (orderState.shippingAddress && orderState.shippingAddress.address_line_1) {
-      let s = orderState.shippingAddress;
-      shipHtml = `<strong>${_.escape(s.contact_name || orderState.customerName)}</strong><br>`;
-      shipHtml += `${_.escape(s.address_line_1)}<br>`;
-      if (s.address_line_2) shipHtml += `${_.escape(s.address_line_2)}<br>`;
-      shipHtml += `${_.escape(s.city || '')}${s.city ? ', ' : ''}${_.escape(s.postal_code || '')}<br>`;
-      shipHtml += `${_.escape(s.country || '')}`;
-    } else {
-      shipHtml = '<em style="color: #94a3b8;">Same as billing address</em>';
+    try {
+      // Use window.print() for the main window
+      window.print();
+    } catch (e) {
+      showToast('error', 'Print failed: ' + e.message);
     }
-    $('#inv-shipping-address').html(shipHtml);
-
-    // Items Table
-    let itemsHtml = '';
-    let subtotal = 0;
-    let discountTotal = 0;
-
-    orderState.items.forEach((item, index) => {
-      const itemSubtotal = (parseFloat(item.price) || 0) * (parseInt(item.qty) || 0);
-      const discount = parseFloat(item.discount) || 0;
-      const lineTotal = Math.max(0, itemSubtotal - discount);
-      const taxRate = 20; // 20% VAT
-
-      subtotal += itemSubtotal;
-      discountTotal += discount;
-
-      itemsHtml += `
-        <tr style="border-bottom: 1px solid #e2e8f0;">
-          <td style="padding: 12px 0; vertical-align: top;">
-            <div style="font-weight: 600; color: #1e293b;">${_.escape(item.name || '')}</div>
-            <div style="font-size: 9pt; color: #94a3b8;">SKU: ${_.escape(item.sku || '-')}</div>
-            ${discount > 0 ? `<div style="font-size: 9pt; color: #dc2626; font-style: italic;">Discount: -${money(discount)}</div>` : ''}
-          </td>
-          <td style="padding: 12px 0; text-align: center; color: #334155;">${item.qty}</td>
-          <td style="padding: 12px 0; text-align: right; color: #334155;">${money(item.price)}</td>
-          <td style="padding: 12px 0; text-align: right; color: #334155;">${taxRate}%</td>
-          <td style="padding: 12px 0; text-align: right; font-weight: 600; color: #1e293b;">${money(lineTotal)}</td>
-        </tr>
-      `;
-    });
-
-    $('#inv-items-body').html(itemsHtml);
-
-    // Calculate totals
-    const shipping = parseFloat($('#shipping_cost').val()) || 0;
-    const taxable = Math.max(0, subtotal - discountTotal);
-    const vat = taxable * 0.20;
-    const shippingVat = shipping * 0.20;
-    const total = taxable + vat + shipping + shippingVat;
-
-    $('#inv-subtotal').text(money(subtotal - discountTotal));
-    $('#inv-discount').text('-' + money(discountTotal));
-    $('#inv-tax').text(money(vat + shippingVat));
-    $('#inv-shipping').text(money(shipping));
-    $('#inv-total').text(money(total));
-    $('#inv-header-total').text(money(total));
-
-    // Notes & Payment Terms
-    $('#inv-notes').text($('#order_notes').val() || 'None');
-    $('#inv-payment-terms').text(orderState.paymentTermName || 'Due on Receipt');
   }
 
   // -----------------------------
   // DOWNLOAD INVOICE AS PDF
   // -----------------------------
   function downloadInvoicePDF() {
-    const element = document.getElementById('invoice-preview-content');
-    const invoiceNum = $('#inv-number').text() || 'Invoice';
+    const contentDiv = document.getElementById('invoice-preview-content');
 
-    // Show loading
     if (window.Swal) {
       Swal.fire({
         title: 'Generating PDF...',
-        text: 'Please wait while we create your invoice.',
+        text: 'Please wait...',
         allowOutsideClick: false,
         didOpen: () => Swal.showLoading()
       });
     }
 
-    const opt = {
-      margin: 0,
-      filename: `${invoiceNum}_${orderState.customerName.replace(/\s+/g, '_')}.pdf`,
-      image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: {
-        scale: 2,
-        useCORS: true,
-        letterRendering: true
-      },
-      jsPDF: {
-        unit: 'mm',
-        format: 'a4',
-        orientation: 'portrait'
-      }
-    };
+    try {
+      const invoiceContainer = contentDiv.querySelector('.invoice-container');
 
-    html2pdf().set(opt).from(element).save().then(() => {
+      if (!invoiceContainer) {
+        if (window.Swal) Swal.close();
+        showToast('error', 'Invoice content not found');
+        return;
+      }
+
+      // Clone the content for PDF generation
+      const clonedContent = invoiceContainer.cloneNode(true);
+
+      // Remove any no-print elements
+      clonedContent.querySelectorAll('.no-print').forEach(el => el.remove());
+
+      // Get styles from the page
+      let styles = '';
+      const styleSheets = document.querySelectorAll('style');
+      styleSheets.forEach(style => {
+        styles += style.innerHTML;
+      });
+
+      // Create wrapper with styles
+      const wrapper = document.createElement('div');
+      wrapper.innerHTML = `<style>${styles}</style>`;
+      wrapper.appendChild(clonedContent);
+
+      const opt = {
+        margin: [5, 5, 5, 5],
+        filename: `Invoice_${orderState.uuid.substring(0, 8).toUpperCase()}_${(orderState.customerName || 'Customer').replace(/\s+/g, '_')}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: {
+          scale: 2,
+          useCORS: true,
+          logging: false,
+          allowTaint: true
+        },
+        jsPDF: {
+          unit: 'mm',
+          format: 'a4',
+          orientation: 'portrait',
+          compress: true
+        },
+        pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+      };
+
+      html2pdf().set(opt).from(wrapper).save().then(() => {
+        if (window.Swal) Swal.close();
+        showToast('success', 'PDF downloaded!');
+      }).catch((err) => {
+        if (window.Swal) Swal.close();
+        showToast('error', 'Failed to generate PDF');
+        console.error(err);
+      });
+
+    } catch (e) {
       if (window.Swal) Swal.close();
-      showToast('success', 'PDF downloaded successfully!');
-    }).catch((err) => {
-      if (window.Swal) Swal.close();
-      showToast('error', 'Failed to generate PDF');
-      console.error(err);
-    });
+      // Fallback: open print view in new tab
+      if (orderState.id) {
+        window.open(routes.invoicePreview.replace('__ORDERID__', orderState.id), '_blank');
+      } else {
+        showToast('error', 'Order ID not available. Please save the order first.');
+      }
+      showToast('info', 'Opening invoice in new tab. Use browser print to save as PDF.');
+    }
   }
 
   // -----------------------------

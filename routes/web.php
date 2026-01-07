@@ -14,12 +14,20 @@ use App\Http\Controllers\Admin\Settings\RolePermissionController;
 use App\Http\Controllers\Admin\Settings\StateController;
 use App\Http\Controllers\Admin\Settings\UserController;
 use App\Models\Company\Company;
+use App\Models\Sales\Order;
 
 /**
  * Bind {company} by UUID (Laravel 12 compatible)
  */
 Route::bind('company', function ($value) {
     return Company::where('uuid', $value)->firstOrFail();
+});
+
+/**
+ * Bind {order} by ID (Laravel 12 compatible)
+ */
+Route::bind('order', function ($value) {
+    return Order::findOrFail($value);
 });
 
 Route::get('/', function () {
@@ -186,14 +194,19 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('sales-orders/wizard/step3/{uuid}', [\App\Http\Controllers\Admin\Sales\SalesOrderWizardController::class, 'step3'])->name('sales-orders.wizard.step3');
             Route::post('sales-orders/wizard/step3/{uuid}', [\App\Http\Controllers\Admin\Sales\SalesOrderWizardController::class, 'storeStep3'])->name('sales-orders.wizard.storeStep3');
 
-            Route::resource('sales-orders', \App\Http\Controllers\Admin\Sales\SalesOrderController::class);
+            // Custom routes BEFORE resource to avoid conflicts
             Route::get('sales-orders-data', [\App\Http\Controllers\Admin\Sales\SalesOrderController::class, 'data'])->name('sales-orders.data');
             Route::post('sales-orders/draft', [\App\Http\Controllers\Admin\Sales\SalesOrderController::class, 'storeDraft'])->name('sales-orders.storeDraft');
             Route::get('sales-orders/search/customers', [\App\Http\Controllers\Admin\Sales\SalesOrderController::class, 'searchCustomers'])->name('sales-orders.searchCustomers');
             Route::get('sales-orders/search/products', [\App\Http\Controllers\Admin\Sales\SalesOrderController::class, 'searchProducts'])->name('sales-orders.searchProducts');
             Route::get('sales/products/{product}/variants', [\App\Http\Controllers\Admin\Sales\SalesOrderController::class, 'getProductVariants'])->name('sales-orders.getVariants');
-            Route::get('sales-orders/{order}/print', [\App\Http\Controllers\Admin\Sales\SalesOrderController::class, 'print'])->name('sales-orders.print');
+
+            Route::resource('sales-orders', \App\Http\Controllers\Admin\Sales\SalesOrderController::class);
         });
-});
+
+        // Invoice preview - OUTSIDE company group to avoid model binding
+        Route::get('{company}/invoice-preview/{orderid}', [\App\Http\Controllers\Admin\Sales\SalesOrderController::class, 'invoicePreview'])->whereUuid('company')->whereNumber('orderid')->name('invoice-preview');
+    });
+
 
 require __DIR__.'/auth.php';

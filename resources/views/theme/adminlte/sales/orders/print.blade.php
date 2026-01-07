@@ -1,394 +1,377 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-  <meta charset="UTF-8">
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      color: #333;
-      font-size: 13px;
-      line-height: 1.4;
-      margin: 0;
-      padding: 0;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice - {{ $order->order_number }}</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-    .invoice-container {
-      max-width: 800px;
-      margin: auto;
-      padding: 40px;
-    }
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+            line-height: 1.4;
+            color: #000;
+            background: #fff;
+        }
 
-    /* Parent Table for Printing */
-    .print-layout {
-      width: 100%;
-      border-collapse: collapse;
-    }
+        .invoice-container {
+            width: 210mm;
+            height: 297mm;
+            margin: 0;
+            padding: 10mm 15mm;
+            background: #fff;
+            page-break-after: avoid;
+        }
 
-    /* Top Header */
-    .top-table {
-      width: 100%;
-      border-bottom: 1px solid #ddd;
-      padding-bottom: 10px;
-      margin-bottom: 20px;
-    }
+        /* Header */
+        .invoice-title {
+            font-size: 28px;
+            font-weight: bold;
+            color: #000;
+            margin-bottom: 30px;
+        }
 
-    .invoice-title {
-      font-size: 32px;
-      font-weight: bold;
-    }
+        /* Bill To Section */
+        .bill-to-section {
+            margin-bottom: 25px;
+        }
 
-    .header-label {
-      font-size: 11px;
-      font-weight: bold;
-      color: #666;
-      display: block;
-    }
+        .bill-to-label {
+            font-weight: bold;
+            color: #000;
+            margin-bottom: 15px;
+        }
 
-    .header-value {
-      font-size: 14px;
-      font-weight: normal;
-    }
+        .bill-to-content {
+            line-height: 1.5;
+        }
 
-    /* Logo and Date Section */
-    .logo-section {
-      width: 100%;
-      border-bottom: 1px solid #ddd;
-      margin-bottom: 20px;
-    }
+        .company-name {
+            font-weight: bold;
+            color: #000;
+            margin-bottom: 3px;
+        }
 
-    .logo-text {
-      font-size: 24px;
-      font-weight: bold;
-      text-transform: uppercase;
-      line-height: 1;
-    }
+        .address-line {
+            color: #000;
+        }
 
-    .logo-distro {
-      color: #E91E63;
-      display: block;
-    }
+        /* Order Details Section */
+        .order-details {
+            display: flex;
+            margin-bottom: 20px;
+        }
 
-    /* Pinkish color from design */
-    .additional-details {
-      background-color: #f4f4f4;
-      padding: 15px;
-      width: 35%;
-      vertical-align: top;
-    }
+        .order-details-left {
+            width: 50%;
+        }
 
-    /* Address Grid */
-    .address-table {
-      width: 100%;
-      margin-bottom: 40px;
-    }
+        .order-details-right {
+            width: 50%;
+        }
 
-    .address-col {
-      width: 33%;
-      vertical-align: top;
-    }
+        .detail-row {
+            display: flex;
+            margin-bottom: 3px;
+        }
 
-    .address-label {
-      font-weight: bold;
-      margin-bottom: 5px;
-      display: block;
-    }
+        .detail-label {
+            width: 140px;
+            color: #000;
+        }
 
-    /* Items Table */
-    .items-table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-bottom: 30px;
-    }
+        .detail-value {
+            color: #000;
+        }
 
-    .items-table th {
-      text-align: left;
-      border-bottom: 1px solid #000;
-      padding: 10px 0;
-      font-size: 12px;
-    }
+        /* Items Table */
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 0;
+        }
 
-    .items-table td {
-      padding: 12px 0;
-      border-bottom: 1px solid #eee;
-      vertical-align: top;
-    }
+        .items-table th {
+            background: #aeaaaa;
+            color: #050000;
+            font-weight: bold;
+            padding: 8px 6px;
+            text-align: left;
+            font-size: 12px;
+            border: 1px solid #000;
+        }
 
-    .text-right {
-      text-align: right;
-    }
+        .items-table td {
+            padding: 6px;
+            border: 1px solid #000;
+            font-size: 12px;
+            color: #000;
+            vertical-align: middle;
+        }
 
-    .discount {
-      font-style: italic;
-      color: #555;
-      display: block;
-      font-size: 12px;
-      margin-top: 2px;
-    }
+        .items-table .col-item-no {
+            width: 180px;
+        }
 
-    /* Summary Section */
-    .summary-wrapper {
-      width: 100%;
-      margin-top: 20px;
-      page-break-inside: avoid;
-    }
+        .items-table .col-description {
+            width: 200px;
+        }
 
-    .summary-table {
-      width: 45%;
-      float: right;
-      border-collapse: collapse;
-    }
+        .items-table .col-currency {
+            width: 25px;
+            text-align: center;
+        }
 
-    .summary-table td {
-      padding: 8px 0;
-      border-bottom: 1px solid #eee;
-    }
+        .items-table .col-price {
+            width: 60px;
+            text-align: right;
+        }
 
-    .total-row {
-      font-weight: bold;
-      font-size: 15px;
-      border-bottom: 2px solid #000 !important;
-    }
+        .items-table .col-quantity {
+            width: 70px;
+            text-align: center;
+        }
 
-    .footer-table {
-      width: 100%;
-      margin-top: 50px;
-      font-size: 11px;
-      color: #666;
-      border-top: 1px solid #eee;
-      padding-top: 10px;
-    }
+        .items-table .col-amount-currency {
+            width: 25px;
+            text-align: center;
+        }
 
-    @media print {
-      .no-print {
-        display: none;
-      }
+        .items-table .col-amount {
+            width: 60px;
+            text-align: right;
+        }
 
-      .invoice-container {
-        max-width: 100%;
-        padding: 0;
-      }
+        .items-table td.text-right {
+            text-align: right;
+        }
 
-      thead {
-        display: table-header-group;
-      }
+        .items-table td.text-center {
+            text-align: center;
+        }
 
-      tfoot {
-        display: table-footer-group;
-      }
+        .items-table th.text-right {
+            text-align: right;
+        }
 
-      body {
-        margin: 0;
-        padding: 0;
-      }
+        .items-table th.text-center {
+            text-align: center;
+        }
 
-      @page {
-        margin: 15mm;
-      }
-    }
-  </style>
+        .items-table .empty-row td {
+            height: 25px;
+        }
+
+        .items-table .totals-label {
+            text-align: right;
+            font-weight: normal;
+        }
+
+        .items-table .totals-label-bold {
+            text-align: right;
+            font-weight: bold;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            font-size: 14px;
+            color: #b8860b;
+            font-weight: bold;
+            font-style: italic;
+        }
+
+        /* Print Styles */
+        @media print {
+            body {
+                margin: 0;
+                padding: 0;
+            }
+
+            .invoice-container {
+                margin: 0;
+                padding: 10mm 15mm;
+                width: 100%;
+                min-height: auto;
+            }
+
+            @page {
+                size: A4;
+                margin: 5mm;
+            }
+
+            .no-print {
+                display: none;
+            }
+        }
+    </style>
 </head>
 
 <body>
+    <div class="invoice-container">
+        <!-- Header -->
+        <div class="invoice-title">Invoice</div>
 
-  <div class="invoice-container">
-    <table class="print-layout">
-      <thead>
-        <tr>
-          <td>
-            <table class="top-table">
-              <tr>
-                <td style="width: 50%;"><span class="invoice-title">INVOICE</span></td>
-                <td style="width: 25%;">
-                  <span class="header-label">Invoice number</span>
-                  <span class="header-value">#{{ $order->order_number }}</span>
-                </td>
-                <td style="width: 25%;" class="text-right">
-                  <span class="header-label">Invoice total</span>
-                  <span
-                    class="header-value">{{ $order->currency->symbol ?? '£' }}{{ number_format($order->grand_total, 2) }}</span>
-                </td>
-              </tr>
-            </table>
-
-            <table class="logo-section">
-              <tr>
-                <td style="padding-bottom: 20px;">
-                  <div class="logo-text">
-                    @php $names = explode(' ', $order->company->name, 2); @endphp
-                    {{ $names[0] }}<br>
-                    <span class="logo-distro">{{ $names[1] ?? '' }}</span>
-                  </div>
-                </td>
-                <td style="vertical-align: top;">
-                  <span class="header-label">Date of issue</span>
-                  <span
-                    class="header-value">{{ ($order->confirmed_at ?? $order->created_at)->format('F d, Y') }}</span><br><br>
-                  <span class="header-label">Date of supply</span>
-                  <span class="header-value">{{ ($order->confirmed_at ?? $order->created_at)->format('F d, Y') }}</span>
-                </td>
-                <td class="additional-details">
-                  <span class="header-label">Additional details</span>
-                  <span class="header-value small text-muted">ID: {{ $order->uuid }}</span>
-                </td>
-              </tr>
-            </table>
-          </td>
-        </tr>
-      </thead>
-
-      <tbody>
-        <tr>
-          <td>
-            <table class="address-table">
-              <tr>
-                <td class="address-col">
-                  <span class="address-label">Bill to</span>
-                  @if ($order->billing_address)
-                    {!! nl2br(e($order->billing_address['contact_name'] ?? ($order->customer->display_name ?? ''))) !!}<br>
+        <!-- Bill To Section -->
+        <div class="bill-to-section">
+            <div class="bill-to-label">Bill To:</div>
+            <div class="bill-to-content">
+                <div class="company-name">{{ $order->customer->display_name ?? 'N/A' }}</div>
+                @if ($order->billing_address)
                     @if (!empty($order->billing_address['address_line_1']))
-                      {!! nl2br(e($order->billing_address['address_line_1'])) !!}<br>
+                        <div class="address-line">{{ $order->billing_address['address_line_1'] }}</div>
                     @endif
                     @if (!empty($order->billing_address['address_line_2']))
-                      {!! nl2br(e($order->billing_address['address_line_2'])) !!}<br>
+                        <div class="address-line">{{ $order->billing_address['address_line_2'] }}</div>
                     @endif
-                    {{ $order->billing_address['city'] ?? '' }} {{ $order->billing_address['postal_code'] ?? '' }}<br>
-                    {{ $order->billing_address['country'] ?? '' }}
-                  @else
-                    {{ $order->customer->display_name ?? 'N/A' }}<br>
-                    {{ $order->customer->email ?? '' }}
-                  @endif
-                </td>
-                <td class="address-col">
-                  <span class="address-label">Ship to</span>
-                  @if ($order->shipping_address)
-                    {!! nl2br(e($order->shipping_address['contact_name'] ?? ($order->customer->display_name ?? ''))) !!}<br>
-                    @if (!empty($order->shipping_address['address_line_1']))
-                      {!! nl2br(e($order->shipping_address['address_line_1'])) !!}<br>
+                    @if (!empty($order->billing_address['city']))
+                        <div class="address-line">{{ $order->billing_address['city'] }}</div>
                     @endif
-                    @if (!empty($order->shipping_address['address_line_2']))
-                      {!! nl2br(e($order->shipping_address['address_line_2'])) !!}<br>
+                    @if (!empty($order->billing_address['postal_code']))
+                        <div class="address-line">{{ $order->billing_address['postal_code'] }}</div>
                     @endif
-                    {{ $order->shipping_address['city'] ?? '' }}
-                    {{ $order->shipping_address['postal_code'] ?? '' }}<br>
-                    {{ $order->shipping_address['country'] ?? '' }}
-                  @else
-                    <em>Same as billing</em>
-                  @endif
-                </td>
-                <td class="address-col text-right">
-                  <span class="address-label">Merchant</span>
-                  <strong>{{ $order->company->name }}</strong><br>
-                  {!! nl2br(e($order->company->address)) !!}<br>
-                  {{ $order->company->email }}<br>
-                  {{ $order->company->tax_number }}
-                </td>
-              </tr>
-            </table>
+                    @if (!empty($order->billing_address['country']))
+                        <div class="address-line">{{ $order->billing_address['country'] }}</div>
+                    @endif
+                @else
+                    <div class="address-line">{{ $order->customer->address ?? '' }}</div>
+                    <div class="address-line">{{ $order->customer->postal_code ?? '' }}</div>
+                    <div class="address-line">{{ $order->customer->country->name ?? '' }}</div>
+                @endif
+            </div>
+        </div>
 
-            <table class="items-table">
-              <thead>
-                <tr>
-                  <th style="width: 50%;">Description</th>
-                  <th style="width: 10%;" class="text-right">Quantity</th>
-                  <th style="width: 15%;" class="text-right">Unit price</th>
-                  <th style="width: 10%;" class="text-right">VAT rate</th>
-                  <th style="width: 15%;" class="text-right">Amount</th>
-                </tr>
-              </thead>
-              <tbody>
-                @foreach ($order->items as $item)
-                  <tr>
-                    <td>
-                      {{ $item->product_name }}
-                      @if ($item->variant_description)
-                        <br><small class="text-muted">{{ $item->variant_description }}</small>
-                      @endif
-                    </td>
-                    <td class="text-right">{{ $item->quantity }}</td>
-                    <td class="text-right">
-                      {{ $order->currency->symbol ?? '£' }}{{ number_format($item->unit_price, 2) }}</td>
-                    <td class="text-right">{{ number_format($item->tax_rate, 0) }}%</td>
-                    <td class="text-right">
-                      {{ $order->currency->symbol ?? '£' }}{{ number_format($item->unit_price * $item->quantity, 2) }}
-                      @if ($item->discount_amount > 0)
-                        <span
-                          class="discount">-{{ $order->currency->symbol ?? '£' }}{{ number_format($item->discount_amount, 2) }}</span>
-                      @endif
-                    </td>
-                  </tr>
-                @endforeach
-              </tbody>
-            </table>
+        <!-- Order Details Section -->
+        <div class="order-details">
+            <div class="order-details-left">
+                <div class="detail-row">
+                    <span class="detail-label">Order Tracking No:</span>
+                    <span class="detail-value">{{ $order->uuid }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Order Date:</span>
+                    <span class="detail-value">{{ ($order->confirmed_at ?? $order->created_at)->format('d/m/Y') }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Delivery Method:</span>
+                    <span class="detail-value">{{ $order->shipping_method ?? 'Standard' }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">BOXES</span>
+                    <span class="detail-value">{{ count($order->items) }}</span>
+                </div>
+            </div>
+            <div class="order-details-right">
+                <div class="detail-row">
+                    <span class="detail-label">Invoice No:</span>
+                    <span class="detail-value">{{ $order->order_number }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Due Date:</span>
+                    <span class="detail-value">{{ $order->paymentTerm ? $order->confirmed_at?->addDays($order->paymentTerm->due_in_days)->format('d/m/Y') : 'On Receipt' }}</span>
+                </div>
+            </div>
+        </div>
 
-            <div class="summary-wrapper">
-              <div style="float: left; width: 50%; font-size: 11px; color: #666;">
-                <strong>Additional Comments:</strong><br>
-                {{ $order->notes ?: 'None' }}
-              </div>
-              <table class="summary-table">
+        <!-- Items Table -->
+        <table class="items-table">
+            <thead>
                 <tr>
-                  <td>Subtotal (Net)</td>
-                  <td class="text-right">
-                    {{ $order->currency->symbol ?? '£' }}{{ number_format($order->subtotal - $order->discount_total, 2) }}
-                  </td>
+                    <th class="col-item-no">Item No:</th>
+                    <th class="col-description">Description</th>
+                    <th class="col-currency" colspan="2">Unit Price</th>
+                    <th class="col-quantity text-center">Quantity</th>
+                    <th class="col-amount-currency" colspan="2">Amount</th>
                 </tr>
+            </thead>
+            <tbody>
+                @forelse ($order->items as $item)
+                    <tr>
+                        <td>{{ $item->product_name }}</td>
+                        <td>{{ $item->variant_description ?? '' }}</td>
+                        <td class="text-center">{{ $order->currency->symbol ?? '£' }}</td>
+                        <td class="text-right">{{ number_format($item->unit_price, 2) }}</td>
+                        <td class="text-center">{{ $item->quantity }}</td>
+                        <td class="text-center">{{ $order->currency->symbol ?? '£' }}</td>
+                        <td class="text-right">{{ number_format($item->unit_price * $item->quantity - ($item->discount_amount ?? 0), 2) }}</td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="7" style="text-align: center; padding: 20px;">No items</td>
+                    </tr>
+                @endforelse
+
+                <!-- Empty rows for padding -->
+                <tr class="empty-row">
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr class="empty-row">
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr class="empty-row">
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+
+                <!-- Totals rows -->
                 <tr>
-                  <td>VAT (20%)</td>
-                  <td class="text-right">
-                    {{ $order->currency->symbol ?? '£' }}{{ number_format($order->tax_total - ($order->shipping_tax_total ?? 0), 2) }}
-                  </td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td class="text-center">{{ $order->items->sum('quantity') }}</td>
+                    <td class="text-center">{{ $order->currency->symbol ?? '£' }}</td>
+                    <td class="text-right">{{ number_format($order->subtotal - $order->discount_total, 2) }}</td>
                 </tr>
                 @if ($order->shipping_total > 0)
-                  <tr>
-                    <td>Shipping</td>
-                    <td class="text-right">
-                      {{ $order->currency->symbol ?? '£' }}{{ number_format($order->shipping_total, 2) }}</td>
-                  </tr>
-                  <tr>
-                    <td>Shipping VAT (20%)</td>
-                    <td class="text-right">
-                      {{ $order->currency->symbol ?? '£' }}{{ number_format($order->shipping_tax_total, 2) }}</td>
-                  </tr>
+                    <tr>
+                        <td colspan="4" class="totals-label">DELIVERY CHARGES</td>
+                        <td></td>
+                        <td class="text-center">{{ $order->currency->symbol ?? '£' }}</td>
+                        <td class="text-right">{{ number_format($order->shipping_total, 2) }}</td>
+                    </tr>
                 @endif
-                <tr class="total-row">
-                  <td>Total</td>
-                  <td class="text-right">
-                    {{ $order->currency->symbol ?? '£' }}{{ number_format($order->grand_total, 2) }}</td>
+                <tr>
+                    <td colspan="4" class="totals-label-bold">AMOUNT</td>
+                    <td></td>
+                    <td class="text-center">{{ $order->currency->symbol ?? '£' }}</td>
+                    <td class="text-right">{{ number_format($order->grand_total, 2) }}</td>
                 </tr>
-              </table>
-              <div style="clear: both;"></div>
-            </div>
-          </td>
-        </tr>
-      </tbody>
+            </tbody>
+        </table>
 
-      <tfoot>
-        <tr>
-          <td>
-            <table class="footer-table">
-              <tr>
-                <td>
-                  Provided by: {{ $order->company->name }}<br>
-                  VAT ID: {{ $order->company->tax_number }}
-                </td>
-                <td class="text-right">
-                  Issued on {{ ($order->confirmed_at ?? $order->created_at)->format('F d, Y') }}<br>
-                  <span class="page-info">Invoiced by {{ $order->company->name }}</span>
-                </td>
-              </tr>
-            </table>
-          </td>
-        </tr>
-      </tfoot>
-    </table>
-  </div>
+        <!-- Footer -->
+        <div class="footer">
+            Thank You For Business!
+        </div>
+    </div>
 
-  <div class="no-print" style="text-align: center; margin: 20px;">
-    <button onclick="window.print()" style="padding: 10px 20px; font-size: 16px; cursor: pointer;">Print
-      Invoice</button>
-  </div>
-
+    <div class="no-print" style="text-align: center; margin: 20px;">
+        <button onclick="window.print()" style="padding: 10px 20px; font-size: 16px; cursor: pointer;">Print Invoice</button>
+    </div>
 </body>
 
 </html>
