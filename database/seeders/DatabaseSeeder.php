@@ -22,5 +22,7 @@ class DatabaseSeeder extends Seeder
 
         $this->call(PaymentTermSeeder::class);
         $this->call(CurrencySeeder::class);
+        $this->call(CountriesStatesSeeder::class);
+        $this->call(OrderSeeder::class);
     }
 }

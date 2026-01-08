@@ -32,7 +32,7 @@ Route::bind('order', function ($value) {
 });
 
 Route::get('/', function () {
-    return view('welcome');
+    return redirect()->route('login');
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {
@@ -192,7 +192,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::resource('sales-orders', \App\Http\Controllers\Admin\Sales\SalesOrderController::class);
 
             Route::get('load-customers', [\App\Http\Controllers\Admin\CustomerController::class, 'loadCustomers'])->name('load-customers');
-
+            Route::get('load-products', [\App\Http\Controllers\Admin\Catalog\ProductController::class, 'loadProducts'])->name('load-products');
+            Route::get('load-variants', [\App\Http\Controllers\Admin\Catalog\ProductController::class, 'loadVariants'])->name('load-variants');
+            
         });
 
     // Invoice preview - OUTSIDE company group to avoid model binding

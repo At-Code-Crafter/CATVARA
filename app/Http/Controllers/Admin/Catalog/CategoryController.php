@@ -234,7 +234,7 @@ class CategoryController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'name' => 'required|string|max:255',
             'parent_id' => 'nullable|exists:categories,id',
             'attributes' => 'array',
@@ -242,7 +242,7 @@ class CategoryController extends Controller
         ]);
 
         $category = new Category;
-        $category->uuid = Str::uuid();
+        // $category->uuid = Str::uuid();
         $category->company_id = $request->company->id;
         $category->parent_id = $request->parent_id;
         $category->name = $request->name;
@@ -251,8 +251,8 @@ class CategoryController extends Controller
         $category->save();
 
         // Sync Attributes
-        if ($request->has('attributes')) {
-            $category->attributes()->sync($request->attributes);
+        if ($validated['attributes']) {
+            $category->attributes()->sync($validated['attributes']);
         }
 
         return redirect(company_route('catalog.categories.index'))
@@ -283,7 +283,7 @@ class CategoryController extends Controller
             abort(403);
         }
 
-        $request->validate([
+        $validated = $request->validate([
             'name' => 'required|string|max:255',
             'parent_id' => 'nullable|exists:categories,id',
             'attributes' => 'array',
@@ -297,8 +297,8 @@ class CategoryController extends Controller
         $category->save();
 
         // Sync Attributes
-        if ($request->has('attributes')) {
-            $category->attributes()->sync($request->attributes);
+        if ($validated['attributes']) {
+            $category->attributes()->sync($validated['attributes']);
         } else {
             $category->attributes()->detach(); // If no attributes are selected, remove all
         }

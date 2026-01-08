@@ -218,66 +218,66 @@ class VapeShopSeeder extends Seeder
                         }
 
                         // Requirement #4 (also): variant has featured image
-                        if (! empty($variantData['featured_image']['src'])) {
-                            $this->downloadAndAttachImage(
-                                attachableType: ProductVariant::class,
-                                attachableId: $variant->id,
-                                companyId: $company->id,
-                                imageUrl: $variantData['featured_image']['src'],
-                                baseDir: "products/{$product->slug}/variants/{$shopifyVariantId}",
-                                isPrimary: true
-                            );
-                        }
+                        // if (! empty($variantData['featured_image']['src'])) {
+                        //     $this->downloadAndAttachImage(
+                        //         attachableType: ProductVariant::class,
+                        //         attachableId: $variant->id,
+                        //         companyId: $company->id,
+                        //         imageUrl: $variantData['featured_image']['src'],
+                        //         baseDir: "products/{$product->slug}/variants/{$shopifyVariantId}",
+                        //         isPrimary: true
+                        //     );
+                        // }
                     }
                 }
 
                 // 4) PRODUCT + VARIANT IMAGES (from item['images'] list)
                 // Requirement #2: Save image with whatever name coming from Shopify, so rerun checks exist
-                if (! empty($item['images']) && is_array($item['images'])) {
-                    foreach ($item['images'] as $idx => $img) {
-                        $src = $img['src'] ?? null;
-                        if (! $src) {
-                            continue;
-                        }
+                // if (! empty($item['images']) && is_array($item['images'])) {
+                //     foreach ($item['images'] as $idx => $img) {
+                //         $src = $img['src'] ?? null;
+                //         if (! $src) {
+                //             continue;
+                //         }
 
-                        $variantIds = $img['variant_ids'] ?? [];
-                        $variantIds = is_array($variantIds) ? $variantIds : [];
+                //         $variantIds = $img['variant_ids'] ?? [];
+                //         $variantIds = is_array($variantIds) ? $variantIds : [];
 
-                        // If variant_ids empty => product image
-                        if (count($variantIds) === 0) {
-                            $this->downloadAndAttachImage(
-                                attachableType: Product::class,
-                                attachableId: $product->id,
-                                companyId: $company->id,
-                                imageUrl: $src,
-                                baseDir: "products/{$product->slug}",
-                                isPrimary: ($idx === 0) // first image primary
-                            );
+                //         // If variant_ids empty => product image
+                //         if (count($variantIds) === 0) {
+                //             $this->downloadAndAttachImage(
+                //                 attachableType: Product::class,
+                //                 attachableId: $product->id,
+                //                 companyId: $company->id,
+                //                 imageUrl: $src,
+                //                 baseDir: "products/{$product->slug}",
+                //                 isPrimary: ($idx === 0) // first image primary
+                //             );
 
-                            continue;
-                        }
+                //             continue;
+                //         }
 
-                        // Else => attach to each referenced variant
-                        foreach ($variantIds as $vId) {
-                            $vId = (string) $vId;
-                            if (! isset($variantIdToModel[$vId])) {
-                                // If variant wasn't created for some reason, skip
-                                continue;
-                            }
+                //         // Else => attach to each referenced variant
+                //         foreach ($variantIds as $vId) {
+                //             $vId = (string) $vId;
+                //             if (! isset($variantIdToModel[$vId])) {
+                //                 // If variant wasn't created for some reason, skip
+                //                 continue;
+                //             }
 
-                            $variant = $variantIdToModel[$vId];
+                //             $variant = $variantIdToModel[$vId];
 
-                            $this->downloadAndAttachImage(
-                                attachableType: ProductVariant::class,
-                                attachableId: $variant->id,
-                                companyId: $company->id,
-                                imageUrl: $src,
-                                baseDir: "products/{$product->slug}/variants/{$vId}",
-                                isPrimary: true
-                            );
-                        }
-                    }
-                }
+                //             $this->downloadAndAttachImage(
+                //                 attachableType: ProductVariant::class,
+                //                 attachableId: $variant->id,
+                //                 companyId: $company->id,
+                //                 imageUrl: $src,
+                //                 baseDir: "products/{$product->slug}/variants/{$vId}",
+                //                 isPrimary: true
+                //             );
+                //         }
+                //     }
+                // }
 
             } catch (\Exception $e) {
                 $title = $item['title'] ?? '(no-title)';

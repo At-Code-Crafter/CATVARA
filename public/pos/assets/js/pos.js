@@ -1,11 +1,6 @@
 /* pos.js (POS page logic) */
 
 (function () {
-	const CUSTOMERS_URL = "assets/data/customers.json";
-	const PRODUCTS_URL = "assets/data/products.json";
-	const VARIANTS_URL = "assets/data/variants.json";
-	const PAYMENT_TERMS_URL = "assets/data/payment_terms.json";
-
 	let customers = [];
 	let products = [];
 	let variantsMap = {}; // { product_id: [variants...] }
@@ -64,7 +59,7 @@
 	}
 
 	function findCustomerById(id) {
-		return customers.find((c) => c.id === id) || null;
+		return customers.find((c) => c.uuid === id) || null;
 	}
 
 	function findPaymentTermById(id) {

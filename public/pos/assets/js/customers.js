@@ -155,11 +155,11 @@
     const sellId = sellTo ? sellTo.uuid : "";
     const billId = same ? sellId : (billTo ? billTo.uuid : "");
 
-    const url = new URL(window.location.origin + window.location.pathname.replace(/customers\.html?$/, "pos.html"));
+    const url = new URL(window.location.origin + window.location.pathname.replace(/customers\.html?$/, "create"));
     // if hosting path differs, fallback: relative
-    if (!url.pathname.endsWith("pos.html")) {
+    if (!url.pathname.endsWith("pos")) {
       // relative fallback
-      window.location.href = `pos.html?sell_to=${encodeURIComponent(sellId)}&bill_to=${encodeURIComponent(billId)}`;
+      window.location.href = `create?sell_to=${encodeURIComponent(sellId)}&bill_to=${encodeURIComponent(billId)}`;
       return;
     }
 

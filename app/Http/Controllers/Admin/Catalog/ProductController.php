@@ -34,13 +34,13 @@ class ProductController extends Controller
                 ->addIndexColumn()
                 ->editColumn('name', function ($row) {
                     $img = $row->attachments->where('is_primary', true)->first();
-                    $src = $img ? asset('storage/'.$img->path) : asset('theme/adminlte/dist/img/default-150x150.png');
+                    $src = $img ? asset('storage/' . $img->path) : asset('theme/adminlte/dist/img/default-150x150.png');
 
                     return '<div class="d-flex align-items-center">
-                                <img src="'.e($src).'" class="img-thumbnail mr-2" style="width: 50px; height: 50px; object-fit: cover;">
+                                <img src="' . e($src) . '" class="img-thumbnail mr-2" style="width: 50px; height: 50px; object-fit: cover;">
                                 <div>
-                                    <div class="font-weight-bold">'.e($row->name).'</div>
-                                    <small class="text-muted">'.e($row->slug).'</small>
+                                    <div class="font-weight-bold">' . e($row->name) . '</div>
+                                    <small class="text-muted">' . e($row->slug) . '</small>
                                 </div>
                             </div>';
                 })
@@ -48,7 +48,7 @@ class ProductController extends Controller
                     return $row->category ? e($row->category->name) : '<span class="text-muted">Uncategorized</span>';
                 })
                 ->addColumn('variants_count', function ($row) {
-                    return '<span class="badge badge-info">'.$row->variants->count().' Variants</span>';
+                    return '<span class="badge badge-info">' . $row->variants->count() . ' Variants</span>';
                 })
                 ->addColumn('action', function ($row) {
                     $compact['editUrl'] = company_route('catalog.products.edit', ['product' => $row->id]);
@@ -123,7 +123,7 @@ class ProductController extends Controller
                     ->update(['is_primary' => false]);
 
                 $path = $request->file('primary_image')->store('products', 'public');
-                
+
                 $product->attachments()->create([
                     'company_id' => $company->id,
                     'disk' => 'public',
@@ -157,7 +157,7 @@ class ProductController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return redirect()->back()->with('error', 'Error updating product: '.$e->getMessage());
+            return redirect()->back()->with('error', 'Error updating product: ' . $e->getMessage());
         }
     }
 
@@ -182,7 +182,7 @@ class ProductController extends Controller
             $product->company_id = $request->company->id;
             $product->category_id = $request->category_id;
             $product->name = $request->name;
-            $product->slug = Str::slug($request->name).'-'.time();
+            $product->slug = Str::slug($request->name) . '-' . time();
             $product->description = $request->description;
             $product->save();
 
@@ -190,7 +190,7 @@ class ProductController extends Controller
             $currency = Currency::first(); // Assuming seeded
             $channel = PriceChannel::where('code', 'WEBSITE')->first(); // Assuming seeded
             // Fallback
-            if (! $channel) {
+            if (!$channel) {
                 $channel = PriceChannel::first();
             }
 
@@ -204,7 +204,7 @@ class ProductController extends Controller
                 $variant->uuid = Str::uuid();
                 $variant->company_id = $request->company->id;
                 $variant->product_id = $product->id;
-                $variant->sku = $v['sku'] ?? ($product->slug.'-'.Str::random(4));
+                $variant->sku = $v['sku'] ?? ($product->slug . '-' . Str::random(4));
                 $variant->barcode = $v['barcode'] ?? null;
                 $variant->cost_price = $v['cost'] ?? null; // Added Cost
                 $variant->save();
@@ -242,4 +242,68 @@ class ProductController extends Controller
             return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
     }
+
+    function loadProducts(Request $request)
+    {
+
+        $products = Product::where('company_id', $request->company->id)->get()->map(function ($product) {
+            return [
+                "id" => $product->id,
+                "name" => $product->name,
+                "category" => $product->category->name,
+                "brand" => $product->brand->name ?? '',
+            ];
+        });
+
+        return response()->json($products);
+    }
+
+
+    public function loadVariants(Request $request)
+    {
+        $variants = ProductVariant::query()
+            ->where('company_id', $request->company->id)
+            ->with([
+                'product:id,uuid',
+                // Adjust relation names if different in your project
+                'attributeValues:id,variant_id,attribute_id,name,value',
+                'attributeValues.attribute:id,name',
+            ])
+            ->get()
+            ->groupBy('product_id')
+            ->mapWithKeys(function ($variantsForProduct) {
+
+                $product = $variantsForProduct->first()->product;
+
+                // Choose the key you want in JSON: P1001 style (code) or SKU, etc.
+                // Example wants: "P1001": [...]
+                $productKey = $product->id;
+
+                $list = $variantsForProduct->map(function ($variant) {
+
+                    // Build attrs as an object: { "Color": "Black", "Size": "Standard" }
+                    $attrs = $variant->attributeValues
+                        ->filter(fn($av) => $av->attribute) // safety
+                        ->mapWithKeys(function ($av) {
+                        $attrName = $av->attribute->name;                 // e.g. "Color"
+                        $attrValue = $av->value ?? $av->name ?? '';        // e.g. "Black"
+                        return [$attrName => $attrValue];
+                    })
+                        ->all();
+
+                    return [
+                        'id' => $variant->id,
+                        'attrs' => $attrs,
+                        'price' => $variant->price,
+                        'stock' => $variant->stock,
+                    ];
+                })->values()->all();
+
+                return [$productKey => $list];
+            });
+
+        return response()->json($variants);
+    }
+
+
 }
