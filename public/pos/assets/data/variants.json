@@ -1,0 +1,92 @@
+{
+	"P1001": [
+		{
+			"id": "V1001-1",
+			"attrs": { "Color": "Black", "Size": "Standard" },
+			"price": 299,
+			"stock": 12
+		},
+		{
+			"id": "V1001-2",
+			"attrs": { "Color": "Silver", "Size": "Standard" },
+			"price": 309,
+			"stock": 7
+		}
+	],
+	"P1002": [
+		{
+			"id": "V1002-1",
+			"attrs": { "Color": "Black", "Strap": "Silicone" },
+			"price": 449,
+			"stock": 9
+		},
+		{
+			"id": "V1002-2",
+			"attrs": { "Color": "Gold", "Strap": "Leather" },
+			"price": 499,
+			"stock": 4
+		}
+	],
+	"P1003": [
+		{
+			"id": "V1003-1",
+			"attrs": { "Color": "White", "Size": "M" },
+			"price": 59,
+			"stock": 28
+		},
+		{
+			"id": "V1003-2",
+			"attrs": { "Color": "Black", "Size": "L" },
+			"price": 59,
+			"stock": 15
+		},
+		{
+			"id": "V1003-3",
+			"attrs": { "Color": "Navy", "Size": "XL" },
+			"price": 65,
+			"stock": 8
+		}
+	],
+	"P1004": [
+		{
+			"id": "V1004-1",
+			"attrs": { "Pack": "250g", "Grind": "Whole Bean" },
+			"price": 42,
+			"stock": 22
+		},
+		{
+			"id": "V1004-2",
+			"attrs": { "Pack": "1kg", "Grind": "Whole Bean" },
+			"price": 139,
+			"stock": 6
+		}
+	],
+	"P1005": [
+		{
+			"id": "V1005-1",
+			"attrs": { "Color": "Grey", "Model": "Mesh" },
+			"price": 799,
+			"stock": 3
+		},
+		{
+			"id": "V1005-2",
+			"attrs": { "Color": "Black", "Model": "Mesh" },
+			"price": 799,
+			"stock": 2
+		}
+	],
+	"P1006": [
+		{
+			"id": "V1006-1",
+			"attrs": { "Size": "750ml", "Color": "Black" },
+			"price": 39,
+			"stock": 34
+		},
+		{
+			"id": "V1006-2",
+			"attrs": { "Size": "1L", "Color": "Steel" },
+			"price": 45,
+			"stock": 19
+		}
+	]
+}

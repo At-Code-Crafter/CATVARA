@@ -1,0 +1,7 @@
+[
+  { "id": "PT_COD", "name": "Cash On Delivery", "due_days": 0 },
+  { "id": "PT_7D",  "name": "Net 7 Days",       "due_days": 7 },
+  { "id": "PT_15D", "name": "Net 15 Days",      "due_days": 15 },
+  { "id": "PT_30D", "name": "Net 30 Days",      "due_days": 30 },
+  { "id": "PT_45D", "name": "Net 45 Days",      "due_days": 45 }
+]

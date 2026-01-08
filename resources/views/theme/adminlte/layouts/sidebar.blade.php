@@ -127,6 +127,16 @@
                       <p>Orders</p>
                     </a>
                   </li>
+
+                  @if (Route::has('sales.orders.create'))
+                    <li class="nav-item">
+                      <a href="{{ company_route('sales.orders.create') }}"
+                        class="nav-link {{ $isActive('sales.orders.create') ? 'active' : '' }}">
+                        <i class="nav-icon fas fa-magic text-warning"></i>
+                        <p>New Order (Wizard)</p>
+                      </a>
+                    </li>
+                  @endif
                 @endif
 
                 @if (Route::has('quotes.index'))
@@ -453,8 +463,7 @@
 
         {{-- Companies --}}
         <li class="nav-item">
-          <a href="{{ safe_route('tenants.index') }}"
-            class="nav-link {{ $isActive('tenants.*') ? 'active' : '' }}">
+          <a href="{{ safe_route('tenants.index') }}" class="nav-link {{ $isActive('tenants.*') ? 'active' : '' }}">
             <i class="nav-icon fas fa-building"></i>
             <p>Companies</p>
           </a>
@@ -462,14 +471,16 @@
 
         {{-- Future items --}}
         <li class="nav-item">
-          <a href="{{ safe_route('currencies.index') }}" class="nav-link {{ $isActive('currencies.*') ? 'active' : '' }}">
+          <a href="{{ safe_route('currencies.index') }}"
+            class="nav-link {{ $isActive('currencies.*') ? 'active' : '' }}">
             <i class="nav-icon fas fa-money-bill-wave"></i>
             <p>Currencies</p>
           </a>
         </li>
 
         <li class="nav-item">
-          <a href="{{ safe_route('payment-terms.index') }}" class="nav-link {{ $isActive('payment-terms.*') ? 'active' : '' }}">
+          <a href="{{ safe_route('payment-terms.index') }}"
+            class="nav-link {{ $isActive('payment-terms.*') ? 'active' : '' }}">
             <i class="nav-icon fas fa-file-invoice"></i>
             <p>Payment Terms</p>
           </a>
@@ -483,13 +494,15 @@
           </a>
           <ul class="nav nav-treeview">
             <li class="nav-item">
-              <a href="{{ safe_route('countries.index') }}" class="nav-link {{ $isActive('countries.*') ? 'active' : '' }}">
+              <a href="{{ safe_route('countries.index') }}"
+                class="nav-link {{ $isActive('countries.*') ? 'active' : '' }}">
                 <i class="far fa-circle nav-icon"></i>
                 <p>Countries</p>
               </a>
             </li>
             <li class="nav-item">
-              <a href="{{ safe_route('states.index') }}" class="nav-link {{ $isActive('states.*') ? 'active' : '' }}">
+              <a href="{{ safe_route('states.index') }}"
+                class="nav-link {{ $isActive('states.*') ? 'active' : '' }}">
                 <i class="far fa-circle nav-icon"></i>
                 <p>States / Provinces</p>
               </a>

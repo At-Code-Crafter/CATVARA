@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport"
+      content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <title>POS - Customer Select</title>
+
+    <link rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" />
+
+    <style>
+    :root{
+      --bg: #f6f7fb;
+      --card: #ffffff;
+      --border: #e6e8ef;
+      --muted: #6c757d;
+      --dark: #343a40;
+    }
+    body { background: var(--bg); }
+    .app { height: 100vh; overflow: hidden; padding: 16px; }
+
+    .panel {
+      height: 100%;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .panel-header{
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+      background: #fff;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .panel-body{ padding: 16px; overflow: hidden; flex: 1; }
+    .panel-footer{
+      padding: 12px 16px;
+      border-top: 1px solid var(--border);
+      background: #fff;
+      position: sticky;
+      bottom: 0;
+      z-index: 10;
+    }
+    .help { font-size: 12px; color: var(--muted); }
+    .badge-soft {
+      background: #f1f3f5;
+      border: 1px solid var(--border);
+      color: #343a40;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 999px;
+    }
+
+    .customer-scroll { height: calc(100vh - 260px); overflow: auto; padding: 12px; border: 1px solid var(--border); border-radius: 12px; background: #fff; }
+    .customer-scroll::-webkit-scrollbar { width: 10px; }
+    .customer-scroll::-webkit-scrollbar-thumb { background: #d6d9e3; border-radius: 10px; }
+
+    .customer-card{
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px;
+      cursor: pointer;
+      transition: transform 120ms ease, box-shadow 120ms ease, border-color 120ms ease;
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      min-height: 92px;
+      background: #fff;
+    }
+    .customer-card:hover{ transform: translateY(-1px); box-shadow: 0 12px 26px rgba(0,0,0,0.08); }
+    .customer-card.active{ border-color: var(--dark); box-shadow: 0 12px 30px rgba(52,58,64,0.18); }
+
+    .avatar{
+      width: 44px; height: 44px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #f0f2f8, #e9edf6);
+      border: 1px solid var(--border);
+      display:flex; align-items:center; justify-content:center;
+      font-weight: 800; color: #495057;
+      flex: 0 0 auto;
+    }
+    .c-title{ font-weight: 800; margin-bottom: 2px; font-size: 14px; }
+    .c-meta{ font-size: 12px; color: var(--muted); margin-bottom: 0; }
+    .c-line{ font-size: 12px; color: #495057; margin-bottom: 0; }
+
+    .pill{
+      display:inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: #fbfbfd;
+      font-size: 12px;
+      color: #495057;
+      font-weight: 700;
+    }
+
+    .form-control, .custom-select { border-color: var(--border); }
+    .form-control:focus, .custom-select:focus { box-shadow: none; border-color: #c6c9d6; }
+    .btn-dark, .btn-secondary, .btn-outline-secondary { border-radius: 10px; }
+  </style>
+  </head>
+
+  <body>
+    <div class="app">
+      <div class="panel">
+        <div class="panel-header">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <h5 class="mb-1">Select Customer</h5>
+              <div class="help">Select <strong>Sell To</strong>, then choose
+                Billing: same or different. Continue opens POS with query
+                params.</div>
+            </div>
+            <span class="badge-soft">Step 1</span>
+          </div>
+
+          <div class="row mt-3">
+            <div class="col-md-6 mb-2 mb-md-0">
+              <input id="customerSearch" class="form-control"
+                placeholder="Search customer by name, email, phone..." />
+            </div>
+            <div class="col-md-3 mb-2 mb-md-0">
+              <select id="typeFilter" class="custom-select">
+                <option value>All Types</option>
+                <option value="B2C">B2C</option>
+                <option value="B2B">B2B</option>
+              </select>
+            </div>
+            <div class="col-md-3">
+              <select id="companyFilter" class="custom-select">
+                <option value>All Customers</option>
+                <option value="company">Company Only</option>
+                <option value="individual">Individual Only</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel-body">
+          <div class="row">
+            <div class="col-lg-6">
+              <div
+                class="d-flex justify-content-between align-items-center mb-2">
+                <div>
+                  <div class="font-weight-bold">Sell To Customer</div>
+                  <div class="help">Required.</div>
+                </div>
+                <span id="sellToBadge" class="pill">Not selected</span>
+              </div>
+              <div id="sellToList" class="customer-scroll"></div>
+            </div>
+
+            <div class="col-lg-6 mt-3 mt-lg-0">
+              <div
+                class="d-flex justify-content-between align-items-center mb-2">
+                <div>
+                  <div class="font-weight-bold">Bill To Customer</div>
+                  <div class="help">Default is same as Sell To.</div>
+                </div>
+                <span id="billToBadge" class="pill">Same as Sell To</span>
+              </div>
+
+              <div class="border rounded p-3 bg-white mb-3"
+                style="border-color: var(--border) !important;">
+                <div class="custom-control custom-checkbox">
+                  <input type="checkbox" class="custom-control-input"
+                    id="sameAsSellTo" checked />
+                  <label class="custom-control-label" for="sameAsSellTo">Billing
+                    address same as Sell To</label>
+                </div>
+                <div class="help mt-1">Uncheck to select a different Billing
+                  customer.</div>
+              </div>
+
+              <div id="billToWrap" class="d-none">
+                <div id="billToList" class="customer-scroll"></div>
+              </div>
+
+              <div class="border rounded p-3 bg-white mt-3"
+                style="border-color: var(--border) !important;">
+                <div class="font-weight-bold mb-2">Selected Summary</div>
+                <div class="row">
+                  <div class="col-md-6">
+                    <div class="help mb-1">Sell To</div>
+                    <div id="sellToSummary" class="small text-muted">Not
+                      selected.</div>
+                  </div>
+                  <div class="col-md-6 mt-3 mt-md-0">
+                    <div class="help mb-1">Bill To</div>
+                    <div id="billToSummary" class="small text-muted">Same as
+                      Sell To.</div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+        <div class="panel-footer">
+          <div class="d-flex justify-content-between align-items-center">
+            <div class="help">
+              URL params will be set as: <span class="pill">sell_to</span> and
+              <span class="pill">bill_to</span>
+            </div>
+            <button id="continueBtn" class="btn btn-dark" disabled>Continue to
+              POS</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script
+      src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js"></script>
+    <script src="assets/js/customers.js"></script>
+  </body>
+</html>

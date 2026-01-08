@@ -1,0 +1,62 @@
+[
+  {
+    "id": "C001",
+    "initial": "AT",
+    "name": "Ayesha Tariq",
+    "address": "Al Barsha, Dubai, UAE",
+    "phone": "+971 50 111 2233",
+    "email": "ayesha.tariq@example.com",
+    "isCompany": false,
+    "customerType": "B2C",
+    "taxNumber": "",
+    "payment_term_id": "PT_COD"
+  },
+  {
+    "id": "C002",
+    "initial": "MK",
+    "name": "Mohammed Khalid",
+    "address": "Deira, Dubai, UAE",
+    "phone": "+971 55 222 3344",
+    "email": "m.khalid@example.com",
+    "isCompany": false,
+    "customerType": "B2C",
+    "taxNumber": "",
+    "payment_term_id": "PT_7D"
+  },
+  {
+    "id": "C003",
+    "initial": "NV",
+    "name": "Nova Ventures LLC",
+    "address": "Business Bay, Dubai, UAE",
+    "phone": "+971 4 555 8899",
+    "email": "accounts@novaventures.ae",
+    "isCompany": true,
+    "customerType": "B2B",
+    "taxNumber": "TRN-100200300400500",
+    "payment_term_id": "PT_30D"
+  },
+  {
+    "id": "C004",
+    "initial": "OS",
+    "name": "Orion Supplies FZE",
+    "address": "JAFZA, Dubai, UAE",
+    "phone": "+971 4 333 1212",
+    "email": "billing@orionsupplies.ae",
+    "isCompany": true,
+    "customerType": "B2B",
+    "taxNumber": "TRN-998877665544332",
+    "payment_term_id": "PT_45D"
+  },
+  {
+    "id": "C005",
+    "initial": "SA",
+    "name": "Sana Ahmed",
+    "address": "Bur Dubai, Dubai, UAE",
+    "phone": "+971 52 987 6600",
+    "email": "sana.ahmed@example.com",
+    "isCompany": false,
+    "customerType": "B2C",
+    "taxNumber": "",
+    "payment_term_id": "PT_15D"
+  }
+]

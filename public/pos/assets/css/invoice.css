@@ -1,0 +1,268 @@
+/* invoice.css - pixel tuned to match your screenshot (A4 @ 100% scale) */
+
+:root{
+  --ink:#111111;
+  --muted:#6a6a6a;
+  --line:#d6d6d6;
+  --panel:#f3f3f3;
+}
+
+*{ box-sizing:border-box; }
+
+body{
+  margin:0;
+  font-family: Arial, Helvetica, sans-serif;
+  color: var(--ink);
+  background:#f4f6f9;
+}
+
+.inv-screen{ padding: 10px 0; }
+
+/* A4 page */
+.invoice-page{
+  width: 210mm;
+  min-height: 297mm;
+  margin: 0 auto 14px auto;
+  background:#fff;
+  position: relative;
+
+  /* MATCH screenshot margins */
+  padding-top: 12.5mm;
+  padding-left: 8.5mm;
+  padding-right: 8.5mm;
+  padding-bottom: 12mm;
+
+  box-shadow: 0 10px 28px rgba(0,0,0,0.08);
+  overflow: hidden;
+}
+
+/* ---------------- HEADER ---------------- */
+.inv-top{
+  display:grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  align-items:start;
+  column-gap: 10mm;
+  padding-bottom: 0;
+  margin-bottom: 0;
+}
+
+/* Page-1 has divider line. Page-2 doesn't. */
+.inv-top.has-divider{
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 6.3mm;
+}
+
+.inv-title{
+  font-size: 38px;
+  font-weight: 800;
+  letter-spacing: .2px;
+  line-height: 1;
+}
+
+.inv-meta-block{
+  font-size: 12.5px;
+  line-height: 1.25;
+  color:#222;
+}
+.inv-meta-block .label{
+  font-weight: 700;
+  margin-bottom: 3px;
+}
+.inv-meta-block .value{
+  font-size: 13.5px;
+}
+
+.inv-top-right{ text-align:right; }
+
+/* ---------------- MID (Page-1 only) ---------------- */
+/* Your screenshot: 3 zones, only separator BEFORE grey box */
+.inv-mid{
+  border-bottom: 1px solid var(--line);
+  display:grid;
+
+  /* Content width = 210 - (8.5*2) = 193mm */
+  /* Grey block width visually ~67mm in PDF analysis */
+  grid-template-columns: 90mm 36mm 67mm;
+
+  min-height: 30mm;
+}
+
+.inv-mid > div{
+  padding: 6.8mm 6.8mm;
+}
+
+.inv-additional{
+  background: var(--panel);
+  border-left: 1px solid var(--line);
+  display:flex;
+  align-items:flex-start;
+  justify-content:flex-end;
+  font-weight: 700;
+  font-size: 13px;
+  color:#333;
+  padding-top: 6.8mm;
+  padding-right: 6.8mm;
+}
+
+.inv-logo-wrap{
+  display:flex;
+  align-items:flex-start;
+}
+.inv-logo{
+  width: 84mm;
+  height: auto;
+  max-width: 100%;
+}
+
+.inv-dates .row{ margin-bottom: 6mm; }
+.inv-dates .row:last-child{ margin-bottom: 0; }
+
+.inv-dates .label{
+  font-size: 12.5px;
+  font-weight: 700;
+  margin-bottom: 3px;
+}
+.inv-dates .value{
+  font-size: 13.5px;
+}
+
+/* ---------------- ADDRESSES ---------------- */
+.inv-addresses{
+  display:grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  column-gap: 14mm;
+  margin-top: 7mm;
+  margin-bottom: 6mm;
+}
+
+.addr h4{
+  margin:0 0 5px 0;
+  font-size: 12.5px;
+  font-weight: 700;
+  color:#222;
+}
+.addr .lines{
+  font-size: 12.5px;
+  line-height: 1.55;
+  white-space: pre-line;
+  color:#222;
+}
+.addr.right{ text-align:right; }
+
+/* ---------------- TABLE ---------------- */
+.inv-table{
+  width:100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  margin-top: 6mm;
+}
+
+.inv-table thead th{
+  font-size: 12.5px;
+  font-weight: 700;
+  text-align:left;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line);
+  color:#222;
+}
+
+.inv-table th.qty,
+.inv-table th.vat{
+  text-align:center;     /* screenshot look */
+}
+.inv-table th.unit,
+.inv-table th.amount{
+  text-align:right;
+}
+
+.inv-table tbody td{
+  font-size: 12.5px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+  color:#222;
+}
+
+.inv-table td.desc{ padding-right: 14px; }
+
+.inv-table td.qty,
+.inv-table td.vat{
+  text-align:center;
+  white-space: nowrap;
+}
+
+.inv-table td.unit,
+.inv-table td.amount{
+  text-align:right;
+  white-space: nowrap;
+}
+
+/* Discount row: only amount shown (like screenshot) */
+.inv-table tr.discount td{
+  padding-top: 0;
+  padding-bottom: 10px;
+}
+.inv-table tr.discount td.amount{
+  color:#444;
+}
+
+/* ---------------- TOTALS PAGE (Page-2) ---------------- */
+.totals-area{
+  display:flex;
+  justify-content:flex-end;
+
+  /* matches your screenshot: box starts around ~26mm below header */
+  margin-top: 26.5mm;
+}
+
+.totals{
+  width: 87mm; /* matches screenshot width and right alignment */
+}
+
+.totals .trow{
+  display:flex;
+  justify-content:space-between;
+  font-size: 13px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line);
+  color:#222;
+}
+.totals .trow .lbl{ font-weight: 700; }
+.totals .trow.total .lbl,
+.totals .trow.total .val{ font-weight: 800; }
+
+/* ---------------- FOOTER (repeat every page) ---------------- */
+.inv-footer{
+  position:absolute;
+  left: 8.5mm;
+  right: 8.5mm;
+  bottom: 6mm; /* tight like screenshot */
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-end;
+  font-size: 12px;
+  color:#666;
+}
+
+.inv-footer .left{ white-space: pre-line; }
+.inv-footer .right{
+  text-align:right;
+  white-space: pre-line;
+}
+
+/* ---------------- PRINT ---------------- */
+@media print{
+  body{ background:#fff; }
+  .inv-screen{ padding:0; }
+
+  .invoice-page{
+    margin:0;
+    box-shadow:none;
+    page-break-after: always;
+  }
+
+  @page{
+    size: A4;
+    margin: 0;
+  }
+}

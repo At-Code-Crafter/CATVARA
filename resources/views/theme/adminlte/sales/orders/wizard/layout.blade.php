@@ -1,207 +1,242 @@
 @extends('theme.adminlte.layouts.app')
 
-@section('title', 'New Sales Order')
+@section('title', 'Sales Order Wizard')
+
+@push('css')
+  <style>
+    /* -------------------------------------------------------------------------- */
+    /*                     ENTERPRISE POS / WIZARD THEME                          */
+    /* -------------------------------------------------------------------------- */
+    :root{
+      --primary:#4f46e5;
+      --primary-dark:#4338ca;
+      --secondary:#64748b;
+      --success:#10b981;
+      --danger:#ef4444;
+
+      --surface:#f8fafc;
+      --panel:#ffffff;
+      --border:#e2e8f0;
+
+      --shadow-sm: 0 1px 2px rgba(0,0,0,.05);
+      --shadow-md: 0 6px 18px rgba(15,23,42,.08);
+      --shadow-lg: 0 16px 30px rgba(15,23,42,.12);
+
+      --r-lg: 16px;
+      --r-xl: 22px;
+    }
+
+    body { background: var(--surface); }
+
+    .wiz-shell {
+      background: transparent;
+    }
+
+    /* Steps */
+    .wiz-steps {
+      border: 0;
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      margin-bottom: 18px;
+      padding: 0;
+    }
+    .wiz-steps .nav-link{
+      border: 1px solid var(--border);
+      background: var(--panel);
+      border-radius: 999px;
+      padding: 10px 16px;
+      font-weight: 700;
+      color: var(--secondary);
+      box-shadow: var(--shadow-sm);
+      transition: .18s ease;
+    }
+    .wiz-steps .nav-link.active{
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #fff;
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-md);
+    }
+    .wiz-steps .nav-link.disabled{
+      opacity: .55;
+      pointer-events: none;
+    }
+
+    /* Cards / Panels */
+    .panel-card{
+      border: 1px solid var(--border);
+      border-radius: var(--r-xl);
+      box-shadow: var(--shadow-md);
+      background: var(--panel);
+      overflow: hidden;
+    }
+    .panel-header{
+      background: #0f172a;
+      color: #fff;
+      padding: 18px 20px;
+    }
+    .panel-subtitle{ color: rgba(255,255,255,.65); }
+
+    /* Customer Cards */
+    .customer-grid{
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+    }
+    @media (max-width: 1200px){ .customer-grid{ grid-template-columns: repeat(3, 1fr); } }
+    @media (max-width: 992px){  .customer-grid{ grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 576px){  .customer-grid{ grid-template-columns: repeat(1, 1fr); } }
+
+    .customer-card{
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      background: #fff;
+      padding: 14px;
+      cursor: pointer;
+      transition: .18s ease;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .customer-card:hover{
+      border-color: var(--primary);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-lg);
+    }
+    .cust-top{
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+    .cust-avatar{
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #e0e7ff, #c7d2fe);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-weight: 900;
+      color: var(--primary-dark);
+      flex: 0 0 auto;
+      overflow: hidden;
+      border: 1px solid rgba(79,70,229,.20);
+    }
+    .cust-avatar img{
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display:block;
+    }
+    .cust-name{
+      font-weight: 900;
+      color: #0f172a;
+      line-height: 1.2;
+      margin: 0;
+      font-size: 15px;
+    }
+    .cust-meta{
+      color: var(--secondary);
+      font-size: 12px;
+      margin: 0;
+    }
+    .cust-badges .badge{
+      border-radius: 999px;
+      padding: 6px 10px;
+      font-weight: 800;
+      letter-spacing: .2px;
+    }
+    .cust-body{
+      color: #334155;
+      font-size: 12px;
+      line-height: 1.45;
+      min-height: 42px;
+    }
+    .cust-foot{
+      margin-top: auto;
+      display:flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      color: var(--secondary);
+      font-size: 12px;
+    }
+    .cust-select-pill{
+      border: 1px dashed var(--border);
+      border-radius: 999px;
+      padding: 6px 10px;
+      font-weight: 800;
+      color: #0f172a;
+      background: #f8fafc;
+    }
+
+    /* Search Bar */
+    .search-bar{
+      border-radius: 999px;
+      overflow: hidden;
+      background: #f1f5f9;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-sm);
+    }
+    .search-bar .input-group-text{
+      background: transparent;
+      border: 0;
+      padding-left: 16px;
+    }
+    .search-bar .form-control{
+      background: transparent;
+      border: 0;
+      height: 48px;
+    }
+
+    /* Primary actions */
+    .btn-primary{
+      background: var(--primary);
+      border-color: var(--primary);
+    }
+    .btn-primary:hover{
+      background: var(--primary-dark);
+      border-color: var(--primary-dark);
+    }
+  </style>
+@endpush
 
 @section('content_header')
   <div class="row mb-2">
-    <div class="col-sm-6">
-      <h1 class="m-0 text-dark">New Sales Order</h1>
+    <div class="col-12">
+      <h1 class="m-0">New Sales Order</h1>
+      <small class="text-muted">Wizard flow: Customer → Items → Review</small>
     </div>
   </div>
-@endsection
-
-@section('css')
-  <style>
-    /* Wizard / Stepper Styles */
-    .wizard-steps {
-      display: flex;
-      justify-content: center;
-      margin-bottom: 2rem;
-      position: relative;
-      z-index: 1;
-    }
-
-    .wizard-step {
-      width: 15rem;
-      text-align: center;
-      position: relative;
-      opacity: 0.6;
-      transition: all 0.3s ease;
-    }
-
-    .wizard-step.active {
-      opacity: 1;
-      transform: scale(1.05);
-    }
-
-    .wizard-step.completed .step-icon {
-      background: #10b981;
-      /* Green */
-      color: white;
-      border-color: #10b981;
-    }
-
-    .wizard-step.active .step-icon {
-      background: #3b82f6;
-      /* Blue */
-      color: white;
-      box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2);
-      border-color: #3b82f6;
-    }
-
-    .step-icon {
-      width: 3.5rem;
-      height: 3.5rem;
-      border-radius: 50%;
-      background: #fff;
-      border: 2px solid #e2e8f0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.25rem;
-      font-weight: 700;
-      color: #64748b;
-      margin: 0 auto 0.75rem;
-      position: relative;
-      z-index: 2;
-      transition: all 0.3s ease;
-    }
-
-    .step-label {
-      font-weight: 600;
-      color: #1e293b;
-      font-size: 0.95rem;
-    }
-
-    .step-desc {
-      font-size: 0.75rem;
-      color: #64748b;
-      display: block;
-      margin-top: 2px;
-    }
-
-    /* Connecting Lines */
-    .wizard-steps::before {
-      content: '';
-      position: absolute;
-      top: 1.75rem;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 60%;
-      height: 2px;
-      background: #e2e8f0;
-      z-index: 0;
-    }
-
-    /* Content Area */
-    .wizard-content {
-      background: #fff;
-      border-radius: 1rem;
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-      border: 1px solid #f1f5f9;
-      overflow: hidden;
-      min-height: 60vh;
-    }
-
-    /* Ultra Enterprise Inputs */
-    .form-label-group {
-      position: relative;
-      margin-bottom: 1.5rem;
-    }
-
-    .form-control-lg {
-      border-radius: 0.75rem;
-      padding: 1rem 1.25rem;
-      font-size: 1rem;
-      height: auto;
-      border-color: #e2e8f0;
-      background-color: #f8fafc;
-      transition: all 0.2s;
-    }
-
-    .form-control-lg:focus {
-      background-color: #fff;
-      border-color: #3b82f6;
-      box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
-    }
-
-    .btn-next {
-      background: #0f172a;
-      color: #fff;
-      border-radius: 0.75rem;
-      padding: 0.75rem 2rem;
-      font-weight: 600;
-      transition: all 0.2s;
-      border: 1px solid #0f172a;
-    }
-
-    .btn-next:hover {
-      background: #1e293b;
-      transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.2);
-      color: #fff;
-    }
-
-    .glass-header {
-      background: rgba(255, 255, 255, 0.9);
-      backdrop-filter: blur(8px);
-      border-bottom: 1px solid #f1f5f9;
-      padding: 1.5rem;
-    }
-  </style>
-  @yield('wizard-css')
 @endsection
 
 @section('content')
-  <div class="container-fluid pb-5">
+  <div class="container-fluid wiz-shell">
+    <ul class="nav nav-pills wiz-steps">
+      <li class="nav-item">
+        <a class="nav-link {{ ($step ?? 1) == 1 ? 'active' : 'disabled' }}" href="javascript:void(0)">
+          <i class="fas fa-user mr-2"></i> 1. Customer
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link {{ ($step ?? 1) == 2 ? 'active' : 'disabled' }}" href="javascript:void(0)">
+          <i class="fas fa-cubes mr-2"></i> 2. Items
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link {{ ($step ?? 1) == 3 ? 'active' : 'disabled' }}" href="javascript:void(0)">
+          <i class="fas fa-check-circle mr-2"></i> 3. Review
+        </a>
+      </li>
+    </ul>
 
-    <!-- Wizard Stepper -->
-    <div class="wizard-steps">
-      @php
-        $currentRoute = Route::currentRouteName();
-        $step1Active = str_contains($currentRoute, 'step1');
-        $step2Active = str_contains($currentRoute, 'step2');
-        $step3Active = str_contains($currentRoute, 'step3');
-
-        $step1Done = $step2Active || $step3Active;
-        $step2Done = $step3Active;
-      @endphp
-
-      <div class="wizard-step {{ $step1Active ? 'active' : '' }} {{ $step1Done ? 'completed' : '' }}">
-        <div class="step-icon">
-          @if ($step1Done)
-            <i class="fas fa-check"></i>
-          @else
-            1
-          @endif
-        </div>
-        <div class="step-label">Select Customer</div>
-        <span class="step-desc">Who's buying?</span>
-      </div>
-
-      <div class="wizard-step {{ $step2Active ? 'active' : '' }} {{ $step2Done ? 'completed' : '' }}">
-        <div class="step-icon">
-          @if ($step2Done)
-            <i class="fas fa-check"></i>
-          @else
-            2
-          @endif
-        </div>
-        <div class="step-label">Add Products</div>
-        <span class="step-desc">Build the order</span>
-      </div>
-
-      <div class="wizard-step {{ $step3Active ? 'active' : '' }}">
-        <div class="step-icon">3</div>
-        <div class="step-label">Review & Pay</div>
-        <span class="step-desc">Finalize details</span>
-      </div>
-    </div>
-
-    <!-- Wizard Content -->
-    <div class="wizard-content">
-      @yield('wizard-content')
-    </div>
-
+    @yield('wizard-content')
   </div>
 @endsection
+
+@push('scripts')
+  {{-- Lodash is required because wizard pages use _.debounce() --}}
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.21/lodash.min.js"></script>
+@endpush

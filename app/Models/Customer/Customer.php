@@ -6,7 +6,6 @@ use App\Models\Accounting\PaymentTerm;
 use App\Models\Common\Country;
 use App\Models\Common\State;
 use Illuminate\Database\Eloquent\Model;
-use App\Models\Customer\CustomerAddress;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Customer extends Model
@@ -50,7 +49,8 @@ class Customer extends Model
         return $this->hasMany(CustomerAddress::class)->where('type', 'SHIPPING');
     }
 
-    public function paymentTerm(){
+    public function paymentTerm()
+    {
         return $this->belongsTo(PaymentTerm::class);
     }
 
@@ -62,5 +62,14 @@ class Customer extends Model
     public function state()
     {
         return $this->belongsTo(State::class);
+    }
+
+    public function getInitialsAttribute()
+    {
+        return collect(preg_split('/\s+/', trim((string) $this->display_name)))
+            ->filter()
+            ->map(fn ($p) => mb_substr($p, 0, 1))
+            ->take(2)
+            ->implode('');
     }
 }

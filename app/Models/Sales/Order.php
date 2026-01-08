@@ -5,8 +5,8 @@ namespace App\Models\Sales;
 use App\Models\Accounting\Payment;
 use App\Models\Accounting\PaymentTerm;
 use App\Models\Company\Company;
-use App\Models\Pricing\Currency;
 use App\Models\Customer\Customer;
+use App\Models\Pricing\Currency;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -38,7 +38,9 @@ class Order extends Model
         'billing_address',
         'shipping_address',
         'shipping_total',
-        'shipping_tax_total'
+        'shipping_tax_total',
+        'additional_charges',
+        'additional_total',
     ];
 
     protected $casts = [
@@ -52,6 +54,8 @@ class Order extends Model
         'shipping_tax_total' => 'decimal:6',
         'billing_address' => 'json',
         'shipping_address' => 'json',
+        'additional_charges' => 'json',
+        'additional_total' => 'decimal:6',
     ];
 
     public function company()

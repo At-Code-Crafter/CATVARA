@@ -1,0 +1,38 @@
+[
+	{
+		"id": "P1001",
+		"name": "Wireless Headphones Pro",
+		"category": "Electronics",
+		"brand": "Auralux"
+	},
+	{
+		"id": "P1002",
+		"name": "Smart Watch Gen 4",
+		"category": "Electronics",
+		"brand": "Chronos"
+	},
+	{
+		"id": "P1003",
+		"name": "Premium Cotton T-Shirt",
+		"category": "Apparel",
+		"brand": "NordWear"
+	},
+	{
+		"id": "P1004",
+		"name": "Organic Arabica Coffee Beans",
+		"category": "Grocery",
+		"brand": "Roast & Co"
+	},
+	{
+		"id": "P1005",
+		"name": "Ergonomic Office Chair",
+		"category": "Home",
+		"brand": "SitWell"
+	},
+	{
+		"id": "P1006",
+		"name": "Stainless Steel Water Bottle",
+		"category": "Home",
+		"brand": "HydraPure"
+	}
+]

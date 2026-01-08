@@ -1,28 +1,49 @@
 @extends('theme.adminlte.layouts.app')
 
+@section('title', 'Variant Inventory')
+
 @section('content-header')
-  <div class="row mb-2">
-    <div class="col-sm-6">
-      <h1 class="m-0 text-dark">
-        <i class="fas fa-boxes text-muted mr-2"></i> {{ $variant->sku }}
-        <small class="text-muted ml-2" style="font-size: 1rem;">{{ $variant->product->name }}</small>
-      </h1>
-    </div>
-    <div class="col-sm-6">
-      <div class="float-sm-right">
-        <a href="{{ company_route('catalog.products.edit', ['product' => $variant->product_id]) }}"
-          class="btn btn-outline-secondary mr-2">
-          <i class="fas fa-arrow-left mr-1"></i> Back to Product
-        </a>
-        <button type="button" class="btn btn-primary btn-transfer-stock">
-          <i class="fas fa-exchange-alt mr-1"></i> Transfer Stock
-        </button>
+<link rel="stylesheet" href="{{ asset('assets/css/enterprise.css') }}">
+  <div class="row mb-2 align-items-center">
+    <div class="col-lg-8 col-md-12">
+      <div class="d-flex align-items-start">
+        <div class="mr-3">
+          <span class="customer-page-icon d-inline-flex align-items-center justify-content-center">
+            <i class="fas fa-boxes"></i>
+          </span>
+        </div>
+
+        <div>
+          <h1 class="m-0">
+            {{ $variant->sku }}
+            <small class="text-muted ml-2" style="font-size: 1rem;">{{ $variant->product->name }}</small>
+          </h1>
+
+          <div class="d-flex flex-wrap mt-2" style="gap:8px;">
+            @foreach ($variant->attributeValues as $val)
+              <span class="ent-chip">
+                <b>{{ strtoupper($val->attribute->name) }}:</b> {{ $val->value }}
+              </span>
+            @endforeach
+          </div>
+        </div>
       </div>
+    </div>
+
+    <div class="col-lg-4 col-md-12 d-flex justify-content-lg-end mt-3 mt-lg-0" style="gap:10px;">
+      <a href="{{ company_route('catalog.products.edit', ['product' => $variant->product_id]) }}"
+        class="btn btn-outline-secondary btn-ent">
+        <i class="fas fa-arrow-left mr-1"></i> Back to Product
+      </a>
+      <button type="button" class="btn btn-primary btn-ent btn-transfer-stock">
+        <i class="fas fa-exchange-alt mr-1"></i> Transfer Stock
+      </button>
     </div>
   </div>
 @endsection
 
 @section('content')
+  {{-- FLASH / VALIDATION --}}
   <div class="row">
     <div class="col-12">
       @if (session('success'))
@@ -32,6 +53,7 @@
           {{ session('success') }}
         </div>
       @endif
+
       @if (session('error'))
         <div class="alert alert-danger alert-dismissible">
           <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
@@ -39,11 +61,12 @@
           {{ session('error') }}
         </div>
       @endif
+
       @if ($errors->any())
         <div class="alert alert-danger alert-dismissible">
           <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
           <h5><i class="icon fas fa-exclamation-triangle"></i> Validation Error!</h5>
-          <ul>
+          <ul class="mb-0">
             @foreach ($errors->all() as $error)
               <li>{{ $error }}</li>
             @endforeach
@@ -52,96 +75,127 @@
       @endif
     </div>
   </div>
-  <div class="row">
-    {{-- LEFT COLUMN: INFO --}}
-    <div class="col-md-3">
 
-      {{-- Total Stock Widget --}}
-      <div class="small-box bg-{{ $balances->sum('quantity') > 0 ? 'info' : 'danger' }}">
-        <div class="inner">
-          <h3>{{ (float) $balances->sum('quantity') }}</h3>
-          <p>Total Stock on Hand</p>
+  <div class="row">
+    {{-- LEFT COLUMN --}}
+    <div class="col-lg-3 col-md-12">
+
+      {{-- TOTAL STOCK (Enterprise stat style) --}}
+      @php $totalQty = (float) $balances->sum('quantity'); @endphp
+      <div class="ent-stat mb-3">
+        <div class="ent-stat-body">
+          <div>
+            <p class="ent-stat-title mb-0">Total Stock on Hand</p>
+            <p class="ent-stat-value mb-0">{{ $totalQty }}</p>
+          </div>
+          <div class="ent-stat-icon">
+            <i class="fas fa-cubes"></i>
+          </div>
         </div>
-        <div class="icon">
-          <i class="fas fa-cubes"></i>
+        <div class="ent-stat-foot">
+          <span>{{ $totalQty > 0 ? 'In stock across locations' : 'No stock available' }}</span>
+          <span class="ent-stat-badge">{{ $totalQty > 0 ? 'OK' : 'LOW' }}</span>
         </div>
       </div>
 
-      {{-- DETAILS CARD --}}
-      <div class="card card-outline card-primary">
+      {{-- DETAILS --}}
+      <div class="card ent-card mb-3">
         <div class="card-header">
-          <h3 class="card-title">Variant Details</h3>
+          <h3 class="card-title"><i class="fas fa-info-circle"></i> Variant Details</h3>
         </div>
+
         <div class="card-body p-0">
-          <table class="table table-striped">
+          <table class="table table-enterprise mb-0">
             <tbody>
               @foreach ($variant->attributeValues as $val)
                 <tr>
-                  <td><b>{{ $val->attribute->name }}</b></td>
+                  <td class="font-weight-bold">{{ $val->attribute->name }}</td>
                   <td class="text-right">{{ $val->value }}</td>
                 </tr>
               @endforeach
+
               <tr>
-                <td><b>Cost Price</b></td>
+                <td class="font-weight-bold">Cost Price</td>
                 <td class="text-right">
                   @php
                     $currency = $variant->prices->first()->currency->symbol ?? '$';
                   @endphp
-                  {{ $currency }}{{ number_format($variant->cost_price, 2) }}
+                  {{ $currency }}{{ number_format((float) $variant->cost_price, 2) }}
                 </td>
               </tr>
             </tbody>
           </table>
         </div>
+
+        <div class="card-footer">
+          <div class="help-hint mb-0">
+            Stock actions below will log movements into the history table.
+          </div>
+        </div>
       </div>
+
     </div>
 
-    {{-- RIGHT COLUMN: STOCK & LOGS --}}
-    <div class="col-md-9">
+    {{-- RIGHT COLUMN --}}
+    <div class="col-lg-9 col-md-12">
+
       {{-- LOCATION BALANCES --}}
-      <div class="card card-outline card-success">
+      <div class="card ent-card mb-3">
         <div class="card-header">
-          <h3 class="card-title"><i class="fas fa-warehouse mr-1"></i> Inventory by Location</h3>
+          <div class="d-flex align-items-center justify-content-between">
+            <h3 class="card-title"><i class="fas fa-warehouse"></i> Inventory by Location</h3>
+            <span class="ent-chip">
+              <i class="fas fa-map-marker-alt"></i> {{ $locations->count() }} Locations
+            </span>
+          </div>
         </div>
+
         <div class="card-body p-0">
           <div class="table-responsive">
-            <table class="table table-hover table-striped mb-0">
-              <thead class="bg-light">
+            <table class="table table-hover table-enterprise mb-0">
+              <thead>
                 <tr>
                   <th>Location</th>
                   <th>Type</th>
                   <th class="text-center">On Hand</th>
-                  <th class="text-right" style="width: 200px;">Actions</th>
+                  <th class="text-right" style="width: 210px;">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 @foreach ($locations as $loc)
                   @php
                     $bal = $balances->where('inventory_location_id', $loc->id)->first();
-                    $qty = $bal ? $bal->quantity : 0;
+                    $qty = (float) ($bal ? $bal->quantity : 0);
                   @endphp
                   <tr>
                     <td class="align-middle">
-                      <span class="font-weight-bold">{{ $loc->locatable->name }}</span>
+                      <div class="font-weight-bold">{{ $loc->locatable->name }}</div>
                       @if ($loc->locatable->code)
-                        <br><small class="text-muted">{{ $loc->locatable->code }}</small>
+                        <div class="text-muted small">{{ $loc->locatable->code }}</div>
                       @endif
                     </td>
-                    <td class="align-middle"><span class="badge badge-light border">{{ ucfirst($loc->type) }}</span></td>
+
+                    <td class="align-middle">
+                      <span class="ent-stat-badge">{{ ucfirst($loc->type) }}</span>
+                    </td>
+
                     <td class="text-center align-middle">
                       <span class="badge {{ $qty > 0 ? 'badge-success' : 'badge-light border' }}"
-                        style="font-size: 1.1rem; padding: 0.5em 0.8em;">
-                        {{ (float) $qty }}
+                        style="font-size: 1.05rem; padding: 0.55em 0.85em;">
+                        {{ $qty }}
                       </span>
                     </td>
+
                     <td class="text-right align-middle">
-                      <div class="btn-group">
-                        <button class="btn btn-sm btn-success btn-add-stock" data-location-id="{{ $loc->id }}"
-                          data-location-name="{{ $loc->locatable->name }}">
-                          <i class="fas fa-plus"></i> Add
+                      <div class="d-inline-flex" style="gap:8px;">
+                        <button class="btn btn-sm btn-primary btn-ent btn-add-stock"
+                          data-location-id="{{ $loc->id }}" data-location-name="{{ $loc->locatable->name }}"
+                          data-toggle="tooltip" title="Add stock into this location">
+                          <i class="fas fa-plus mr-1"></i> Add
                         </button>
-                        <button class="btn btn-sm btn-default btn-adjust-stock" data-location-id="{{ $loc->id }}"
-                          title="Adjust / Remove">
+
+                        <button class="btn btn-sm btn-outline-secondary btn-ent btn-adjust-stock"
+                          data-location-id="{{ $loc->id }}" data-toggle="tooltip" title="Adjust / remove stock">
                           <i class="fas fa-cog"></i>
                         </button>
                       </div>
@@ -152,23 +206,34 @@
             </table>
           </div>
         </div>
-      </div>
 
-      {{-- AUDIT TRAIL --}}
-      <div class="card card-outline card-navy">
-        <div class="card-header">
-          <h3 class="card-title"><i class="fas fa-history mr-1"></i> Movement History</h3>
-          <div class="card-tools">
-            <button type="button" class="btn btn-tool" data-card-widget="collapse"><i class="fas fa-minus"></i></button>
+        <div class="card-footer">
+          <div class="help-hint mb-0">
+            Use <b>Add</b> for inbound updates, and <b>Adjust</b> to remove or correct quantities.
           </div>
         </div>
+      </div>
+
+      {{-- MOVEMENT HISTORY --}}
+      <div class="card ent-card">
+        <div class="card-header">
+          <div class="d-flex align-items-center justify-content-between">
+            <h3 class="card-title"><i class="fas fa-history"></i> Movement History</h3>
+            <div class="card-tools">
+              <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                <i class="fas fa-minus"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
         <div class="card-body">
-          <table id="movements-table" class="table table-bordered table-striped" style="width: 100%;">
+          <table id="movements-table" class="table table-enterprise" style="width: 100%;">
             <thead>
               <tr>
                 <th>Date</th>
                 <th>Reason</th>
-                <th>Reference</th> {{-- Added Reference Column --}}
+                <th>Reference</th>
                 <th>Location</th>
                 <th>Qty</th>
                 <th>User</th>
@@ -182,21 +247,22 @@
   </div>
 
   {{-- ADJUSTMENT MODAL --}}
-  <div class="modal fade" id="adjustStockModal">
+  <div class="modal fade ent-modal" id="adjustStockModal">
     <div class="modal-dialog">
-      <form action="{{ company_route('inventory.store') }}" method="POST" class="modal-content">
+      <form action="{{ company_route('inventory.store') }}" method="POST" class="modal-content ent-modal-content">
         @csrf
         <input type="hidden" name="redirect_to" value="{{ url()->current() }}">
-        <input type="hidden" name="product_variant_id" value="{{ $variant->id }}"> <!-- Fixed for this page -->
+        <input type="hidden" name="product_variant_id" value="{{ $variant->id }}">
 
-        <div class="modal-header bg-light">
+        <div class="modal-header">
           <h4 class="modal-title" id="modalTitle">Adjust Stock</h4>
           <button type="button" class="close" data-dismiss="modal">&times;</button>
         </div>
+
         <div class="modal-body">
           <div class="form-group">
-            <label>Location</label>
-            <select class="form-control" name="inventory_location_id" id="modal_location_id" required>
+            <label>Location <span class="req">*</span></label>
+            <select class="form-control ent-control" name="inventory_location_id" id="modal_location_id" required>
               @foreach ($locations as $loc)
                 <option value="{{ $loc->id }}">{{ $loc->locatable->name }} ({{ ucfirst($loc->type) }})</option>
               @endforeach
@@ -206,8 +272,8 @@
           <div class="row">
             <div class="col-md-6">
               <div class="form-group">
-                <label>Action</label>
-                <select class="form-control" name="type" id="modal_type" required>
+                <label>Action <span class="req">*</span></label>
+                <select class="form-control ent-control" name="type" id="modal_type" required>
                   <option value="add">Add Stock (+)</option>
                   <option value="remove">Remove Stock (-)</option>
                 </select>
@@ -215,64 +281,74 @@
             </div>
             <div class="col-md-6">
               <div class="form-group">
-                <label>Quantity</label>
-                <input type="number" step="0.01" class="form-control" name="quantity" min="0.01" required
-                  placeholder="0.00">
+                <label>Quantity <span class="req">*</span></label>
+                <input type="number" step="0.01" class="form-control ent-control" name="quantity" min="0.01"
+                  required placeholder="0.00">
               </div>
             </div>
           </div>
 
-          <div class="form-group">
-            <label>Reason / Reference</label>
-            <input type="text" class="form-control" name="reason"
+          <div class="form-group mb-0">
+            <label>Reason / Reference <span class="req">*</span></label>
+            <input type="text" class="form-control ent-control" name="reason"
               placeholder="e.g. Purchase Order, Stock count, Broken..." required>
           </div>
         </div>
-        <div class="modal-footer bg-light justify-content-between">
-          <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-          <button type="submit" class="btn btn-primary" id="btnSubmitAdjust">Update Stock</button>
+
+        <div class="modal-footer justify-content-between">
+          <button type="button" class="btn btn-outline-secondary btn-ent" data-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary btn-ent" id="btnSubmitAdjust">
+            <i class="fas fa-save mr-1"></i> Update Stock
+          </button>
         </div>
       </form>
     </div>
   </div>
 
   {{-- TRANSFER MODAL --}}
-  <div class="modal fade" id="transferStockModal">
+  <div class="modal fade ent-modal" id="transferStockModal">
     <div class="modal-dialog">
-      <form action="{{ company_route('inventory.transfer') }}" method="POST" class="modal-content">
+      <form action="{{ company_route('inventory.transfer') }}" method="POST" class="modal-content ent-modal-content">
         @csrf
         <input type="hidden" name="redirect_to" value="{{ url()->current() }}">
         <input type="hidden" name="product_variant_id" value="{{ $variant->id }}">
 
-        <div class="modal-header bg-light">
+        <div class="modal-header">
           <h4 class="modal-title">Quick Transfer</h4>
           <button type="button" class="close" data-dismiss="modal">&times;</button>
         </div>
+
         <div class="modal-body">
           <div class="form-group">
-            <label>From Location</label>
-            <select class="form-control" name="from_location_id" required>
+            <label>From Location <span class="req">*</span></label>
+            <select class="form-control ent-control" name="from_location_id" required>
               @foreach ($locations as $loc)
                 <option value="{{ $loc->id }}">{{ $loc->locatable->name }}</option>
               @endforeach
             </select>
           </div>
+
           <div class="form-group">
-            <label>To Location</label>
-            <select class="form-control" name="to_location_id" required>
+            <label>To Location <span class="req">*</span></label>
+            <select class="form-control ent-control" name="to_location_id" required>
               @foreach ($locations as $loc)
                 <option value="{{ $loc->id }}">{{ $loc->locatable->name }}</option>
               @endforeach
             </select>
           </div>
-          <div class="form-group">
-            <label>Quantity</label>
-            <input type="number" step="0.01" class="form-control" name="quantity" min="0.01" required>
+
+          <div class="form-group mb-0">
+            <label>Quantity <span class="req">*</span></label>
+            <input type="number" step="0.01" class="form-control ent-control" name="quantity" min="0.01"
+              required>
           </div>
         </div>
-        <div class="modal-footer bg-light justify-content-between">
-          <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-          <button type="submit" class="btn btn-primary">Execute Transfer</button>
+
+        <div class="modal-footer justify-content-between">
+          <button type="button" class="btn btn-outline-secondary btn-ent" data-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary btn-ent">
+            <i class="fas fa-exchange-alt mr-1"></i> Execute Transfer
+          </button>
         </div>
       </form>
     </div>
@@ -282,13 +358,19 @@
 @push('scripts')
   <script>
     $(function() {
-      // Init DataTable only if it exists (hidden if empty)
+
+      // Tooltips
+      if ($.fn.tooltip) {
+        $('[data-toggle="tooltip"]').tooltip();
+      }
+
+      // DataTable
       if ($('#movements-table').length) {
         $('#movements-table').DataTable({
           processing: true,
           serverSide: true,
           autoWidth: false,
-          searching: false, // Minimal mode for sidebar feel
+          searching: false,
           lengthChange: false,
           pageLength: 10,
           ajax: {
@@ -307,7 +389,7 @@
             },
             {
               data: 'reference',
-              name: 'reference_type', // Searchable by type/id? logic in controller
+              name: 'reference_type',
               orderable: false
             },
             {
@@ -329,41 +411,33 @@
         });
       }
 
-      // Add Stock Button Logic
+      // Add Stock (prefill)
       $('.btn-add-stock').click(function() {
         var locId = $(this).data('location-id');
         var locName = $(this).data('location-name');
 
         $('#modalTitle').text('Add Stock: ' + locName);
-        $('#modal_location_id').val(locId); // Select location
-        $('#modal_type').val('add'); // Force Add
-
-        // Optional: Disable location and type to simplify UX? 
-        // User may want to change it though. Let's keep it flexible but pre-filled.
+        $('#modal_location_id').val(locId);
+        $('#modal_type').val('add');
 
         $('#adjustStockModal').modal('show');
       });
 
-      // Adjust/Manage Button Logic
+      // Adjust (prefill location)
       $('.btn-adjust-stock').click(function() {
         var locId = $(this).data('location-id');
 
         $('#modalTitle').text('Adjust Stock');
-        if (locId) {
-          $('#modal_location_id').val(locId);
-        }
-        $('#modal_type').val('add'); // Default
+        if (locId) $('#modal_location_id').val(locId);
+        $('#modal_type').val('add');
 
         $('#adjustStockModal').modal('show');
       });
 
+      // Transfer
       $('.btn-transfer-stock').click(function() {
         $('#transferStockModal').modal('show');
       });
-
-      // Select2 inside modals if needed, but standard select is often fine for small lists
-      // If locations list is huge, we should init select2.
-      // $('select.form-control').select2({ theme: 'bootstrap4' });
     });
   </script>
 @endpush

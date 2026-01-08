@@ -93,10 +93,18 @@ class SalesOrderController extends Controller
     public function create()
     {
         $companyId = active_company_id();
+
         $paymentTerms = PaymentTerm::where('is_active', true)->get();
         $categories = Category::where('company_id', $companyId)->where('is_active', true)->get();
 
-        return view('theme.adminlte.sales.orders.create', compact('paymentTerms', 'categories'));
+        // Quick pick customers (cards)
+        $customers = Customer::where('company_id', $companyId)
+            ->with(['paymentTerm', 'addresses', 'country', 'state'])
+            ->orderBy('display_name')
+            ->limit(12)
+            ->get();
+
+        return view('theme.adminlte.sales.orders.create', compact('paymentTerms', 'categories', 'customers'));
     }
 
     public function storeDraft(Request $request)
@@ -116,10 +124,10 @@ class SalesOrderController extends Controller
 
         // Ensure company is selected
         $companyId = active_company_id();
-        if (!$companyId) {
+        if (! $companyId) {
             return response()->json([
                 'success' => false,
-                'message' => 'No company selected. Please select a company first.'
+                'message' => 'No company selected. Please select a company first.',
             ], 400);
         }
 
@@ -226,7 +234,7 @@ class SalesOrderController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
 
-            \Log::error('Draft save error: ' . $e->getMessage(), [
+            \Log::error('Draft save error: '.$e->getMessage(), [
                 'file' => $e->getFile(),
                 'line' => $e->getLine(),
             ]);
@@ -249,7 +257,7 @@ class SalesOrderController extends Controller
 
             // Get or create CONFIRMED status
             $statusConfirmed = OrderStatus::where('code', 'CONFIRMED')->first();
-            if (!$statusConfirmed) {
+            if (! $statusConfirmed) {
                 $statusConfirmed = OrderStatus::create([
                     'code' => 'CONFIRMED',
                     'name' => 'Confirmed',
@@ -308,6 +316,7 @@ class SalesOrderController extends Controller
         // Both parameters come as strings, no model binding due to whereUuid and whereNumber constraints
         $order = Order::findOrFail($orderid);
         $order->load(['items', 'customer', 'customer.country', 'customer.state', 'paymentTerm', 'company', 'currency']);
+
         return view('theme.adminlte.sales.orders.print', compact('order'));
     }
 
@@ -320,7 +329,7 @@ class SalesOrderController extends Controller
             'customer.state',
             'paymentTerm',
             'company',
-            'currency'
+            'currency',
         ])->where('uuid', $uuid)->firstOrFail();
 
         return view('theme.adminlte.sales.orders.print', compact('order'));
@@ -335,7 +344,7 @@ class SalesOrderController extends Controller
             'customer.state',
             'paymentTerm',
             'company',
-            'currency'
+            'currency',
         ]);
 
         return view('theme.adminlte.sales.orders.print', compact('order'));
@@ -465,5 +474,82 @@ class SalesOrderController extends Controller
         });
 
         return response()->json($results);
+    }
+
+    // SalesOrderController.php
+
+    public function wizardStep1($company, $uuid)
+    {
+        $order = Order::where('uuid', $uuid)->with(['customer.paymentTerm', 'items'])->firstOrFail();
+
+        $companyId = active_company_id();
+
+        // Show “quick select” cards: recent customers (or top customers)
+        $customers = Customer::where('company_id', $companyId)
+            ->with(['paymentTerm', 'country', 'state'])
+            ->orderByDesc('id')
+            ->limit(12)
+            ->get();
+
+        return view('theme.adminlte.sales.orders.wizard.step1', [
+            'step' => 1,
+            'order' => $order,
+            'customers' => $customers,
+        ]);
+    }
+
+    public function wizardStoreStep1(Request $request, $company, $uuid)
+    {
+        $data = $request->validate([
+            'customer_id' => 'required|integer|exists:customers,id',
+        ]);
+
+        $order = Order::where('uuid', $uuid)->firstOrFail();
+
+        $order->customer_id = $data['customer_id'];
+        $order->save();
+
+        return redirect()->route('company.sales-orders.wizard.step2', $order->uuid);
+    }
+
+    public function wizardStep2($company, $uuid)
+    {
+        $companyId = active_company_id();
+
+        $order = Order::where('uuid', $uuid)->with(['items'])->firstOrFail();
+
+        $categories = Category::where('company_id', $companyId)
+            ->where('is_active', true)
+            ->get();
+
+        return view('theme.adminlte.sales.orders.wizard.step2', [
+            'step' => 2,
+            'order' => $order,
+            'categories' => $categories,
+        ]);
+    }
+
+    public function wizardStoreStep2(Request $request, $company, $uuid)
+    {
+        $order = Order::where('uuid', $uuid)->with('items')->firstOrFail();
+
+        if ($order->items->count() === 0) {
+            return back()->with('error', 'Please add at least one item.');
+        }
+
+        return redirect()->route('company.sales-orders.wizard.step3', $order->uuid);
+    }
+
+    public function wizardStep3($company, $uuid)
+    {
+        $order = Order::where('uuid', $uuid)->with(['items', 'paymentTerm'])->firstOrFail();
+
+        $paymentTerms = PaymentTerm::where('is_active', true)->get();
+
+        return view('theme.adminlte.sales.orders.wizard.step3', [
+            'step' => 3,
+            'order' => $order,
+            'paymentTerms' => $paymentTerms,
+        ]);
     }
 }

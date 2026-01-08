@@ -1,0 +1,44 @@
+:root {
+  --pos-primary:#4f46e5;
+  --pos-bg:#f1f5f9;
+  --pos-card:#ffffff;
+  --pos-border:#e2e8f0;
+  --pos-shadow:0 10px 15px -3px rgba(0,0,0,.08),0 4px 6px -2px rgba(0,0,0,.04);
+  --pos-radius:18px;
+}
+
+.pos-shell { background: var(--pos-bg); border-radius: 24px; padding: 16px; }
+.pos-left-card,.pos-right-card {
+  background: var(--pos-card);
+  border: 1px solid var(--pos-border);
+  border-radius: var(--pos-radius);
+  box-shadow: var(--pos-shadow);
+}
+
+.pos-sticky {
+  position: sticky;
+  top: 16px;
+  height: calc(100vh - 32px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.pos-scroll { overflow: auto; flex: 1; }
+
+.pos-product {
+  border: 1px solid var(--pos-border);
+  border-radius: 16px;
+  background: #fff;
+  cursor: pointer;
+  transition: .15s;
+  &:hover { transform: translateY(-3px); border-color: var(--pos-primary); }
+}
+
+.pos-product-img { height: 150px; display:flex; align-items:center; justify-content:center; padding:10px; }
+.pos-pill { border-radius: 999px; }
+.pos-total { font-size: 1.6rem; font-weight: 800; color: var(--pos-primary); }
+.pos-mini { font-size: .82rem; }
+.pos-muted { color: #64748b; }
+.pos-kbd { font-family: ui-monospace, Menlo, Consolas, monospace; }
+.cursor-pointer { cursor: pointer; }

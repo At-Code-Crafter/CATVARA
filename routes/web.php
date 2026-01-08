@@ -15,6 +15,7 @@ use App\Http\Controllers\Admin\Settings\StateController;
 use App\Http\Controllers\Admin\Settings\UserController;
 use App\Models\Company\Company;
 use App\Models\Sales\Order;
+use Illuminate\Support\Facades\Route;
 
 /**
  * Bind {company} by UUID (Laravel 12 compatible)
@@ -175,6 +176,37 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('customers/load/stats', [\App\Http\Controllers\Admin\CustomerController::class, 'stats'])->name('customers.stats');
 
             /**
+             * POS Orders (Enterprise POS Screen)
+             */
+            Route::prefix('pos')->as('pos.')->group(function () {
+
+                Route::get('orders/create', [\App\Http\Controllers\Admin\Sales\POS\OrderController::class, 'create'])
+                    ->name('orders.create');
+
+                Route::get('orders/{uuid}', [\App\Http\Controllers\Admin\Sales\POS\OrderController::class, 'edit'])
+                    ->name('orders.edit');
+
+                Route::post('orders/{uuid}/action', [\App\Http\Controllers\Admin\Sales\POS\OrderController::class, 'action'])
+                    ->name('orders.action');
+
+                // Draft autosave endpoints
+                Route::post('orders/{uuid}/draft/sync', [\App\Http\Controllers\Admin\Sales\POS\OrderDraftController::class, 'sync'])
+                    ->name('orders.draft.sync');
+
+                Route::post('orders/{uuid}/draft/customer', [\App\Http\Controllers\Admin\Sales\POS\OrderDraftController::class, 'updateSellTo'])
+                    ->name('orders.draft.sellTo');
+
+                Route::post('orders/{uuid}/draft/bill-to', [\App\Http\Controllers\Admin\Sales\POS\OrderDraftController::class, 'updateBillTo'])
+                    ->name('orders.draft.billTo');
+
+                Route::post('orders/{uuid}/draft/payment-term', [\App\Http\Controllers\Admin\Sales\POS\OrderDraftController::class, 'updatePaymentTerm'])
+                    ->name('orders.draft.paymentTerm');
+            });
+
+            Route::get('load-customers', [\App\Http\Controllers\Admin\Sales\POS\OrderController::class, 'loadCustomers'])
+                ->name('load-customers');
+
+            /**
              * Quotes Management
              */
             Route::resource('quotes', \App\Http\Controllers\Admin\QuoteController::class);
@@ -202,11 +234,35 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('sales/products/{product}/variants', [\App\Http\Controllers\Admin\Sales\SalesOrderController::class, 'getProductVariants'])->name('sales-orders.getVariants');
 
             Route::resource('sales-orders', \App\Http\Controllers\Admin\Sales\SalesOrderController::class);
+
+            /**
+             * Redesigned Sales Order Wizard
+             */
+            Route::prefix('sales/order')->as('sales.orders.')->group(function () {
+                Route::get('new', [\App\Http\Controllers\Admin\Sales\OrderController::class, 'create'])->name('create');
+                Route::post('new', [\App\Http\Controllers\Admin\Sales\OrderController::class, 'storeCustomer'])->name('store.customer');
+                
+                // AJAX for Step 1
+                Route::get('search-customers', [\App\Http\Controllers\Admin\Sales\OrderController::class, 'searchCustomers'])->name('search.customers');
+                Route::get('load-customers', [\App\Http\Controllers\Admin\Sales\OrderController::class, 'loadCustomers'])->name('load.customers');
+
+                Route::get('{order}/products', [\App\Http\Controllers\Admin\Sales\OrderController::class, 'products'])->name('products');
+                
+                // Cart / Product Actions
+                Route::get('search-products', [\App\Http\Controllers\Admin\Sales\OrderController::class, 'searchProducts'])->name('search.products');
+                Route::post('{order}/cart/add', [\App\Http\Controllers\Admin\Sales\OrderController::class, 'addToCart'])->name('cart.add');
+                Route::post('{order}/cart/update/{lineId}', [\App\Http\Controllers\Admin\Sales\OrderController::class, 'updateLine'])->name('cart.update');
+                Route::post('{order}/cart/remove/{lineId}', [\App\Http\Controllers\Admin\Sales\OrderController::class, 'removeLine'])->name('cart.remove');
+
+                Route::get('{order}/billing', [\App\Http\Controllers\Admin\Sales\OrderController::class, 'billing'])->name('billing');
+                Route::post('{order}/billing', [\App\Http\Controllers\Admin\Sales\OrderController::class, 'storeBilling'])->name('store.billing');
+                Route::get('{order}/preview', [\App\Http\Controllers\Admin\Sales\OrderController::class, 'preview'])->name('preview');
+                Route::post('{order}/preview', [\App\Http\Controllers\Admin\Sales\OrderController::class, 'store'])->name('store');
+            });
         });
 
-        // Invoice preview - OUTSIDE company group to avoid model binding
-        Route::get('{company}/invoice-preview/{orderid}', [\App\Http\Controllers\Admin\Sales\SalesOrderController::class, 'invoicePreview'])->whereUuid('company')->whereNumber('orderid')->name('invoice-preview');
-    });
-
+    // Invoice preview - OUTSIDE company group to avoid model binding
+    Route::get('{company}/invoice-preview/{orderid}', [\App\Http\Controllers\Admin\Sales\SalesOrderController::class, 'invoicePreview'])->whereUuid('company')->whereNumber('orderid')->name('invoice-preview');
+});
 
 require __DIR__.'/auth.php';

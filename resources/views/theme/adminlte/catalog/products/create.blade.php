@@ -1,16 +1,31 @@
 @extends('theme.adminlte.layouts.app')
 
+@section('title', 'Create Product')
+
 @section('content-header')
-  <div class="row mb-2">
-    <div class="col-sm-6">
-      <h1 class="m-0">Create Product</h1>
-    </div>
-    <div class="col-sm-6">
-      <div class="float-sm-right">
-        <a href="{{ company_route('catalog.products.index') }}" class="btn btn-default">
-          <i class="fas fa-arrow-left"></i> Back
-        </a>
+<link rel="stylesheet" href="{{ asset('assets/css/enterprise.css') }}">
+  <div class="row mb-2 align-items-center">
+    <div class="col-sm-8">
+      <div class="d-flex align-items-center">
+        <div class="mr-3">
+          <span class="customer-page-icon d-inline-flex align-items-center justify-content-center">
+            <i class="fas fa-plus"></i>
+          </span>
+        </div>
+        <div>
+          <h1 class="m-0">Create Product</h1>
+          <div class="text-muted small">Create product, generate variants and pricing in one flow.</div>
+        </div>
       </div>
+    </div>
+
+    <div class="col-sm-4 d-flex justify-content-sm-end mt-3 mt-sm-0" style="gap:10px;">
+      <a href="{{ company_route('catalog.products.index') }}" class="btn btn-outline-secondary btn-ent">
+        <i class="fas fa-arrow-left mr-1"></i> Back
+      </a>
+      <button type="button" class="btn btn-primary btn-ent" id="btnSubmitTop">
+        <i class="fas fa-save mr-1"></i> Create
+      </button>
     </div>
   </div>
 @endsection
@@ -20,48 +35,57 @@
     @csrf
 
     <div class="row">
-      <!-- Left Column: Basic Info -->
-      <div class="col-md-4">
-        <div class="card card-primary">
+      {{-- LEFT: BASIC + VARIANT SETTINGS --}}
+      <div class="col-lg-4 col-md-12">
+
+        {{-- BASIC INFORMATION --}}
+        <div class="card ent-card mb-3">
           <div class="card-header">
-            <h3 class="card-title">Basic Information</h3>
+            <h3 class="card-title"><i class="fas fa-info-circle"></i> Basic Information</h3>
           </div>
           <div class="card-body">
             <div class="form-group">
-              <label for="name">Product Name *</label>
-              <input type="text" class="form-control" id="name" name="name" required
+              <label for="name">Product Name <span class="req">*</span></label>
+              <input type="text" class="form-control ent-control" id="name" name="name" required
                 placeholder="e.g. Cotton T-Shirt">
             </div>
 
             <div class="form-group">
-              <label for="category_id">Category *</label>
-              <select class="form-control select2" name="category_id" required>
+              <label for="category_id">Category <span class="req">*</span></label>
+              <select class="form-control ent-control select2" name="category_id" required>
                 <option value="">Select Category</option>
                 @foreach ($categories as $cat)
                   <option value="{{ $cat->id }}">{{ $cat->name }}</option>
                 @endforeach
               </select>
+              <div class="help-hint">Changing category will refresh available attributes for variant generation.</div>
             </div>
 
-            <div class="form-group">
+            <div class="form-group mb-0">
               <label for="description">Description</label>
-              <textarea class="form-control" name="description" rows="3"></textarea>
+              <textarea class="form-control ent-control" name="description" rows="3"></textarea>
             </div>
           </div>
         </div>
 
-        <div class="card card-info">
+        {{-- VARIANT SETTINGS --}}
+        <div class="card ent-card mb-3">
           <div class="card-header">
-            <h3 class="card-title">Variant Settings</h3>
+            <h3 class="card-title"><i class="fas fa-sliders-h"></i> Variant Settings</h3>
           </div>
           <div class="card-body">
             <label>Select Attributes to Generate Variants</label>
-            <div class="form-group">
+
+            <div class="ent-divider"></div>
+
+            <div class="form-group mb-0" id="attrContainer">
               @foreach ($attributes as $attr)
                 <div class="mb-3">
                   <label>{{ $attr->name }}</label>
-                  <select class="form-control attribute-selector" data-attr-id="{{ $attr->id }}"
-                    data-attr-name="{{ $attr->name }}" multiple>
+                  <select class="form-control ent-control attribute-selector"
+                    data-attr-id="{{ $attr->id }}"
+                    data-attr-name="{{ $attr->name }}"
+                    multiple>
                     @foreach ($attr->values as $val)
                       <option value="{{ $val->id }}">{{ $val->value }}</option>
                     @endforeach
@@ -69,38 +93,89 @@
                 </div>
               @endforeach
             </div>
-            <button type="button" class="btn btn-success btn-block" id="btnGenerate">Generate Variants</button>
-            <button type="button" class="btn btn-warning btn-block" id="btnClear">Clear Variants</button>
+
+            <div class="ent-divider"></div>
+
+            <div class="d-flex" style="gap:10px;">
+              <button type="button" class="btn btn-primary btn-ent flex-fill" id="btnGenerate">
+                <i class="fas fa-bolt mr-1"></i> Generate
+              </button>
+              <button type="button" class="btn btn-outline-secondary btn-ent flex-fill" id="btnClear">
+                <i class="fas fa-undo mr-1"></i> Clear
+              </button>
+            </div>
+
+            <div class="help-hint">Select values in one or more attributes, then generate combinations.</div>
           </div>
         </div>
+
+        {{-- QUICK HELP --}}
+        <div class="card ent-card">
+          <div class="card-header">
+            <h3 class="card-title"><i class="fas fa-lightbulb"></i> Tips</h3>
+          </div>
+          <div class="card-body">
+            <div class="text-muted small">
+              <div class="mb-2">
+                <b>SKU:</b> You can leave SKU empty and auto-generate later, or fill now.
+              </div>
+              <div class="mb-2">
+                <b>Prices:</b> Cost and Selling price are per-variant.
+              </div>
+              <div>
+                <b>Remove:</b> Use the trash icon to delete a single variant row.
+              </div>
+            </div>
+          </div>
+        </div>
+
       </div>
 
-      <!-- Right Column: Variants Table -->
-      <div class="col-md-8">
-        <div class="card card-outline card-success">
+      {{-- RIGHT: VARIANTS TABLE --}}
+      <div class="col-lg-8 col-md-12">
+        <div class="card ent-card">
           <div class="card-header">
-            <h3 class="card-title">Product Variants</h3>
+            <div class="d-flex align-items-center justify-content-between">
+              <h3 class="card-title"><i class="fas fa-tags"></i> Product Variants</h3>
+              <span class="ent-chip" id="variantCountChip">
+                <i class="fas fa-layer-group"></i> 0 Variants
+              </span>
+            </div>
           </div>
-          <div class="card-body table-responsive p-0" style="height: 600px;">
-            <table class="table table-head-fixed text-nowrap" id="variantTable">
-              <thead>
-                <tr>
-                  <th>Variant Name</th>
-                  <th>SKU</th>
-                  <th>Cost Price</th>
-                  <th>Selling Price</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr id="emptyRow">
-                  <td colspan="5" class="text-center text-muted">No variants generated yet.</td>
-                </tr>
-              </tbody>
-            </table>
+
+          <div class="card-body p-0">
+            <div class="table-responsive ent-variant-scroll">
+              <table class="table table-hover table-enterprise mb-0" id="variantTable">
+                <thead>
+                  <tr>
+                    <th style="min-width:260px;">Variant Name</th>
+                    <th style="min-width:160px;">SKU</th>
+                    <th style="min-width:140px;">Cost Price</th>
+                    <th style="min-width:140px;">Selling Price</th>
+                    <th style="min-width:90px;" class="text-center">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr id="emptyRow">
+                    <td colspan="5" class="text-center text-muted">No variants generated yet.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="ent-callout">
+              <i class="fas fa-info-circle mr-2"></i>
+              Generate variants from selected attributes, then review SKU and pricing before creating.
+            </div>
           </div>
-          <div class="card-footer">
-            <button type="button" class="btn btn-primary float-right" id="btnSubmit">Create Product & Variants</button>
+
+          <div class="card-footer d-flex justify-content-end" style="gap:10px;">
+            <button type="button" class="btn btn-outline-secondary btn-ent" id="btnClearBottom">
+              <i class="fas fa-undo mr-1"></i> Clear
+            </button>
+            <button type="button" class="btn btn-primary btn-ent" id="btnSubmit">
+              <i class="fas fa-save mr-1"></i> Create Product & Variants
+            </button>
           </div>
         </div>
       </div>
@@ -111,9 +186,27 @@
 @push('scripts')
   <script>
     $(document).ready(function() {
-      $('.select2').select2();
 
-      // Dynamic Attribute Loading
+      // Tooltips
+      if ($.fn.tooltip) {
+        $('[data-toggle="tooltip"]').tooltip();
+      }
+
+      // Init Select2 (bootstrap4 + your enterprise arrow/tags fixes from SCSS)
+      if ($.fn.select2) {
+        $('.select2').select2({
+          theme: 'bootstrap4',
+          width: '100%'
+        });
+
+        $('.attribute-selector').select2({
+          theme: 'bootstrap4',
+          width: '100%',
+          placeholder: "Select values..."
+        });
+      }
+
+      // Dynamic Attribute Loading by Category
       $('[name="category_id"]').change(function() {
         var catId = $(this).val();
         if (!catId) return;
@@ -122,43 +215,54 @@
         url = url.replace(':id', catId);
 
         $.get(url, function(data) {
-          var container = $('.card-info .card-body .form-group');
+          var container = $('#attrContainer');
           container.empty();
 
-          if (data.length === 0) {
-            container.html('<p class="text-muted">No attributes assigned to this category.</p>');
+          if (!Array.isArray(data) || data.length === 0) {
+            container.html('<p class="text-muted mb-0">No attributes assigned to this category.</p>');
             return;
           }
 
           data.forEach(function(attr) {
             var html = `
-                        <div class="mb-3">
-                            <label>${attr.name}</label>
-                            <select class="form-control attribute-selector" 
-                                data-attr-id="${attr.id}" 
-                                data-attr-name="${attr.name}" 
-                                multiple="multiple" style="width: 100%;">
-                                ${attr.values.map(v => `<option value="${v.id}">${v.value}</option>`).join('')}
-                            </select>
-                        </div>
-                    `;
+              <div class="mb-3">
+                <label>${attr.name}</label>
+                <select class="form-control ent-control attribute-selector"
+                  data-attr-id="${attr.id}"
+                  data-attr-name="${attr.name}"
+                  multiple="multiple" style="width:100%;">
+                  ${(attr.values || []).map(v => `<option value="${v.id}">${v.value}</option>`).join('')}
+                </select>
+              </div>
+            `;
             container.append(html);
           });
 
           // Re-init select2 on new elements
-          $('.attribute-selector').select2({
-            placeholder: "Select values..."
-          });
+          if ($.fn.select2) {
+            $('.attribute-selector').select2({
+              theme: 'bootstrap4',
+              width: '100%',
+              placeholder: "Select values..."
+            });
+          }
         });
       });
+
+      function updateVariantCount() {
+        var count = $('#variantTable tbody tr.variant-row').length;
+        $('#variantCountChip').html('<i class="fas fa-layer-group"></i> ' + count + ' Variants');
+      }
 
       // Generate Variants
       $('#btnGenerate').click(function() {
         let selectedAttrs = [];
+
         $('.attribute-selector').each(function() {
           let attrId = $(this).data('attr-id');
-          let values = $(this).select2('data'); // Get full data objects
-          if (values.length > 0) {
+          let values = $(this).select2 ? $(this).select2('data') : [];
+
+          if (values && values.length > 0) {
             selectedAttrs.push({
               id: attrId,
               values: values.map(v => ({
@@ -187,34 +291,56 @@
           let rowId = 'row_' + Date.now() + '_' + index;
 
           let tr = `
-                    <tr id="${rowId}" class="variant-row">
-                        <td>
-                            <strong>${name}</strong>
-                            <input type="hidden" name="variants[${index}][name]" value="${name}">
-                            ${attrIds.map(id => `<input type="hidden" name="variants[${index}][attributes][]" value="${id}">`).join('')}
-                        </td>
-                        <td>
-                            <input type="text" class="form-control form-control-sm" name="variants[${index}][sku]" placeholder="Auto-gen">
-                        </td>
-                        <td>
-                            <input type="number" step="0.01" class="form-control form-control-sm" name="variants[${index}][cost]" placeholder="0.00">
-                        </td>
-                         <td>
-                            <input type="number" step="0.01" class="form-control form-control-sm" name="variants[${index}][price]" placeholder="0.00">
-                        </td>
-                        <td>
-                            <button type="button" class="btn btn-xs btn-danger" onclick="$('#${rowId}').remove()">X</button>
-                        </td>
-                    </tr>
-                `;
+            <tr id="${rowId}" class="variant-row">
+              <td>
+                <div class="font-weight-bold">${name}</div>
+                <input type="hidden" name="variants[${index}][name]" value="${name}">
+                ${attrIds.map(id => `<input type="hidden" name="variants[${index}][attributes][]" value="${id}">`).join('')}
+              </td>
+
+              <td>
+                <input type="text" class="form-control ent-control form-control-sm"
+                  name="variants[${index}][sku]" placeholder="SKU">
+              </td>
+
+              <td>
+                <input type="number" step="0.01" class="form-control ent-control form-control-sm"
+                  name="variants[${index}][cost]" placeholder="0.00">
+              </td>
+
+              <td>
+                <input type="number" step="0.01" class="form-control ent-control form-control-sm"
+                  name="variants[${index}][price]" placeholder="0.00">
+              </td>
+
+              <td class="text-center">
+                <button type="button" class="btn btn-sm btn-danger btn-ent ent-icon-btn"
+                  data-toggle="tooltip" title="Remove"
+                  onclick="$('#${rowId}').remove(); updateVariantCount();">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </td>
+            </tr>
+          `;
           tbody.append(tr);
         });
+
+        if ($.fn.tooltip) {
+          $('[data-toggle="tooltip"]').tooltip();
+        }
+
+        updateVariantCount();
       });
 
-      $('#btnClear').click(function() {
+      function resetVariants() {
         $('#variantTable tbody').html(
           '<tr id="emptyRow"><td colspan="5" class="text-center text-muted">No variants generated yet.</td></tr>'
-          );
+        );
+        updateVariantCount();
+      }
+
+      $('#btnClear, #btnClearBottom').click(function() {
+        resetVariants();
       });
 
       // Cartesian Helper
@@ -234,9 +360,10 @@
         return r;
       }
 
-      // AJAX Submit
-      $('#btnSubmit').click(function() {
+      // AJAX Submit (same behavior, just called from two buttons)
+      function submitCreate() {
         let formData = $('#productForm').serialize();
+
         if (!$('#name').val()) {
           alert('Name is required');
           return;
@@ -247,16 +374,24 @@
           method: 'POST',
           data: formData,
           success: function(res) {
-            if (res.success) {
+            if (res && res.success) {
               window.location.href = res.redirect;
+            } else {
+              alert('Unexpected response from server.');
             }
           },
           error: function(err) {
-            alert('Error: ' + (err.responseJSON ? err.responseJSON.message :
-            'Currently there is an error'));
+            alert('Error: ' + (err.responseJSON ? err.responseJSON.message : 'Currently there is an error'));
           }
         });
+      }
+
+      $('#btnSubmit, #btnSubmitTop').click(function() {
+        submitCreate();
       });
+
+      // Initial
+      updateVariantCount();
     });
   </script>
 @endpush
