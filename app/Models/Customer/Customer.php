@@ -34,20 +34,20 @@ class Customer extends Model
         'is_active' => 'boolean',
     ];
 
-    public function addresses()
-    {
-        return $this->hasMany(CustomerAddress::class);
-    }
+    // public function addresses()
+    // {
+    //     return $this->hasMany(CustomerAddress::class);
+    // }
 
-    public function billingAddresses()
-    {
-        return $this->hasMany(CustomerAddress::class)->where('type', 'BILLING');
-    }
+    // public function billingAddresses()
+    // {
+    //     return $this->hasMany(CustomerAddress::class)->where('type', 'BILLING');
+    // }
 
-    public function shippingAddresses()
-    {
-        return $this->hasMany(CustomerAddress::class)->where('type', 'SHIPPING');
-    }
+    // public function shippingAddresses()
+    // {
+    //     return $this->hasMany(CustomerAddress::class)->where('type', 'SHIPPING');
+    // }
 
     public function paymentTerm()
     {
@@ -71,5 +71,10 @@ class Customer extends Model
             ->map(fn ($p) => mb_substr($p, 0, 1))
             ->take(2)
             ->implode('');
+    }
+
+    function renderAddress()
+    {
+        return $this->address. ', '.$this->state->name.', '.$this->postal_code.', '.$this->country->name;
     }
 }

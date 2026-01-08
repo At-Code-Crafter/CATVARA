@@ -5,9 +5,9 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\CustomerStoreRequest;
 use App\Http\Requests\Admin\CustomerUpdateRequest;
-use App\Models\Customer\Customer;
-use App\Models\Company\Company;
 use App\Models\Common\Country;
+use App\Models\Company\Company;
+use App\Models\Customer\Customer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -55,26 +55,28 @@ class CustomerController extends Controller
                 ->editColumn('display_name', function ($row) {
                     $name = e($row->display_name);
                     if ($row->legal_name) {
-                        $name .= '<br><small class="text-muted">' . e($row->legal_name) . '</small>';
+                        $name .= '<br><small class="text-muted">'.e($row->legal_name).'</small>';
                     }
+
                     return $name;
                 })
 
                 ->addColumn('type_badge', function ($row) {
                     $badge = $row->type === 'COMPANY' ? 'primary' : 'secondary';
                     $icon = $row->type === 'COMPANY' ? 'building' : 'user';
-                    return '<span class="badge badge-' . $badge . '"><i class="fas fa-' . $icon . ' mr-1"></i>' . e($row->type) . '</span>';
+
+                    return '<span class="badge badge-'.$badge.'"><i class="fas fa-'.$icon.' mr-1"></i>'.e($row->type).'</span>';
                 })
 
                 ->editColumn('email', function ($row) {
                     return $row->email
-                        ? '<a href="mailto:' . e($row->email) . '">' . e($row->email) . '</a>'
+                        ? '<a href="mailto:'.e($row->email).'">'.e($row->email).'</a>'
                         : '<span class="text-muted">—</span>';
                 })
 
                 ->editColumn('phone', function ($row) {
                     return $row->phone
-                        ? '<a href="tel:' . e($row->phone) . '">' . e($row->phone) . '</a>'
+                        ? '<a href="tel:'.e($row->phone).'">'.e($row->phone).'</a>'
                         : '<span class="text-muted">—</span>';
                 })
 
@@ -82,6 +84,7 @@ class CustomerController extends Controller
                     if ($row->is_active) {
                         return '<span class="badge badge-success">Active</span>';
                     }
+
                     return '<span class="badge badge-danger">Inactive</span>';
                 })
 
@@ -107,7 +110,7 @@ class CustomerController extends Controller
                     'phone',
                     'status_badge',
                     'created_at',
-                    'action'
+                    'action',
                 ])
                 ->make(true);
         }
@@ -278,5 +281,26 @@ class CustomerController extends Controller
 
             throw $e;
         }
+    }
+
+    public function loadCustomers()
+    {
+        $customers = Customer::where('company_id', request()->company->id)->get()->map(function ($customer) {
+            return [
+                'id' => $customer->id,
+                'initial' => $customer->initials,
+                'name' => $customer->display_name,
+                'address' => $customer->renderAddress(),
+                'phone' => $customer->phone,
+                'email' => $customer->email,
+                'isCompany' => $customer->type == 'COMPANY',
+                'customerType' => $customer->type,
+                'taxNumber' => $customer->tax_number,
+                'payment_term_id' => $customer->payment_term_id,
+                'uuid' => $customer->uuid,
+            ];
+        });
+
+        return response()->json($customers);
     }
 }

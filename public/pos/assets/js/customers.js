@@ -1,8 +1,7 @@
 /* customers.js (Customer page logic) */
 
 (function () {
-  const DATA_URL = "assets/data/customers.json";
-
+ 
   let customers = [];
   let sellTo = null;
   let billTo = null;
@@ -15,11 +14,11 @@
   function setPageQueryParams() {
     const url = new URL(window.location.href);
 
-    if (sellTo && sellTo.id) url.searchParams.set("sell_to", sellTo.id);
+    if (sellTo && sellTo.uuid) url.searchParams.set("sell_to", sellTo.uuid);
     else url.searchParams.delete("sell_to");
 
     const same = $("#sameAsSellTo").is(":checked");
-    const billId = same ? (sellTo ? sellTo.id : "") : (billTo ? billTo.id : "");
+    const billId = same ? (sellTo ? sellTo.uuid : "") : (billTo ? billTo.uuid : "");
 
     if (billId) url.searchParams.set("bill_to", billId);
     else url.searchParams.delete("bill_to");
@@ -52,11 +51,11 @@
       ? `<span class="pill mr-2">${c.customerType}</span><span class="pill">Tax: ${c.taxNumber}</span>`
       : `<span class="pill">${c.customerType}</span>`;
 
-    const active = selectedId === c.id ? "active" : "";
+    const active = selectedId === c.uuid ? "active" : "";
 
     return `
       <div class="mb-2">
-        <div class="customer-card ${active}" data-role="${role}" data-id="${c.id}">
+        <div class="customer-card ${active}" data-role="${role}" data-id="${c.uuid}">
           <div class="avatar">${c.initial}</div>
           <div class="flex-grow-1">
             <div class="d-flex justify-content-between align-items-start">
@@ -75,12 +74,12 @@
     const list = filterCustomers();
 
     $("#sellToList").html(
-      list.map((c) => cardHtml(c, "sell", sellTo ? sellTo.id : null)).join("") ||
+      list.map((c) => cardHtml(c, "sell", sellTo ? sellTo.uuid : null)).join("") ||
         `<div class="p-3 text-muted">No customers found.</div>`
     );
 
     $("#billToList").html(
-      list.map((c) => cardHtml(c, "bill", billTo ? billTo.id : null)).join("") ||
+      list.map((c) => cardHtml(c, "bill", billTo ? billTo.uuid : null)).join("") ||
         `<div class="p-3 text-muted">No customers found.</div>`
     );
   }
@@ -129,8 +128,8 @@
     setPageQueryParams();
   }
 
-  function findCustomerById(id) {
-    return customers.find((c) => c.id === id) || null;
+  function findCustomerById(uuid) {
+    return customers.find((c) => c.uuid === uuid) || null;
   }
 
   function hydrateFromUrlIfPresent() {
@@ -140,7 +139,7 @@
     if (sellId) sellTo = findCustomerById(sellId);
 
     // if bill_to exists and differs, auto uncheck
-    if (billId && sellTo && billId !== sellTo.id) {
+    if (billId && sellTo && billId !== sellTo.uuid) {
       $("#sameAsSellTo").prop("checked", false);
       $("#billToWrap").removeClass("d-none");
       billTo = findCustomerById(billId);
@@ -153,8 +152,8 @@
 
   function goToPos() {
     const same = $("#sameAsSellTo").is(":checked");
-    const sellId = sellTo ? sellTo.id : "";
-    const billId = same ? sellId : (billTo ? billTo.id : "");
+    const sellId = sellTo ? sellTo.uuid : "";
+    const billId = same ? sellId : (billTo ? billTo.uuid : "");
 
     const url = new URL(window.location.origin + window.location.pathname.replace(/customers\.html?$/, "pos.html"));
     // if hosting path differs, fallback: relative

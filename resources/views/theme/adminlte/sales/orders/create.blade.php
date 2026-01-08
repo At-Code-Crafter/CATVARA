@@ -1,166 +1,277 @@
 @extends('theme.adminlte.layouts.app')
 
-@section('title', 'New Sales Order - Select Customer')
-
-@section('content-header')
-  <link rel="stylesheet" href="{{ asset('assets/css/enterprise.css') }}">
-  <div class="row mb-2 align-items-center">
-    <div class="col-lg-8">
-      <h1 class="m-0">
-        <i class="fas fa-file-invoice mr-2 text-primary"></i> New Sales Order
-      </h1>
-      <div class="text-muted">Step 1: Select Customer</div>
-    </div>
-  </div>
-@endsection
-
 @section('content')
-  <div class="container-fluid pos-shell">
+  <style>
+    :root {
+      --bg: #f6f7fb;
+      --card: #ffffff;
+      --border: #e6e8ef;
+      --muted: #6c757d;
+      --dark: #343a40;
+    }
 
-    <div class="card ent-card">
-      {{-- WIZARD HEADER --}}
-      <div class="card-header p-0 pt-3 border-bottom-0">
-        <ul class="nav nav-tabs pos-steps" role="tablist">
-          <li class="nav-item">
-            <a class="nav-link active" href="#">
-              <i class="fas fa-user mr-2"></i> 1. Customer
-            </a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link disabled" href="#">
-              <i class="fas fa-cubes mr-2"></i> 2. Products
-            </a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link disabled" href="#">
-              <i class="fas fa-file-invoice-dollar mr-2"></i> 3. Terms
-            </a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link disabled" href="#">
-              <i class="fas fa-check-circle mr-2"></i> 4. Preview
-            </a>
-          </li>
-        </ul>
-      </div>
+    body {
+      background: var(--bg);
+    }
 
-      <div class="card-body p-4">
-        {{-- STEP 1 CONTENT --}}
-        <div class="customer-picker">
+    .app {
+      height: 90vh;
+      overflow: hidden;
+      padding: 16px;
+    }
 
-          <div class="text-center mb-4">
-            <h3 class="font-weight-bold mb-1">Select Customer</h3>
-            <div class="text-muted">Pick from quick cards or search to continue.</div>
+    .panel {
+      height: 100%;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .panel-header {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+      background: #fff;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .panel-body {
+      padding: 16px;
+      overflow: hidden;
+      flex: 1;
+    }
+
+    .panel-footer {
+      padding: 12px 16px;
+      border-top: 1px solid var(--border);
+      background: #fff;
+      position: sticky;
+      bottom: 0;
+      z-index: 10;
+    }
+
+    .help {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .badge-soft {
+      background: #f1f3f5;
+      border: 1px solid var(--border);
+      color: #343a40;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 999px;
+    }
+
+    .customer-scroll {
+      height: calc(86vh - 260px);
+      overflow: auto;
+      padding: 12px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: #fff;
+    }
+
+    .customer-scroll::-webkit-scrollbar {
+      width: 10px;
+    }
+
+    .customer-scroll::-webkit-scrollbar-thumb {
+      background: #d6d9e3;
+      border-radius: 10px;
+    }
+
+    .customer-card {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px;
+      cursor: pointer;
+      transition: transform 120ms ease, box-shadow 120ms ease, border-color 120ms ease;
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      min-height: 92px;
+      background: #fff;
+    }
+
+    .customer-card:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 12px 26px rgba(0, 0, 0, 0.08);
+    }
+
+    .customer-card.active {
+      border-color: var(--dark);
+      box-shadow: 0 12px 30px rgba(52, 58, 64, 0.18);
+    }
+
+    .avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #f0f2f8, #e9edf6);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      color: #495057;
+      flex: 0 0 auto;
+    }
+
+    .c-title {
+      font-weight: 800;
+      margin-bottom: 2px;
+      font-size: 14px;
+    }
+
+    .c-meta {
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 0;
+    }
+
+    .c-line {
+      font-size: 12px;
+      color: #495057;
+      margin-bottom: 0;
+    }
+
+    .pill {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: #fbfbfd;
+      font-size: 12px;
+      color: #495057;
+      font-weight: 700;
+    }
+
+    .form-control,
+    .custom-select {
+      border-color: var(--border);
+    }
+
+    .form-control:focus,
+    .custom-select:focus {
+      box-shadow: none;
+      border-color: #c6c9d6;
+    }
+
+    .btn-dark,
+    .btn-secondary,
+    .btn-outline-secondary {
+      border-radius: 10px;
+    }
+  </style>
+
+    <div class="app">
+      <div class="panel">
+        <div class="panel-header">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <h5 class="mb-1">Select Customer</h5>
+              <div class="help">Select <strong>Sell To</strong>, then choose
+                Billing: same or different. Continue opens POS with query
+                params.</div>
+            </div>
+            <span class="badge-soft">Step 1</span>
           </div>
 
-          {{-- SEARCH + QUICK FILTER --}}
-          <div class="customer-searchbar mb-3">
-            <div class="row align-items-end">
-              <div class="col-md-8">
-                <label class="text-muted small font-weight-bold text-uppercase mb-1">Search Customer <small
-                    class="text-muted ">
-                    (Search by Name, Email, or Phone.)
-                  </small></label>
-                <select class="form-control ent-control select2" id="customer_id" style="width: 100%;"></select>
-              </div>
+          <div class="row mt-3">
+            <div class="col-md-4 mb-2 mb-md-0">
+              <input id="customerSearch" class="form-control" placeholder="Search customer by name, email, phone..." />
+            </div>
 
-              <div class="col-md-4">
-                <label class="text-muted small font-weight-bold text-uppercase mb-1">Quick Filter Cards</label>
-                <input type="text" id="customer_card_filter" class="form-control ent-control"
-                  placeholder="Type to filter cards...">
-              </div>
+            <div class="col-md-2">
+              <select id="companyFilter" class="custom-select">
+                <option value>All Customers</option>
+                <option value="company">Company Only</option>
+                <option value="individual">Individual Only</option>
+              </select>
             </div>
           </div>
+        </div>
 
-          {{-- QUICK CUSTOMER CARDS --}}
-          <div class="customer-grid" id="customer-cards">
-            <div class="text-center py-5">
-              <div class="spinner-border text-primary" role="status">
-                <span class="sr-only">Loading...</span>
+        <div class="panel-body">
+          <div class="row">
+            <div class="col-lg-6">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <div>
+                  <div class="font-weight-bold">Sell To Customer</div>
+                  <div class="help">Required.</div>
+                </div>
+                <span id="sellToBadge" class="pill">Not selected</span>
               </div>
+              <div id="sellToList" class="customer-scroll"></div>
+            </div>
+
+            <div class="col-lg-6 mt-3 mt-lg-0">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <div>
+                  <div class="font-weight-bold">Bill To Customer</div>
+                  <div class="help">Default is same as Sell To.</div>
+                </div>
+                <span id="billToBadge" class="pill">Same as Sell To</span>
+              </div>
+
+              <div class="border rounded p-3 bg-white mb-3" style="border-color: var(--border) !important;">
+                <div class="custom-control custom-checkbox">
+                  <input type="checkbox" class="custom-control-input" id="sameAsSellTo" checked />
+                  <label class="custom-control-label" for="sameAsSellTo">Billing
+                    address same as Sell To</label>
+                </div>
+                <div class="help mt-1">Uncheck to select a different Billing
+                  customer.</div>
+              </div>
+
+              <div id="billToWrap" class="d-none">
+                <div id="billToList" class="customer-scroll"></div>
+              </div>
+
+              <div class="border rounded p-3 bg-white mt-3" style="border-color: var(--border) !important;">
+                <div class="font-weight-bold mb-2">Selected Summary</div>
+                <div class="row">
+                  <div class="col-md-6">
+                    <div class="help mb-1">Sell To</div>
+                    <div id="sellToSummary" class="small text-muted">Not
+                      selected.</div>
+                  </div>
+                  <div class="col-md-6 mt-3 mt-md-0">
+                    <div class="help mb-1">Bill To</div>
+                    <div id="billToSummary" class="small text-muted">Same as
+                      Sell To.</div>
+                  </div>
+                </div>
+              </div>
+
             </div>
           </div>
+        </div>
 
-          {{-- FORM TO SUBMIT --}}
-          <form id="customer-form" action="{{ company_route('sales.orders.store.customer') }}" method="POST"
-            style="display:none;">
-            @csrf
-            <input type="hidden" name="customer_id" id="selected_customer_id">
-          </form>
-
+        <div class="panel-footer">
+          <div class="d-flex justify-content-between align-items-center">
+            <div class="help">
+              {{-- URL params will be set as: <span class="pill">sell_to</span> and
+              <span class="pill">bill_to</span> --}}
+            </div>
+            <button id="continueBtn" class="btn btn-dark" disabled>Continue to
+              POS</button>
+          </div>
         </div>
       </div>
     </div>
+  @endsection
 
-  </div>
-@endsection
-
-@push('scripts')
-  <script>
-    $(document).ready(function() {
-
-      // 1. Load Customer Cards
-      $.ajax({
-        url: '{{ company_route('sales.orders.load.customers') }}',
-        type: 'GET',
-        success: function(response) {
-          $('#customer-cards').html(response.view);
-        },
-        error: function() {
-          $('#customer-cards').html('<div class="text-center text-danger">Failed to load customers.</div>');
-        }
-      });
-
-      // 2. Initialize Select2 for searching
-      $('#customer_id').select2({
-        placeholder: 'Search for a customer...',
-        ajax: {
-          url: '{{ company_route('sales.orders.search.customers') }}',
-          dataType: 'json',
-          delay: 250,
-          data: function(params) {
-            return {
-              term: params.term, // search term
-            };
-          },
-          processResults: function(data) {
-            return {
-              results: data.results
-            };
-          },
-          cache: true
-        },
-        minimumInputLength: 1,
-        theme: 'bootstrap4',
-      });
-
-      // 3. Handle Select2 Selection
-      $('#customer_id').on('select2:select', function(e) {
-        var data = e.params.data;
-        submitCustomer(data.id);
-      });
-
-      // 4. Handle Card Selection (Delegated event)
-      $(document).on('click', '.select-customer', function(e) {
-        e.preventDefault();
-        var custId = $(this).data('id');
-        submitCustomer(custId);
-      });
-
-      // 5. Filter Cards
-      $('#customer_card_filter').on('keyup', function() {
-        var value = $(this).val().toLowerCase();
-        $(".customer-card").filter(function() {
-          $(this).toggle($(this).attr('data-name').toLowerCase().indexOf(value) > -1)
-        });
-      });
-
-      function submitCustomer(uuid) {
-        // Show full page loader if needed
-        $('#selected_customer_id').val(uuid);
-        $('#customer-form').submit();
-      }
-
-    });
-  </script>
-@endpush
+  @push('scripts')
+    <script>
+      const DATA_URL = "{{ company_route('load-customers') }}";
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js"></script>
+    <script src="{{ asset('pos/assets/js/customers.js') }}"></script>
+  @endpush

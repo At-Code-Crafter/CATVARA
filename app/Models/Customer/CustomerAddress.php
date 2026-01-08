@@ -28,4 +28,9 @@ class CustomerAddress extends Model
     protected $casts = [
         'is_default' => 'boolean',
     ];
+
+    public function render()
+    {
+        return $this->address_line_1.', '.$this->city.', '.$this->state.', '.$this->postal_code.', '.$this->country_code;
+    }
 }
