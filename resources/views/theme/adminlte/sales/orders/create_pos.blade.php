@@ -152,8 +152,7 @@
         <div class="px-3 pos-left-header">
           <div class="d-flex align-items-center justify-content-between">
             <div>
-              <h5 class="mb-0">POS</h5>
-              <div class="help" id="customerBar">Sell To: - | Bill To: -</div>
+              <div class="help" id="customerBar">Sell To: {{ $sellToCustomer->legal_name ?? $sellToCustomer->display_name }} | Bill To: {{ $billToCustomer->legal_name ?? $billToCustomer->display_name }}</div>
             </div>
             <div>
               <a href="{{ company_route('sales-orders.create') }}" class="btn btn-outline-secondary btn-sm">Change Customer</a>
@@ -387,15 +386,13 @@
 @push('scripts')
   <script>
     const CUSTOMERS_URL ="{{ company_route('load-customers') }}";
-    const PRODUCTS_URL = "{{ company_route('load-products') }}";
-    const VARIANTS_URL = "{{ company_route('load-variants') }}";
-    const PAYMENT_TERMS_URL = "{{ asset('pos/assets/data/payment_terms.json') }}";
+    const LOAD_PRODUCTS_URL = "{{ company_route('load-products') }}";
+    const PAYMENT_TERMS_URL = "{{ company_route('load-payment-terms') }}";
     const CURRENCIES_URL = "{{ asset('pos/assets/data/currencies.json') }}";
+    const SELECTED_PAYMENT_TERM_ID = "{{ $billToCustomer->payment_term_id }}";
   </script>
 
-  <script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.min.js"></script>
 
   <script src="{{ asset('pos/assets/js/pos.js') }}"></script>
 @endpush

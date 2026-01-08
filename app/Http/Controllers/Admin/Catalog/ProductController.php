@@ -243,67 +243,67 @@ class ProductController extends Controller
         }
     }
 
-    function loadProducts(Request $request)
+    public function loadProducts(Request $request)
     {
+        $companyId = $request->company->id;
 
-        $products = Product::where('company_id', $request->company->id)->get()->map(function ($product) {
-            return [
-                "id" => $product->id,
-                "name" => $product->name,
-                "category" => $product->category->name,
-                "brand" => $product->brand->name ?? '',
-            ];
-        });
-
-        return response()->json($products);
-    }
-
-
-    public function loadVariants(Request $request)
-    {
-        $variants = ProductVariant::query()
-            ->where('company_id', $request->company->id)
+        $products = Product::query()
+            ->where('company_id', $companyId)
             ->with([
-                'product:id,uuid',
-                // Adjust relation names if different in your project
-                'attributeValues:id,variant_id,attribute_id,name,value',
-                'attributeValues.attribute:id,name',
+                'category:id,name',
+                'variants' => function ($q) {
+                    $q->select(['id', 'uuid', 'product_id']) // keep product_id for relation
+                        ->with([
+                            'attributeValues:id,attribute_id,value',
+                            'attributeValues.attribute:id,name',
+                        ])
+                        // Inventory sum (change `quantity` if your column differs)
+                        ->withSum('inventory as stock', 'quantity')
+                        // Latest price (change `price` column if needed)
+                        ->with([
+                            'prices' => function ($pq) {
+                                $pq->select(['id', 'product_variant_id', 'price'])
+                                    ->latest('id');
+                            }
+                        ]);
+                }
             ])
             ->get()
-            ->groupBy('product_id')
-            ->mapWithKeys(function ($variantsForProduct) {
+            ->map(function ($product) {
 
-                $product = $variantsForProduct->first()->product;
+                $productId = (string) ($product->uuid ?? $product->id);
 
-                // Choose the key you want in JSON: P1001 style (code) or SKU, etc.
-                // Example wants: "P1001": [...]
-                $productKey = $product->id;
+                $variants = $product->variants->map(function ($variant) {
 
-                $list = $variantsForProduct->map(function ($variant) {
-
-                    // Build attrs as an object: { "Color": "Black", "Size": "Standard" }
                     $attrs = $variant->attributeValues
-                        ->filter(fn($av) => $av->attribute) // safety
-                        ->mapWithKeys(function ($av) {
-                        $attrName = $av->attribute->name;                 // e.g. "Color"
-                        $attrValue = $av->value ?? $av->name ?? '';        // e.g. "Black"
-                        return [$attrName => $attrValue];
-                    })
+                        ->filter(fn($av) => $av->attribute)
+                        ->mapWithKeys(fn($av) => [$av->attribute->name => $av->value])
                         ->all();
 
+                    $priceRow = $variant->prices->first();
+                    $price = $priceRow ? (float) $priceRow->price : (float) ($variant->price ?? 0);
+
+                    $stock = (int) ($variant->stock ?? 0); // from withSum alias
+    
                     return [
-                        'id' => $variant->id,
+                        'id' => (string) ($variant->uuid ?? $variant->id),
                         'attrs' => $attrs,
-                        'price' => $variant->price,
-                        'stock' => $variant->stock,
+                        'price' => $price,
+                        'stock' => $stock,
                     ];
                 })->values()->all();
 
-                return [$productKey => $list];
-            });
+                return [
+                    'id' => $productId,
+                    'name' => (string) $product->name,
+                    'category' => (string) optional($product->category)->name,
+                    'brand' => (string) ($product->brand ?? ''),
+                    'variants' => $variants,
+                ];
+            })
+            ->values();
 
-        return response()->json($variants);
+        return response()->json($products);
     }
-
 
 }

@@ -193,8 +193,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
             Route::get('load-customers', [\App\Http\Controllers\Admin\CustomerController::class, 'loadCustomers'])->name('load-customers');
             Route::get('load-products', [\App\Http\Controllers\Admin\Catalog\ProductController::class, 'loadProducts'])->name('load-products');
-            Route::get('load-variants', [\App\Http\Controllers\Admin\Catalog\ProductController::class, 'loadVariants'])->name('load-variants');
-            
+            Route::get('load-payment-terms', [\App\Http\Controllers\Admin\Sales\SalesOrderController::class, 'loadPaymentTerms'])->name('load-payment-terms');
         });
 
     // Invoice preview - OUTSIDE company group to avoid model binding

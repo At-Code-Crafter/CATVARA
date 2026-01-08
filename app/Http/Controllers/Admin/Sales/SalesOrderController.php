@@ -97,11 +97,24 @@ class SalesOrderController extends Controller
 
             $sellToCustomer = Customer::where('company_id', request()->company->id)->where('uuid', request('sell_to'))->first();
             $billToCustomer = Customer::where('company_id', request()->company->id)->where('uuid', request('bill_to'))->first();
-
             return view('theme.adminlte.sales.orders.create_pos', compact('sellToCustomer', 'billToCustomer'));
 
         }
 
         return view('theme.adminlte.sales.orders.create');
     }
+
+    function loadPaymentTerms(){
+
+        $paymentTerms = request()->company->paymentTerms->map(function ($paymentTerm) {
+            return [
+                'id' => $paymentTerm->id,
+                'name' => $paymentTerm->name,
+                'due_days' => $paymentTerm->due_days,
+            ];
+        });
+
+        return response()->json($paymentTerms);
+    }
+
 }

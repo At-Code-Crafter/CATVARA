@@ -3,13 +3,53 @@
 		"id": "P1001",
 		"name": "Wireless Headphones Pro",
 		"category": "Electronics",
-		"brand": "Auralux"
+		"brand": "Auralux",
+		"variants": [
+			{
+				"id": "V1001-1",
+				"attrs": {
+					"Color": "Black",
+					"Size": "Standard"
+				},
+				"price": 299,
+				"stock": 12
+			},
+			{
+				"id": "V1001-2",
+				"attrs": {
+					"Color": "Silver",
+					"Size": "Standard"
+				},
+				"price": 309,
+				"stock": 7
+			}
+		]
 	},
 	{
 		"id": "P1002",
 		"name": "Smart Watch Gen 4",
 		"category": "Electronics",
-		"brand": "Chronos"
+		"brand": "Chronos",
+		"variants": [
+			{
+				"id": "V1002-1",
+				"attrs": {
+					"Color": "Black",
+					"Strap": "Silicone"
+				},
+				"price": 449,
+				"stock": 9
+			},
+			{
+				"id": "V1002-2",
+				"attrs": {
+					"Color": "Gold",
+					"Strap": "Leather"
+				},
+				"price": 499,
+				"stock": 4
+			}
+		]
 	},
 	{
 		"id": "P1003",
