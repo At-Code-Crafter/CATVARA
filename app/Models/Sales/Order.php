@@ -4,6 +4,7 @@ namespace App\Models\Sales;
 
 use App\Models\Accounting\Payment;
 use App\Models\Accounting\PaymentTerm;
+use App\Models\Common\Address;
 use App\Models\Company\Company;
 use App\Models\Customer\Customer;
 use App\Models\Pricing\Currency;
@@ -35,8 +36,6 @@ class Order extends Model
         'confirmed_at',
         'created_by',
         'notes',
-        'billing_address',
-        'shipping_address',
         'shipping_total',
         'shipping_tax_total',
         'additional_charges',
@@ -52,8 +51,6 @@ class Order extends Model
         'grand_total' => 'decimal:6',
         'shipping_total' => 'decimal:6',
         'shipping_tax_total' => 'decimal:6',
-        'billing_address' => 'json',
-        'shipping_address' => 'json',
         'additional_charges' => 'json',
         'additional_total' => 'decimal:6',
     ];
@@ -96,5 +93,20 @@ class Order extends Model
     public function payments()
     {
         return $this->morphMany(Payment::class, 'payable');
+    }
+
+    public function addresses()
+    {
+        return $this->morphMany(Address::class, 'addressable');
+    }
+
+    public function billingAddress()
+    {
+        return $this->morphOne(Address::class, 'addressable')->where('type', 'BILLING');
+    }
+
+    public function shippingAddress()
+    {
+        return $this->morphOne(Address::class, 'addressable')->where('type', 'SHIPPING');
     }
 }

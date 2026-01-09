@@ -33,14 +33,14 @@ class ProductController extends Controller
             return DataTables::of($query)
                 ->addIndexColumn()
                 ->editColumn('name', function ($row) {
-                    $img = $row->attachments->where('is_primary', true)->first();
-                    $src = $img ? asset('storage/' . $img->path) : asset('theme/adminlte/dist/img/default-150x150.png');
+                    $img = $row->image;
+                    $src = $img ? asset('storage/'.$img) : asset('theme/adminlte/dist/img/default-150x150.png');
 
                     return '<div class="d-flex align-items-center">
-                                <img src="' . e($src) . '" class="img-thumbnail mr-2" style="width: 50px; height: 50px; object-fit: cover;">
+                                <img src="'.e($src).'" class="img-thumbnail mr-2" style="width: 50px; height: 50px; object-fit: cover;">
                                 <div>
-                                    <div class="font-weight-bold">' . e($row->name) . '</div>
-                                    <small class="text-muted">' . e($row->slug) . '</small>
+                                    <div class="font-weight-bold">'.e($row->name).'</div>
+                                    <small class="text-muted">'.e($row->slug).'</small>
                                 </div>
                             </div>';
                 })
@@ -48,7 +48,7 @@ class ProductController extends Controller
                     return $row->category ? e($row->category->name) : '<span class="text-muted">Uncategorized</span>';
                 })
                 ->addColumn('variants_count', function ($row) {
-                    return '<span class="badge badge-info">' . $row->variants->count() . ' Variants</span>';
+                    return '<span class="badge badge-info">'.$row->variants->count().' Variants</span>';
                 })
                 ->addColumn('action', function ($row) {
                     $compact['editUrl'] = company_route('catalog.products.edit', ['product' => $row->id]);
@@ -157,68 +157,76 @@ class ProductController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return redirect()->back()->with('error', 'Error updating product: ' . $e->getMessage());
+
+            return redirect()->back()->with('error', 'Error updating product: '.$e->getMessage());
         }
     }
 
     public function store(Request $request)
     {
-        // Complex form handling
-        // 1. Create Product
-        // 2. Iterate variants JSON/array
-        // 3. Create Variants + Prices + Inventory
-
         $request->validate([
-            'name' => 'required|string',
+            'name' => 'required|string|max:255',
             'category_id' => 'required',
+            'description' => 'nullable|string',
             'variants' => 'required|array',
+            'image' => 'nullable|image|max:5120', // 5MB
         ]);
 
         try {
             DB::beginTransaction();
 
             $product = new Product;
-            $product->uuid = Str::uuid();
+            $product->uuid = (string) Str::uuid();
             $product->company_id = $request->company->id;
             $product->category_id = $request->category_id;
             $product->name = $request->name;
-            $product->slug = Str::slug($request->name) . '-' . time();
+            $product->slug = Str::slug($request->name).'-'.time();
             $product->description = $request->description;
+
+            // Save first to get ID
             $product->save();
 
-            // Get default defaults
-            $currency = Currency::first(); // Assuming seeded
-            $channel = PriceChannel::where('code', 'WEBSITE')->first(); // Assuming seeded
-            // Fallback
-            if (!$channel) {
-                $channel = PriceChannel::first();
+            /**
+             * IMAGE UPLOAD (stores path into $product->image)
+             * storage/app/public/products/...
+             */
+            if ($request->hasFile('image')) {
+                $file = $request->file('image');
+
+                $ext = strtolower($file->getClientOriginalExtension() ?: 'jpg');
+                $safeName = Str::slug($product->name).'-'.$product->id.'-'.Str::random(6).'.'.$ext;
+
+                $path = $file->storeAs('products', $safeName, 'public'); // returns products/xxx.jpg
+
+                $product->image = $path;
+                $product->save();
             }
 
-            // Default location - NOT USED anymore in this flow
-            // $location = InventoryLocation::where('company_id', $request->company->id)->first();
+            // Defaults
+            $currency = Currency::first(); // Assuming seeded
+            $channel = PriceChannel::where('code', 'WEBSITE')->first() ?? PriceChannel::first();
 
             foreach ($request->variants as $v) {
-                // $v should contain: attributes (combo), price, cost, sku
-
                 $variant = new ProductVariant;
-                $variant->uuid = Str::uuid();
+                $variant->uuid = (string) Str::uuid();
                 $variant->company_id = $request->company->id;
                 $variant->product_id = $product->id;
-                $variant->sku = $v['sku'] ?? ($product->slug . '-' . Str::random(4));
+                $variant->sku = $v['sku'] ?? ($product->slug.'-'.Str::random(4));
                 $variant->barcode = $v['barcode'] ?? null;
-                $variant->cost_price = $v['cost'] ?? null; // Added Cost
+                $variant->cost_price = $v['cost'] ?? null;
                 $variant->save();
 
-                // Attach attributes
-                // $v['attributes'] could be [attr_id => val_id, ...]
+                // Attach attribute values (value IDs)
                 if (isset($v['attributes']) && is_array($v['attributes'])) {
                     foreach ($v['attributes'] as $valId) {
-                        $variant->attributeValues()->attach($valId);
+                        if ($valId) {
+                            $variant->attributeValues()->attach($valId);
+                        }
                     }
                 }
 
-                // Create Price
-                if (isset($v['price'])) {
+                // Price (selling)
+                if (isset($v['price']) && $v['price'] !== null && $v['price'] !== '') {
                     $vp = new VariantPrice;
                     $vp->company_id = $request->company->id;
                     $vp->product_variant_id = $variant->id;
@@ -228,82 +236,24 @@ class ProductController extends Controller
                     $vp->valid_from = now();
                     $vp->save();
                 }
-
-                // MOVED: Opening Stock logic is now part of the Inventory Module
             }
 
             DB::commit();
 
-            return response()->json(['success' => true, 'redirect' => company_route('catalog.products.index')]);
+            return response()->json([
+                'success' => true,
+                'redirect' => company_route('catalog.products.index'),
+            ]);
 
         } catch (\Exception $e) {
             DB::rollBack();
 
-            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 500);
         }
     }
 
-    public function loadProducts(Request $request)
-    {
-        $companyId = $request->company->id;
-
-        $products = Product::query()
-            ->where('company_id', $companyId)
-            ->with([
-                'category:id,name',
-                'variants' => function ($q) {
-                    $q->select(['id', 'uuid', 'product_id']) // keep product_id for relation
-                        ->with([
-                            'attributeValues:id,attribute_id,value',
-                            'attributeValues.attribute:id,name',
-                        ])
-                        // Inventory sum (change `quantity` if your column differs)
-                        ->withSum('inventory as stock', 'quantity')
-                        // Latest price (change `price` column if needed)
-                        ->with([
-                            'prices' => function ($pq) {
-                                $pq->select(['id', 'product_variant_id', 'price'])
-                                    ->latest('id');
-                            }
-                        ]);
-                }
-            ])
-            ->get()
-            ->map(function ($product) {
-
-                $productId = (string) ($product->uuid ?? $product->id);
-
-                $variants = $product->variants->map(function ($variant) {
-
-                    $attrs = $variant->attributeValues
-                        ->filter(fn($av) => $av->attribute)
-                        ->mapWithKeys(fn($av) => [$av->attribute->name => $av->value])
-                        ->all();
-
-                    $priceRow = $variant->prices->first();
-                    $price = $priceRow ? (float) $priceRow->price : (float) ($variant->price ?? 0);
-
-                    $stock = (int) ($variant->stock ?? 0); // from withSum alias
-    
-                    return [
-                        'id' => (string) ($variant->uuid ?? $variant->id),
-                        'attrs' => $attrs,
-                        'price' => $price,
-                        'stock' => $stock,
-                    ];
-                })->values()->all();
-
-                return [
-                    'id' => $productId,
-                    'name' => (string) $product->name,
-                    'category' => (string) optional($product->category)->name,
-                    'brand' => (string) ($product->brand ?? ''),
-                    'variants' => $variants,
-                ];
-            })
-            ->values();
-
-        return response()->json($products);
-    }
 
 }

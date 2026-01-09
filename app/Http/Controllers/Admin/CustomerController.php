@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\CustomerStoreRequest;
 use App\Http\Requests\Admin\CustomerUpdateRequest;
+use App\Models\Common\Address;
 use App\Models\Common\Country;
+use App\Models\Common\State;
 use App\Models\Company\Company;
 use App\Models\Customer\Customer;
 use Illuminate\Http\Request;
@@ -171,12 +173,20 @@ class CustomerController extends Controller
                 'legal_name' => $data['legal_name'] ?? null,
                 'tax_number' => $data['tax_number'] ?? null,
                 'notes' => $data['notes'] ?? null,
-                'country_id' => $data['country_id'] ?? null,
-                'state_id' => $data['state_id'] ?? null,
-                'postal_code' => $data['postal_code'] ?? null,
-                'address' => $data['address'] ?? null,
                 'is_active' => $data['is_active'] ?? true,
                 'payment_term_id' => $data['payment_term_id'] ?? null,
+            ]);
+
+            Address::create([
+                'company_id' => $company->id,
+                'addressable_id' => $customer->id,
+                'addressable_type' => Customer::class,
+                'address_line_1' => $data['address_line_1'],
+                'address_line_2' => $data['address_line_2'] ?? null,
+                'city' => $data['city'] ?? null,
+                'state_id' => $data['state_id'] ?? null,
+                'zip_code' => $data['zip_code'] ?? null,
+                'country_id' => $data['country_id'] ?? null,
             ]);
 
             DB::commit();
@@ -224,9 +234,10 @@ class CustomerController extends Controller
     {
         $customer = Customer::where('company_id', $company->id)->findOrFail($id);
         $countries = Country::active()->ordered()->get();
+        $states = State::where('country_id', $customer->country_id)->active()->ordered()->get();
         $paymentTerms = \App\Models\Accounting\PaymentTerm::where('is_active', true)->get();
 
-        return view('theme.adminlte.customers.edit', compact('company', 'customer', 'countries', 'paymentTerms'));
+        return view('theme.adminlte.customers.edit', compact('company', 'customer', 'countries', 'states', 'paymentTerms'));
     }
 
     /**
@@ -248,13 +259,21 @@ class CustomerController extends Controller
                 'legal_name' => $data['legal_name'] ?? null,
                 'tax_number' => $data['tax_number'] ?? null,
                 'notes' => $data['notes'] ?? null,
-                'country_id' => $data['country_id'] ?? null,
-                'state_id' => $data['state_id'] ?? null,
-                'postal_code' => $data['postal_code'] ?? null,
-                'address' => $data['address'] ?? null,
-                'address' => $data['address'] ?? null,
                 'is_active' => $data['is_active'] ?? true,
                 'payment_term_id' => $data['payment_term_id'] ?? null,
+            ]);
+
+            Address::updateOrCreate([
+                'company_id' => $request->company->id,
+                'addressable_id' => $customer->id,
+                'addressable_type' => Customer::class,
+            ], [
+                'address_line_1' => $data['address_line_1'],
+                'address_line_2' => $data['address_line_2'] ?? null,
+                'city' => $data['city'] ?? null,
+                'state_id' => $data['state_id'],
+                'country_id' => $data['country_id'],
+                'zip_code' => $data['zip_code'],
             ]);
 
             DB::commit();
@@ -283,24 +302,5 @@ class CustomerController extends Controller
         }
     }
 
-    public function loadCustomers()
-    {
-        $customers = Customer::where('company_id', request()->company->id)->get()->map(function ($customer) {
-            return [
-                'id' => $customer->id,
-                'initial' => $customer->initials,
-                'name' => $customer->display_name,
-                'address' => $customer->renderAddress(),
-                'phone' => $customer->phone,
-                'email' => $customer->email,
-                'isCompany' => $customer->type == 'COMPANY',
-                'customerType' => $customer->type,
-                'taxNumber' => $customer->tax_number,
-                'payment_term_id' => $customer->payment_term_id,
-                'uuid' => $customer->uuid,
-            ];
-        });
 
-        return response()->json($customers);
-    }
 }

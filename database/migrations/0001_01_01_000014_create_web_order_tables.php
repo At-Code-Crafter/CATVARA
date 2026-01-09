@@ -77,29 +77,6 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        /**
-         * WEB ORDER ADDRESSES (SNAPSHOT)
-         */
-        Schema::create('web_order_addresses', function (Blueprint $table) {
-            $table->id();
-
-            $table->unsignedBigInteger('web_order_id');
-            $table->enum('type', ['BILLING', 'SHIPPING']);
-
-            $table->string('contact_name');
-            $table->string('email')->nullable();
-            $table->string('phone')->nullable();
-
-            $table->string('address_line_1');
-            $table->string('address_line_2')->nullable();
-            $table->string('city');
-            $table->string('state')->nullable();
-            $table->string('postal_code')->nullable();
-            $table->string('country_code', 2);
-
-            $table->timestamps();
-        });
-
 
         /**
          * FOREIGN KEYS (SHORT & SAFE)
@@ -136,16 +113,10 @@ return new class extends Migration
                 ->restrictOnDelete();
         });
 
-        Schema::table('web_order_addresses', function (Blueprint $table) {
-            $table->foreign('web_order_id', 'web_addr_order_fk')
-                ->references('id')->on('web_orders')
-                ->cascadeOnDelete();
-        });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('web_order_addresses');
         Schema::dropIfExists('web_order_items');
         Schema::dropIfExists('web_orders');
         Schema::dropIfExists('web_order_statuses');

@@ -155,17 +155,30 @@
     const sellId = sellTo ? sellTo.uuid : "";
     const billId = same ? sellId : (billTo ? billTo.uuid : "");
 
-    const url = new URL(window.location.origin + window.location.pathname.replace(/customers\.html?$/, "create"));
-    // if hosting path differs, fallback: relative
-    if (!url.pathname.endsWith("pos")) {
-      // relative fallback
-      window.location.href = `create?sell_to=${encodeURIComponent(sellId)}&bill_to=${encodeURIComponent(billId)}`;
-      return;
-    }
+    // Prepare payload
+    const payload = {
+      sell_to: sellId,
+      bill_to: billId,
+      _token: $('meta[name="csrf-token"]').attr('content') 
+    };
 
-    url.searchParams.set("sell_to", sellId);
-    url.searchParams.set("bill_to", billId);
-    window.location.href = url.toString();
+    const btn = $("#continueBtn");
+    const originalText = btn.text();
+    btn.prop("disabled", true).text("Creating Draft...");
+
+    $.post(STORE_ORDER_URL, payload)
+      .done(function(res) {
+        if (res.success && res.redirect_url) {
+          window.location.href = res.redirect_url;
+        } else {
+          alert("Error creating draft order.");
+          btn.prop("disabled", false).text(originalText);
+        }
+      })
+      .fail(function(xhr) {
+        alert("Failed to create draft order: " + (xhr.responseJSON?.message || "Unknown error"));
+        btn.prop("disabled", false).text(originalText);
+      });
   }
 
   $(function () {

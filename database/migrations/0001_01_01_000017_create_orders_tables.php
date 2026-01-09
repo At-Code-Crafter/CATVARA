@@ -61,10 +61,15 @@ return new class extends Migration
             $table->decimal('subtotal', 18, 6)->default(0);
             $table->decimal('tax_total', 18, 6)->default(0);
             $table->decimal('discount_total', 18, 6)->default(0);
+            $table->decimal('shipping_total', 18, 6)->default(0);
+            $table->decimal('shipping_tax_total', 18, 6)->default(0);
             $table->decimal('grand_total', 18, 6)->default(0);
 
             $table->timestamp('confirmed_at')->nullable();
             $table->unsignedBigInteger('created_by')->nullable();
+
+            $table->text('notes')->nullable();
+            
 
             $table->timestamps();
             $table->softDeletes();
@@ -88,9 +93,13 @@ return new class extends Migration
             $table->decimal('unit_price', 18, 6);
             $table->integer('quantity');
             $table->integer('fulfilled_quantity')->default(0);
+            $table->decimal('discount_amount', 18, 6)->default(0);
+            $table->decimal('discount_percent', 5, 2)->default(0);
+            
+            $table->decimal('tax_rate', 5, 2)->default(0);
+            $table->decimal('tax_amount', 18, 6)->default(0);
 
             $table->decimal('line_total', 18, 6);
-            $table->decimal('tax_amount', 18, 6)->default(0);
 
             $table->timestamps();
 

@@ -34,6 +34,8 @@ return new class extends Migration
             $table->string('logo')->nullable();
             $table->string('website_url')->nullable();
 
+            $table->unsignedBigInteger('base_currency_id')->nullable();
+
             $table->unsignedBigInteger('company_status_id');
 
             $table->timestamps();

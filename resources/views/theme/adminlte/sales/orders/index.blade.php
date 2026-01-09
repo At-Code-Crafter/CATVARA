@@ -171,7 +171,7 @@
             name: 'actions',
             orderable: false,
             searchable: false,
-            className: 'text-right pr-4'
+            className: 'd-flex justify-content-end pr-4'
           }
         ],
         order: [

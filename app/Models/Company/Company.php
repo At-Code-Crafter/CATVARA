@@ -2,13 +2,12 @@
 
 namespace App\Models\Company;
 
-use App\Models\User;
 use App\Models\Auth\Role;
-use Illuminate\Support\Str;
-use App\Models\Company\CompanyDetail;
-use App\Models\Company\CompanyStatus;
+use App\Models\Common\Address;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Str;
 
 class Company extends Model
 {
@@ -62,5 +61,11 @@ class Company extends Model
             \App\Models\Accounting\PaymentTerm::class,
             'company_payment_terms'
         )->withPivot('is_default')->withTimestamps();
+    }
+
+    // Company Has one Address
+    public function address()
+    {
+        return $this->morphOne(Address::class, 'addressable');
     }
 }

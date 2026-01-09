@@ -2,6 +2,7 @@
 
 namespace App\Models\Sales;
 
+use App\Models\Catalog\ProductVariant;
 use Illuminate\Database\Eloquent\Model;
 
 class OrderItem extends Model
@@ -19,4 +20,9 @@ class OrderItem extends Model
         'discount_amount',
         'tax_rate'
     ];
+
+    public function productVariant()
+    {
+        return $this->belongsTo(ProductVariant::class);
+    }
 }

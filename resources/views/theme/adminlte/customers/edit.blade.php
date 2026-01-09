@@ -180,12 +180,22 @@
 
           <div class="card-body">
             <div class="form-group">
-              <label>Address</label>
-              <textarea name="address"
-                        rows="3"
-                        class="form-control ent-control @error('address') is-invalid @enderror"
-                        placeholder="Street address, building, floor, etc.">{{ old('address', $customer->address) }}</textarea>
-              @error('address')
+              <label>Address Line 1</label>
+              <textarea name="address_line_1"
+                        rows="2"
+                        class="form-control ent-control @error('address_line_1') is-invalid @enderror"
+                        placeholder="Street address, building, floor, etc.">{{ old('address_line_1', $customer->address->address_line_1) }}</textarea>
+              @error('address_line_1')
+                <div class="invalid-feedback">{{ $message }}</div>
+              @enderror
+            </div>
+            <div class="form-group">
+              <label>Address Line 2</label>
+              <textarea name="address_line_2"
+                        rows="2"
+                        class="form-control ent-control @error('address_line_2') is-invalid @enderror"
+                        placeholder="Street address, building, floor, etc.">{{ old('address_line_2', $customer->address->address_line_2) }}</textarea>
+              @error('address_line_2')
                 <div class="invalid-feedback">{{ $message }}</div>
               @enderror
             </div>
@@ -201,7 +211,7 @@
                     @foreach ($countries as $country)
                       <option value="{{ $country->id }}"
                               data-uuid="{{ $country->uuid }}"
-                              {{ old('country_id', $customer->country_id) == $country->id ? 'selected' : '' }}>
+                              {{ old('country_id', $customer->address->country_id ?? null) == $country->id ? 'selected' : '' }}>
                         {{ $country->name }}
                       </option>
                     @endforeach
@@ -217,6 +227,13 @@
                   <label>State / Province</label>
                   <select name="state_id" id="state_id" class="form-control ent-control @error('state_id') is-invalid @enderror">
                     <option value="">-- Select State --</option>
+                    @foreach ($states as $state)
+                      <option value="{{ $state->id }}"
+                              data-uuid="{{ $state->uuid }}"
+                              {{ old('state_id', $customer->address->state_id ?? null) == $state->id ? 'selected' : '' }}>
+                        {{ $state->name }}
+                      </option>
+                    @endforeach
                   </select>
                   @error('state_id')
                     <div class="invalid-feedback">{{ $message }}</div>
@@ -228,13 +245,13 @@
             <div class="row">
               <div class="col-md-6">
                 <div class="form-group">
-                  <label>Postal Code</label>
+                  <label>Zip Code</label>
                   <input type="text"
-                         name="postal_code"
-                         value="{{ old('postal_code', $customer->postal_code) }}"
-                         class="form-control ent-control @error('postal_code') is-invalid @enderror"
+                         name="zip_code"
+                         value="{{ old('zip_code', $customer->address->zip_code) }}"
+                         class="form-control ent-control @error('zip_code') is-invalid @enderror"
                          placeholder="e.g. 10001">
-                  @error('postal_code')
+                  @error('zip_code')
                     <div class="invalid-feedback">{{ $message }}</div>
                   @enderror
                 </div>

@@ -6,10 +6,9 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 use App\Models\Accounting\Payment;
-use App\Models\Customer\Customer;
+use App\Models\Common\Address;
 use App\Models\Web\WebOrderItem;
 use App\Models\Web\WebOrderStatus;
-use App\Models\Web\WebOrderAddress;
 
 class WebOrder extends Model
 {
@@ -57,17 +56,17 @@ class WebOrder extends Model
 
     public function addresses()
     {
-        return $this->hasMany(WebOrderAddress::class);
+        return $this->morphMany(Address::class, 'addressable');
     }
 
     public function billingAddress()
     {
-        return $this->hasOne(WebOrderAddress::class)->where('type', 'BILLING');
+        return $this->morphOne(Address::class, 'addressable')->where('type', 'BILLING');
     }
 
     public function shippingAddress()
     {
-        return $this->hasOne(WebOrderAddress::class)->where('type', 'SHIPPING');
+        return $this->morphOne(Address::class, 'addressable')->where('type', 'SHIPPING');
     }
 
     /**

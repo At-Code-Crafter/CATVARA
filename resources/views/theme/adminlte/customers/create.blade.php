@@ -179,12 +179,22 @@
 
           <div class="card-body">
             <div class="form-group">
-              <label>Address</label>
-              <textarea name="address"
-                        rows="3"
-                        class="form-control ent-control @error('address') is-invalid @enderror"
-                        placeholder="Street address, building, floor, etc.">{{ old('address') }}</textarea>
-              @error('address')
+              <label>Address Line 1</label>
+              <textarea name="address_line_1"
+                        rows="2"
+                        class="form-control ent-control @error('address_line_1') is-invalid @enderror"
+                        placeholder="Street address, building, floor, etc.">{{ old('address_line_1') }}</textarea>
+              @error('address_line_1')
+                <div class="invalid-feedback">{{ $message }}</div>
+              @enderror
+            </div>
+            <div class="form-group">
+              <label>Address Line 2</label>
+              <textarea name="address_line_2"
+                        rows="2"
+                        class="form-control ent-control @error('address_line_2') is-invalid @enderror"
+                        placeholder="Street address, building, floor, etc.">{{ old('address_line_2') }}</textarea>
+              @error('address_line_2')
                 <div class="invalid-feedback">{{ $message }}</div>
               @enderror
             </div>
@@ -229,11 +239,11 @@
                 <div class="form-group">
                   <label>Postal Code</label>
                   <input type="text"
-                         name="postal_code"
-                         value="{{ old('postal_code') }}"
-                         class="form-control ent-control @error('postal_code') is-invalid @enderror"
+                         name="zip_code"
+                         value="{{ old('zip_code') }}"
+                         class="form-control ent-control @error('zip_code') is-invalid @enderror"
                          placeholder="e.g. 10001">
-                  @error('postal_code')
+                  @error('zip_code')
                     <div class="invalid-feedback">{{ $message }}</div>
                   @enderror
                 </div>

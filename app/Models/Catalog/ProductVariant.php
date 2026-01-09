@@ -49,4 +49,11 @@ class ProductVariant extends Model
     {
         return $this->hasMany(\App\Models\Inventory\InventoryBalance::class);
     }
+
+    function getVariantDescription()
+    {
+        return $this->attributeValues->map(function ($attr) {
+            return $attr->attribute->name . ': ' . $attr->value;
+        })->implode(', ');
+    }
 }

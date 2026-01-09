@@ -40,38 +40,7 @@ return new class extends Migration
             $table->unique(['company_id', 'phone'], 'cust_company_phone_unique');
         });
 
-        /**
-         * CUSTOMER ADDRESSES
-         */
-        Schema::create('customer_addresses', function (Blueprint $table) {
-            $table->id();
-            $table->uuid('uuid')->unique();
-
-            $table->unsignedBigInteger('company_id');
-            $table->unsignedBigInteger('customer_id');
-
-            $table->enum('type', ['BILLING', 'SHIPPING'])->default('SHIPPING');
-            $table->boolean('is_default')->default(false);
-
-            $table->string('contact_name')->nullable();
-            $table->string('phone')->nullable();
-
-            $table->string('address_line_1');
-            $table->string('address_line_2')->nullable();
-            $table->string('city')->nullable();
-            $table->string('state')->nullable();
-            $table->string('postal_code')->nullable();
-            $table->string('country_code', 2)->nullable();
-
-            $table->timestamps();
-            $table->softDeletes();
-
-            $table->index(
-                ['company_id', 'customer_id', 'type'],
-                'cust_addr_comp_cust_type_idx'
-            );
-        });
-
+    
         /**
          * FOREIGN KEYS (SHORT NAMES)
          */
@@ -85,15 +54,7 @@ return new class extends Migration
                 ->nullOnDelete();
         });
 
-        Schema::table('customer_addresses', function (Blueprint $table) {
-            $table->foreign('company_id', 'custaddr_company_fk')
-                ->references('id')->on('companies')
-                ->cascadeOnDelete();
-
-            $table->foreign('customer_id', 'custaddr_customer_fk')
-                ->references('id')->on('customers')
-                ->cascadeOnDelete();
-        });
+       
 
         /**
          * POS ORDERS → CUSTOMER (OPTIONAL)
@@ -114,24 +75,17 @@ return new class extends Migration
         Schema::table('pos_orders', function (Blueprint $table) {
             $table->dropForeign('pos_customer_fk');
 
-
-
             if (Schema::hasColumn('pos_orders', 'customer_id')) {
                 $table->dropColumn('customer_id');
             }
         });
 
-        Schema::table('customer_addresses', function (Blueprint $table) {
-            $table->dropForeign('custaddr_company_fk');
-            $table->dropForeign('custaddr_customer_fk');
-        });
 
         Schema::table('customers', function (Blueprint $table) {
             $table->dropForeign('cust_company_fk');
             $table->dropForeign('cust_payment_term_fk');
         });
 
-        Schema::dropIfExists('customer_addresses');
         Schema::dropIfExists('customers');
     }
 };

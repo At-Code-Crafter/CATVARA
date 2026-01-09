@@ -1,17 +1,23 @@
 @extends('theme.adminlte.layouts.app')
 
 @section('content')
-
   <style>
-    :root{
+    :root {
       --bg: #f6f7fb;
       --card: #ffffff;
       --border: #e6e8ef;
       --muted: #6c757d;
     }
 
-    .pos-app { height: 100vh; overflow: hidden; }
-    .pos-col { height: 100vh; overflow: hidden; }
+    .pos-app {
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .pos-col {
+      height: 100vh;
+      overflow: hidden;
+    }
 
     .pos-left-header {
       position: sticky;
@@ -22,9 +28,20 @@
       padding: 12px 0;
     }
 
-    .scroll-area { height: calc(100vh - 86px); overflow: auto; padding-bottom: 16px; }
-    .scroll-area::-webkit-scrollbar { width: 10px; }
-    .scroll-area::-webkit-scrollbar-thumb { background: #d6d9e3; border-radius: 10px; }
+    .scroll-area {
+      height: calc(100vh - 86px);
+      overflow: auto;
+      padding-bottom: 16px;
+    }
+
+    .scroll-area::-webkit-scrollbar {
+      width: 10px;
+    }
+
+    .scroll-area::-webkit-scrollbar-thumb {
+      background: #d6d9e3;
+      border-radius: 10px;
+    }
 
     .product-card {
       border: 1px solid var(--border);
@@ -37,29 +54,93 @@
       flex-direction: column;
       overflow: hidden;
     }
+
     .product-card:hover {
       transform: translateY(-2px);
-      box-shadow: 0 10px 24px rgba(0,0,0,0.08);
+      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
     }
+
+    /* image in thumb */
     .product-thumb {
-      height: 88px;
+      height: 92px;
       background: linear-gradient(135deg, #f0f2f8, #e9edf6);
       border-bottom: 1px solid var(--border);
-      display:flex; align-items:center; justify-content:center;
-      font-weight: 700; color: #495057;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 8px;
     }
-    .product-body { padding: 10px 12px; flex: 1; display:flex; flex-direction:column; }
+
+    .product-img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      display: block;
+      filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.08));
+    }
+
+    .product-img-placeholder {
+      width: 100%;
+      height: 100%;
+      border: 1px dashed rgba(108, 117, 125, 0.35);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      color: rgba(108, 117, 125, 0.85);
+      background: rgba(255, 255, 255, 0.35);
+    }
+
+    .product-body {
+      padding: 10px 12px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* name + category inline */
     .product-title {
-      font-weight: 700;
-      font-size: 14px;
-      line-height: 1.2;
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
       margin-bottom: 6px;
-      display: -webkit-box;
-      -webkit-line-clamp: 2;
-      -webkit-box-orient: vertical;
+      line-height: 1.2;
+      white-space: nowrap;
       overflow: hidden;
     }
-    .product-meta { margin-top: auto; font-size: 12px; color: var(--muted); display:flex; justify-content:space-between; align-items:center; }
+
+    .product-name {
+      font-weight: 700;
+      font-size: 14px;
+      color: #111827;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      min-width: 0;
+      flex: 1;
+    }
+
+    .product-category {
+      font-size: 11px;
+      font-weight: 600;
+      color: #9aa3af;
+      background: rgba(148, 163, 184, 0.15);
+      border: 1px solid rgba(148, 163, 184, 0.25);
+      padding: 2px 8px;
+      border-radius: 999px;
+      white-space: nowrap;
+      flex: 0 0 auto;
+    }
+
+    .product-meta {
+      margin-top: auto;
+      font-size: 12px;
+      color: var(--muted);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
     .badge-soft {
       background: #f1f3f5;
       border: 1px solid var(--border);
@@ -69,13 +150,18 @@
       border-radius: 999px;
     }
 
-    /* RIGHT SIDE (Selected Items) - Smaller font */
+    /* RIGHT */
     .pos-right {
       background: var(--card);
       border-left: 1px solid var(--border);
       font-size: 12px;
     }
-    .pos-right .help { font-size: 11px; color: var(--muted); }
+
+    .pos-right .help {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
     .pos-right-header {
       border-bottom: 1px solid var(--border);
       padding: 12px 14px;
@@ -84,15 +170,26 @@
       top: 0;
       z-index: 6;
     }
-    .pos-right-header h5 { font-size: 15px; margin-bottom: 4px; }
+
+    .pos-right-header h5 {
+      font-size: 15px;
+      margin-bottom: 4px;
+    }
 
     .cart-scroll {
       height: calc(100vh - 340px);
       overflow: auto;
       padding: 8px 10px;
     }
-    .cart-scroll::-webkit-scrollbar { width: 10px; }
-    .cart-scroll::-webkit-scrollbar-thumb { background: #d6d9e3; border-radius: 10px; }
+
+    .cart-scroll::-webkit-scrollbar {
+      width: 10px;
+    }
+
+    .cart-scroll::-webkit-scrollbar-thumb {
+      background: #d6d9e3;
+      border-radius: 10px;
+    }
 
     .cart-footer {
       border-top: 1px solid var(--border);
@@ -117,15 +214,55 @@
       padding-top: 8px;
       padding-bottom: 8px;
     }
-    .table td { padding-top: 8px; padding-bottom: 8px; vertical-align: middle; }
-    .cart-item-name { font-weight: 700; font-size: 12px; margin-bottom: 2px; }
-    .cart-item-variant { font-size: 11px; color: var(--muted); }
-    .input-xs { height: 30px; padding: 0 8px; font-size: 12px; }
-    .btn-icon { width: 30px; height: 30px; padding: 0; display:flex; align-items:center; justify-content:center; }
 
-    .form-control, .custom-select { border-color: var(--border); }
-    .form-control:focus, .custom-select:focus { box-shadow: none; border-color: #c6c9d6; }
-    .btn-dark, .btn-secondary, .btn-outline-secondary { border-radius: 10px; }
+    .table td {
+      padding-top: 8px;
+      padding-bottom: 8px;
+      vertical-align: middle;
+    }
+
+    .cart-item-name {
+      font-weight: 700;
+      font-size: 12px;
+      margin-bottom: 2px;
+    }
+
+    .cart-item-variant {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .input-xs {
+      height: 30px;
+      padding: 0 8px;
+      font-size: 12px;
+    }
+
+    .btn-icon {
+      width: 30px;
+      height: 30px;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .form-control,
+    .custom-select {
+      border-color: var(--border);
+    }
+
+    .form-control:focus,
+    .custom-select:focus {
+      box-shadow: none;
+      border-color: #c6c9d6;
+    }
+
+    .btn-dark,
+    .btn-secondary,
+    .btn-outline-secondary {
+      border-radius: 10px;
+    }
 
     .variant-card {
       border: 1px solid var(--border);
@@ -135,14 +272,32 @@
       cursor: pointer;
       transition: box-shadow 120ms ease, transform 120ms ease;
       height: 92px;
-      display:flex;
-      flex-direction:column;
-      justify-content:space-between;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
     }
-    .variant-card:hover { transform: translateY(-1px); box-shadow: 0 10px 22px rgba(0,0,0,0.08); }
-    .variant-card.active { border-color: #343a40; box-shadow: 0 12px 28px rgba(52,58,64,0.18); }
-    .variant-attrs { font-size: 12px; color: #495057; }
-    .variant-meta { font-size: 12px; color: var(--muted); display:flex; justify-content:space-between; }
+
+    .variant-card:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 10px 22px rgba(0, 0, 0, 0.08);
+    }
+
+    .variant-card.active {
+      border-color: #343a40;
+      box-shadow: 0 12px 28px rgba(52, 58, 64, 0.18);
+    }
+
+    .variant-attrs {
+      font-size: 12px;
+      color: #495057;
+    }
+
+    .variant-meta {
+      font-size: 12px;
+      color: var(--muted);
+      display: flex;
+      justify-content: space-between;
+    }
   </style>
 
   <div class="container-fluid pos-app">
@@ -152,10 +307,14 @@
         <div class="px-3 pos-left-header">
           <div class="d-flex align-items-center justify-content-between">
             <div>
-              <div class="help" id="customerBar">Sell To: {{ $sellToCustomer->legal_name ?? $sellToCustomer->display_name }} | Bill To: {{ $billToCustomer->legal_name ?? $billToCustomer->display_name }}</div>
+              <div class="help" id="customerBar">
+                Sell To: {{ $sellToCustomer->legal_name ?? $sellToCustomer->display_name }}
+                | Bill To: {{ $billToCustomer->legal_name ?? $billToCustomer->display_name }}
+              </div>
             </div>
             <div>
-              <a href="{{ company_route('sales-orders.create') }}" class="btn btn-outline-secondary btn-sm">Change Customer</a>
+              <a href="{{ company_route('sales-orders.create') }}" class="btn btn-outline-secondary btn-sm">Change
+                Customer</a>
             </div>
           </div>
 
@@ -243,24 +402,29 @@
             </table>
           </div>
 
-          <div class="mt-3">
-            <label class="mb-1 small text-muted">Additional Comments</label>
-            <textarea id="commentsInput" class="form-control" rows="3" placeholder="Notes for this invoice..."></textarea>
-          </div>
+
         </div>
 
         <div class="cart-footer">
           <div class="row">
+            <div class="col-12">
+              <label class="mb-1 small text-muted">Additional Comments</label>
+              <textarea id="commentsInput" class="form-control" rows="2" placeholder="Notes for this invoice..."></textarea>
+            </div>
+          </div>
+          <div class="row bg-light mt-2">
             <div class="col-6">
               <div class="form-group mb-2">
                 <label class="mb-1 small text-muted">Shipping Charges</label>
-                <input id="shippingInput" type="number" class="form-control input-xs" value="0" min="0" step="0.01"/>
+                <input id="shippingInput" type="number" class="form-control input-xs" value="0" min="0"
+                  step="0.01" />
               </div>
             </div>
             <div class="col-6">
               <div class="form-group mb-2">
                 <label class="mb-1 small text-muted">Additional Charges</label>
-                <input id="additionalInput" type="number" class="form-control input-xs" value="0" min="0" step="0.01"/>
+                <input id="additionalInput" type="number" class="form-control input-xs" value="0" min="0"
+                  step="0.01" />
               </div>
             </div>
           </div>
@@ -269,7 +433,8 @@
             <div class="col-6">
               <div class="form-group mb-2">
                 <label class="mb-1 small text-muted">VAT %</label>
-                <input id="vatRateInput" type="number" class="form-control input-xs" value="5" min="0" step="0.01"/>
+                <input id="vatRateInput" type="number" class="form-control input-xs" value="5" min="0"
+                  step="0.01" />
               </div>
             </div>
             <div class="col-6">
@@ -299,18 +464,28 @@
             </div>
 
             <div class="row mt-3">
-              <div class="col-4">
-                <button class="btn btn-secondary btn-block" id="saveDraftBtn">Save Draft</button>
+              <div class="col-6">
+                <button class="btn btn-outline-secondary btn-block" id="saveDraftBtn">Save Draft</button>
               </div>
-              <div class="col-4">
-                <button class="btn btn-outline-secondary btn-block" id="printBtn">Print</button>
+              <div class="col-6" id="generateOrderContainer">
+                <button class="btn btn-dark btn-block" id="generateOrderBtn">Generate Order</button>
               </div>
-              <div class="col-4">
-                <button class="btn btn-dark btn-block" id="viewInvoiceBtn">View Invoice</button>
+              <div class="col-6 d-none" id="postGenerateContainer">
+                <div class="dropdown">
+                  <button class="btn btn-dark btn-block dropdown-toggle" type="button" data-toggle="dropdown">
+                    Actions
+                  </button>
+                  <div class="dropdown-menu dropdown-menu-right w-100">
+                    <a class="dropdown-item" href="#" id="downloadPdfBtn">
+                      <i class="fas fa-file-pdf mr-2"></i> Download PDF
+                    </a>
+                    <a class="dropdown-item" href="#" id="createInvoiceBtn">
+                      <i class="fas fa-file-invoice mr-2"></i> Generate Invoice
+                    </a>
+                  </div>
+                </div>
               </div>
             </div>
-
-            <div class="small text-muted mt-2">Demo UI only.</div>
           </div>
         </div>
       </div>
@@ -326,7 +501,9 @@
             <h5 class="modal-title mb-1">Select Variant</h5>
             <div class="small text-muted" id="variantModalSubtitle">-</div>
           </div>
-          <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
         </div>
 
         <div class="modal-body">
@@ -344,25 +521,7 @@
     </div>
   </div>
 
-  <!-- Missing customer modal -->
-  <div class="modal fade" id="missingCustomerModal" tabindex="-1" role="dialog" aria-hidden="true">
-    <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
-      <div class="modal-content" style="border-radius: 14px; overflow:hidden;">
-        <div class="modal-header">
-          <h6 class="modal-title mb-0">Customer required</h6>
-          <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
-        </div>
-        <div class="modal-body">
-          <div class="small text-muted">Sell To and Bill To are missing. Please select customer first.</div>
-        </div>
-        <div class="modal-footer">
-          <a href="customers.html" class="btn btn-dark btn-block">Go to Customer Select</a>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Invoice Preview Modal -->
+  <!-- Invoice Preview Modal (kept for later wiring) -->
   <div class="modal fade" id="invoiceModal" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
       <div class="modal-content" style="border-radius:14px; overflow:hidden;">
@@ -385,14 +544,19 @@
 
 @push('scripts')
   <script>
-    const CUSTOMERS_URL ="{{ company_route('load-customers') }}";
+    const CUSTOMERS_URL = "{{ company_route('load-customers') }}";
     const LOAD_PRODUCTS_URL = "{{ company_route('load-products') }}";
     const PAYMENT_TERMS_URL = "{{ company_route('load-payment-terms') }}";
-    const CURRENCIES_URL = "{{ asset('pos/assets/data/currencies.json') }}";
+
+    // default term
     const SELECTED_PAYMENT_TERM_ID = "{{ $billToCustomer->payment_term_id }}";
+
+    // edit hydration + update endpoint
+    const INITIAL_STATE = @json($initialState ?? null);
+    const UPDATE_URL = "{{ isset($order) ? company_route('sales-orders.update', ['sales_order' => $order->uuid]) : '' }}";
+    const PRINT_URL = "{{ isset($order) ? company_route('sales-orders.print', ['sales_order' => $order->uuid]) : '' }}";
   </script>
 
   <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
-
   <script src="{{ asset('pos/assets/js/pos.js') }}"></script>
 @endpush

@@ -47,8 +47,10 @@ class CustomerUpdateRequest extends FormRequest
             'notes' => ['nullable', 'string', 'max:2000'],
             'country_id' => ['nullable', 'exists:countries,id'],
             'state_id' => ['nullable', 'exists:states,id'],
-            'postal_code' => ['nullable', 'string', 'max:20'],
-            'address' => ['nullable', 'string', 'max:1000'],
+            'zip_code' => ['nullable', 'string', 'max:20'],
+            'address_line_1' => ['nullable', 'string', 'max:1000'],
+            'address_line_2' => ['nullable', 'string', 'max:1000'],
+            'city' => ['nullable', 'string', 'max:100'],
             'is_active' => ['nullable', 'boolean'],
             'payment_term_id' => ['nullable', 'exists:payment_terms,id'],
         ];

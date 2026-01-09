@@ -3,6 +3,7 @@
 namespace App\Models\Customer;
 
 use App\Models\Accounting\PaymentTerm;
+use App\Models\Common\Address;
 use App\Models\Common\Country;
 use App\Models\Common\State;
 use Illuminate\Database\Eloquent\Model;
@@ -22,10 +23,6 @@ class Customer extends Model
         'legal_name',
         'tax_number',
         'notes',
-        'country_id',
-        'state_id',
-        'postal_code',
-        'address',
         'is_active',
         'payment_term_id',
     ];
@@ -34,20 +31,11 @@ class Customer extends Model
         'is_active' => 'boolean',
     ];
 
-    // public function addresses()
-    // {
-    //     return $this->hasMany(CustomerAddress::class);
-    // }
-
-    // public function billingAddresses()
-    // {
-    //     return $this->hasMany(CustomerAddress::class)->where('type', 'BILLING');
-    // }
-
-    // public function shippingAddresses()
-    // {
-    //     return $this->hasMany(CustomerAddress::class)->where('type', 'SHIPPING');
-    // }
+    // Customer Has one Address, but order or invoices may have many
+    public function address()
+    {
+        return $this->morphOne(Address::class, 'addressable');
+    }
 
     public function paymentTerm()
     {
@@ -71,10 +59,5 @@ class Customer extends Model
             ->map(fn ($p) => mb_substr($p, 0, 1))
             ->take(2)
             ->implode('');
-    }
-
-    function renderAddress()
-    {
-        return $this->address. ', '.$this->state->name.', '.$this->postal_code.', '.$this->country->name;
     }
 }

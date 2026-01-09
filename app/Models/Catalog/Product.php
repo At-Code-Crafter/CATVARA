@@ -17,6 +17,7 @@ class Product extends Model
         'slug',
         'description',
         'is_active',
+        'image'
     ];
 
     /* ================= Relations ================= */

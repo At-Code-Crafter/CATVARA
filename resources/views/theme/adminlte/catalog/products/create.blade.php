@@ -31,11 +31,11 @@
 @endsection
 
 @section('content')
-  <form id="productForm" action="{{ company_route('catalog.products.store') }}" method="POST">
+  <form id="productForm" action="{{ company_route('catalog.products.store') }}" method="POST" enctype="multipart/form-data">
     @csrf
 
     <div class="row">
-      {{-- LEFT: BASIC + VARIANT SETTINGS --}}
+      {{-- LEFT: BASIC + IMAGE + VARIANT SETTINGS --}}
       <div class="col-lg-4 col-md-12">
 
         {{-- BASIC INFORMATION --}}
@@ -65,6 +65,48 @@
               <label for="description">Description</label>
               <textarea class="form-control ent-control" name="description" rows="3"></textarea>
             </div>
+          </div>
+        </div>
+
+        {{-- MAIN IMAGE (SINGLE) --}}
+        <div class="card ent-card mb-3">
+          <div class="card-header">
+            <h3 class="card-title"><i class="fas fa-image"></i> Main Image</h3>
+          </div>
+          <div class="card-body">
+
+            @php
+              $placeholder = asset('theme/adminlte/dist/img/default-150x150.png');
+            @endphp
+
+            <label class="mb-2">Upload Product Image</label>
+
+            <div class="ent-preview-card text-center"
+                 style="border:1px solid #e2e8f0;border-radius:10px;padding:12px;background:#fff;">
+              <img id="mainImagePreview"
+                   src="{{ $placeholder }}"
+                   class="img-fluid rounded"
+                   style="max-height: 240px;"
+                   alt="preview">
+            </div>
+
+            <div class="d-flex align-items-center flex-wrap mt-3" style="gap:10px;">
+              <label class="btn btn-outline-primary btn-ent mb-0" style="cursor:pointer;">
+                <i class="fas fa-upload mr-1"></i> Choose Image
+                <input id="mainImageInput" type="file" name="image" class="d-none" accept="image/*">
+              </label>
+
+              <button type="button" id="clearMainImage" class="btn btn-outline-secondary btn-ent">
+                <i class="fas fa-times mr-1"></i> Clear
+              </button>
+
+              <div class="text-muted small" id="mainImageFileName">No file selected</div>
+            </div>
+
+            <div class="help-hint mt-2">
+              This will be saved into <b>$product->image</b> and used as primary listing thumbnail.
+            </div>
+
           </div>
         </div>
 
@@ -192,7 +234,7 @@
         $('[data-toggle="tooltip"]').tooltip();
       }
 
-      // Init Select2 (bootstrap4 + your enterprise arrow/tags fixes from SCSS)
+      // Init Select2
       if ($.fn.select2) {
         $('.select2').select2({
           theme: 'bootstrap4',
@@ -205,6 +247,40 @@
           placeholder: "Select values..."
         });
       }
+
+      // --- Single Image Preview ---
+      const $imgInput = $('#mainImageInput');
+      const $imgPreview = $('#mainImagePreview');
+      const $imgName = $('#mainImageFileName');
+      const originalSrc = $imgPreview.attr('src');
+
+      function resetMainImage() {
+        $imgInput.val('');
+        $imgPreview.attr('src', originalSrc);
+        $imgName.text('No file selected');
+      }
+
+      $('#clearMainImage').on('click', function() {
+        resetMainImage();
+      });
+
+      $imgInput.on('change', function(e) {
+        const file = (e.target.files && e.target.files[0]) ? e.target.files[0] : null;
+
+        if (!file) {
+          resetMainImage();
+          return;
+        }
+
+        if (!file.type || !file.type.startsWith('image/')) {
+          resetMainImage();
+          return;
+        }
+
+        $imgName.text(file.name);
+        const url = URL.createObjectURL(file);
+        $imgPreview.attr('src', url);
+      });
 
       // Dynamic Attribute Loading by Category
       $('[name="category_id"]').change(function() {
@@ -238,7 +314,6 @@
             container.append(html);
           });
 
-          // Re-init select2 on new elements
           if ($.fn.select2) {
             $('.attribute-selector').select2({
               theme: 'bootstrap4',
@@ -249,6 +324,7 @@
         });
       });
 
+      // count chip
       function updateVariantCount() {
         var count = $('#variantTable tbody tr.variant-row').length;
         $('#variantCountChip').html('<i class="fas fa-layer-group"></i> ' + count + ' Variants');
@@ -360,19 +436,29 @@
         return r;
       }
 
-      // AJAX Submit (same behavior, just called from two buttons)
+      // AJAX Submit with FormData (required for file upload)
       function submitCreate() {
-        let formData = $('#productForm').serialize();
-
         if (!$('#name').val()) {
           alert('Name is required');
           return;
         }
 
+        // Ensure at least 1 variant row exists
+        var variantCount = $('#variantTable tbody tr.variant-row').length;
+        if (variantCount === 0) {
+          alert('Please generate at least one variant.');
+          return;
+        }
+
+        let form = document.getElementById('productForm');
+        let fd = new FormData(form);
+
         $.ajax({
           url: $('#productForm').attr('action'),
           method: 'POST',
-          data: formData,
+          data: fd,
+          processData: false,
+          contentType: false,
           success: function(res) {
             if (res && res.success) {
               window.location.href = res.redirect;
@@ -381,7 +467,9 @@
             }
           },
           error: function(err) {
-            alert('Error: ' + (err.responseJSON ? err.responseJSON.message : 'Currently there is an error'));
+            let msg = 'Currently there is an error';
+            if (err.responseJSON && err.responseJSON.message) msg = err.responseJSON.message;
+            alert('Error: ' + msg);
           }
         });
       }

@@ -175,7 +175,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::resource('customers', \App\Http\Controllers\Admin\CustomerController::class);
             Route::get('customers/load/stats', [\App\Http\Controllers\Admin\CustomerController::class, 'stats'])->name('customers.stats');
 
-
             /**
              * Quotes Management
              */
@@ -186,14 +185,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::post('quotes/{quote}/cancel', [\App\Http\Controllers\Admin\QuoteController::class, 'cancel'])->name('quotes.cancel');
             Route::post('quotes/{quote}/convert-to-order', [\App\Http\Controllers\Admin\QuoteController::class, 'convertToOrder'])->name('quotes.convertToOrder');
 
-
             // Custom routes BEFORE resource to avoid conflicts
+            Route::get('sales-orders/{sales_order}/print', [\App\Http\Controllers\Admin\Sales\SalesOrderController::class, 'printOrder'])->name('sales-orders.print');
             Route::get('sales-orders-data', [\App\Http\Controllers\Admin\Sales\SalesOrderController::class, 'data'])->name('sales-orders.data');
             Route::resource('sales-orders', \App\Http\Controllers\Admin\Sales\SalesOrderController::class);
 
-            Route::get('load-customers', [\App\Http\Controllers\Admin\CustomerController::class, 'loadCustomers'])->name('load-customers');
-            Route::get('load-products', [\App\Http\Controllers\Admin\Catalog\ProductController::class, 'loadProducts'])->name('load-products');
-            Route::get('load-payment-terms', [\App\Http\Controllers\Admin\Sales\SalesOrderController::class, 'loadPaymentTerms'])->name('load-payment-terms');
+            Route::get('load-customers', [\App\Http\Controllers\Admin\Sales\OrderController::class, 'loadCustomers'])->name('load-customers');
+            Route::get('load-products', [\App\Http\Controllers\Admin\Sales\OrderController::class, 'loadProducts'])->name('load-products');
+            Route::get('load-payment-terms', [\App\Http\Controllers\Admin\Sales\OrderController::class, 'loadPaymentTerms'])->name('load-payment-terms');
+            Route::get('load-currencies', [\App\Http\Controllers\Admin\Sales\OrderController::class, 'loadCurrencies'])->name('load-currencies');
         });
 
     // Invoice preview - OUTSIDE company group to avoid model binding

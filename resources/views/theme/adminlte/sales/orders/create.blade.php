@@ -170,108 +170,108 @@
     }
   </style>
 
-    <div class="app">
-      <div class="panel">
-        <div class="panel-header">
-          <div class="d-flex justify-content-between align-items-start">
-            <div>
-              <h5 class="mb-1">Select Customer</h5>
-              <div class="help">Select <strong>Sell To</strong>, then choose
-                Billing: same or different. Continue opens POS with query
-                params.</div>
-            </div>
-            <span class="badge-soft">Step 1</span>
+  <div class="app">
+    <div class="panel">
+      <div class="panel-header">
+        <div class="d-flex justify-content-between align-items-start">
+          <div>
+            <h5 class="mb-1">Select Customer</h5>
+            <div class="help">Select <strong>Sell To</strong>, then choose
+              Billing: same or different. Continue opens POS with query
+              params.</div>
           </div>
-
-          <div class="row mt-3">
-            <div class="col-md-4 mb-2 mb-md-0">
-              <input id="customerSearch" class="form-control" placeholder="Search customer by name, email, phone..." />
-            </div>
-
-            <div class="col-md-2">
-              <select id="companyFilter" class="custom-select">
-                <option value>All Customers</option>
-                <option value="company">Company Only</option>
-                <option value="individual">Individual Only</option>
-              </select>
-            </div>
-          </div>
+          <span class="badge-soft">Step 1</span>
         </div>
 
-        <div class="panel-body">
-          <div class="row">
-            <div class="col-lg-6">
-              <div class="d-flex justify-content-between align-items-center mb-2">
-                <div>
-                  <div class="font-weight-bold">Sell To Customer</div>
-                  <div class="help">Required.</div>
-                </div>
-                <span id="sellToBadge" class="pill">Not selected</span>
-              </div>
-              <div id="sellToList" class="customer-scroll"></div>
-            </div>
-
-            <div class="col-lg-6 mt-3 mt-lg-0">
-              <div class="d-flex justify-content-between align-items-center mb-2">
-                <div>
-                  <div class="font-weight-bold">Bill To Customer</div>
-                  <div class="help">Default is same as Sell To.</div>
-                </div>
-                <span id="billToBadge" class="pill">Same as Sell To</span>
-              </div>
-
-              <div class="border rounded p-3 bg-white mb-3" style="border-color: var(--border) !important;">
-                <div class="custom-control custom-checkbox">
-                  <input type="checkbox" class="custom-control-input" id="sameAsSellTo" checked />
-                  <label class="custom-control-label" for="sameAsSellTo">Billing
-                    address same as Sell To</label>
-                </div>
-                <div class="help mt-1">Uncheck to select a different Billing
-                  customer.</div>
-              </div>
-
-              <div id="billToWrap" class="d-none">
-                <div id="billToList" class="customer-scroll"></div>
-              </div>
-
-              <div class="border rounded p-3 bg-white mt-3" style="border-color: var(--border) !important;">
-                <div class="font-weight-bold mb-2">Selected Summary</div>
-                <div class="row">
-                  <div class="col-md-6">
-                    <div class="help mb-1">Sell To</div>
-                    <div id="sellToSummary" class="small text-muted">Not
-                      selected.</div>
-                  </div>
-                  <div class="col-md-6 mt-3 mt-md-0">
-                    <div class="help mb-1">Bill To</div>
-                    <div id="billToSummary" class="small text-muted">Same as
-                      Sell To.</div>
-                  </div>
-                </div>
-              </div>
-
-            </div>
+        <div class="row mt-3">
+          <div class="col-md-4 mb-2 mb-md-0">
+            <input id="customerSearch" class="form-control" placeholder="Search customer by name, email, phone..." />
           </div>
-        </div>
 
-        <div class="panel-footer">
-          <div class="d-flex justify-content-between align-items-center">
-            <div class="help">
-              {{-- URL params will be set as: <span class="pill">sell_to</span> and
-              <span class="pill">bill_to</span> --}}
-            </div>
-            <button id="continueBtn" class="btn btn-dark" disabled>Continue to
-              POS</button>
+          <div class="col-md-2">
+            <select id="companyFilter" class="custom-select">
+              <option value>All Customers</option>
+              <option value="company">Company Only</option>
+              <option value="individual">Individual Only</option>
+            </select>
           </div>
         </div>
       </div>
-    </div>
-  @endsection
 
-  @push('scripts')
-    <script>
-      const DATA_URL = "{{ company_route('load-customers') }}";
-    </script>
-    <script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js"></script>
-    <script src="{{ asset('pos/assets/js/customers.js') }}"></script>
-  @endpush
+      <div class="panel-body">
+        <div class="row">
+          <div class="col-lg-6">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <div>
+                <div class="font-weight-bold">Sell To Customer</div>
+                <div class="help">Required.</div>
+              </div>
+              <span id="sellToBadge" class="pill">Not selected</span>
+            </div>
+            <div id="sellToList" class="customer-scroll"></div>
+          </div>
+
+          <div class="col-lg-6 mt-3 mt-lg-0">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <div>
+                <div class="font-weight-bold">Bill To Customer</div>
+                <div class="help">Default is same as Sell To.</div>
+              </div>
+              <span id="billToBadge" class="pill">Same as Sell To</span>
+            </div>
+
+            <div class="border rounded p-3 bg-white mb-3" style="border-color: var(--border) !important;">
+              <div class="custom-control custom-checkbox">
+                <input type="checkbox" class="custom-control-input" id="sameAsSellTo" checked />
+                <label class="custom-control-label" for="sameAsSellTo">Billing
+                  address same as Sell To</label>
+              </div>
+              <div class="help mt-1">Uncheck to select a different Billing
+                customer.</div>
+            </div>
+
+            <div id="billToWrap" class="d-none">
+              <div id="billToList" class="customer-scroll"></div>
+            </div>
+
+            <div class="border rounded p-3 bg-white mt-3" style="border-color: var(--border) !important;">
+              <div class="font-weight-bold mb-2">Selected Summary</div>
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="help mb-1">Sell To</div>
+                  <div id="sellToSummary" class="small text-muted">Not
+                    selected.</div>
+                </div>
+                <div class="col-md-6 mt-3 mt-md-0">
+                  <div class="help mb-1">Bill To</div>
+                  <div id="billToSummary" class="small text-muted">Same as
+                    Sell To.</div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <div class="panel-footer">
+        <div class="d-flex justify-content-between align-items-center">
+          <div class="help">
+            {{-- URL params will be set as: <span class="pill">sell_to</span> and
+              <span class="pill">bill_to</span> --}}
+          </div>
+          <button id="continueBtn" class="btn btn-dark" disabled>Add Products</button>
+        </div>
+      </div>
+    </div>
+  </div>
+@endsection
+
+@push('scripts')
+  <script>
+    const DATA_URL = "{{ company_route('load-customers') }}";
+    const STORE_ORDER_URL = "{{ company_route('sales-orders.store') }}";
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js"></script>
+  <script src="{{ asset('pos/assets/js/customers.js') }}"></script>
+@endpush

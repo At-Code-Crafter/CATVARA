@@ -3,7 +3,7 @@
 @section('title', 'Edit Product')
 
 @section('content-header')
-<link rel="stylesheet" href="{{ asset('assets/css/enterprise.css') }}">
+  <link rel="stylesheet" href="{{ asset('assets/css/enterprise.css') }}">
   <div class="row mb-2 align-items-center">
     <div class="col-sm-8">
       <div class="d-flex align-items-center">
@@ -58,8 +58,8 @@
 
               <div class="col-12 mb-3">
                 <label>Product Name <span class="req">*</span></label>
-                <input type="text" class="form-control ent-control @error('name') is-invalid @enderror"
-                  name="name" value="{{ old('name', $product->name) }}" placeholder="Enter product name">
+                <input type="text" class="form-control ent-control @error('name') is-invalid @enderror" name="name"
+                  value="{{ old('name', $product->name) }}" placeholder="Enter product name">
                 @error('name')
                   <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
@@ -83,7 +83,8 @@
                   <div class="input-group-prepend">
                     <span class="input-group-text ent-input-addon">/products/</span>
                   </div>
-                  <input type="text" class="form-control ent-control" name="slug" value="{{ $product->slug }}" readonly>
+                  <input type="text" class="form-control ent-control" name="slug" value="{{ $product->slug }}"
+                    readonly>
                 </div>
                 <div class="help-hint">Slug is auto-managed and cannot be edited here.</div>
               </div>
@@ -163,15 +164,17 @@
                           $val = $price ? $price->price : '';
                         @endphp
                         <td>
-                          <input type="number" step="0.01" class="form-control ent-control ent-variant-price ent-price-accent"
-                            name="prices[{{ $variant->id }}][{{ $ch->id }}]" value="{{ $val }}" placeholder="0.00">
+                          <input type="number" step="0.01"
+                            class="form-control ent-control ent-variant-price ent-price-accent"
+                            name="prices[{{ $variant->id }}][{{ $ch->id }}]" value="{{ $val }}"
+                            placeholder="0.00">
                         </td>
                       @endforeach
 
                       <td class="text-center">
                         <a href="{{ company_route('inventory.variant.details', ['product_variant' => $variant->id]) }}"
-                          class="btn btn-sm btn-outline-primary btn-ent ent-icon-btn"
-                          target="_blank" data-toggle="tooltip" title="Manage Inventory">
+                          class="btn btn-sm btn-outline-primary btn-ent ent-icon-btn" target="_blank"
+                          data-toggle="tooltip" title="Manage Inventory">
                           <i class="fas fa-boxes"></i>
                         </a>
                       </td>
@@ -188,59 +191,64 @@
           </div>
         </div>
 
-        {{-- MEDIA GALLERY --}}
-        <div class="card ent-card mb-3">
-          <div class="card-header">
-            <h3 class="card-title">
-              <i class="fas fa-images"></i> Media Gallery
-            </h3>
-          </div>
 
-          <div class="card-body">
-            <div class="row">
-              @foreach ($product->attachments as $atch)
-                <div class="col-6 col-sm-4 col-md-3 mb-3">
-                  <div class="ent-media-item" title="Media">
-                    <img src="{{ asset('storage/' . $atch->path) }}" alt="media"
-                      class="img-fluid ent-media-img">
-                    <div class="ent-media-overlay">
-                      {{-- Keep your actions as-is (wire to routes/ajax later) --}}
-                      <button type="button" class="btn btn-sm btn-danger btn-ent ent-icon-btn" data-toggle="tooltip" title="Delete">
-                        <i class="fas fa-trash"></i>
-                      </button>
-
-                      @if (!$atch->is_primary)
-                        <button type="button" class="btn btn-sm btn-primary btn-ent ent-icon-btn" data-toggle="tooltip" title="Set Primary">
-                          <i class="fas fa-star"></i>
-                        </button>
-                      @else
-                        <span class="badge badge-warning">Primary</span>
-                      @endif
-                    </div>
-                  </div>
-                </div>
-              @endforeach
-
-              <div class="col-6 col-sm-4 col-md-3 mb-3">
-                <label class="ent-media-upload">
-                  <i class="fas fa-plus-circle"></i>
-                  <span>Upload</span>
-                  <input type="file" name="images[]" class="d-none" multiple>
-                </label>
-              </div>
-            </div>
-
-            <div class="help-hint">
-              Tip: Upload multiple images at once. Primary image is used as thumbnail across listings.
-            </div>
-          </div>
-        </div>
 
       </div>
 
       {{-- SIDEBAR (RIGHT) --}}
       <div class="col-lg-4 col-md-12">
         <div class="sticky-side">
+          {{-- MAIN IMAGE (SINGLE) --}}
+          <div class="card ent-card mb-3">
+            <div class="card-header">
+              <h3 class="card-title">
+                <i class="fas fa-image"></i> Product Main Image
+              </h3>
+            </div>
+
+            <div class="card-body">
+              @php
+                $mainImageSrc = !empty($product->image)
+                    ? asset('storage/' . $product->image)
+                    : asset('theme/adminlte/dist/img/default-150x150.png');
+              @endphp
+
+              <div class="row">
+                <div class="col-md-5">
+                  <label class="mb-2">Current Image</label>
+                  <div class="ent-preview-card text-center"
+                    style="border:1px solid #e2e8f0;border-radius:10px;padding:12px;background:#fff;">
+                    <img id="mainImagePreview" src="{{ $mainImageSrc }}" class="img-fluid rounded"
+                      style="max-height: 260px;" alt="main">
+                  </div>
+                  <div class="help-hint mt-2">
+                    This image is used as the primary thumbnail across listings.
+                  </div>
+                </div>
+
+                <div class="col-md-7">
+                  <label class="mb-2">Upload New Image</label>
+
+                  <div class="d-flex align-items-center flex-wrap" style="gap:10px;">
+                    <label class="btn btn-outline-primary btn-ent mb-0" style="cursor:pointer;">
+                      <i class="fas fa-upload mr-1"></i> Choose Image
+                      <input id="mainImageInput" type="file" name="image" class="d-none" accept="image/*">
+                    </label>
+
+                    <button type="button" id="clearMainImage" class="btn btn-outline-secondary btn-ent">
+                      <i class="fas fa-times mr-1"></i> Clear
+                    </button>
+
+                    <div class="text-muted small" id="mainImageFileName">No file selected</div>
+                  </div>
+
+                  <div class="help-hint mt-2">
+                    Selecting a file will instantly preview it. Save changes to upload.
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
 
           {{-- STATUS --}}
           <div class="card ent-card mb-3">
@@ -283,35 +291,6 @@
               <button type="submit" form="product-form" class="btn btn-primary btn-ent btn-block">
                 <i class="fas fa-save mr-1"></i> Update Product
               </button>
-            </div>
-          </div>
-
-          {{-- PRIMARY PREVIEW --}}
-          <div class="card ent-card mb-3">
-            <div class="card-header">
-              <h3 class="card-title">
-                <i class="fas fa-image"></i> Primary Preview
-              </h3>
-            </div>
-
-            <div class="card-body text-center">
-              @php
-                $primaryImg = $product->attachments->where('is_primary', true)->first();
-                $primarySrc = $primaryImg
-                    ? asset('storage/' . $primaryImg->path)
-                    : asset('theme/adminlte/dist/img/default-150x150.png');
-              @endphp
-
-              <div class="ent-preview-card">
-                <img src="{{ $primarySrc }}" class="img-fluid rounded" style="max-height: 260px;" alt="primary">
-              </div>
-
-              <div class="mt-3">
-                <label class="btn btn-outline-primary btn-ent btn-block" style="cursor:pointer;">
-                  <i class="fas fa-camera mr-1"></i> Change Main Image
-                  <input type="file" name="primary_image" class="d-none">
-                </label>
-              </div>
             </div>
           </div>
 
@@ -363,6 +342,43 @@
           width: '100%'
         });
       }
+
+      // --- Single Image Preview ---
+      const $input = $('#mainImageInput');
+      const $img = $('#mainImagePreview');
+      const $name = $('#mainImageFileName');
+
+      const originalSrc = $img.attr('src');
+
+      function resetMainImage() {
+        $input.val('');
+        $img.attr('src', originalSrc);
+        $name.text('No file selected');
+      }
+
+      $('#clearMainImage').on('click', function() {
+        resetMainImage();
+      });
+
+      $input.on('change', function(e) {
+        const file = (e.target.files && e.target.files[0]) ? e.target.files[0] : null;
+
+        if (!file) {
+          resetMainImage();
+          return;
+        }
+
+        if (!file.type || !file.type.startsWith('image/')) {
+          resetMainImage();
+          return;
+        }
+
+        $name.text(file.name);
+
+        const url = URL.createObjectURL(file);
+        $img.attr('src', url);
+      });
+
     });
   </script>
 @endpush
