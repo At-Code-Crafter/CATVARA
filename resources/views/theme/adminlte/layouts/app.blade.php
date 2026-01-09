@@ -150,7 +150,46 @@
   </script> --}}
 
 
+  {{-- Common Modal Close Handler (Bootstrap 4 to 5 compatibility) --}}
+  <script>
+    $(document).ready(function() {
+      // Handle Bootstrap 4 style data-dismiss="modal" in Bootstrap 5
+      $(document).on('click', '[data-dismiss="modal"]', function(e) {
+        e.preventDefault();
+        var $modal = $(this).closest('.modal');
+        if ($modal.length) {
+          // Try Bootstrap 5 method first
+          var bsModal = bootstrap.Modal.getInstance($modal[0]);
+          if (bsModal) {
+            bsModal.hide();
+          } else {
+            // Fallback: manually hide modal
+            $modal.modal('hide');
+          }
+        }
+      });
 
+      // Handle .close button clicks inside modals (× button)
+      $(document).on('click', '.modal .close, .modal .btn-close', function(e) {
+        e.preventDefault();
+        var $modal = $(this).closest('.modal');
+        if ($modal.length) {
+          var bsModal = bootstrap.Modal.getInstance($modal[0]);
+          if (bsModal) {
+            bsModal.hide();
+          } else {
+            $modal.modal('hide');
+          }
+        }
+      });
+
+      // Clean up modal backdrop on hide
+      $(document).on('hidden.bs.modal', '.modal', function() {
+        $('.modal-backdrop').remove();
+        $('body').removeClass('modal-open').css('padding-right', '');
+      });
+    });
+  </script>
 
   <!-- Custom JS -->
   <script src="{{ asset('assets/js/form.js') }}"></script>

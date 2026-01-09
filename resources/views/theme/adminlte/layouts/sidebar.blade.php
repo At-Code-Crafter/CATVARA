@@ -15,8 +15,8 @@
 
   // Module visibility flags (only show if at least one route exists)
   $hasSales =
-      Route::has('orders.index') ||
-      Route::has('quotes.index') ||
+      Route::has('sales-orders.index') ||
+      // Route::has('quotes.index') || // DISABLED
       Route::has('invoices.index') ||
       Route::has('credit-notes.index');
   $hasPos = Route::has('company.pos.orders.index') || Route::has('company.pos.returns.index');
@@ -111,9 +111,9 @@
           {{-- Sales --}}
           @if ($hasSales)
             <li
-              class="nav-item has-treeview {{ $isActive(['sales-orders.*', 'quotes.*', 'invoices.*', 'credit-notes.*']) ? 'menu-open' : '' }}">
+              class="nav-item has-treeview {{ $isActive(['sales-orders.*', 'invoices.*', 'credit-notes.*']) ? 'menu-open' : '' }}">
               <a href="#"
-                class="nav-link {{ $isActive(['sales-orders.*', 'quotes.*', 'invoices.*', 'credit-notes.*']) ? 'active' : '' }}">
+                class="nav-link {{ $isActive(['sales-orders.*', 'invoices.*', 'credit-notes.*']) ? 'active' : '' }}">
                 <i class="nav-icon fas fa-shopping-cart"></i>
                 <p>Sales <i class="right fas fa-angle-left"></i></p>
               </a>
@@ -139,6 +139,7 @@
                   @endif
                 @endif
 
+                {{-- Quotes Navigation (DISABLED)
                 @if (Route::has('quotes.index'))
                   <li class="nav-item">
                     <a href="{{ company_route('quotes.index') }}"
@@ -148,6 +149,7 @@
                     </a>
                   </li>
                 @endif
+                --}}
 
                 @if (Route::has('invoices.index'))
                   <li class="nav-item">
