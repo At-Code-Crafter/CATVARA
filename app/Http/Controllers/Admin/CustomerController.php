@@ -57,7 +57,7 @@ class CustomerController extends Controller
                 ->editColumn('display_name', function ($row) {
                     $name = e($row->display_name);
                     if ($row->legal_name) {
-                        $name .= '<br><small class="text-muted">'.e($row->legal_name).'</small>';
+                        $name .= '<br><small class="text-muted">' . e($row->legal_name) . '</small>';
                     }
 
                     return $name;
@@ -67,18 +67,18 @@ class CustomerController extends Controller
                     $badge = $row->type === 'COMPANY' ? 'primary' : 'secondary';
                     $icon = $row->type === 'COMPANY' ? 'building' : 'user';
 
-                    return '<span class="badge badge-'.$badge.'"><i class="fas fa-'.$icon.' mr-1"></i>'.e($row->type).'</span>';
+                    return '<span class="badge badge-' . $badge . '"><i class="fas fa-' . $icon . ' mr-1"></i>' . e($row->type) . '</span>';
                 })
 
                 ->editColumn('email', function ($row) {
                     return $row->email
-                        ? '<a href="mailto:'.e($row->email).'">'.e($row->email).'</a>'
+                        ? '<a href="mailto:' . e($row->email) . '">' . e($row->email) . '</a>'
                         : '<span class="text-muted">—</span>';
                 })
 
                 ->editColumn('phone', function ($row) {
                     return $row->phone
-                        ? '<a href="tel:'.e($row->phone).'">'.e($row->phone).'</a>'
+                        ? '<a href="tel:' . e($row->phone) . '">' . e($row->phone) . '</a>'
                         : '<span class="text-muted">—</span>';
                 })
 
@@ -221,10 +221,21 @@ class CustomerController extends Controller
     public function show(Company $company, string $id)
     {
         $customer = Customer::where('company_id', $company->id)
-            ->with(['addresses', 'country', 'state'])
+            ->with(['address', 'orders.status', 'orders.currency'])
             ->findOrFail($id);
 
-        return view('theme.adminlte.customers.show', compact('company', 'customer'));
+        // Stats Calculation
+        $stats = [
+            'orders_count' => $customer->orders()->count(),
+            'orders_draft' => $customer->orders()->whereHas('status', fn($q) => $q->where('code', 'DRAFT'))->count(),
+            'orders_completed' => $customer->orders()->whereHas('status', fn($q) => $q->where('code', 'FULFILLED'))->count(),
+            'invoices_paid' => \App\Models\Accounting\Invoice::where('customer_id', $customer->id)->whereHas('status', fn($q) => $q->where('code', 'PAID'))->count(),
+            'invoices_unpaid' => \App\Models\Accounting\Invoice::where('customer_id', $customer->id)->whereHas('status', fn($q) => $q->whereIn('code', ['ISSUED', 'PARTIALLY_PAID', 'OVERDUE']))->count(),
+            'total_spent' => $customer->orders()->whereHas('status', fn($q) => $q->where('code', 'FULFILLED'))->sum('grand_total'),
+            'total_overdue' => \App\Models\Accounting\Invoice::where('customer_id', $customer->id)->whereHas('status', fn($q) => $q->where('code', 'OVERDUE'))->sum('grand_total'), // Or use balance due if available, assuming grand_total for now
+        ];
+
+        return view('theme.adminlte.customers.show', compact('company', 'customer', 'stats'));
     }
 
     /**

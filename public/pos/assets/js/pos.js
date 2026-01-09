@@ -207,14 +207,13 @@
 			grid.append(`
         <div class="col-6 col-md-4 col-xl-4 mb-3">
           <div class="product-card" data-product-id="${p.id}">
-            <div class="product-thumb">${imgHtml}</div>
+            <div class="product-thumb">
+              ${p.category ? `<div class="product-cat-badge">${escapeHtml(p.category)}</div>` : ""}
+              ${imgHtml}
+            </div>
             <div class="product-body">
               <div class="product-title">
                 <span class="product-name">${escapeHtml(p.name || "")}</span>
-                ${p.category
-					? `<span class="product-category">${escapeHtml(p.category)}</span>`
-					: ""
-				}
               </div>
               <div class="product-meta">
                 <span class="text-muted">${escapeHtml(p.brand || "")}</span>

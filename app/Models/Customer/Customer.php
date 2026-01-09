@@ -56,8 +56,13 @@ class Customer extends Model
     {
         return collect(preg_split('/\s+/', trim((string) $this->display_name)))
             ->filter()
-            ->map(fn ($p) => mb_substr($p, 0, 1))
+            ->map(fn($p) => mb_substr($p, 0, 1))
             ->take(2)
             ->implode('');
+    }
+
+    public function orders()
+    {
+        return $this->hasMany(\App\Models\Sales\Order::class);
     }
 }

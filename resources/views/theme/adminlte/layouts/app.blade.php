@@ -8,7 +8,8 @@
   <title>{{ setting('site_title', 'Xtremez') }}</title>
 
   <!-- Google Font: Source Sans Pro -->
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
+  <link rel="stylesheet"
+    href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
   <!-- Font Awesome Icons -->
   <link rel="stylesheet" href="{{ asset('theme/adminlte/plugins/fontawesome-free/css/all.min.css') }}">
   <!-- DataTables -->
@@ -36,6 +37,10 @@
   <link rel="stylesheet" href="{{ asset('theme/adminlte/dist/css/adminlte.min.css') }}">
 
   <style>
+    html {
+      font-size: 80%;
+    }
+
     [class*=sidebar-dark-] {
       background-color: #000000;
     }
@@ -90,9 +95,11 @@
   <!-- jQuery -->
   <script src="{{ asset('theme/adminlte/plugins/jquery/jquery.min.js') }}"></script>
   <!-- Bootstrap 4 -->
-  {{-- <script src="{{ asset('theme/adminlte/plugins/bootstrap/js/bootstrap.bundle.min.js') }}"></script> --}}
+  {{--
+  <script src="{{ asset('theme/adminlte/plugins/bootstrap/js/bootstrap.bundle.min.js') }}"></script> --}}
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
-    integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+    integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
+    crossorigin="anonymous"></script>
   <!-- AdminLTE App -->
   <script src="{{ asset('theme/adminlte/dist/js/adminlte.min.js') }}"></script>
   <!-- DataTables  & Plugins -->
@@ -111,7 +118,8 @@
   <!-- Select2 -->
   <script src="{{ asset('theme/adminlte/plugins/select2/js/select2.full.min.js') }}"></script>
 
-  {{-- <script src="https://cdn.tiny.cloud/1/{{ setting('tiny_mc_key', env('TINY_MC_KEY')) }}/tinymce/7/tinymce.min.js"
+  {{--
+  <script src="https://cdn.tiny.cloud/1/{{ setting('tiny_mc_key', env('TINY_MC_KEY')) }}/tinymce/7/tinymce.min.js"
     referrerpolicy="origin"></script>
   <script>
     tinymce.init({
@@ -140,8 +148,8 @@
   <script>
     setInterval(() => {
       fetch("{{ route('admin.session.check') }}", {
-          cache: "no-store"
-        })
+        cache: "no-store"
+      })
         .then(r => {
           if (!r.ok) location.reload();
         })
@@ -152,9 +160,9 @@
 
   {{-- Common Modal Close Handler (Bootstrap 4 to 5 compatibility) --}}
   <script>
-    $(document).ready(function() {
+    $(document).ready(function () {
       // Handle Bootstrap 4 style data-dismiss="modal" in Bootstrap 5
-      $(document).on('click', '[data-dismiss="modal"]', function(e) {
+      $(document).on('click', '[data-dismiss="modal"]', function (e) {
         e.preventDefault();
         var $modal = $(this).closest('.modal');
         if ($modal.length) {
@@ -170,7 +178,7 @@
       });
 
       // Handle .close button clicks inside modals (× button)
-      $(document).on('click', '.modal .close, .modal .btn-close', function(e) {
+      $(document).on('click', '.modal .close, .modal .btn-close', function (e) {
         e.preventDefault();
         var $modal = $(this).closest('.modal');
         if ($modal.length) {
@@ -184,7 +192,7 @@
       });
 
       // Clean up modal backdrop on hide
-      $(document).on('hidden.bs.modal', '.modal', function() {
+      $(document).on('hidden.bs.modal', '.modal', function () {
         $('.modal-backdrop').remove();
         $('body').removeClass('modal-open').css('padding-right', '');
       });

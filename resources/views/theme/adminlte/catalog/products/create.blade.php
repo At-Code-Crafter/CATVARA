@@ -68,49 +68,7 @@
           </div>
         </div>
 
-        {{-- MAIN IMAGE (SINGLE) --}}
-        <div class="card ent-card mb-3">
-          <div class="card-header">
-            <h3 class="card-title"><i class="fas fa-image"></i> Main Image</h3>
-          </div>
-          <div class="card-body">
-
-            @php
-              $placeholder = asset('theme/adminlte/dist/img/default-150x150.png');
-            @endphp
-
-            <label class="mb-2">Upload Product Image</label>
-
-            <div class="ent-preview-card text-center"
-                 style="border:1px solid #e2e8f0;border-radius:10px;padding:12px;background:#fff;">
-              <img id="mainImagePreview"
-                   src="{{ $placeholder }}"
-                   class="img-fluid rounded"
-                   style="max-height: 240px;"
-                   alt="preview">
-            </div>
-
-            <div class="d-flex align-items-center flex-wrap mt-3" style="gap:10px;">
-              <label class="btn btn-outline-primary btn-ent mb-0" style="cursor:pointer;">
-                <i class="fas fa-upload mr-1"></i> Choose Image
-                <input id="mainImageInput" type="file" name="image" class="d-none" accept="image/*">
-              </label>
-
-              <button type="button" id="clearMainImage" class="btn btn-outline-secondary btn-ent">
-                <i class="fas fa-times mr-1"></i> Clear
-              </button>
-
-              <div class="text-muted small" id="mainImageFileName">No file selected</div>
-            </div>
-
-            <div class="help-hint mt-2">
-              This will be saved into <b>$product->image</b> and used as primary listing thumbnail.
-            </div>
-
-          </div>
-        </div>
-
-        {{-- VARIANT SETTINGS --}}
+                {{-- VARIANT SETTINGS --}}
         <div class="card ent-card mb-3">
           <div class="card-header">
             <h3 class="card-title"><i class="fas fa-sliders-h"></i> Variant Settings</h3>
@@ -151,25 +109,46 @@
           </div>
         </div>
 
-        {{-- QUICK HELP --}}
-        <div class="card ent-card">
+        {{-- MAIN IMAGE (SINGLE) --}}
+        <div class="card ent-card mb-3">
           <div class="card-header">
-            <h3 class="card-title"><i class="fas fa-lightbulb"></i> Tips</h3>
+            <h3 class="card-title"><i class="fas fa-image"></i> Main Image</h3>
           </div>
           <div class="card-body">
-            <div class="text-muted small">
-              <div class="mb-2">
-                <b>SKU:</b> You can leave SKU empty and auto-generate later, or fill now.
-              </div>
-              <div class="mb-2">
-                <b>Prices:</b> Cost and Selling price are per-variant.
-              </div>
-              <div>
-                <b>Remove:</b> Use the trash icon to delete a single variant row.
-              </div>
+
+            @php
+              $placeholder = asset('theme/adminlte/dist/img/default-150x150.png');
+            @endphp
+
+            <label class="mb-2">Upload Product Image</label>
+
+            <div class="ent-preview-card text-center"
+                 style="border:1px solid #e2e8f0;border-radius:10px;padding:12px;background:#fff;">
+              <img id="mainImagePreview"
+                   src="{{ $placeholder }}"
+                   class="img-fluid rounded"
+                   style="max-height: 240px;"
+                   alt="preview">
             </div>
+
+            <div class="d-flex align-items-center flex-wrap mt-3" style="gap:10px;">
+              <label class="btn btn-outline-primary btn-ent mb-0" style="cursor:pointer;">
+                <i class="fas fa-upload mr-1"></i> Choose Image
+                <input id="mainImageInput" type="file" name="image" class="d-none" accept="image/*">
+              </label>
+
+              <button type="button" id="clearMainImage" class="btn btn-outline-secondary btn-ent">
+                <i class="fas fa-times mr-1"></i> Clear
+              </button>
+
+              <div class="text-muted small" id="mainImageFileName">No file selected</div>
+            </div>
+
           </div>
         </div>
+
+
+
 
       </div>
 
@@ -218,6 +197,26 @@
             <button type="button" class="btn btn-primary btn-ent" id="btnSubmit">
               <i class="fas fa-save mr-1"></i> Create Product & Variants
             </button>
+          </div>
+        </div>
+
+                {{-- QUICK HELP --}}
+        <div class="card ent-card">
+          <div class="card-header">
+            <h3 class="card-title"><i class="fas fa-lightbulb"></i> Tips</h3>
+          </div>
+          <div class="card-body">
+            <div class="text-muted small">
+              <div class="mb-2">
+                <b>SKU:</b> You can leave SKU empty and auto-generate later, or fill now.
+              </div>
+              <div class="mb-2">
+                <b>Prices:</b> Cost and Selling price are per-variant.
+              </div>
+              <div>
+                <b>Remove:</b> Use the trash icon to delete a single variant row.
+              </div>
+            </div>
           </div>
         </div>
       </div>

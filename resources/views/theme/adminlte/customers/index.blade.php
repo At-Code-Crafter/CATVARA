@@ -203,9 +203,7 @@
         <h3 class="card-title m-0">
           <i class="fas fa-table"></i> Customer Directory
         </h3>
-        <div class="text-muted small">
-          Server-side results with advanced filtering
-        </div>
+        
       </div>
     </div>
 
