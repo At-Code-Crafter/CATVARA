@@ -22,30 +22,34 @@
         <div class="card-header">
           <h3 class="card-title">Warehouse Details</h3>
         </div>
-        <form action="{{ company_route('inventory.warehouses.update', ['warehouse' => $warehouse->id]) }}"
+        <form id="warehouseForm" action="{{ company_route('inventory.warehouses.update', ['warehouse' => $warehouse->id]) }}"
           method="POST">
           @csrf
           @method('PUT')
           <div class="card-body">
             <div class="form-group">
-              <label>Name *</label>
-              <input type="text" class="form-control" name="name" value="{{ $warehouse->name }}" required>
+              <label>Name <span class="text-danger">*</span></label>
+              <input type="text" class="form-control @error('name') is-invalid @enderror" name="name" id="name" value="{{ old('name', $warehouse->name) }}">
+              <div class="invalid-feedback" id="name-error">@error('name') {{ $message }} @enderror</div>
             </div>
             <div class="form-group">
-              <label>Code</label>
-              <input type="text" class="form-control" name="code" value="{{ $warehouse->code }}">
+              <label>Code <span class="text-danger">*</span></label>
+              <input type="text" class="form-control @error('code') is-invalid @enderror" name="code" id="code" value="{{ old('code', $warehouse->code) }}">
+              <div class="invalid-feedback" id="code-error">@error('code') {{ $message }} @enderror</div>
             </div>
             <div class="form-group">
               <label>Address</label>
-              <textarea class="form-control" name="address" rows="3">{{ $warehouse->address }}</textarea>
+              <textarea class="form-control @error('address') is-invalid @enderror" name="address" id="address" rows="3">{{ old('address', $warehouse->address) }}</textarea>
+              <div class="invalid-feedback" id="address-error">@error('address') {{ $message }} @enderror</div>
             </div>
             <div class="form-group">
               <label>Phone</label>
-              <input type="text" class="form-control" name="phone" value="{{ $warehouse->phone }}">
+              <input type="text" class="form-control @error('phone') is-invalid @enderror" name="phone" id="phone" value="{{ old('phone', $warehouse->phone) }}">
+              <div class="invalid-feedback" id="phone-error">@error('phone') {{ $message }} @enderror</div>
             </div>
             <div class="custom-control custom-switch">
               <input type="checkbox" class="custom-control-input" id="is_active" name="is_active"
-                {{ $warehouse->is_active ? 'checked' : '' }}>
+                {{ old('is_active', $warehouse->is_active) ? 'checked' : '' }}>
               <label class="custom-control-label" for="is_active">Active</label>
             </div>
           </div>
@@ -57,3 +61,69 @@
     </div>
   </div>
 @endsection
+
+@push('scripts')
+<script>
+$(document).ready(function() {
+  $('#warehouseForm').on('submit', function(e) {
+    // Clear previous errors
+    $('.form-control').removeClass('is-invalid');
+    $('.invalid-feedback').text('');
+
+    let isValid = true;
+    let errors = {};
+
+    // Validate Name (required, max 255)
+    const name = $('#name').val().trim();
+    if (!name) {
+      errors.name = 'Warehouse name is required.';
+      isValid = false;
+    } else if (name.length > 255) {
+      errors.name = 'Name cannot exceed 255 characters.';
+      isValid = false;
+    }
+
+    // Validate Code (required, max 50)
+    const code = $('#code').val().trim();
+    if (!code) {
+      errors.code = 'Warehouse code is required.';
+      isValid = false;
+    } else if (code.length > 50) {
+      errors.code = 'Code cannot exceed 50 characters.';
+      isValid = false;
+    }
+
+    // Validate Phone (optional, max 50)
+    const phone = $('#phone').val().trim();
+    if (phone && phone.length > 50) {
+      errors.phone = 'Phone cannot exceed 50 characters.';
+      isValid = false;
+    }
+
+    // Show errors if validation fails
+    if (!isValid) {
+      e.preventDefault();
+      $.each(errors, function(field, message) {
+        $('#' + field).addClass('is-invalid');
+        $('#' + field + '-error').text(message);
+      });
+
+      // Scroll to first error
+      const firstError = $('.is-invalid').first();
+      if (firstError.length) {
+        $('html, body').animate({
+          scrollTop: firstError.offset().top - 100
+        }, 300);
+        firstError.focus();
+      }
+    }
+  });
+
+  // Clear error on input
+  $('.form-control').on('input', function() {
+    $(this).removeClass('is-invalid');
+    $(this).siblings('.invalid-feedback').text('');
+  });
+});
+</script>
+@endpush
