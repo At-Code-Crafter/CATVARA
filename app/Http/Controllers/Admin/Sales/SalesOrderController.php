@@ -20,6 +20,8 @@ class SalesOrderController extends Controller
 {
     public function index()
     {
+        $this->authorize('view', 'orders');
+
         $companyId = active_company_id();
         $statuses = OrderStatus::all();
         $customers = Customer::where('company_id', $companyId)->orderBy('display_name')->get();
@@ -91,11 +93,15 @@ class SalesOrderController extends Controller
 
     public function create()
     {
+        $this->authorize('create', 'orders');
+
         return view('theme.adminlte.sales.orders.create');
     }
 
     public function store(Request $request)
     {
+        $this->authorize('create', 'orders');
+
         $request->validate([
             'sell_to' => 'required|exists:customers,uuid',
             'bill_to' => 'nullable|exists:customers,uuid',
@@ -167,6 +173,8 @@ class SalesOrderController extends Controller
 
     public function edit(Company $company, $id)
     {
+        $this->authorize('edit', 'orders');
+
         $order = Order::where('company_id', $company->id)
             ->whereUuid($id)
             ->with(['items.productVariant.product'])
@@ -221,6 +229,8 @@ class SalesOrderController extends Controller
      */
     public function update(Request $request, Company $company, $uuid)
     {
+        $this->authorize('edit', 'orders');
+
         $order = Order::where('company_id', $company->id)
             ->where('uuid', $uuid)
             ->firstOrFail();

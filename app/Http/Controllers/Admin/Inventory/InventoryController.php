@@ -31,6 +31,8 @@ class InventoryController extends Controller
      */
     public function index(Request $request)
     {
+        $this->authorize('view', 'inventory');
+
         $companyId = $request->company->id;
         $locations = InventoryLocation::where('company_id', $companyId)->with('locatable')->get();
 
@@ -85,6 +87,8 @@ class InventoryController extends Controller
      */
     public function create()
     {
+        $this->authorize('adjust', 'inventory');
+
         $locations = InventoryLocation::where('company_id', request()->company->id)->with('locatable')->get();
 
         // Simple list of products for dropdown - in real app might need AJAX search
@@ -104,6 +108,8 @@ class InventoryController extends Controller
      */
     public function store(Requests\Inventory\StoreStockAdjustmentRequest $request)
     {
+        $this->authorize('adjust', 'inventory');
+
         try {
             DB::beginTransaction();
 

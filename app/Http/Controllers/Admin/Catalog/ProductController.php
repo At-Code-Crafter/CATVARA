@@ -21,6 +21,8 @@ class ProductController extends Controller
 {
     public function index(Request $request)
     {
+        $this->authorize('view', 'products');
+
         if ($request->ajax()) {
             $query = Product::where('company_id', $request->company->id)
                 ->with(['category', 'variants', 'attachments']); // Eager load attachments for thumbnail
@@ -67,6 +69,8 @@ class ProductController extends Controller
 
     public function create()
     {
+        $this->authorize('create', 'products');
+
         $categories = Category::where('company_id', request()->company->id)->get();
         $attributes = Attribute::where('company_id', request()->company->id)->with('values')->get();
 
@@ -82,6 +86,8 @@ class ProductController extends Controller
 
     public function edit(\App\Models\Company\Company $company, $id)
     {
+        $this->authorize('edit', 'products');
+
         // $company is passed via route model binding
         $product = Product::where('company_id', $company->id)->with(['variants.attributeValues', 'variants.prices', 'variants.inventory'])->findOrFail($id);
         $categories = Category::where('company_id', $company->id)->get();
@@ -96,6 +102,8 @@ class ProductController extends Controller
 
     public function update(Request $request, \App\Models\Company\Company $company, $id)
     {
+        $this->authorize('edit', 'products');
+
         $request->validate([
             'name' => 'required|string|max:255',
             'category_id' => 'required|exists:categories,id',
@@ -164,6 +172,8 @@ class ProductController extends Controller
 
     public function store(Request $request)
     {
+        $this->authorize('create', 'products');
+
         $request->validate([
             'name' => 'required|string|max:255',
             'category_id' => 'required',

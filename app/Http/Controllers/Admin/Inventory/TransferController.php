@@ -29,6 +29,8 @@ class TransferController extends Controller
      */
     public function index(Request $request)
     {
+        $this->authorize('view', 'transfers');
+
         if ($request->ajax()) {
             $query = InventoryTransfer::where('company_id', $request->company->id)
                 ->with(['fromLocation.locatable', 'toLocation.locatable', 'status']);
@@ -65,6 +67,8 @@ class TransferController extends Controller
      */
     public function create(Request $request)
     {
+        $this->authorize('create', 'transfers');
+
         $locations = InventoryLocation::where('company_id', $request->company->id)->with('locatable')->get();
         $variants = ProductVariant::where('company_id', $request->company->id)->with('product')->get();
 
@@ -76,6 +80,8 @@ class TransferController extends Controller
      */
     public function store(Requests\Inventory\StoreTransferRequest $request)
     {
+        $this->authorize('create', 'transfers');
+
         $draftStatus = InventoryTransferStatus::where('code', 'DRAFT')->firstOrFail();
 
         $transfer = InventoryTransfer::create([
@@ -107,6 +113,8 @@ class TransferController extends Controller
      */
     public function show(Request $request, Company $company, $id)
     {
+        $this->authorize('view', 'transfers');
+
         $transfer = InventoryTransfer::where('company_id', $request->company->id)
             ->with(['fromLocation.locatable', 'toLocation.locatable', 'status', 'items.variant.product'])
             ->findOrFail($id);

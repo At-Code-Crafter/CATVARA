@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice - 02DEC2025001</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+            line-height: 1.4;
+            color: #000;
+            background: #fff;
+        }
+
+        .invoice-container {
+            width: 210mm;
+            min-height: 297mm;
+            margin: 0 auto;
+            padding: 15mm 20mm;
+            background: #fff;
+        }
+
+        /* Header */
+        .invoice-title {
+            font-size: 28px;
+            font-weight: bold;
+            color: #000;
+            margin-bottom: 30px;
+        }
+
+        /* Bill To Section */
+        .bill-to-section {
+            margin-bottom: 25px;
+        }
+
+        .bill-to-label {
+            font-weight: bold;
+            color: #000;
+            margin-bottom: 15px;
+        }
+
+        .bill-to-content {
+            line-height: 1.5;
+        }
+
+        .company-name {
+            font-weight: bold;
+            color: #000;
+            margin-bottom: 3px;
+        }
+
+        .address-line {
+            color: #000;
+        }
+
+        /* Order Details Section */
+        .order-details {
+            display: flex;
+            margin-bottom: 20px;
+        }
+
+        .order-details-left {
+            width: 50%;
+        }
+
+        .order-details-right {
+            width: 50%;
+        }
+
+        .detail-row {
+            display: flex;
+            margin-bottom: 3px;
+        }
+
+        .detail-label {
+            width: 140px;
+            color: #000;
+        }
+
+        .detail-value {
+            color: #000;
+        }
+
+        /* Items Table */
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 0;
+        }
+
+        .items-table th {
+            background: #aeaaaa;
+            color: #050000;
+            font-weight: bold;
+            padding: 8px 6px;
+            text-align: left;
+            font-size: 12px;
+            border: 1px solid #000;
+        }
+
+        .items-table td {
+            padding: 6px;
+            border: 1px solid #000;
+            font-size: 12px;
+            color: #000;
+            vertical-align: middle;
+        }
+
+        .items-table .col-item-no {
+            width: 180px;
+        }
+
+        .items-table .col-description {
+            width: 200px;
+        }
+
+        .items-table .col-currency {
+            width: 25px;
+            text-align: center;
+        }
+
+        .items-table .col-price {
+            width: 60px;
+            text-align: right;
+        }
+
+        .items-table .col-quantity {
+            width: 70px;
+            text-align: center;
+        }
+
+        .items-table .col-amount-currency {
+            width: 25px;
+            text-align: center;
+        }
+
+        .items-table .col-amount {
+            width: 60px;
+            text-align: right;
+        }
+
+        .items-table td.text-right {
+            text-align: right;
+        }
+
+        .items-table td.text-center {
+            text-align: center;
+        }
+
+        .items-table th.text-right {
+            text-align: right;
+        }
+
+        .items-table th.text-center {
+            text-align: center;
+        }
+
+        .items-table .empty-row td {
+            height: 25px;
+        }
+
+        .items-table .totals-label {
+            text-align: right;
+            font-weight: normal;
+        }
+
+        .items-table .totals-label-bold {
+            text-align: right;
+            font-weight: bold;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            font-size: 14px;
+            color: #b8860b;
+            font-weight: bold;
+            font-style: italic;
+        }
+
+        /* Print Styles */
+        @media print {
+            body {
+                margin: 0;
+                padding: 0;
+            }
+
+            .invoice-container {
+                margin: 0;
+                padding: 10mm 15mm;
+                width: 100%;
+                min-height: auto;
+            }
+
+            @page {
+                size: A4;
+                margin: 5mm;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="invoice-container">
+        <!-- Header -->
+        <div class="invoice-title">Invoice</div>
+
+        <!-- Bill To Section -->
+        <div class="bill-to-section">
+            <div class="bill-to-label">Bill To:</div>
+            <div class="bill-to-content">
+                <div class="company-name">BUDGENS WOOLER RIVERSIDE</div>
+                <div class="address-line">7-9 SOUTH ROAD</div>
+                <div class="address-line">WOOLER</div>
+                <div class="address-line">NE71 6QE</div>
+                <div class="address-line">UK</div>
+            </div>
+        </div>
+
+        <!-- Order Details Section -->
+        <div class="order-details">
+            <div class="order-details-left">
+                <div class="detail-row">
+                    <span class="detail-label">Order Tracking No:</span>
+                    <span class="detail-value">1550 3948 2160 832</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Order Date:</span>
+                    <span class="detail-value">02/12/2025</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Delivery Method:</span>
+                    <span class="detail-value">DPD</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">BOXES</span>
+                    <span class="detail-value">1</span>
+                </div>
+            </div>
+            <div class="order-details-right">
+                <div class="detail-row">
+                    <span class="detail-label">Invoice No:</span>
+                    <span class="detail-value">02DEC2025001</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Due Date:</span>
+                    <span class="detail-value">20/12/2025</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Items Table -->
+        <table class="items-table">
+            <thead>
+                <tr>
+                    <th class="col-item-no">Item No:</th>
+                    <th class="col-description">Description</th>
+                    <th class="col-currency" colspan="2">Unit Price</th>
+                    <th class="col-quantity text-center">Quantity</th>
+                    <th class="col-amount-currency" colspan="2">Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>IVG SMART MAX KIT</td>
+                    <td>PINEAPPLE ICE</td>
+                    <td class="text-center">£</td>
+                    <td class="text-right">24.00</td>
+                    <td class="text-center">1</td>
+                    <td class="text-center">£</td>
+                    <td class="text-right">24.00</td>
+                </tr>
+                <tr>
+                    <td>IVG SMART MAX REFILL</td>
+                    <td>PINEAPPLE ICE</td>
+                    <td class="text-center">£</td>
+                    <td class="text-right">17.00</td>
+                    <td class="text-center">1</td>
+                    <td class="text-center">£</td>
+                    <td class="text-right">17.00</td>
+                </tr>
+                <tr>
+                    <td>IVG SMART MAX REFILL</td>
+                    <td>COLA ICE</td>
+                    <td class="text-center">£</td>
+                    <td class="text-right">17.00</td>
+                    <td class="text-center">1</td>
+                    <td class="text-center">£</td>
+                    <td class="text-right">17.00</td>
+                </tr>
+                <tr>
+                    <td>IVG 2400 ( 4 in 1 )</td>
+                    <td>PASSIONFRUIT EDITION</td>
+                    <td class="text-center">£</td>
+                    <td class="text-right">22.50</td>
+                    <td class="text-center">1</td>
+                    <td class="text-center">£</td>
+                    <td class="text-right">22.50</td>
+                </tr>
+                <tr>
+                    <td>IVG PRO REFILL</td>
+                    <td>PINEAPPLE ICE</td>
+                    <td class="text-center">£</td>
+                    <td class="text-right">17.00</td>
+                    <td class="text-center">1</td>
+                    <td class="text-center">£</td>
+                    <td class="text-right">17.00</td>
+                </tr>
+                <tr>
+                    <td>IVG PRO REFILL</td>
+                    <td>LEMON LIME</td>
+                    <td class="text-center">£</td>
+                    <td class="text-right">17.00</td>
+                    <td class="text-center">1</td>
+                    <td class="text-center">£</td>
+                    <td class="text-right">17.00</td>
+                </tr>
+                <tr>
+                    <td>IVG PRO REFILL</td>
+                    <td>CLASSIC MENTHOL</td>
+                    <td class="text-center">£</td>
+                    <td class="text-right">17.00</td>
+                    <td class="text-center">1</td>
+                    <td class="text-center">£</td>
+                    <td class="text-right">17.00</td>
+                </tr>
+                <tr>
+                    <td>IVG PRO REFILL</td>
+                    <td>FIZZY CHERRY</td>
+                    <td class="text-center">£</td>
+                    <td class="text-right">17.00</td>
+                    <td class="text-center">1</td>
+                    <td class="text-center">£</td>
+                    <td class="text-right">17.00</td>
+                </tr>
+                <tr>
+                    <td>IVG PRO REFILL</td>
+                    <td>BLUE SOUR RASPBERRY</td>
+                    <td class="text-center">£</td>
+                    <td class="text-right">17.00</td>
+                    <td class="text-center">1</td>
+                    <td class="text-center">£</td>
+                    <td class="text-right">17.00</td>
+                </tr>
+                <tr>
+                    <td>CRYSTAL (SKE)</td>
+                    <td>FIZZY CHERRY</td>
+                    <td class="text-center">£</td>
+                    <td class="text-right">20.50</td>
+                    <td class="text-center">1</td>
+                    <td class="text-center">£</td>
+                    <td class="text-right">20.50</td>
+                </tr>
+                <tr>
+                    <td>CRYSTAL (SKE)</td>
+                    <td>CHERRY ICE</td>
+                    <td class="text-center">£</td>
+                    <td class="text-right">20.50</td>
+                    <td class="text-center">1</td>
+                    <td class="text-center">£</td>
+                    <td class="text-right">20.50</td>
+                </tr>
+                <tr>
+                    <td>CRYSTAL (SKE)</td>
+                    <td>LEMON & LIME</td>
+                    <td class="text-center">£</td>
+                    <td class="text-right">20.50</td>
+                    <td class="text-center">2</td>
+                    <td class="text-center">£</td>
+                    <td class="text-right">41.00</td>
+                </tr>
+                <tr>
+                    <td>CRYSTAL (SKE)</td>
+                    <td>BANANA ICE</td>
+                    <td class="text-center">£</td>
+                    <td class="text-right">20.50</td>
+                    <td class="text-center">2</td>
+                    <td class="text-center">£</td>
+                    <td class="text-right">41.00</td>
+                </tr>
+                <!-- Empty rows -->
+                <tr class="empty-row">
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr class="empty-row">
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr class="empty-row">
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr class="empty-row">
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <!-- Totals rows -->
+                <tr>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td class="text-center">15</td>
+                    <td class="text-center">£</td>
+                    <td class="text-right">288.50</td>
+                </tr>
+                <tr>
+                    <td colspan="4" class="totals-label">DELIVERY CHARGES</td>
+                    <td></td>
+                    <td class="text-center">£</td>
+                    <td class="text-right">10.00</td>
+                </tr>
+                <tr>
+                    <td colspan="4" class="totals-label-bold">AMOUNT</td>
+                    <td></td>
+                    <td class="text-center">£</td>
+                    <td class="text-right">298.50</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- Footer -->
+        <div class="footer">
+            Thank You For Business!
+        </div>
+    </div>
+</body>
+</html>

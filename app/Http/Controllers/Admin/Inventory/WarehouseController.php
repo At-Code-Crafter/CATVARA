@@ -14,17 +14,23 @@ class WarehouseController extends Controller
 {
     public function index(Request $request)
     {
+        $this->authorize('view', 'warehouses');
+        
         $warehouses = Warehouse::where('company_id', $request->company->id)->paginate(10);
         return view('theme.adminlte.inventory.warehouses.index', compact('warehouses'));
     }
 
     public function create()
     {
+        $this->authorize('create', 'warehouses');
+        
         return view('theme.adminlte.inventory.warehouses.create');
     }
 
     public function store(Requests\Inventory\StoreWarehouseRequest $request)
     {
+        $this->authorize('create', 'warehouses');
+        
         $warehouse = new Warehouse();
         $warehouse->uuid = Str::uuid();
         $warehouse->company_id = $request->company->id;
@@ -51,6 +57,8 @@ class WarehouseController extends Controller
 
     public function edit(Company $company, Warehouse $warehouse)
     {
+        $this->authorize('edit', 'warehouses');
+        
         if ($warehouse->company_id !== $company->id) {
             abort(403);
         }
@@ -59,6 +67,8 @@ class WarehouseController extends Controller
 
     public function update(Requests\Inventory\UpdateWarehouseRequest $request, Company $company, Warehouse $warehouse)
     {
+        $this->authorize('edit', 'warehouses');
+        
         if ($warehouse->company_id !== $company->id) {
             abort(403);
         }
@@ -82,7 +92,9 @@ class WarehouseController extends Controller
 
     public function destroy(Company $company, Warehouse $warehouse)
     {
-         if ($warehouse->company_id !== $company->id) {
+        $this->authorize('delete', 'warehouses');
+        
+        if ($warehouse->company_id !== $company->id) {
             abort(403);
         }
         

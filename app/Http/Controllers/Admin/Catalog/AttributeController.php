@@ -14,6 +14,8 @@ class AttributeController extends Controller
 {
     public function index(Request $request)
     {
+        $this->authorize('view', 'attributes');
+
         $companyId = $request->company->id;
 
         $prefix = DB::getTablePrefix();
@@ -106,11 +108,15 @@ class AttributeController extends Controller
 
     public function create()
     {
+        $this->authorize('create', 'attributes');
+
         return view('theme.adminlte.catalog.attributes.form');
     }
 
     public function store(Request $request)
     {
+        $this->authorize('create', 'attributes');
+
         $request->validate([
             'name' => 'required|string|max:255',
             'code' => 'required|string|max:255',
@@ -142,6 +148,8 @@ class AttributeController extends Controller
 
     public function edit(\App\Models\Company\Company $company, Attribute $attribute)
     {
+        $this->authorize('edit', 'attributes');
+
         if ($attribute->company_id !== $company->id) {
             abort(403);
         }
@@ -151,6 +159,8 @@ class AttributeController extends Controller
 
     public function update(Request $request, \App\Models\Company\Company $company, Attribute $attribute)
     {
+        $this->authorize('edit', 'attributes');
+
         if ($attribute->company_id !== $company->id) {
             abort(403);
         }

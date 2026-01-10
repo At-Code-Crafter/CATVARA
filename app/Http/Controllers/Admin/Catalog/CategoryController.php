@@ -14,6 +14,8 @@ class CategoryController extends Controller
 {
     public function index(Request $request)
     {
+        $this->authorize('view', 'categories');
+
         $company = $request->company;
 
         // Non-ajax page load: provide parent list for filter dropdown
@@ -222,6 +224,8 @@ class CategoryController extends Controller
 
     public function create()
     {
+        $this->authorize('create', 'categories');
+
         $categories = Category::where('company_id', request()->company->id)->with('children')->get();
         // Load all attributes for selection
         $attributes = \App\Models\Catalog\Attribute::where('company_id', request()->company->id)->get();
@@ -234,6 +238,8 @@ class CategoryController extends Controller
      */
     public function store(Request $request)
     {
+        $this->authorize('create', 'categories');
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'parent_id' => 'nullable|exists:categories,id',
@@ -261,6 +267,8 @@ class CategoryController extends Controller
 
     public function edit(Company $company, Category $category)
     {
+        $this->authorize('edit', 'categories');
+
         if ($category->company_id !== $company->id) {
             abort(403);
         }
@@ -279,6 +287,8 @@ class CategoryController extends Controller
      */
     public function update(Request $request, Company $company, Category $category)
     {
+        $this->authorize('edit', 'categories');
+
         if ($category->company_id !== $company->id) {
             abort(403);
         }
@@ -309,6 +319,8 @@ class CategoryController extends Controller
 
     public function destroy(Company $company, Category $category)
     {
+        $this->authorize('delete', 'categories');
+
         if ($category->company_id !== $company->id) {
             abort(403);
         }

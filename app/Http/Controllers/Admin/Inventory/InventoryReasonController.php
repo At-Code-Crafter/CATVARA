@@ -12,17 +12,23 @@ class InventoryReasonController extends Controller
 {
     public function index(Request $request)
     {
+        $this->authorize('view', 'inventory-reasons');
+
         $reasons = InventoryReason::where('company_id', $request->company->id)->get();
         return view('theme.adminlte.inventory.reasons.index', compact('reasons'));
     }
 
     public function create()
     {
+        $this->authorize('create', 'inventory-reasons');
+
         return view('theme.adminlte.inventory.reasons.create');
     }
 
     public function store(Requests\Inventory\StoreInventoryReasonRequest $request)
     {
+        $this->authorize('create', 'inventory-reasons');
+
         $reason = new InventoryReason();
         $reason->company_id = $request->company->id;
         $reason->name = $request->name;
@@ -37,6 +43,8 @@ class InventoryReasonController extends Controller
 
     public function edit(Company $company, InventoryReason $reason)
     {
+        $this->authorize('edit', 'inventory-reasons');
+
         if ($reason->company_id !== $company->id) {
             abort(403);
         }
@@ -45,6 +53,8 @@ class InventoryReasonController extends Controller
 
     public function update(Requests\Inventory\UpdateInventoryReasonRequest $request, Company $company, InventoryReason $reason)
     {
+        $this->authorize('edit', 'inventory-reasons');
+
         if ($reason->company_id !== $company->id) {
             abort(403);
         }
@@ -61,6 +71,8 @@ class InventoryReasonController extends Controller
 
     public function destroy(Company $company, InventoryReason $reason)
     {
+        $this->authorize('delete', 'inventory-reasons');
+
         if ($reason->company_id !== $company->id) {
             abort(403);
         }

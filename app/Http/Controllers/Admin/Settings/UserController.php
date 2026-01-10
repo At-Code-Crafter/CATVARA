@@ -20,6 +20,8 @@ class UserController extends Controller
 {
     public function index(Request $request)
     {
+        $this->authorize('view', 'users');
+
         if ($request->ajax()) {
             $query = User::query()
                 ->select('users.*') // Select all to ensure we have IDs for routes
@@ -88,11 +90,15 @@ class UserController extends Controller
 
     public function create()
     {
+        $this->authorize('create', 'users');
+
         return view('theme.adminlte.settings.users.create');
     }
 
     public function store(UserStoreRequest $request)
     {
+        $this->authorize('create', 'users');
+
         $data = $request->validated();
 
         DB::beginTransaction();
@@ -141,6 +147,8 @@ class UserController extends Controller
 
     public function show(string $id)
     {
+        $this->authorize('view', 'users');
+
         $user = User::query()
             ->with(['companies' => function ($q) {
                 $q->select('companies.id', 'companies.uuid', 'companies.name', 'companies.code')
@@ -157,12 +165,16 @@ class UserController extends Controller
 
     public function edit(string $id)
     {
+        $this->authorize('edit', 'users');
+
         $user = User::findOrFail($id);
         return view('theme.adminlte.settings.users.edit', compact('user'));
     }
 
     public function update(UserUpdateRequest $request, string $id)
     {
+        $this->authorize('edit', 'users');
+
         $user = User::findOrFail($id);
         $data = $request->validated();
 

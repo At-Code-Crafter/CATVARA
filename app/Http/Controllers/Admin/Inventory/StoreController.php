@@ -14,17 +14,23 @@ class StoreController extends Controller
 {
     public function index(Request $request)
     {
+        $this->authorize('view', 'stores');
+
         $stores = Store::where('company_id', $request->company->id)->paginate(10);
         return view('theme.adminlte.inventory.stores.index', compact('stores'));
     }
 
     public function create()
     {
+        $this->authorize('create', 'stores');
+
         return view('theme.adminlte.inventory.stores.create');
     }
 
     public function store(Requests\Inventory\StoreStoreRequest $request)
     {
+        $this->authorize('create', 'stores');
+
         $store = new Store();
         $store->uuid = Str::uuid();
         $store->company_id = $request->company->id;
@@ -42,7 +48,7 @@ class StoreController extends Controller
         // Correct Polymorphic relation
         $location->locatable_type = Store::class;
         $location->locatable_id = $store->id;
-        $location->type = 'store'; 
+        $location->type = 'store';
         $location->is_active = $store->is_active;
         $location->save();
 
@@ -52,6 +58,8 @@ class StoreController extends Controller
 
     public function edit(Company $company, Store $store)
     {
+        $this->authorize('edit', 'stores');
+
         if ($store->company_id !== $company->id) {
             abort(403);
         }
@@ -60,6 +68,8 @@ class StoreController extends Controller
 
     public function update(Requests\Inventory\UpdateStoreRequest $request, Company $company, Store $store)
     {
+        $this->authorize('edit', 'stores');
+
         if ($store->company_id !== $company->id) {
             abort(403);
         }
@@ -83,10 +93,12 @@ class StoreController extends Controller
 
     public function destroy(Company $company, Store $store)
     {
-         if ($store->company_id !== $company->id) {
+        $this->authorize('delete', 'stores');
+
+        if ($store->company_id !== $company->id) {
             abort(403);
         }
-        
+
         try {
             // Check balances logic would go here
              if($store->inventoryLocation && $store->inventoryLocation->balances()->sum('quantity') > 0) {
@@ -97,7 +109,7 @@ class StoreController extends Controller
                 $store->inventoryLocation->delete();
             }
             $store->delete();
-            
+
             return redirect()->back()->with('success', 'Store deleted successfully.');
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Error deleting store.');

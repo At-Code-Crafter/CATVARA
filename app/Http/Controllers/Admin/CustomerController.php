@@ -22,6 +22,7 @@ class CustomerController extends Controller
      */
     public function index(Request $request, Company $company)
     {
+        $this->authorize('view', 'customers');
         if ($request->ajax()) {
 
             $query = Customer::query()
@@ -147,6 +148,8 @@ class CustomerController extends Controller
      */
     public function create(Company $company)
     {
+        $this->authorize('create', 'customers');
+
         $countries = Country::active()->ordered()->get();
         $paymentTerms = \App\Models\Accounting\PaymentTerm::where('is_active', true)->get();
 
@@ -158,6 +161,8 @@ class CustomerController extends Controller
      */
     public function store(CustomerStoreRequest $request, Company $company)
     {
+        $this->authorize('create', 'customers');
+
         $data = $request->validated();
 
         DB::beginTransaction();
@@ -220,6 +225,8 @@ class CustomerController extends Controller
      */
     public function show(Company $company, string $id)
     {
+        $this->authorize('view', 'customers');
+
         $customer = Customer::where('company_id', $company->id)
             ->with(['address', 'orders.status', 'orders.currency'])
             ->findOrFail($id);
@@ -243,6 +250,8 @@ class CustomerController extends Controller
      */
     public function edit(Company $company, string $id)
     {
+        $this->authorize('edit', 'customers');
+
         $customer = Customer::where('company_id', $company->id)->findOrFail($id);
         $countries = Country::active()->ordered()->get();
         $states = State::where('country_id', $customer->country_id)->active()->ordered()->get();
@@ -256,6 +265,8 @@ class CustomerController extends Controller
      */
     public function update(CustomerUpdateRequest $request, Company $company, string $id)
     {
+        $this->authorize('edit', 'customers');
+
         $customer = Customer::where('company_id', $company->id)->findOrFail($id);
         $data = $request->validated();
 

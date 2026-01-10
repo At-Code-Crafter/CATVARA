@@ -18,6 +18,8 @@ class RoleController extends Controller
 {
     public function index(Company $company, Request $request)
     {
+        $this->authorize('view', 'roles');
+
         if ($request->ajax()) {
 
             $query = Role::query()
@@ -86,6 +88,8 @@ class RoleController extends Controller
 
     public function create(Company $company)
     {
+        $this->authorize('create', 'roles');
+
         $modules = Module::query()
             ->where('is_active', true)
             ->with(['permissions' => function ($q) {
@@ -99,6 +103,8 @@ class RoleController extends Controller
 
     public function store(Company $company, RoleStoreRequest $request)
     {
+        $this->authorize('create', 'roles');
+
         $data = $request->validated();
 
         DB::beginTransaction();
@@ -141,6 +147,8 @@ class RoleController extends Controller
 
     public function edit(Company $company, Role $role)
     {
+        $this->authorize('edit', 'roles');
+
         // Safety: role must belong to company
         abort_unless($role->company_id === $company->id, 404);
 
@@ -159,6 +167,8 @@ class RoleController extends Controller
 
     public function update(Company $company, RoleUpdateRequest $request, Role $role)
     {
+        $this->authorize('edit', 'roles');
+
         abort_unless($role->company_id === $company->id, 404);
 
         $data = $request->validated();

@@ -13,6 +13,8 @@ class CurrencyController extends Controller
 {
     public function index(Request $request)
     {
+        $this->authorize('view', 'currencies');
+
         if ($request->ajax()) {
             $data = Currency::query();
 
@@ -23,8 +25,8 @@ class CurrencyController extends Controller
                     return $btn;
                 })
                 ->editColumn('is_active', function ($row) {
-                    return $row->is_active 
-                        ? '<span class="badge badge-success">Active</span>' 
+                    return $row->is_active
+                        ? '<span class="badge badge-success">Active</span>'
                         : '<span class="badge badge-danger">Inactive</span>';
                 })
                 ->rawColumns(['action', 'is_active'])
@@ -36,28 +38,38 @@ class CurrencyController extends Controller
 
     public function create()
     {
+        $this->authorize('create', 'currencies');
+
         return view('theme.adminlte.settings.currencies.create');
     }
 
     public function store(StoreCurrencyRequest $request)
     {
+        $this->authorize('create', 'currencies');
+
         Currency::create($request->validated() + ['is_active' => $request->has('is_active')]);
         return redirect()->route('currencies.index')->with('success', 'Currency created successfully.');
     }
 
     public function edit(Currency $currency)
     {
+        $this->authorize('edit', 'currencies');
+
         return view('theme.adminlte.settings.currencies.edit', compact('currency'));
     }
 
     public function update(UpdateCurrencyRequest $request, Currency $currency)
     {
+        $this->authorize('edit', 'currencies');
+
         $currency->update($request->validated() + ['is_active' => $request->has('is_active')]);
         return redirect()->route('currencies.index')->with('success', 'Currency updated successfully.');
     }
 
     public function destroy(Currency $currency)
     {
+        $this->authorize('delete', 'currencies');
+
         $currency->delete();
         return redirect()->route('currencies.index')->with('success', 'Currency deleted successfully.');
     }
