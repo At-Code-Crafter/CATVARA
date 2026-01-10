@@ -40,6 +40,7 @@ class Order extends Model
         'shipping_tax_total',
         'additional_charges',
         'additional_total',
+        'payment_status',
     ];
 
     protected $casts = [
@@ -109,4 +110,6 @@ class Order extends Model
     {
         return $this->morphOne(Address::class, 'addressable')->where('type', 'SHIPPING');
     }
+
+
 }

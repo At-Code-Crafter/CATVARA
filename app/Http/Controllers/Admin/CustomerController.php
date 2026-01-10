@@ -34,6 +34,7 @@ class CustomerController extends Controller
                     'customers.phone',
                     'customers.legal_name',
                     'customers.is_active',
+                    'customers.percentage_discount',
                     'customers.created_at'
                 )
                 ->where('customers.company_id', $company->id);
@@ -90,6 +91,13 @@ class CustomerController extends Controller
                     return '<span class="badge badge-danger">Inactive</span>';
                 })
 
+                ->editColumn('percentage_discount', function ($row) {
+                    if ($row->percentage_discount > 0) {
+                        return '<span class="text-success font-weight-bold">' . (float) $row->percentage_discount . '%</span>';
+                    }
+                    return '<span class="text-muted">-</span>';
+                })
+
                 ->editColumn('created_at', function ($row) {
                     return $row->created_at
                         ? \Carbon\Carbon::parse($row->created_at)->format('d-M-Y h:i A')
@@ -110,7 +118,9 @@ class CustomerController extends Controller
                     'type_badge',
                     'email',
                     'phone',
+                    'phone',
                     'status_badge',
+                    'percentage_discount',
                     'created_at',
                     'action',
                 ])
@@ -175,6 +185,7 @@ class CustomerController extends Controller
                 'notes' => $data['notes'] ?? null,
                 'is_active' => $data['is_active'] ?? true,
                 'payment_term_id' => $data['payment_term_id'] ?? null,
+                'percentage_discount' => $data['percentage_discount'] ?? 0,
             ]);
 
             Address::create([
@@ -272,6 +283,7 @@ class CustomerController extends Controller
                 'notes' => $data['notes'] ?? null,
                 'is_active' => $data['is_active'] ?? true,
                 'payment_term_id' => $data['payment_term_id'] ?? null,
+                'percentage_discount' => $data['percentage_discount'] ?? 0,
             ]);
 
             Address::updateOrCreate([

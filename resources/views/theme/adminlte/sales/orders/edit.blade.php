@@ -183,7 +183,8 @@
     .product-cat-badge {
       position: absolute;
       top: 8px;
-      right: 8px; /* Changed from left: 8px */
+      right: 8px;
+      /* Changed from left: 8px */
       z-index: 2;
       font-size: 10px;
       font-weight: 800;
@@ -474,14 +475,14 @@
           <div class="customer-cards">
             <div class="customer-mini-card">
               <div class="customer-mini-title">
-<div class="chip">Sell To</div>
+                <div class="chip">Sell To</div>
                 <div class="d-flex align-items-center" style="gap:6px;">
                   <button type="button" class="btn btn-light btn-mini-icon" id="changeSellToBtn" title="Change Sell To"
                     aria-label="Change Sell To" data-type="sell_to">
                     <i class="fas fa-user-edit"></i>
                   </button>
 
-                  
+
                 </div>
               </div>
 
@@ -504,7 +505,7 @@
 
             <div class="customer-mini-card">
               <div class="customer-mini-title">
-                  <div class="chip">Bill To</div>
+                <div class="chip">Bill To</div>
 
                 <div class="d-flex align-items-center" style="gap:6px;">
                   <button type="button" class="btn btn-light btn-mini-icon" id="changeBillToBtn" title="Change Bill To"
@@ -577,6 +578,15 @@
               </div>
             </div>
             <button id="clearCartBtn" class="btn btn-outline-secondary btn-sm">Clear</button>
+          </div>
+
+          <div class="px-3 pt-2">
+            <div class="custom-control custom-switch">
+              <input type="checkbox" class="custom-control-input" id="applyCustomerDiscountToggle">
+              <label class="custom-control-label small" for="applyCustomerDiscountToggle">
+                Apply Customer Discount (<span id="customerDiscountPercent">0.00</span>%)
+              </label>
+            </div>
           </div>
 
           <div class="row mt-2">
@@ -768,6 +778,9 @@
     const INITIAL_STATE = @json($initialState ?? null);
     const UPDATE_URL = "{{ isset($order) ? company_route('sales-orders.update', ['sales_order' => $order->uuid]) : '' }}";
     const PRINT_URL = "{{ isset($order) ? company_route('sales-orders.print', ['sales_order' => $order->uuid]) : '' }}";
+
+    // Pass customer discount
+    const CUSTOMER_DISCOUNT_PERCENT = {{ $sellToCustomer->percentage_discount ?? 0 }};
   </script>
 
   <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>

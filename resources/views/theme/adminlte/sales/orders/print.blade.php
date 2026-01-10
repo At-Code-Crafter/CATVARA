@@ -1,185 +1,252 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Print Order - {{ $order->order_number }}</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
-  <style>
-    body {
-      background: #f4f6f9;
-      font-size: 0.9rem;
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Invoice</title>
+  <link rel="stylesheet" href="{{ asset('pos/assets/css/invoice.css') }}" />
+@php
+    // --- Configuration & Helpers ---
+    $maxLinesPerPage = 42; // Total adjustable lines of "height" per page
+    $headerHeightPg1 = 18; // Logo, Addresses, Dates area cost
+    $headerHeightPgN = 4;  // Simple header cost
+    $footerHeight    = 3;  // Footer cost
+    $totalsBoxHeight = 8;  // Totals box cost
+
+    $pages = [];
+    $currentPageIndex = 0;
+    
+    // Initialize Page 1
+    $pages[$currentPageIndex] = [
+        'is_first' => true,
+        'items' => [],
+        'lines_used' => $headerHeightPg1 + $footerHeight,
+        'show_totals' => false
+    ];
+
+    // --- Item Distribution Logic ---
+    foreach($order->items as $item) {
+        // Calculate item "cost" (1 line base + 1 if discount + 1 if description wraps? simplified)
+        // If you want robust text wrapping calculation, you need char counting. 
+        // For now, assuming standard 1 line = 1 unit.
+        $itemCost = 1;
+        if($item->discount_amount > 0) $itemCost += 0.5; // Discount sub-row
+        if(strlen($item->product_name) > 60) $itemCost += 0.5; // Wrap guess
+
+        // Check capacity
+        if ( ($pages[$currentPageIndex]['lines_used'] + $itemCost) > $maxLinesPerPage ) {
+            // Page full, start new page
+            $currentPageIndex++;
+            $pages[$currentPageIndex] = [
+                'is_first' => false,
+                'items' => [],
+                'lines_used' => $headerHeightPgN + $footerHeight,
+                'show_totals' => false
+            ];
+        }
+
+        // Add item
+        $pages[$currentPageIndex]['items'][] = $item;
+        $pages[$currentPageIndex]['lines_used'] += $itemCost;
     }
 
-    .print-container {
-      max-width: 900px;
-      margin: 30px auto;
-      background: white;
-      box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
-      border-radius: 8px;
+    // --- Totals Section Logic ---
+    // Check if totals fit on the current last page
+    if ( ($pages[$currentPageIndex]['lines_used'] + $totalsBoxHeight) <= $maxLinesPerPage ) {
+        $pages[$currentPageIndex]['show_totals'] = true;
+    } else {
+        // Create a final page just for totals (and maybe overflow items if logic was tighter, but here just totals)
+        $currentPageIndex++;
+        $pages[$currentPageIndex] = [
+            'is_first' => false,
+            'items' => [], // Empty items
+            'lines_used' => $headerHeightPgN + $footerHeight + $totalsBoxHeight,
+            'show_totals' => true
+        ];
     }
-
-    .invoice-box {
-      padding: 40px;
-    }
-
-    @media print {
-      body {
-        background: white;
-        margin: 0;
-      }
-
-      .print-container {
-        max-width: 100%;
-        margin: 0;
-        box-shadow: none;
-        border: 0;
-      }
-
-      .no-print {
-        display: none !important;
-      }
-    }
-
-    .table thead th {
-      background: #f8f9fa;
-      border-top: 0;
-    }
-
-    .badge {
-      font-weight: 500;
-      font-size: 0.8rem;
-    }
-  </style>
-</head>
+    
+    $totalPages = count($pages);
+    $logo = $order->company->logo ? asset('storage/' . $order->company->logo) : asset('assets/images/logo.png'); // Replace with dynamic company logo if available
+@endphp
 
 <body>
+  <div class="inv-screen">
+    <div id="invoicePages">
+        @foreach($pages as $index => $page)
+        @php $pageNo = $index + 1; @endphp
+        
+        <div class="invoice-page">
+            <!-- Header Top -->
+            <div class="inv-top {{ $page['is_first'] ? 'has-divider' : '' }}">
+                <div class="inv-title">INVOICE</div>
 
-  <div class="container py-4 no-print text-center">
-    <button onclick="window.print()" class="btn btn-primary px-4 shadow-sm"><i class="fas fa-print mr-2"></i> Print / Save
-      as PDF</button>
-    <button onclick="window.close()" class="btn btn-outline-secondary px-4 shadow-sm">Close Window</button>
-  </div>
-
-  <div class="print-container">
-    <div class="invoice-box">
-      <div class="row mb-5">
-        <div class="col-6">
-          <h3 class="font-weight-bold text-dark">{{ $order->company->name }}</h3>
-          <div class="text-muted">{{ $order->company->email }}</div>
-          <div class="text-muted">{{ $order->company->phone }}</div>
-        </div>
-        <div class="col-6 text-right">
-          <h2 class="text-primary font-weight-bold mb-0">SALES ORDER</h2>
-          <div class="h5 text-dark mt-1">{{ $order->order_number }}</div>
-          <div class="text-muted">Date: {{ $order->created_at->format('M d, Y') }}</div>
-          @if ($order->status)
-            <div class="mt-2"><span class="badge badge-success px-3 py-2">{{ $order->status->name }}</span></div>
-          @endif
-        </div>
-      </div>
-
-      <div class="row mb-5">
-        <div class="col-6">
-          <h6 class="font-weight-bold text-uppercase text-muted small mb-3">Bill To</h6>
-          <div class="bg-light p-3 rounded">
-            <strong>{{ $order->customer->display_name }}</strong><br>
-            @if ($order->billingAddress)
-              {{ $order->billingAddress->address_line_1 }}<br>
-              @if ($order->billingAddress->address_line_2)
-                {{ $order->billingAddress->address_line_2 }}<br>
-              @endif
-              {{ $order->billingAddress->city }} {{ $order->billingAddress->zip_code }}<br>
-              {{ $order->billingAddress->country->name ?? '' }}
-            @endif
-          </div>
-        </div>
-        <div class="col-6 text-right">
-          <h6 class="font-weight-bold text-uppercase text-muted small mb-3">Ship To</h6>
-          <div class="bg-light p-3 rounded text-left">
-            @if ($order->shippingAddress)
-              <strong>{{ $order->customer->display_name }}</strong><br>
-              {{ $order->shippingAddress->address_line_1 }}<br>
-              @if ($order->shippingAddress->address_line_2)
-                {{ $order->shippingAddress->address_line_2 }}<br>
-              @endif
-              {{ $order->shippingAddress->city }} {{ $order->shippingAddress->zip_code }}<br>
-              {{ $order->shippingAddress->country->name ?? '' }}
-            @else
-              <div class="text-muted italic">Same as Billing</div>
-            @endif
-          </div>
-        </div>
-      </div>
-
-      <table class="table table-hover mb-5">
-        <thead>
-          <tr>
-            <th style="width: 45%">Description</th>
-            <th class="text-center">Qty</th>
-            <th class="text-right">Price</th>
-            <th class="text-right">Disc</th>
-            <th class="text-right">Total</th>
-          </tr>
-        </thead>
-        <tbody>
-          @foreach ($order->items as $item)
-            <tr>
-              <td>
-                <div class="font-weight-bold text-dark">{{ $item->product_name }}</div>
-                <div class="small text-muted">{{ $item->variant_description }}</div>
-              </td>
-              <td class="text-center">{{ $item->quantity }}</td>
-              <td class="text-right">{{ number_format($item->unit_price, 2) }}</td>
-              <td class="text-right">
-                {{ $item->discount_amount > 0 ? number_format($item->discount_amount, 2) : '-' }}
-              </td>
-              <td class="text-right font-weight-bold text-dark">{{ number_format($item->line_total, 2) }}</td>
-            </tr>
-          @endforeach
-        </tbody>
-      </table>
-
-      <div class="row justify-content-end">
-        <div class="col-5">
-          <div class="card bg-light border-0">
-            <div class="card-body p-3">
-              <div class="d-flex justify-content-between mb-2">
-                <span>Subtotal:</span>
-                <span class="font-weight-bold">{{ number_format($order->subtotal, 2) }}</span>
-              </div>
-              @if ($order->shipping_total > 0)
-                <div class="d-flex justify-content-between mb-2">
-                  <span>Shipping:</span>
-                  <span>{{ number_format($order->shipping_total, 2) }}</span>
+                <div class="inv-meta-block">
+                    <div class="label">Invoice number</div>
+                    <div class="value">{{ $order->order_number }}</div>
                 </div>
-              @endif
-              @if ($order->tax_total > 0)
-                <div class="d-flex justify-content-between mb-2">
-                  <span>Tax:</span>
-                  <span>{{ number_format($order->tax_total, 2) }}</span>
+
+                <div class="inv-meta-block inv-top-right">
+                    <div class="label">Invoice total</div>
+                    <div class="value">{{ number_format($order->grand_total, 2) }} {{ $order->currency->code ?? '' }}</div>
                 </div>
-              @endif
-              <hr>
-              <div class="d-flex justify-content-between text-primary h5 font-weight-bold">
-                <span>Total:</span>
-                <span>{{ number_format($order->grand_total, 2) }} {{ $order->currency->code ?? '' }}</span>
-              </div>
             </div>
-          </div>
-        </div>
-      </div>
 
-      @if ($order->notes)
-        <div class="mt-5 pt-4 border-top">
-          <h6 class="font-weight-bold small text-uppercase text-muted">Notes / Special Instructions</h6>
-          <p class="text-muted small">{{ $order->notes }}</p>
+            <!-- Page 1 Specific Content -->
+            @if($page['is_first'])
+            <div class="inv-mid">
+                <div class="inv-logo-wrap">
+                    <img class="inv-logo" src="{{ $logo }}" alt="Logo" />
+                </div>
+
+                <div class="inv-dates">
+                    <div class="row">
+                        <div class="label">Date of issue</div>
+                        <div class="value">{{ $order->created_at->format('d F Y') }}</div>
+                    </div>
+                    <div class="row">
+                        <div class="label">Date of supply</div>
+                         <!-- Assuming supply date is same or exists, falling back to created -->
+                        <div class="value">{{ $order->created_at->format('d F Y') }}</div>
+                    </div>
+                </div>
+
+                <div class="inv-additional">
+                    <!-- Optional: Payment Terms or other info -->
+                    {{ $order->paymentTerm->name ?? '' }}
+                </div>
+            </div>
+
+            <div class="inv-addresses">
+                <div class="addr">
+                    <h4>Bill to</h4>
+                    <div class="lines">{{ $order->billingAddress->name ?? $order->customer->display_name }}
+@if($order->billingAddress)
+{{ $order->billingAddress->address_line_1 }}
+{{ $order->billingAddress->address_line_2 }}
+{{ $order->billingAddress->city }} {{ $order->billingAddress->zip_code }}
+{{ $order->billingAddress->country->name ?? '' }}
+@endif</div>
+                </div>
+
+                <div class="addr">
+                    <h4>Ship to</h4>
+                    <div class="lines">{{ $order->shippingAddress->name ?? $order->customer->display_name }}
+@if($order->shippingAddress)
+{{ $order->shippingAddress->address_line_1 }}
+{{ $order->shippingAddress->address_line_2 }}
+{{ $order->shippingAddress->city }} {{ $order->shippingAddress->zip_code }}
+{{ $order->shippingAddress->country->name ?? '' }}
+@endif</div>
+                </div>
+
+                <div class="addr right">
+                    <h4>Merchant</h4>
+                    <!-- Dynamic Merchant Info (Company) -->
+                    <div class="lines">{{ $order->company->name }}
+{{ $order->company->email }}
+{{ $order->company->phone }}
+{{ $order->company->vat_number ?? '' }}
+                    </div>
+                </div>
+            </div>
+            @endif
+
+            <!-- Items Table -->
+            @if(count($page['items']) > 0)
+            <table class="inv-table">
+                <colgroup>
+                    <col style="width:70mm" />
+                    <col style="width:10mm" />
+                    <col style="width:23mm" />
+                    <col style="width:22mm" />
+                    <col style="width:26mm" />
+                </colgroup>
+                <thead>
+                    <tr>
+                        <th class="desc">Description</th>
+                        <th class="qty">Quantity</th>
+                        <th class="unit">Unit price</th>
+                        <th class="vat">VAT rate</th>
+                        <th class="amount">Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($page['items'] as $item)
+                    <tr>
+                        <td class="desc">
+                            {{ $item->product_name }}
+                            @if($item->variant_description)
+                            <div style="color:#6b6b6b;font-size:13px;margin-top:4px;">{{ $item->variant_description }}</div>
+                            @endif
+                        </td>
+                        <td class="qty">{{ (float)$item->quantity }}</td>
+                        <td class="unit">{{ number_format($item->unit_price, 2) }}</td>
+                        <td class="vat">{{ $item->tax_rate ?? '0' }}%</td>
+                        <td class="amount">
+                            {{ number_format($item->line_total, 2) }}
+                            @if($item->discount_amount > 0)
+                            <br><span style="color:#444">-{{ number_format($item->discount_amount, 2) }}</span>
+                            @endif
+                        </td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+            @endif
+
+            <!-- Totals Section -->
+            @if($page['show_totals'])
+            <div class="totals-area">
+                <div class="totals">
+                    <div class="trow">
+                        <div class="lbl">Subtotal</div>
+                        <div class="val">{{ number_format($order->subtotal, 2) }}</div>
+                    </div>
+                    @if($order->discount_total > 0)
+                    <div class="trow">
+                        <div class="lbl">Discount</div>
+                        <div class="val text-danger">-{{ number_format($order->discount_total, 2) }}</div>
+                    </div>
+                    @endif
+                    <div class="trow">
+                        <div class="lbl">VAT</div>
+                        <div class="val">{{ number_format($order->tax_total, 2) }}</div>
+                    </div>
+                    @if($order->shipping_total > 0)
+                    <div class="trow">
+                        <div class="lbl">Shipping</div>
+                        <div class="val">{{ number_format($order->shipping_total, 2) }}</div>
+                    </div>
+                    @endif
+                    <div class="trow total">
+                        <div class="lbl">Total</div>
+                        <div class="val">{{ number_format($order->grand_total, 2) }} {{ $order->currency->code ?? '' }}</div>
+                    </div>
+                </div>
+            </div>
+            
+            @if($order->notes)
+            <div class="mt-4 pt-3 border-top">
+                <strong>Notes:</strong> <span class="text-muted small">{{ $order->notes }}</span>
+            </div>
+            @endif
+            @endif
+
+            <!-- Footer -->
+            <div class="inv-footer">
+                <div class="left">Provided by: {{ $order->company->name }}<br>VAT ID: {{ $order->company->detail->tax_number ?? 'N/A' }}</div>
+                <div class="right">Issued on {{ $order->created_at->format('d F Y') }}<br>Page {{ $pageNo }} of {{ $totalPages }} for {{ $order->order_number }}</div>
+            </div>
         </div>
-      @endif
+        @endforeach
     </div>
   </div>
 
+  <script>
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('autoprint') === '1') {
+          setTimeout(() => window.print(), 300);
+      }
+  </script>
 </body>
-
 </html>

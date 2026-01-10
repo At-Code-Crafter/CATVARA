@@ -25,10 +25,12 @@ class Customer extends Model
         'notes',
         'is_active',
         'payment_term_id',
+        'percentage_discount',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
+        'percentage_discount' => 'decimal:2',
     ];
 
     // Customer Has one Address, but order or invoices may have many

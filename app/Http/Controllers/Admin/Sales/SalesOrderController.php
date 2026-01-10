@@ -52,7 +52,7 @@ class SalesOrderController extends Controller
 
         return DataTables::of($query)
             ->editColumn('order_number', function ($order) {
-                return '<span class="font-weight-bold">'.e($order->order_number).'</span>';
+                return '<span class="font-weight-bold">' . e($order->order_number) . '</span>';
             })
             ->editColumn('created_at', function ($order) {
                 return $order->created_at->format('M d, Y');
@@ -69,15 +69,15 @@ class SalesOrderController extends Controller
                     $color = 'warning';
                 }
 
-                return '<span class="badge badge-'.$color.'">'.e($order->status->name ?? '—').'</span>';
+                return '<span class="badge badge-' . $color . '">' . e($order->status->name ?? '—') . '</span>';
             })
             ->editColumn('grand_total', function ($order) {
-                return '<span class="font-weight-bold text-dark">'.number_format((float) $order->grand_total, 2).'</span>';
+                return '<span class="font-weight-bold text-dark">' . number_format((float) $order->grand_total, 2) . '</span>';
             })
             ->addColumn('actions', function ($order) {
                 $edit = company_route('sales-orders.edit', ['sales_order' => $order->uuid]);
                 $showUrl = company_route('sales-orders.show', ['sales_order' => $order->id]); // if you have show
-
+    
                 $compact['showUrl'] = $showUrl;
                 $compact['editUrl'] = $edit;
                 $compact['deleteUrl'] = null;
@@ -112,7 +112,7 @@ class SalesOrderController extends Controller
             : $sellToCustomer;
 
         $status = OrderStatus::where('code', 'DRAFT')->first();
-        if (! $status) {
+        if (!$status) {
             $status = OrderStatus::firstOrCreate(
                 ['code' => 'DRAFT'],
                 ['name' => 'Draft', 'is_active' => true]
@@ -231,8 +231,11 @@ class SalesOrderController extends Controller
             if ($status) {
                 $order->update(['status_id' => $status->id]);
             }
-            // We can continue to update the order data if provided, or just return success
-            // If payload has items, let's update them too to be safe (final save)
+            // Return redirect URL for show page
+            return response()->json([
+                'success' => true,
+                'redirect_url' => company_route('sales-orders.show', ['sales_order' => $order->id]),
+            ]);
         }
 
         $data = $request->validate([
@@ -348,7 +351,7 @@ class SalesOrderController extends Controller
 
         $currency = Currency::query()->where('code', $code)->first();
 
-        if (! $currency) {
+        if (!$currency) {
             throw new \Exception("Currency not found for code: {$code}");
         }
 
@@ -357,7 +360,7 @@ class SalesOrderController extends Controller
 
     private function resolvePaymentTermSnapshot(?int $paymentTermId): array
     {
-        if (! $paymentTermId) {
+        if (!$paymentTermId) {
             return [
                 'payment_term_id' => null,
                 'payment_term_name' => null,
@@ -366,7 +369,7 @@ class SalesOrderController extends Controller
         }
 
         $term = PaymentTerm::find($paymentTermId);
-        if (! $term) {
+        if (!$term) {
             return [
                 'payment_term_id' => null,
                 'payment_term_name' => null,
@@ -454,20 +457,58 @@ class SalesOrderController extends Controller
         ];
     }
 
+    public function show(Company $company, $id)
+    {
+        $order = Order::where('company_id', $company->id)
+            ->where('id', $id)
+            ->with([
+                'items.productVariant.product',
+                'customer',
+                'billingAddress.country',
+                'shippingAddress.country',
+                'company',
+                'currency',
+                'status',
+                'creator',
+                'paymentTerm'
+            ])
+            ->firstOrFail();
+
+        return view('theme.adminlte.sales.orders.show', compact('order'));
+    }
+
+    public function updatePaymentStatus(Request $request, Company $company, $id)
+    {
+        $order = Order::where('company_id', $company->id)
+            ->where('id', $id)
+            ->firstOrFail();
+
+        $request->validate([
+            'payment_status' => 'required|in:UNPAID,PAID',
+        ]);
+
+        $order->update(['payment_status' => $request->payment_status]);
+
+        return response()->json([
+            'success' => true,
+            'payment_status' => $order->payment_status,
+        ]);
+    }
+
     private function generateOrderNumber($company)
     {
-        $prefix = 'SO-'.Carbon::now()->format('Ymd').'-';
+        $prefix = 'SO-' . Carbon::now()->format('Ymd') . '-';
         $lastOrder = Order::where('company_id', $company->id)
-            ->where('order_number', 'like', $prefix.'%')
+            ->where('order_number', 'like', $prefix . '%')
             ->orderBy('id', 'desc')
             ->first();
 
         if ($lastOrder) {
             $lastNum = intval(substr($lastOrder->order_number, strlen($prefix)));
 
-            return $prefix.str_pad($lastNum + 1, 4, '0', STR_PAD_LEFT);
+            return $prefix . str_pad($lastNum + 1, 4, '0', STR_PAD_LEFT);
         }
 
-        return $prefix.'0001';
+        return $prefix . '0001';
     }
 }
