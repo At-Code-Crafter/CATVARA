@@ -101,51 +101,82 @@
                 <div class="inv-dates">
                     <div class="row">
                         <div class="label">Date of issue</div>
-                        <div class="value">{{ $order->created_at->format('d F Y') }}</div>
+                        <div class="value">{{ $order->created_at->format('F d, Y') }}</div>
                     </div>
                     <div class="row">
                         <div class="label">Date of supply</div>
                          <!-- Assuming supply date is same or exists, falling back to created -->
-                        <div class="value">{{ $order->created_at->format('d F Y') }}</div>
+                        <div class="value">{{ $order->created_at->format('F d, Y') }}</div>
                     </div>
                 </div>
 
                 <div class="inv-additional">
-                    <!-- Optional: Payment Terms or other info -->
-                    {{ $order->paymentTerm->name ?? '' }}
+                    <div class="label">
+                        Additional details
+                    </div>
+                   {{-- @if($order->payment_term_id)
+                    <p>
+                        {{ $order->paymentTerm->name ?? '' }}
+                    </p>
+                    @endif --}}
+                    @if($order->notes)
+                    <p>
+                        {{ $order->notes ?? '' }}
+                    </p>
+                    @endif
                 </div>
             </div>
 
             <div class="inv-addresses">
                 <div class="addr">
                     <h4>Bill to</h4>
-                    <div class="lines">{{ $order->billingAddress->name ?? $order->customer->display_name }}
-@if($order->billingAddress)
-{{ $order->billingAddress->address_line_1 }}
-{{ $order->billingAddress->address_line_2 }}
-{{ $order->billingAddress->city }} {{ $order->billingAddress->zip_code }}
-{{ $order->billingAddress->country->name ?? '' }}
-@endif</div>
+                    <div class="lines">
+                        <div class="label">
+                            {{ $order->billingAddress->name ?? $order->customer->display_name }}
+                        </div>
+                        @if($order->billingAddress)
+                        <div class="value">
+                            {{ $order->billingAddress->address_line_1 }}
+                            {{ $order->billingAddress->address_line_2 }}
+                            {{ $order->billingAddress->city }} {{ $order->billingAddress->zip_code }}
+                            {{ $order->billingAddress->country->name ?? '' }}
+                        </div>
+                        @endif
+                    </div>
                 </div>
 
                 <div class="addr">
                     <h4>Ship to</h4>
-                    <div class="lines">{{ $order->shippingAddress->name ?? $order->customer->display_name }}
-@if($order->shippingAddress)
-{{ $order->shippingAddress->address_line_1 }}
-{{ $order->shippingAddress->address_line_2 }}
-{{ $order->shippingAddress->city }} {{ $order->shippingAddress->zip_code }}
-{{ $order->shippingAddress->country->name ?? '' }}
-@endif</div>
+                    <div class="lines">
+                        <div class="label">
+                                {{ $order->shippingAddress->name ?? $order->customer->display_name }}
+                            </div>
+                            @if($order->shippingAddress)
+                            <div class="value">
+                                {{ $order->shippingAddress->address_line_1 }}
+                            {{ $order->shippingAddress->address_line_2 }}
+                            {{ $order->shippingAddress->city }} {{ $order->shippingAddress->zip_code }}
+                            {{ $order->shippingAddress->country->name ?? '' }}
+                        </div>
+                        @endif
+                    </div>
                 </div>
 
                 <div class="addr right">
                     <h4>Merchant</h4>
                     <!-- Dynamic Merchant Info (Company) -->
                     <div class="lines">{{ $order->company->name }}
-{{ $order->company->email }}
-{{ $order->company->phone }}
-{{ $order->company->vat_number ?? '' }}
+                        <p>
+                            {{ $order->company->legal_name }}
+                            {{ $order->company->detail->address }}
+                            {{ $order->company->email }}
+                            {{ $order->company->phone }}
+                        </p>
+                        @if($order->company->detail->tax_number)
+                        <p>
+                            {{ $order->company->detail->tax_number }}
+                        </p>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -235,7 +266,7 @@
             <!-- Footer -->
             <div class="inv-footer">
                 <div class="left">Provided by: {{ $order->company->name }}<br>VAT ID: {{ $order->company->detail->tax_number ?? 'N/A' }}</div>
-                <div class="right">Issued on {{ $order->created_at->format('d F Y') }}<br>Page {{ $pageNo }} of {{ $totalPages }} for {{ $order->order_number }}</div>
+                <div class="right">Issued on {{ $order->created_at->format('F d, Y') }}<br>Page {{ $pageNo }} of {{ $totalPages }} for {{ $order->order_number }}</div>
             </div>
         </div>
         @endforeach
