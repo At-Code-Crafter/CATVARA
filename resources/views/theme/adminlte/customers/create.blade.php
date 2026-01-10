@@ -123,6 +123,22 @@
                   <div class="help-hint">Used for invoices and due-date calculation.</div>
                 </div>
               </div>
+
+              <div class="col-md-6">
+                <div class="form-group">
+                    <label>Percentage Discount (%)</label>
+                    <input type="number"
+                           name="percentage_discount"
+                           value="{{ old('percentage_discount', 0) }}"
+                           class="form-control ent-control @error('percentage_discount') is-invalid @enderror"
+                           min="0" max="100" step="0.01"
+                           placeholder="0.00">
+                    <div class="help-hint">Auto-applied to new orders for this customer.</div>
+                    @error('percentage_discount')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                </div>
+              </div>
             </div>
           </div>
         </div>

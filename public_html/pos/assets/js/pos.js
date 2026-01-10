@@ -311,6 +311,14 @@
 			item.qty = Math.min(item.qty + 1, Math.max(1, stock || 1));
 			cart.set(key, item);
 		} else {
+			// CHECK DISCOUNT TOGGLE
+			let initialDisc = 0;
+			if ($("#applyCustomerDiscountToggle").is(":checked")) {
+				if (typeof CUSTOMER_DISCOUNT_PERCENT !== "undefined") {
+					initialDisc = Number(CUSTOMER_DISCOUNT_PERCENT) || 0;
+				}
+			}
+
 			cart.set(key, {
 				variantId: String(variant.id),
 				productId: String(product.id),
@@ -320,7 +328,7 @@
 				unitPrice: safeNum(variant.price),
 				stock: stock,
 				qty: 1,
-				discountPercent: 0,
+				discountPercent: initialDisc,
 			});
 		}
 
@@ -561,6 +569,11 @@
 				// Check status for button visibility
 				const isConfirmed = typeof INITIAL_STATE !== "undefined" && INITIAL_STATE.status === "CONFIRMED";
 				updateButtonVisibility(isConfirmed);
+
+				// SETUP DISCOUNT LABEL
+				if (typeof CUSTOMER_DISCOUNT_PERCENT !== "undefined") {
+					$("#customerDiscountPercent").text(Number(CUSTOMER_DISCOUNT_PERCENT).toFixed(2));
+				}
 			})
 			.fail(function () {
 				$("#productsGrid").html(
@@ -591,6 +604,32 @@
 			if (safeNum(selectedVariant.stock) <= 0) return;
 			upsertCartItem(activeProduct, selectedVariant);
 			$("#variantModal").modal("hide");
+		});
+
+		// DISCOUNT TOGGLE
+		$("#applyCustomerDiscountToggle").on("change", function () {
+			const isChecked = $(this).is(":checked");
+			let discPercent = 0;
+
+			if (typeof CUSTOMER_DISCOUNT_PERCENT !== "undefined") {
+				discPercent = Number(CUSTOMER_DISCOUNT_PERCENT) || 0;
+			}
+
+			if (isChecked) {
+				// Apply to all
+				for (const item of cart.values()) {
+					item.discountPercent = discPercent;
+					cart.set(item.variantId, item);
+				}
+			} else {
+				// Remove from all (Reset to 0)
+				for (const item of cart.values()) {
+					item.discountPercent = 0;
+					cart.set(item.variantId, item);
+				}
+			}
+
+			renderCart();
 		});
 
 		// cart edits
@@ -666,6 +705,11 @@
 				data: payload,
 				success: function (res) {
 					if (res && res.success) {
+						if (res.redirect_url) {
+							window.location.href = res.redirect_url;
+							return;
+						}
+
 						applyServerTotals(res.totals);
 						if (isGenerating) {
 							updateButtonVisibility(true);

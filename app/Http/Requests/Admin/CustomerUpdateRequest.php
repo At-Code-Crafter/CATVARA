@@ -53,6 +53,7 @@ class CustomerUpdateRequest extends FormRequest
             'city' => ['nullable', 'string', 'max:100'],
             'is_active' => ['nullable', 'boolean'],
             'payment_term_id' => ['nullable', 'exists:payment_terms,id'],
+            'percentage_discount' => ['nullable', 'numeric', 'min:0', 'max:100'],
         ];
     }
 

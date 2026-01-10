@@ -3,7 +3,7 @@
 @section('title', 'Customers')
 
 @section('content-header')
-<link rel="stylesheet" href="{{ asset('assets/css/enterprise.css') }}">
+  <link rel="stylesheet" href="{{ asset('assets/css/enterprise.css') }}">
   <div class="row mb-2 align-items-center">
     <div class="col-sm-7">
       <div class="d-flex align-items-center">
@@ -203,7 +203,7 @@
         <h3 class="card-title m-0">
           <i class="fas fa-table"></i> Customer Directory
         </h3>
-        
+
       </div>
     </div>
 
@@ -216,6 +216,7 @@
               <th style="min-width: 120px;">Type</th>
               <th style="min-width: 220px;">Email</th>
               <th style="min-width: 140px;">Phone</th>
+              <th style="min-width: 100px;">Discount</th>
               <th style="min-width: 120px;">Status</th>
               <th style="min-width: 140px;">Created</th>
               <th style="min-width: 120px;">Action</th>
@@ -230,7 +231,7 @@
 
 @push('scripts')
   <script>
-    $(function() {
+    $(function () {
 
       function initSelect2() {
         if (!$.fn.select2) return;
@@ -275,7 +276,7 @@
 
       function setStatsLoading(isLoading) {
         const ids = ['#statAllCustomers', '#statActiveCustomers', '#statCompanyCustomers', '#statIndividualCustomers'];
-        ids.forEach(function(sel) {
+        ids.forEach(function (sel) {
           const $el = $(sel);
           if (isLoading) {
             $el.data('prev', $el.text());
@@ -288,13 +289,13 @@
         setStatsLoading(true);
 
         $.get('{{ route('customers.stats', $company->uuid) }}', getFilters())
-          .done(function(res) {
+          .done(function (res) {
             $('#statAllCustomers').text(res.all_customers ?? 0);
             $('#statActiveCustomers').text(res.active_customers ?? 0);
             $('#statCompanyCustomers').text(res.company_customers ?? 0);
             $('#statIndividualCustomers').text(res.individual_customers ?? 0);
           })
-          .fail(function() {
+          .fail(function () {
             $('#statAllCustomers').text($('#statAllCustomers').data('prev') || 0);
             $('#statActiveCustomers').text($('#statActiveCustomers').data('prev') || 0);
             $('#statCompanyCustomers').text($('#statCompanyCustomers').data('prev') || 0);
@@ -314,7 +315,7 @@
 
         ajax: {
           url: '{{ route('customers.index', $company->uuid) }}',
-          data: function(d) {
+          data: function (d) {
             const f = getFilters();
             d.type = f.type;
             d.is_active = f.is_active;
@@ -325,38 +326,43 @@
         },
 
         columns: [{
-            data: 'display_name',
-            name: 'customers.display_name'
-          },
-          {
-            data: 'type_badge',
-            name: 'customers.type',
-            orderable: false,
-            searchable: false
-          },
-          {
-            data: 'email',
-            name: 'customers.email'
-          },
-          {
-            data: 'phone',
-            name: 'customers.phone'
-          },
-          {
-            data: 'status_badge',
-            name: 'customers.is_active',
-            searchable: false
-          },
-          {
-            data: 'created_at',
-            name: 'customers.created_at'
-          },
-          {
-            data: 'action',
-            name: 'action',
-            orderable: false,
-            searchable: false
-          }
+          data: 'display_name',
+          name: 'customers.display_name'
+        },
+        {
+          data: 'type_badge',
+          name: 'customers.type',
+          orderable: false,
+          searchable: false
+        },
+        {
+          data: 'email',
+          name: 'customers.email'
+        },
+        {
+          data: 'phone',
+          name: 'customers.phone'
+        },
+        {
+          data: 'percentage_discount',
+          name: 'customers.percentage_discount',
+          className: 'text-center'
+        },
+        {
+          data: 'status_badge',
+          name: 'customers.is_active',
+          searchable: false
+        },
+        {
+          data: 'created_at',
+          name: 'customers.created_at'
+        },
+        {
+          data: 'action',
+          name: 'action',
+          orderable: false,
+          searchable: false
+        }
         ],
 
         dom: '<"row p-3 align-items-center"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6 d-flex justify-content-md-end"f>>rt<"row p-3 align-items-center"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7 d-flex justify-content-md-end"p>>',
@@ -365,7 +371,7 @@
           search: ""
         },
 
-        drawCallback: function() {
+        drawCallback: function () {
           // keep chip synced when table redraws
           syncActiveFiltersChip();
         }
@@ -377,12 +383,12 @@
         syncActiveFiltersChip();
       }
 
-      $('#btn_apply_filters').on('click', function(e) {
+      $('#btn_apply_filters').on('click', function (e) {
         e.preventDefault();
         applyFilters();
       });
 
-      $('#btn_reset_filters').on('click', function(e) {
+      $('#btn_reset_filters').on('click', function (e) {
         e.preventDefault();
 
         $('#filterStatus').val('');
@@ -400,13 +406,13 @@
         applyFilters();
       });
 
-      $('#btn_refresh').on('click', function(e) {
+      $('#btn_refresh').on('click', function (e) {
         e.preventDefault();
         applyFilters();
       });
 
       // Optional: auto-apply on Enter (not while typing in datatable search)
-      $(document).on('keydown', function(e) {
+      $(document).on('keydown', function (e) {
         const isTypingInSearch = $(e.target).closest('.dataTables_filter').length > 0;
         if (isTypingInSearch) return;
 
