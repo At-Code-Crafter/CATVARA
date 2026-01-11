@@ -177,7 +177,7 @@ class SalesOrderController extends Controller
 
         $order = Order::where('company_id', $company->id)
             ->whereUuid($id)
-            ->with(['items.productVariant.product'])
+            ->with(['items.productVariant.product', 'invoice'])
             ->firstOrFail();
 
         $sellToCustomer = $order->customer;
@@ -259,6 +259,8 @@ class SalesOrderController extends Controller
 
             // JS sends currency code: AED/USD/GBP
             'currency' => ['required', 'string'],
+            'sell_to' => ['nullable', 'exists:customers,uuid'],
+            'bill_to' => ['nullable', 'exists:customers,uuid'],
 
             'items' => ['nullable', 'array'],
             'items.*.variant_id' => ['required_with:items'],
@@ -291,6 +293,51 @@ class SalesOrderController extends Controller
                 $data['items'] ?? [],
                 $vatRate
             );
+
+            // Update addresses if sell_to/bill_to provided
+            if (!empty($data['sell_to'])) {
+                $sellToCustomer = Customer::where('company_id', $company->id)->where('uuid', $data['sell_to'])->first();
+                if ($sellToCustomer) {
+                    $order->update(['customer_id' => $sellToCustomer->id]);
+
+                    // Update Shipping Address
+                    $order->shippingAddress()->updateOrCreate(
+                        ['type' => 'SHIPPING'],
+                        [
+                            'company_id' => $company->id,
+                            'address_line_1' => $sellToCustomer->address->address_line_1 ?? '',
+                            'address_line_2' => $sellToCustomer->address->address_line_2 ?? '',
+                            'city' => $sellToCustomer->address->city ?? '',
+                            'state_id' => $sellToCustomer->address->state_id ?? '',
+                            'zip_code' => $sellToCustomer->address->zip_code ?? '',
+                            'country_id' => $sellToCustomer->address->country_id ?? '',
+                            'phone' => $sellToCustomer->phone,
+                            'email' => $sellToCustomer->email,
+                        ]
+                    );
+                }
+            }
+
+            if (!empty($data['bill_to'])) {
+                $billToCustomer = Customer::where('company_id', $company->id)->where('uuid', $data['bill_to'])->first();
+                if ($billToCustomer) {
+                    // Update Billing Address
+                    $order->billingAddress()->updateOrCreate(
+                        ['type' => 'BILLING'],
+                        [
+                            'company_id' => $company->id,
+                            'address_line_1' => $billToCustomer->address->address_line_1 ?? '',
+                            'address_line_2' => $billToCustomer->address->address_line_2 ?? '',
+                            'city' => $billToCustomer->address->city ?? '',
+                            'state_id' => $billToCustomer->address->state_id ?? '',
+                            'zip_code' => $billToCustomer->address->zip_code ?? '',
+                            'country_id' => $billToCustomer->address->country_id ?? '',
+                            'phone' => $billToCustomer->phone,
+                            'email' => $billToCustomer->email,
+                        ]
+                    );
+                }
+            }
 
             // Update order header (ONLY fields that exist in your migration)
             $order->update([
@@ -349,6 +396,22 @@ class SalesOrderController extends Controller
             ->where('uuid', $uuid)
             ->with(['items.productVariant.product', 'customer', 'billingAddress.country', 'shippingAddress.country', 'company', 'currency'])
             ->firstOrFail();
+
+        return view('theme.adminlte.sales.orders.print', compact('order'));
+    }
+
+    public function invoicePreview(Company $company, $orderId)
+    {
+        $order = Order::where('company_id', $company->id)
+            ->where('id', $orderId) // Route uses ID, not UUID based on web.php definition
+            ->with(['items.productVariant.product', 'customer', 'billingAddress.country', 'shippingAddress.country', 'company', 'currency'])
+            ->firstOrFail();
+
+        // Use the same print view but potentially with a flag or just render it
+        // The user asked for "Preview the pdf". 
+        // We can either return the PDF view (HTML) to be shown in iframe/modal 
+        // or generate a real PDF if using a library like DOMPDF.
+        // Given existing code uses HTML views for 'print', we will return that.
 
         return view('theme.adminlte.sales.orders.print', compact('order'));
     }

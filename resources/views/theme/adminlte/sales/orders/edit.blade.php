@@ -693,7 +693,7 @@
                 <button class="btn btn-dark btn-block" id="generateOrderBtn">Generate Order</button>
               </div>
 
-              <div class="col-6 d-none" id="postGenerateContainer">
+              <div class="col-6" id="postGenerateContainer">
                 <div class="dropdown">
                   <button class="btn btn-dark btn-block dropdown-toggle" type="button" data-toggle="dropdown">
                     Actions
@@ -702,9 +702,20 @@
                     <a class="dropdown-item" href="#" id="downloadPdfBtn">
                       <i class="fas fa-file-pdf mr-2"></i> Download PDF
                     </a>
-                    <a class="dropdown-item" href="#" id="createInvoiceBtn">
-                      <i class="fas fa-file-invoice mr-2"></i> Generate Invoice
+                    <a class="dropdown-item" href="#" id="previewPdfBtn">
+                      <i class="fas fa-eye mr-2"></i> Preview PDF
                     </a>
+
+                    @if($order->invoice)
+                      <a class="dropdown-item" href="#"
+                        onclick="window.open('{{ company_route('invoices.print', ['invoice' => $order->invoice->uuid]) }}', '_blank')">
+                        <i class="fas fa-file-invoice mr-2"></i> View Invoice
+                      </a>
+                    @else
+                      <a class="dropdown-item" href="#" id="createInvoiceBtn">
+                        <i class="fas fa-file-invoice mr-2"></i> Generate Invoice
+                      </a>
+                    @endif
                   </div>
                 </div>
               </div>
@@ -765,6 +776,8 @@
       </div>
     </div>
   </div>
+
+  @include('theme.adminlte.sales.orders.partials.customer_modal')
 @endsection
 
 @push('scripts')
@@ -778,6 +791,7 @@
     const INITIAL_STATE = @json($initialState ?? null);
     const UPDATE_URL = "{{ isset($order) ? company_route('sales-orders.update', ['sales_order' => $order->uuid]) : '' }}";
     const PRINT_URL = "{{ isset($order) ? company_route('sales-orders.print', ['sales_order' => $order->uuid]) : '' }}";
+    const GENERATE_INVOICE_URL = "{{ isset($order) ? company_route('sales-orders.generate-invoice', ['sales_order' => $order->uuid]) : '' }}";
 
     // Pass customer discount
     const CUSTOMER_DISCOUNT_PERCENT = {{ $sellToCustomer->percentage_discount ?? 0 }};

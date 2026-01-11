@@ -8,207 +8,227 @@
 */
 
 (function () {
-	/* ===================== STATE ===================== */
-	let customers = [];
-	let products = [];
-	let variantsMap = {}; // { product_id: [variants...] }
-	let paymentTerms = []; // [{id,name,due_days},...]
+    /* ===================== STATE ===================== */
+    let customers = [];
+    let products = [];
+    let variantsMap = {}; // { product_id: [variants...] }
+    let paymentTerms = []; // [{id,name,due_days},...]
 
-	let activeProduct = null;
-	let selectedVariant = null;
+    let activeProduct = null;
+    let selectedVariant = null;
 
-	const cart = new Map();
+    const cart = new Map();
 
-	let invoiceDate = new Date();
-	let dueDate = new Date();
+    let invoiceDate = new Date();
+    let dueDate = new Date();
 
-	/* ===================== HELPERS ===================== */
-	function pad2(n) {
-		return String(n).padStart(2, "0");
-	}
+    /* ===================== HELPERS ===================== */
+    function pad2(n) {
+        return String(n).padStart(2, "0");
+    }
 
-	function formatDate(d) {
-		return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
-	}
+    function formatDate(d) {
+        return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(
+            d.getDate()
+        )}`;
+    }
 
-	function addDays(dateObj, days) {
-		const d = new Date(dateObj.getTime());
-		d.setDate(d.getDate() + Number(days || 0));
-		return d;
-	}
+    function addDays(dateObj, days) {
+        const d = new Date(dateObj.getTime());
+        d.setDate(d.getDate() + Number(days || 0));
+        return d;
+    }
 
-	function safeNum(val) {
-		const n = Number(val);
-		return isNaN(n) ? 0 : n;
-	}
+    function safeNum(val) {
+        const n = Number(val);
+        return isNaN(n) ? 0 : n;
+    }
 
-	function escapeHtml(str) {
-		return String(str ?? "")
-			.replaceAll("&", "&amp;")
-			.replaceAll("<", "&lt;")
-			.replaceAll(">", "&gt;")
-			.replaceAll('"', "&quot;")
-			.replaceAll("'", "&#039;");
-	}
+    function escapeHtml(str) {
+        return String(str ?? "")
+            .replaceAll("&", "&amp;")
+            .replaceAll("<", "&lt;")
+            .replaceAll(">", "&gt;")
+            .replaceAll('"', "&quot;")
+            .replaceAll("'", "&#039;");
+    }
 
-	function money(n) {
-		const currency = $("#currencySelect").val() || "AED";
-		const val = (Number(n) || 0).toFixed(2);
-		return `${val} ${currency}`;
-	}
+    function money(n) {
+        const currency = $("#currencySelect").val() || "AED";
+        const val = (Number(n) || 0).toFixed(2);
+        return `${val} ${currency}`;
+    }
 
-	function attrsToText(attrsObj) {
-		if (!attrsObj || typeof attrsObj !== "object") return "";
-		return Object.keys(attrsObj)
-			.map((k) => `${k}: ${attrsObj[k]}`)
-			.join(" • ");
-	}
+    function attrsToText(attrsObj) {
+        if (!attrsObj || typeof attrsObj !== "object") return "";
+        return Object.keys(attrsObj)
+            .map((k) => `${k}: ${attrsObj[k]}`)
+            .join(" • ");
+    }
 
-	function findPaymentTermById(id) {
-		return paymentTerms.find((t) => String(t.id) === String(id)) || null;
-	}
+    function findPaymentTermById(id) {
+        return paymentTerms.find((t) => String(t.id) === String(id)) || null;
+    }
 
-	function paymentTermExists(id) {
-		return !!findPaymentTermById(id);
-	}
+    function paymentTermExists(id) {
+        return !!findPaymentTermById(id);
+    }
 
-	// resolve product image from common possible keys
-	function getProductImage(p) {
-		return (
-			p?.image ||
-			p?.thumbnail ||
-			p?.image_url ||
-			p?.thumb ||
-			p?.photo ||
-			p?.featured_image ||
-			""
-		);
-	}
+    // resolve product image from common possible keys
+    function getProductImage(p) {
+        return (
+            p?.image ||
+            p?.thumbnail ||
+            p?.image_url ||
+            p?.thumb ||
+            p?.photo ||
+            p?.featured_image ||
+            ""
+        );
+    }
 
-	function csrfToken() {
-		return $('meta[name="csrf-token"]').attr("content") || "";
-	}
+    function csrfToken() {
+        return $('meta[name="csrf-token"]').attr("content") || "";
+    }
 
-	/* ===================== UI ===================== */
-	function setInvoiceDatesUI() {
-		$("#invoiceDateText").text(formatDate(invoiceDate));
-		$("#dueDateText").text(formatDate(dueDate));
-	}
+    /* ===================== UI ===================== */
+    function setInvoiceDatesUI() {
+        $("#invoiceDateText").text(formatDate(invoiceDate));
+        $("#dueDateText").text(formatDate(dueDate));
+    }
 
-	function setPaymentTermsUI(selectedId) {
-		const options = paymentTerms
-			.map(
-				(t) =>
-					`<option value="${t.id}" data-days="${t.due_days}">${escapeHtml(
-						t.name
-					)}</option>`
-			)
-			.join("");
+    function setPaymentTermsUI(selectedId) {
+        const options = paymentTerms
+            .map(
+                (t) =>
+                    `<option value="${t.id}" data-days="${
+                        t.due_days
+                    }">${escapeHtml(t.name)}</option>`
+            )
+            .join("");
 
-		$("#paymentTermSelect").html(
-			`<option value="">Select Payment Term</option>${options}`
-		);
+        $("#paymentTermSelect").html(
+            `<option value="">Select Payment Term</option>${options}`
+        );
 
-		if (selectedId && paymentTermExists(selectedId)) {
-			$("#paymentTermSelect").val(String(selectedId));
-		} else {
-			$("#paymentTermSelect").val("");
-		}
+        if (selectedId && paymentTermExists(selectedId)) {
+            $("#paymentTermSelect").val(String(selectedId));
+        } else {
+            $("#paymentTermSelect").val("");
+        }
 
-		syncDueDateFromSelectedTerm();
-	}
+        syncDueDateFromSelectedTerm();
+    }
 
-	function syncDueDateFromSelectedTerm() {
-		const termId = $("#paymentTermSelect").val() || "";
-		const term = findPaymentTermById(termId);
-		const days = term ? Number(term.due_days || 0) : 0;
+    function syncDueDateFromSelectedTerm() {
+        const termId = $("#paymentTermSelect").val() || "";
+        const term = findPaymentTermById(termId);
+        const days = term ? Number(term.due_days || 0) : 0;
 
-		$("#paymentTermDays").val(days);
-		dueDate = addDays(invoiceDate, days);
-		setInvoiceDatesUI();
-	}
+        $("#paymentTermDays").val(days);
+        dueDate = addDays(invoiceDate, days);
+        setInvoiceDatesUI();
+    }
 
-	/* ===================== PRODUCTS LIST ===================== */
-	function getProductFilters() {
-		return {
-			q: ($("#searchInput").val() || "").trim().toLowerCase(),
-			category: $("#categoryFilter").val() || "",
-			brand: $("#brandFilter").val() || "",
-		};
-	}
+    /* ===================== PRODUCTS LIST ===================== */
+    function getProductFilters() {
+        return {
+            q: ($("#searchInput").val() || "").trim().toLowerCase(),
+            category: $("#categoryFilter").val() || "",
+            brand: $("#brandFilter").val() || "",
+        };
+    }
 
-	function filteredProducts() {
-		const { q, category, brand } = getProductFilters();
+    function filteredProducts() {
+        const { q, category, brand } = getProductFilters();
 
-		return products.filter((p) => {
-			const name = (p.name || "").toLowerCase();
-			const okQ = !q || name.includes(q);
-			const okC = !category || p.category === category;
-			const okB = !brand || p.brand === brand;
-			return okQ && okC && okB;
-		});
-	}
+        return products.filter((p) => {
+            const name = (p.name || "").toLowerCase();
+            const okQ = !q || name.includes(q);
+            const okC = !category || p.category === category;
+            const okB = !brand || p.brand === brand;
+            return okQ && okC && okB;
+        });
+    }
 
-	function populateProductFilters() {
-		const categories = [
-			...new Set(products.map((p) => p.category).filter(Boolean)),
-		].sort();
+    function populateProductFilters() {
+        const categories = [
+            ...new Set(products.map((p) => p.category).filter(Boolean)),
+        ].sort();
 
-		const brands = [...new Set(products.map((p) => p.brand).filter(Boolean))].sort();
+        const brands = [
+            ...new Set(products.map((p) => p.brand).filter(Boolean)),
+        ].sort();
 
-		$("#categoryFilter").html(
-			`<option value="">All Categories</option>` +
-			categories
-				.map((c) => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`)
-				.join("")
-		);
+        $("#categoryFilter").html(
+            `<option value="">All Categories</option>` +
+                categories
+                    .map(
+                        (c) =>
+                            `<option value="${escapeHtml(c)}">${escapeHtml(
+                                c
+                            )}</option>`
+                    )
+                    .join("")
+        );
 
-		$("#brandFilter").html(
-			`<option value="">All Brands</option>` +
-			brands
-				.map((b) => `<option value="${escapeHtml(b)}">${escapeHtml(b)}</option>`)
-				.join("")
-		);
-	}
+        $("#brandFilter").html(
+            `<option value="">All Brands</option>` +
+                brands
+                    .map(
+                        (b) =>
+                            `<option value="${escapeHtml(b)}">${escapeHtml(
+                                b
+                            )}</option>`
+                    )
+                    .join("")
+        );
+    }
 
-	function renderAllProducts() {
-		const list = filteredProducts();
-		const grid = $("#productsGrid");
-		grid.empty();
+    function renderAllProducts() {
+        const list = filteredProducts();
+        const grid = $("#productsGrid");
+        grid.empty();
 
-		if (!list.length) {
-			grid.html(`
+        if (!list.length) {
+            grid.html(`
         <div class="col-12">
           <div class="alert alert-light border mb-0">No products found. Try changing search/filters.</div>
         </div>
       `);
-			return;
-		}
+            return;
+        }
 
-		for (const p of list) {
-			const v = variantsMap[p.id] || [];
-			const prices = v.map((x) => safeNum(x.price));
-			const minPrice = prices.length ? Math.min(...prices) : 0;
-			const maxPrice = prices.length ? Math.max(...prices) : 0;
+        for (const p of list) {
+            const v = variantsMap[p.id] || [];
+            const prices = v.map((x) => safeNum(x.price));
+            const minPrice = prices.length ? Math.min(...prices) : 0;
+            const maxPrice = prices.length ? Math.max(...prices) : 0;
 
-			const priceText = prices.length
-				? minPrice === maxPrice
-					? money(minPrice)
-					: `${money(minPrice)} - ${money(maxPrice)}`
-				: "No variants";
+            const priceText = prices.length
+                ? minPrice === maxPrice
+                    ? money(minPrice)
+                    : `${money(minPrice)} - ${money(maxPrice)}`
+                : "No variants";
 
-			const img = getProductImage(p);
-			const imgHtml = img
-				? `<img class="product-img" src="${escapeHtml(
-					img
-				)}" alt="${escapeHtml(p.name || "Product")}" loading="lazy">`
-				: `<div class="product-img-placeholder">No Image</div>`;
+            const img = getProductImage(p);
+            const imgHtml = img
+                ? `<img class="product-img" src="${escapeHtml(
+                      img
+                  )}" alt="${escapeHtml(p.name || "Product")}" loading="lazy">`
+                : `<div class="product-img-placeholder">No Image</div>`;
 
-			grid.append(`
+            grid.append(`
         <div class="col-6 col-md-4 col-xl-4 mb-3">
           <div class="product-card" data-product-id="${p.id}">
             <div class="product-thumb">
-              ${p.category ? `<div class="product-cat-badge">${escapeHtml(p.category)}</div>` : ""}
+              ${
+                  p.category
+                      ? `<div class="product-cat-badge">${escapeHtml(
+                            p.category
+                        )}</div>`
+                      : ""
+              }
               ${imgHtml}
             </div>
             <div class="product-body">
@@ -223,38 +243,38 @@
           </div>
         </div>
       `);
-		}
-	}
+        }
+    }
 
-	/* ===================== VARIANT MODAL ===================== */
-	function openVariantModal(productId) {
-		activeProduct =
-			products.find((p) => String(p.id) === String(productId)) || null;
+    /* ===================== VARIANT MODAL ===================== */
+    function openVariantModal(productId) {
+        activeProduct =
+            products.find((p) => String(p.id) === String(productId)) || null;
 
-		selectedVariant = null;
-		if (!activeProduct) return;
+        selectedVariant = null;
+        if (!activeProduct) return;
 
-		const list = variantsMap[activeProduct.id] || [];
+        const list = variantsMap[activeProduct.id] || [];
 
-		$("#variantModalSubtitle").text(
-			`${activeProduct.name || ""} • ${activeProduct.brand || ""}`
-		);
+        $("#variantModalSubtitle").text(
+            `${activeProduct.name || ""} • ${activeProduct.brand || ""}`
+        );
 
-		$("#variantSelectionHint").text("Click a variant to add it to cart.");
-		$("#addVariantBtn").prop("disabled", true);
+        $("#variantSelectionHint").text("Click a variant to add it to cart.");
+        $("#addVariantBtn").prop("disabled", true);
 
-		if (!list.length) {
-			$("#variantGrid").html(
-				`<div class="col-12"><div class="alert alert-light border mb-0">No variants for this product.</div></div>`
-			);
-			$("#variantModal").modal("show");
-			return;
-		}
+        if (!list.length) {
+            $("#variantGrid").html(
+                `<div class="col-12"><div class="alert alert-light border mb-0">No variants for this product.</div></div>`
+            );
+            $("#variantModal").modal("show");
+            return;
+        }
 
-		$("#variantGrid").html(
-			list
-				.map(
-					(v) => `
+        $("#variantGrid").html(
+            list
+                .map(
+                    (v) => `
         <div class="col-md-6 mb-3">
           <div class="variant-card" data-variant-id="${v.id}">
             <div class="variant-attrs">${escapeHtml(attrsToText(v.attrs))}</div>
@@ -265,224 +285,252 @@
           </div>
         </div>
       `
-				)
-				.join("")
-		);
+                )
+                .join("")
+        );
 
-		$("#variantModal").modal("show");
-	}
+        $("#variantModal").modal("show");
+    }
 
-	// supports autoAdd
-	function selectVariant(variantId, autoAdd = false) {
-		if (!activeProduct) return;
+    // supports autoAdd
+    function selectVariant(variantId, autoAdd = false) {
+        if (!activeProduct) return;
 
-		const list = variantsMap[activeProduct.id] || [];
-		selectedVariant =
-			list.find((v) => String(v.id) === String(variantId)) || null;
+        const list = variantsMap[activeProduct.id] || [];
+        selectedVariant =
+            list.find((v) => String(v.id) === String(variantId)) || null;
 
-		$(".variant-card").removeClass("active");
-		$(`.variant-card[data-variant-id="${variantId}"]`).addClass("active");
+        $(".variant-card").removeClass("active");
+        $(`.variant-card[data-variant-id="${variantId}"]`).addClass("active");
 
-		if (!selectedVariant) return;
+        if (!selectedVariant) return;
 
-		const stock = safeNum(selectedVariant.stock);
+        const stock = safeNum(selectedVariant.stock);
 
-		$("#variantSelectionHint").text(
-			`${attrsToText(selectedVariant.attrs)} • ${money(
-				selectedVariant.price
-			)} • Stock: ${stock}`
-		);
+        $("#variantSelectionHint").text(
+            `${attrsToText(selectedVariant.attrs)} • ${money(
+                selectedVariant.price
+            )} • Stock: ${stock}`
+        );
 
-		$("#addVariantBtn").prop("disabled", stock <= 0);
+        $("#addVariantBtn").prop("disabled", stock <= 0);
 
-		if (autoAdd && stock > 0) {
-			upsertCartItem(activeProduct, selectedVariant);
-			$("#variantModal").modal("hide");
-		}
-	}
+        if (autoAdd && stock > 0) {
+            upsertCartItem(activeProduct, selectedVariant);
+            $("#variantModal").modal("hide");
+        }
+    }
 
-	/* ===================== CART ===================== */
-	function upsertCartItem(product, variant) {
-		const key = String(variant.id);
-		const stock = safeNum(variant.stock);
+    /* ===================== CART ===================== */
+    function upsertCartItem(product, variant) {
+        const key = String(variant.id);
+        const stock = safeNum(variant.stock);
 
-		if (cart.has(key)) {
-			const item = cart.get(key);
-			item.qty = Math.min(item.qty + 1, Math.max(1, stock || 1));
-			cart.set(key, item);
-		} else {
-			// CHECK DISCOUNT TOGGLE
-			let initialDisc = 0;
-			if ($("#applyCustomerDiscountToggle").is(":checked")) {
-				if (typeof CUSTOMER_DISCOUNT_PERCENT !== "undefined") {
-					initialDisc = Number(CUSTOMER_DISCOUNT_PERCENT) || 0;
-				}
-			}
+        if (cart.has(key)) {
+            const item = cart.get(key);
+            item.qty = Math.min(item.qty + 1, Math.max(1, stock || 1));
+            cart.set(key, item);
+        } else {
+            // CHECK DISCOUNT TOGGLE
+            let initialDisc = 0;
+            if ($("#applyCustomerDiscountToggle").is(":checked")) {
+                if (typeof CUSTOMER_DISCOUNT_PERCENT !== "undefined") {
+                    initialDisc = Number(CUSTOMER_DISCOUNT_PERCENT) || 0;
+                }
+            }
 
-			cart.set(key, {
-				variantId: String(variant.id),
-				productId: String(product.id),
-				name: product.name || "",
-				brand: product.brand || "",
-				attrs: variant.attrs || {},
-				unitPrice: safeNum(variant.price),
-				stock: stock,
-				qty: 1,
-				discountPercent: initialDisc,
-			});
-		}
+            cart.set(key, {
+                variantId: String(variant.id),
+                productId: String(product.id),
+                name: product.name || "",
+                brand: product.brand || "",
+                attrs: variant.attrs || {},
+                unitPrice: safeNum(variant.price),
+                stock: stock,
+                qty: 1,
+                discountPercent: initialDisc,
+            });
+        }
 
-		renderCart();
-	}
+        renderCart();
+    }
 
-	// UI total (gross - discount). VAT computed globally on totals section.
-	function calcLineNet(item) {
-		const qty = safeNum(item.qty);
-		const unit = safeNum(item.unitPrice);
-		const disc = Math.min(100, Math.max(0, safeNum(item.discountPercent)));
-		const gross = unit * qty;
-		return Math.max(0, gross - gross * (disc / 100));
-	}
+    // UI total (gross - discount). VAT computed globally on totals section.
+    function calcLineNet(item) {
+        const qty = safeNum(item.qty);
+        const unit = safeNum(item.unitPrice);
+        const disc = Math.min(100, Math.max(0, safeNum(item.discountPercent)));
+        const gross = unit * qty;
+        return Math.max(0, gross - gross * (disc / 100));
+    }
 
-	function renderCart() {
-		const tbody = $("#cartBody");
-		tbody.empty();
+    function renderCart() {
+        const tbody = $("#cartBody");
+        tbody.empty();
 
-		if (cart.size === 0) {
-			tbody.append($("#emptyCartRow"));
-			$("#emptyCartRow").show();
-			updateTotalsUI();
-			return;
-		}
+        if (cart.size === 0) {
+            tbody.append($("#emptyCartRow"));
+            $("#emptyCartRow").show();
+            updateTotalsUI();
+            return;
+        }
 
-		$("#emptyCartRow").hide();
+        $("#emptyCartRow").hide();
 
-		for (const item of cart.values()) {
-			tbody.append(`
+        for (const item of cart.values()) {
+            tbody.append(`
         <tr data-variant-id="${item.variantId}">
           <td>
             <div class="cart-item-name">${escapeHtml(item.name)}</div>
-            <div class="cart-item-variant">${escapeHtml(attrsToText(item.attrs))}</div>
+            <div class="cart-item-variant">${escapeHtml(
+                attrsToText(item.attrs)
+            )}</div>
             <div class="small text-muted">Stock: ${safeNum(item.stock)}</div>
           </td>
-          <td class="text-right"><div class="font-weight-bold">${money(item.unitPrice)}</div></td>
+          <td class="text-right"><div class="font-weight-bold">${money(
+              item.unitPrice
+          )}</div></td>
           <td class="text-center">
-            <input type="number" class="form-control input-xs qty-input" value="${item.qty}" min="1" max="${Math.max(
-				1,
-				safeNum(item.stock)
-			)}" step="1" />
+            <input type="number" class="form-control input-xs qty-input" value="${
+                item.qty
+            }" min="1" max="${Math.max(1, safeNum(item.stock))}" step="1" />
           </td>
           <td class="text-center">
-            <input type="number" class="form-control input-xs disc-input" value="${item.discountPercent}" min="0" max="100" step="0.5" />
+            <input type="number" class="form-control input-xs disc-input" value="${
+                item.discountPercent
+            }" min="0" max="100" step="0.5" />
           </td>
-          <td class="text-right"><div class="font-weight-bold line-total">${money(calcLineNet(item))}</div></td>
+          <td class="text-right"><div class="font-weight-bold line-total">${money(
+              calcLineNet(item)
+          )}</div></td>
           <td class="text-center">
             <button class="btn btn-outline-secondary btn-icon remove-btn" title="Remove">&times;</button>
           </td>
         </tr>
       `);
-		}
+        }
 
-		updateTotalsUI();
-	}
+        updateTotalsUI();
+    }
 
-	function updateTotalsUI() {
-		let subTotalNet = 0;
-		for (const item of cart.values()) subTotalNet += calcLineNet(item);
+    function updateTotalsUI() {
+        let subTotalNet = 0;
+        for (const item of cart.values()) subTotalNet += calcLineNet(item);
 
-		const shipping = Math.max(0, safeNum($("#shippingInput").val()));
-		const additional = Math.max(0, safeNum($("#additionalInput").val()));
+        const shipping = Math.max(0, safeNum($("#shippingInput").val()));
+        const additional = Math.max(0, safeNum($("#additionalInput").val()));
+        const vatRate = Math.max(0, safeNum($("#vatRateInput").val()));
+
+        const taxable = subTotalNet + shipping + additional;
+        const vat = taxable * (vatRate / 100);
+        const grand = taxable + vat;
+
+        $("#subTotalText").text(money(subTotalNet));
+        $("#vatText").text(money(vat));
+        $("#grandTotalText").text(money(grand));
+
+        // update each row net
+        $("#cartBody tr").each(function () {
+            const vid = $(this).data("variant-id");
+            if (!vid) return;
+            const item = cart.get(String(vid));
+            if (!item) return;
+
+            $(this)
+                .find(".line-total")
+                .text(money(calcLineNet(item)));
+            $(this)
+                .find("td.text-right .font-weight-bold")
+                .first()
+                .text(money(item.unitPrice));
+        });
+    }
+
+    /* ===================== HYDRATE (EDIT MODE) ===================== */
+    function hydrateStateAfterLoad() {
+        if (typeof INITIAL_STATE === "undefined" || !INITIAL_STATE) return;
+
+        // currency (code)
+        if (INITIAL_STATE.currency) {
+            $("#currencySelect")
+                .val(String(INITIAL_STATE.currency))
+                .trigger("change");
+        }
+
+        // charges + notes
+        $("#shippingInput").val(safeNum(INITIAL_STATE.shipping || 0));
+        $("#additionalInput").val(safeNum(INITIAL_STATE.additional || 0));
+        $("#vatRateInput").val(safeNum(INITIAL_STATE.vat_rate || 5));
+        $("#commentsInput").val(INITIAL_STATE.notes || "");
+
+        // payment term: set AFTER payment terms dropdown built
+        if (
+            INITIAL_STATE.payment_term_id &&
+            paymentTermExists(INITIAL_STATE.payment_term_id)
+        ) {
+            $("#paymentTermSelect").val(String(INITIAL_STATE.payment_term_id));
+            syncDueDateFromSelectedTerm();
+        }
+
+        // items
+        if (Array.isArray(INITIAL_STATE.items)) {
+            for (const savedItem of INITIAL_STATE.items) {
+                const variantId = String(
+                    savedItem.variantId || savedItem.variant_id || ""
+                );
+
+                if (!variantId) continue;
+
+                let foundProduct = null;
+                let foundVariant = null;
+
+                for (const p of products) {
+                    const variants = variantsMap[p.id] || [];
+                    const v = variants.find((x) => String(x.id) === variantId);
+                    if (v) {
+                        foundProduct = p;
+                        foundVariant = v;
+                        break;
+                    }
+                }
+
+                if (foundProduct && foundVariant) {
+                    cart.set(String(foundVariant.id), {
+                        variantId: String(foundVariant.id),
+                        productId: String(foundProduct.id),
+                        name: foundProduct.name || "",
+                        brand: foundProduct.brand || "",
+                        attrs: foundVariant.attrs || {},
+                        unitPrice: safeNum(
+                            savedItem.unitPrice ??
+                                savedItem.unit_price ??
+                                foundVariant.price
+                        ),
+                        stock: safeNum(foundVariant.stock),
+                        qty: Math.max(
+                            1,
+                            safeNum(savedItem.qty ?? savedItem.quantity ?? 1)
+                        ),
+                        discountPercent: safeNum(
+                            savedItem.discountPercent ??
+                                savedItem.discount_percent ??
+                                0
+                        ),
+                    });
+                }
+            }
+        }
+
+        renderCart();
+    }
+
+    /* ===================== PAYLOAD + SAVE ===================== */
+    	function buildUpdatePayload() {
 		const vatRate = Math.max(0, safeNum($("#vatRateInput").val()));
 
-		const taxable = subTotalNet + shipping + additional;
-		const vat = taxable * (vatRate / 100);
-		const grand = taxable + vat;
-
-		$("#subTotalText").text(money(subTotalNet));
-		$("#vatText").text(money(vat));
-		$("#grandTotalText").text(money(grand));
-
-		// update each row net
-		$("#cartBody tr").each(function () {
-			const vid = $(this).data("variant-id");
-			if (!vid) return;
-			const item = cart.get(String(vid));
-			if (!item) return;
-
-			$(this).find(".line-total").text(money(calcLineNet(item)));
-			$(this)
-				.find("td.text-right .font-weight-bold")
-				.first()
-				.text(money(item.unitPrice));
-		});
-	}
-
-	/* ===================== HYDRATE (EDIT MODE) ===================== */
-	function hydrateStateAfterLoad() {
-		if (typeof INITIAL_STATE === "undefined" || !INITIAL_STATE) return;
-
-		// currency (code)
-		if (INITIAL_STATE.currency) {
-			$("#currencySelect").val(String(INITIAL_STATE.currency)).trigger("change");
-		}
-
-		// charges + notes
-		$("#shippingInput").val(safeNum(INITIAL_STATE.shipping || 0));
-		$("#additionalInput").val(safeNum(INITIAL_STATE.additional || 0));
-		$("#vatRateInput").val(safeNum(INITIAL_STATE.vat_rate || 5));
-		$("#commentsInput").val(INITIAL_STATE.notes || "");
-
-		// payment term: set AFTER payment terms dropdown built
-		if (INITIAL_STATE.payment_term_id && paymentTermExists(INITIAL_STATE.payment_term_id)) {
-			$("#paymentTermSelect").val(String(INITIAL_STATE.payment_term_id));
-			syncDueDateFromSelectedTerm();
-		}
-
-		// items
-		if (Array.isArray(INITIAL_STATE.items)) {
-			for (const savedItem of INITIAL_STATE.items) {
-				const variantId = String(savedItem.variantId || savedItem.variant_id || "");
-
-				if (!variantId) continue;
-
-				let foundProduct = null;
-				let foundVariant = null;
-
-				for (const p of products) {
-					const variants = variantsMap[p.id] || [];
-					const v = variants.find((x) => String(x.id) === variantId);
-					if (v) {
-						foundProduct = p;
-						foundVariant = v;
-						break;
-					}
-				}
-
-
-
-
-				if (foundProduct && foundVariant) {
-					cart.set(String(foundVariant.id), {
-						variantId: String(foundVariant.id),
-						productId: String(foundProduct.id),
-						name: foundProduct.name || "",
-						brand: foundProduct.brand || "",
-						attrs: foundVariant.attrs || {},
-						unitPrice: safeNum(savedItem.unitPrice ?? savedItem.unit_price ?? foundVariant.price),
-						stock: safeNum(foundVariant.stock),
-						qty: Math.max(1, safeNum(savedItem.qty ?? savedItem.quantity ?? 1)),
-						discountPercent: safeNum(savedItem.discountPercent ?? savedItem.discount_percent ?? 0),
-					});
-				}
-			}
-		}
-
-		renderCart();
-	}
-
-	/* ===================== PAYLOAD + SAVE ===================== */
-	function buildUpdatePayload() {
-		const vatRate = Math.max(0, safeNum($("#vatRateInput").val()));
+		// NEW: Check if customers were changed
+		const sellTo = $("#posContainer").data("sell-to-uuid");
+		const billTo = $("#posContainer").data("bill-to-uuid");
 
 		return {
 			payment_term_id: $("#paymentTermSelect").val() || null,
@@ -494,6 +542,10 @@
 			vat_rate: vatRate,
 
 			currency: $("#currencySelect").val() || "AED",
+			
+			// If changed, send them. If not pending change, backend keeps existing.
+			sell_to: sellTo || null,
+			bill_to: billTo || null,
 
 			items: Array.from(cart.values()).map((x) => ({
 				variant_id: x.variantId,
@@ -508,251 +560,445 @@
 		};
 	}
 
-	function applyServerTotals(totals) {
-		if (!totals) return;
+    function applyServerTotals(totals) {
+        if (!totals) return;
 
-		// totals are numeric; we display using current currency code
-		$("#subTotalText").text(money(totals.subtotal ?? 0));
-		$("#vatText").text(money(totals.tax_total ?? 0));
-		$("#grandTotalText").text(money(totals.grand_total ?? 0));
-	}
+        // totals are numeric; we display using current currency code
+        $("#subTotalText").text(money(totals.subtotal ?? 0));
+        $("#vatText").text(money(totals.tax_total ?? 0));
+        $("#grandTotalText").text(money(totals.grand_total ?? 0));
+    }
 
-	// UPDATE: Toggle visibility based on status
-	function updateButtonVisibility(isConfirmed) {
-		if (isConfirmed) {
-			$("#generateOrderContainer").addClass("d-none");
-			$("#postGenerateContainer").removeClass("d-none");
-			$("#saveDraftBtn").text("Update Order");
-		} else {
-			$("#generateOrderContainer").removeClass("d-none");
-			$("#postGenerateContainer").addClass("d-none");
-			$("#saveDraftBtn").text("Save Draft");
-		}
-	}
+    // UPDATE: Toggle visibility based on status
+    function updateButtonVisibility(isConfirmed) {
+        if (isConfirmed) {
+            $("#generateOrderContainer").addClass("d-none");
+            $("#postGenerateContainer").removeClass("d-none");
+            $("#saveDraftBtn").text("Update Order");
+        } else {
+            $("#generateOrderContainer").removeClass("d-none");
+            $("#postGenerateContainer").addClass("d-none");
+            $("#saveDraftBtn").text("Save Draft");
+        }
+    }
 
-	/* ===================== BOOT ===================== */
-	function boot() {
-		const bladeSelectedTermId =
-			typeof SELECTED_PAYMENT_TERM_ID !== "undefined"
-				? String(SELECTED_PAYMENT_TERM_ID || "")
-				: "";
+    /* ===================== BOOT ===================== */
+    function boot() {
+        const bladeSelectedTermId =
+            typeof SELECTED_PAYMENT_TERM_ID !== "undefined"
+                ? String(SELECTED_PAYMENT_TERM_ID || "")
+                : "";
 
-		$.when($.getJSON(CUSTOMERS_URL), $.getJSON(LOAD_PRODUCTS_URL), $.getJSON(PAYMENT_TERMS_URL))
-			.done(function (cRes, pRes, tRes) {
-				customers = Array.isArray(cRes[0]) ? cRes[0] : [];
-				products = Array.isArray(pRes[0]) ? pRes[0] : [];
-				paymentTerms = Array.isArray(tRes[0]) ? tRes[0] : [];
+        $.when(
+            $.getJSON(CUSTOMERS_URL),
+            $.getJSON(LOAD_PRODUCTS_URL),
+            $.getJSON(PAYMENT_TERMS_URL)
+        )
+            .done(function (cRes, pRes, tRes) {
+                customers = Array.isArray(cRes[0]) ? cRes[0] : [];
+                products = Array.isArray(pRes[0]) ? pRes[0] : [];
+                paymentTerms = Array.isArray(tRes[0]) ? tRes[0] : [];
 
-				variantsMap = {};
-				for (const p of products) {
-					variantsMap[p.id] = Array.isArray(p.variants) ? p.variants : [];
-				}
+                variantsMap = {};
+                for (const p of products) {
+                    variantsMap[p.id] = Array.isArray(p.variants)
+                        ? p.variants
+                        : [];
+                }
 
-				populateProductFilters();
-				renderAllProducts();
+                populateProductFilters();
+                renderAllProducts();
 
-				// Choose term:
-				let termToSelect = "";
+                // Choose term:
+                let termToSelect = "";
 
-				if (typeof INITIAL_STATE !== "undefined" && INITIAL_STATE && INITIAL_STATE.payment_term_id) {
-					termToSelect = String(INITIAL_STATE.payment_term_id);
-				} else if (bladeSelectedTermId && paymentTermExists(bladeSelectedTermId)) {
-					termToSelect = bladeSelectedTermId;
-				}
+                if (
+                    typeof INITIAL_STATE !== "undefined" &&
+                    INITIAL_STATE &&
+                    INITIAL_STATE.payment_term_id
+                ) {
+                    termToSelect = String(INITIAL_STATE.payment_term_id);
+                } else if (
+                    bladeSelectedTermId &&
+                    paymentTermExists(bladeSelectedTermId)
+                ) {
+                    termToSelect = bladeSelectedTermId;
+                }
 
-				setPaymentTermsUI(termToSelect);
-				setInvoiceDatesUI();
+                setPaymentTermsUI(termToSelect);
+                setInvoiceDatesUI();
 
-				// hydrate after products + terms loaded
-				hydrateStateAfterLoad();
+                // hydrate after products + terms loaded
+                hydrateStateAfterLoad();
 
-				// Check status for button visibility
-				const isConfirmed = typeof INITIAL_STATE !== "undefined" && INITIAL_STATE.status === "CONFIRMED";
-				updateButtonVisibility(isConfirmed);
+                // Check status for button visibility
+                const isConfirmed =
+                    typeof INITIAL_STATE !== "undefined" &&
+                    INITIAL_STATE.status === "CONFIRMED";
+                updateButtonVisibility(isConfirmed);
 
-				// SETUP DISCOUNT LABEL
-				if (typeof CUSTOMER_DISCOUNT_PERCENT !== "undefined") {
-					$("#customerDiscountPercent").text(Number(CUSTOMER_DISCOUNT_PERCENT).toFixed(2));
-				}
-			})
-			.fail(function () {
-				$("#productsGrid").html(
-					`<div class="col-12"><div class="alert alert-danger">Failed to load JSON data.</div></div>`
-				);
-			});
+                // SETUP DISCOUNT LABEL
+                if (typeof CUSTOMER_DISCOUNT_PERCENT !== "undefined") {
+                    $("#customerDiscountPercent").text(
+                        Number(CUSTOMER_DISCOUNT_PERCENT).toFixed(2)
+                    );
+                }
+            })
+            .fail(function () {
+                $("#productsGrid").html(
+                    `<div class="col-12"><div class="alert alert-danger">Failed to load JSON data.</div></div>`
+                );
+            });
 
-		// payment terms -> due date
-		$("#paymentTermSelect").on("change", syncDueDateFromSelectedTerm);
+        // payment terms -> due date
+        $("#paymentTermSelect").on("change", syncDueDateFromSelectedTerm);
 
-		// filters
-		$("#searchInput").on("input", renderAllProducts);
-		$("#categoryFilter, #brandFilter").on("change", renderAllProducts);
+        // filters
+        $("#searchInput").on("input", renderAllProducts);
+        $("#categoryFilter, #brandFilter").on("change", renderAllProducts);
 
-		// product click -> modal
-		$(document).on("click", ".product-card", function () {
-			openVariantModal($(this).data("product-id"));
-		});
+        // product click -> modal
+        $(document).on("click", ".product-card", function () {
+            openVariantModal($(this).data("product-id"));
+        });
 
-		// variant click -> select + auto add
-		$(document).on("click", ".variant-card", function () {
-			selectVariant($(this).data("variant-id"), true);
-		});
+        // variant click -> select + auto add
+        $(document).on("click", ".variant-card", function () {
+            selectVariant($(this).data("variant-id"), true);
+        });
 
-		// fallback add button
-		$("#addVariantBtn").on("click", function () {
-			if (!activeProduct || !selectedVariant) return;
-			if (safeNum(selectedVariant.stock) <= 0) return;
-			upsertCartItem(activeProduct, selectedVariant);
-			$("#variantModal").modal("hide");
-		});
+        // fallback add button
+        $("#addVariantBtn").on("click", function () {
+            if (!activeProduct || !selectedVariant) return;
+            if (safeNum(selectedVariant.stock) <= 0) return;
+            upsertCartItem(activeProduct, selectedVariant);
+            $("#variantModal").modal("hide");
+        });
 
-		// DISCOUNT TOGGLE
-		$("#applyCustomerDiscountToggle").on("change", function () {
-			const isChecked = $(this).is(":checked");
-			let discPercent = 0;
+        // DISCOUNT TOGGLE
+        $("#applyCustomerDiscountToggle").on("change", function () {
+            const isChecked = $(this).is(":checked");
+            let discPercent = 0;
 
-			if (typeof CUSTOMER_DISCOUNT_PERCENT !== "undefined") {
-				discPercent = Number(CUSTOMER_DISCOUNT_PERCENT) || 0;
-			}
+            if (typeof CUSTOMER_DISCOUNT_PERCENT !== "undefined") {
+                discPercent = Number(CUSTOMER_DISCOUNT_PERCENT) || 0;
+            }
 
-			if (isChecked) {
-				// Apply to all
-				for (const item of cart.values()) {
-					item.discountPercent = discPercent;
-					cart.set(item.variantId, item);
-				}
-			} else {
-				// Remove from all (Reset to 0)
-				for (const item of cart.values()) {
-					item.discountPercent = 0;
-					cart.set(item.variantId, item);
-				}
-			}
+            if (isChecked) {
+                // Apply to all
+                for (const item of cart.values()) {
+                    item.discountPercent = discPercent;
+                    cart.set(item.variantId, item);
+                }
+            } else {
+                // Remove from all (Reset to 0)
+                for (const item of cart.values()) {
+                    item.discountPercent = 0;
+                    cart.set(item.variantId, item);
+                }
+            }
 
-			renderCart();
-		});
+            renderCart();
+        });
 
-		// cart edits
-		$(document).on("input", ".qty-input, .disc-input", function () {
-			const row = $(this).closest("tr");
-			const vid = String(row.data("variant-id") || "");
-			const item = cart.get(vid);
-			if (!item) return;
+        // cart edits
+        $(document).on("input", ".qty-input, .disc-input", function () {
+            const row = $(this).closest("tr");
+            const vid = String(row.data("variant-id") || "");
+            const item = cart.get(vid);
+            if (!item) return;
 
-			const qty = Math.max(1, Math.floor(safeNum(row.find(".qty-input").val())));
-			const maxQty = Math.max(1, safeNum(item.stock));
-			item.qty = Math.min(qty, maxQty);
+            const qty = Math.max(
+                1,
+                Math.floor(safeNum(row.find(".qty-input").val()))
+            );
+            const maxQty = Math.max(1, safeNum(item.stock));
+            item.qty = Math.min(qty, maxQty);
 
-			const disc = Math.min(100, Math.max(0, safeNum(row.find(".disc-input").val())));
-			item.discountPercent = disc;
+            const disc = Math.min(
+                100,
+                Math.max(0, safeNum(row.find(".disc-input").val()))
+            );
+            item.discountPercent = disc;
 
-			cart.set(vid, item);
-			row.find(".qty-input").val(item.qty);
-			row.find(".disc-input").val(item.discountPercent);
+            cart.set(vid, item);
+            row.find(".qty-input").val(item.qty);
+            row.find(".disc-input").val(item.discountPercent);
 
-			updateTotalsUI();
-		});
+            updateTotalsUI();
+        });
 
-		// remove
-		$(document).on("click", ".remove-btn", function () {
-			const vid = String($(this).closest("tr").data("variant-id") || "");
-			cart.delete(vid);
-			renderCart();
-		});
+        // remove
+        $(document).on("click", ".remove-btn", function () {
+            const vid = String($(this).closest("tr").data("variant-id") || "");
+            cart.delete(vid);
+            renderCart();
+        });
 
-		// totals inputs
-		$("#shippingInput, #additionalInput, #vatRateInput, #currencySelect").on(
-			"input change",
-			updateTotalsUI
-		);
+        // totals inputs
+        $(
+            "#shippingInput, #additionalInput, #vatRateInput, #currencySelect"
+        ).on("input change", updateTotalsUI);
 
-		$("#clearCartBtn").on("click", function () {
-			cart.clear();
-			renderCart();
-		});
+        $("#clearCartBtn").on("click", function () {
+            cart.clear();
+            renderCart();
+        });
 
-		// Save Draft
-		$("#saveDraftBtn").on("click", function () {
-			saveOrder(false);
-		});
+        // Save Draft
+        $("#saveDraftBtn").on("click", function () {
+            saveOrder(false);
+        });
 
-		// Generate Order
-		$("#generateOrderBtn").on("click", function () {
-			if (confirm("Are you sure you want to generate this order? This will confirm the status.")) {
-				saveOrder(true);
-			}
-		});
+        // Generate Order
+        $("#generateOrderBtn").on("click", function () {
+            if (
+                confirm(
+                    "Are you sure you want to generate this order? This will confirm the status."
+                )
+            ) {
+                saveOrder(true);
+            }
+        });
 
-		function saveOrder(isGenerating) {
-			if (typeof UPDATE_URL === "undefined" || !UPDATE_URL) {
-				alert("UPDATE_URL not configured in Blade.");
+        function saveOrder(isGenerating) {
+            if (typeof UPDATE_URL === "undefined" || !UPDATE_URL) {
+                alert("UPDATE_URL not configured in Blade.");
+                return;
+            }
+
+            const payload = buildUpdatePayload();
+            if (isGenerating) {
+                payload.action = "generate";
+            }
+
+            const btn = isGenerating
+                ? $("#generateOrderBtn")
+                : $("#saveDraftBtn");
+            const originalText = btn.text();
+
+            btn.prop("disabled", true).text("Saving...");
+
+            $.ajax({
+                url: UPDATE_URL,
+                type: "POST",
+                data: payload,
+                success: function (res) {
+                    if (res && res.success) {
+                        if (res.redirect_url) {
+                            window.location.href = res.redirect_url;
+                            return;
+                        }
+
+                        applyServerTotals(res.totals);
+                        if (isGenerating) {
+                            updateButtonVisibility(true);
+                            alert(
+                                "Order generated and confirmed successfully."
+                            );
+                        } else {
+                            alert("Order updated successfully.");
+                        }
+                    } else {
+                        alert(res?.message || "Error saving order.");
+                    }
+                },
+                error: function (xhr) {
+                    alert(
+                        "Failed to save order: " +
+                            (xhr.responseJSON?.message || "Unknown error")
+                    );
+                },
+                complete: function () {
+                    btn.prop("disabled", false).text(originalText);
+                },
+            });
+        }
+
+        // Download PDF / Print
+        $("#downloadPdfBtn").on("click", function (e) {
+            e.preventDefault();
+            if (typeof PRINT_URL !== "undefined" && PRINT_URL) {
+                window.open(PRINT_URL, "_blank");
+            } else {
+                alert("Print URL not available.");
+            }
+        });
+
+        		// Generate Invoice Stub
+		$("#createInvoiceBtn").on("click", function (e) {
+			e.preventDefault();
+			
+			if (typeof GENERATE_INVOICE_URL === "undefined" || !GENERATE_INVOICE_URL) {
+				alert("Invoice generation not available (save order first).");
 				return;
 			}
 
-			const payload = buildUpdatePayload();
-			if (isGenerating) {
-				payload.action = "generate";
-			}
+			if (!confirm("Generate Invoice from this Order?")) return;
 
-			const btn = isGenerating ? $("#generateOrderBtn") : $("#saveDraftBtn");
-			const originalText = btn.text();
-
-			btn.prop("disabled", true).text("Saving...");
+			const btn = $(this);
+			const originalText = btn.html();
+			btn.prop("disabled", true).html('<i class="fas fa-spinner fa-spin mr-2"></i> Generating...');
 
 			$.ajax({
-				url: UPDATE_URL,
+				url: GENERATE_INVOICE_URL,
 				type: "POST",
-				data: payload,
+				data: {
+					_token: csrfToken()
+				},
 				success: function (res) {
 					if (res && res.success) {
+						alert(res.message);
 						if (res.redirect_url) {
 							window.location.href = res.redirect_url;
-							return;
-						}
-
-						applyServerTotals(res.totals);
-						if (isGenerating) {
-							updateButtonVisibility(true);
-							alert("Order generated and confirmed successfully.");
 						} else {
-							alert("Order updated successfully.");
+							// Reload to see status change
+							window.location.reload();
 						}
 					} else {
-						alert(res?.message || "Error saving order.");
+						alert(res?.message || "Error generating invoice.");
 					}
 				},
 				error: function (xhr) {
-					alert("Failed to save order: " + (xhr.responseJSON?.message || "Unknown error"));
+					alert("Failed: " + (xhr.responseJSON?.message || "Unknown error"));
 				},
 				complete: function () {
-					btn.prop("disabled", false).text(originalText);
+					btn.prop("disabled", false).html(originalText);
 				},
 			});
-		}
+		});
 
-		// Download PDF / Print
-		$("#downloadPdfBtn").on("click", function (e) {
+
+
+		// Preview PDF Handler
+		$("#previewPdfBtn").on("click", function(e) {
 			e.preventDefault();
 			if (typeof PRINT_URL !== "undefined" && PRINT_URL) {
-				window.open(PRINT_URL, "_blank");
+				// Open in a small popup window for "Preview" feel, or just new tab
+				const width = 1000;
+				const height = 800;
+				const left = (screen.width - width) / 2;
+				const top = (screen.height - height) / 2;
+				window.open(PRINT_URL, "PDFPreview", `width=${width},height=${height},top=${top},left=${left},scrollbars=yes,resizable=yes`);
 			} else {
-				alert("Print URL not available.");
+				alert("Preview not available.");
 			}
 		});
 
-		// Generate Invoice Stub
-		$("#createInvoiceBtn").on("click", function (e) {
-			e.preventDefault();
-			alert("Generate Invoice functionality will be implemented soon.");
-		});
+        /* ===================== CUSTOMER CHANGE LOGIC ===================== */
+        let targetCustomerType = null; // 'sell_to' or 'bill_to'
 
-		$("#variantModal").on("hidden.bs.modal", function () {
-			activeProduct = null;
-			selectedVariant = null;
-			$("#variantGrid").empty();
-			$("#addVariantBtn").prop("disabled", true);
-		});
-	}
+        function renderCustomerList(list) {
+            const container = $("#customerList");
+            container.empty();
 
-	$(boot);
+            if (list.length === 0) {
+                container.html(
+                    '<div class="p-3 text-muted text-center">No customers found.</div>'
+                );
+                return;
+            }
+
+            list.forEach((c) => {
+                const name = escapeHtml(c.name || "Unknown");
+                const email = escapeHtml(c.email || "");
+                const phone = escapeHtml(c.phone || "");
+
+                container.append(`
+					<a href="#" class="list-group-item list-group-item-action customer-item" data-id="${c.uuid}">
+						<div class="d-flex w-100 justify-content-between">
+							<h6 class="mb-1 text-dark font-weight-bold">${name}</h6>
+							<small class="text-muted">${phone}</small>
+						</div>
+						<small class="text-muted">${email}</small>
+					</a>
+				`);
+            });
+        }
+
+        $("#changeSellToBtn, #changeSellToBtn i").on("click", function (e) {
+            // .closest to ensure we get button if icon clicked, though handler is on both
+            const btn = $(e.target).closest("button");
+            targetCustomerType = "sell_to";
+            $("#customerModal .modal-title").text("Select Customer (Sell To)");
+            $("#customerSearchInput").val("");
+            renderCustomerList(customers);
+            $("#customerModal").modal("show");
+        });
+
+        $("#changeBillToBtn, #changeBillToBtn i").on("click", function (e) {
+            targetCustomerType = "bill_to";
+            $("#customerModal .modal-title").text("Select Customer (Bill To)");
+            $("#customerSearchInput").val("");
+            renderCustomerList(customers);
+            $("#customerModal").modal("show");
+        });
+
+        $("#customerSearchInput").on("input", function () {
+            const q = $(this).val().toLowerCase();
+            const filtered = customers.filter((c) => {
+                const n = (c.name || "").toLowerCase();
+                const e = (c.email || "").toLowerCase();
+                const p = (c.phone || "").toLowerCase();
+                return n.includes(q) || e.includes(q) || p.includes(q);
+            });
+            renderCustomerList(filtered);
+        });
+
+        $(document).on("click", ".customer-item", function (e) {
+            e.preventDefault();
+            const uuid = $(this).data("id");
+            const customer = customers.find((c) => c.uuid === uuid);
+
+            if (!customer) return;
+
+            // Update UI
+            const name = escapeHtml(customer.name);
+            const phone = customer.phone
+                ? `<span title="${escapeHtml(
+                      customer.phone
+                  )}"><i class="fas fa-phone-alt mr-1"></i>${escapeHtml(
+                      customer.phone
+                  )}</span>`
+                : "";
+            const email = customer.email
+                ? `<span title="${escapeHtml(
+                      customer.email
+                  )}"><i class="fas fa-envelope mr-1"></i>${escapeHtml(
+                      customer.email
+                  )}</span>`
+                : "";
+
+            if (targetCustomerType === "sell_to") {
+                const card = $("#changeSellToBtn").closest(
+                    ".customer-mini-card"
+                );
+                card.find(".customer-mini-name").text(name).attr("title", name);
+                card.find(".customer-mini-line").html(`${phone}${email}`);
+
+                // Store in a global or data attr if needed for payload
+                // We'll attach to the container to retrieve later
+                $("#posContainer").data("sell-to-uuid", uuid);
+            } else if (targetCustomerType === "bill_to") {
+                const card = $("#changeBillToBtn").closest(
+                    ".customer-mini-card"
+                );
+                card.find(".customer-mini-name").text(name).attr("title", name);
+                card.find(".customer-mini-line").html(`${phone}${email}`);
+
+                $("#posContainer").data("bill-to-uuid", uuid);
+            }
+
+            $("#customerModal").modal("hide");
+        });
+
+        $("#variantModal").on("hidden.bs.modal", function () {
+            activeProduct = null;
+            selectedVariant = null;
+            $("#variantGrid").empty();
+            $("#addVariantBtn").prop("disabled", true);
+        });
+    }
+
+    $(boot);
 })();

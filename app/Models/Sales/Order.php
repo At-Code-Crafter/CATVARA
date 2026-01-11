@@ -111,5 +111,12 @@ class Order extends Model
         return $this->morphOne(Address::class, 'addressable')->where('type', 'SHIPPING');
     }
 
+    public function invoice()
+    {
+        // Invoice source_id = order.id
+        // invoice.source_type = Order::class
+        return $this->hasOne(\App\Models\Accounting\Invoice::class, 'source_id')->where('source_type', self::class);
+    }
+
 
 }

@@ -164,7 +164,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
                 // Route::get('roles/{role}/permissions', [RolePermissionController::class, 'edit'])
                 //     ->name('roles.permissions.edit');
-
+    
                 // Route::put('roles/{role}/permissions', [RolePermissionController::class, 'update'])
                 //     ->name('roles.permissions.update');
             });
@@ -184,9 +184,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
             // Route::post('quotes/{quote}/accept', [\App\Http\Controllers\Admin\QuoteController::class, 'accept'])->name('quotes.accept');
             // Route::post('quotes/{quote}/cancel', [\App\Http\Controllers\Admin\QuoteController::class, 'cancel'])->name('quotes.cancel');
             // Route::post('quotes/{quote}/convert-to-order', [\App\Http\Controllers\Admin\QuoteController::class, 'convertToOrder'])->name('quotes.convertToOrder');
-
+    
             // Custom routes BEFORE resource to avoid conflicts
             Route::get('sales-orders/{sales_order}/print', [\App\Http\Controllers\Admin\Sales\SalesOrderController::class, 'printOrder'])->name('sales-orders.print');
+            Route::post('sales-orders/{sales_order}/generate-invoice', [\App\Http\Controllers\Admin\Accounting\InvoiceController::class, 'storeFromOrder'])->name('sales-orders.generate-invoice');
+            Route::get('invoices/{invoice}/print', [\App\Http\Controllers\Admin\Accounting\InvoiceController::class, 'print'])->name('invoices.print');
             Route::get('sales-orders-data', [\App\Http\Controllers\Admin\Sales\SalesOrderController::class, 'data'])->name('sales-orders.data');
             Route::resource('sales-orders', \App\Http\Controllers\Admin\Sales\SalesOrderController::class);
 
@@ -200,4 +202,4 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('{company}/invoice-preview/{orderid}', [\App\Http\Controllers\Admin\Sales\SalesOrderController::class, 'invoicePreview'])->whereUuid('company')->whereNumber('orderid')->name('invoice-preview');
 });
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';
