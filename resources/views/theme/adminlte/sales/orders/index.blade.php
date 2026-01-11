@@ -3,7 +3,7 @@
 @section('title', 'Sales Orders')
 
 @section('content-header')
-<link rel="stylesheet" href="{{ asset('assets/css/enterprise.css') }}">
+  <link rel="stylesheet" href="{{ asset('assets/css/enterprise.css') }}">
   <div class="row mb-2 align-items-center">
     <div class="col-lg-8 col-md-12">
       <div class="d-flex align-items-start">
@@ -120,13 +120,34 @@
 
 @push('scripts')
   <script>
-    $(function() {
+    $(function () {
 
       // Select2
       $('.select2').select2({
         theme: 'bootstrap4',
         width: '100%'
       });
+
+      // Read URL parameters to pre-populate filters from dashboard links
+      const urlParams = new URLSearchParams(window.location.search);
+      const filterStatusId = urlParams.get('status_id');
+      const filterCustomerId = urlParams.get('customer_id');
+      const filterDateFrom = urlParams.get('date_from');
+      const filterDateTo = urlParams.get('date_to');
+
+      // Pre-populate filter fields
+      if (filterStatusId) {
+        $('#filter_status').val(filterStatusId);
+      }
+      if (filterCustomerId) {
+        $('#filter_customer').val(filterCustomerId).trigger('change');
+      }
+      if (filterDateFrom) {
+        $('#filter_date_from').val(filterDateFrom);
+      }
+      if (filterDateTo) {
+        $('#filter_date_to').val(filterDateTo);
+      }
 
       // DataTable
       var table = $('#orders-table').DataTable({
@@ -137,7 +158,7 @@
         pageLength: 25,
         ajax: {
           url: '{{ company_route('sales-orders.data') }}',
-          data: function(d) {
+          data: function (d) {
             d.customer_id = $('#filter_customer').val();
             d.status_id = $('#filter_status').val();
             d.date_from = $('#filter_date_from').val();
@@ -145,34 +166,34 @@
           }
         },
         columns: [{
-            data: 'order_number',
-            name: 'order_number',
-            className: 'pl-4'
-          },
-          {
-            data: 'created_at',
-            name: 'created_at'
-          },
-          {
-            data: 'customer_name',
-            name: 'customer.display_name'
-          },
-          {
-            data: 'status',
-            name: 'status.name',
-            orderable: false
-          },
-          {
-            data: 'grand_total',
-            name: 'grand_total'
-          },
-          {
-            data: 'actions',
-            name: 'actions',
-            orderable: false,
-            searchable: false,
-            className: 'd-flex justify-content-end pr-4'
-          }
+          data: 'order_number',
+          name: 'order_number',
+          className: 'pl-4'
+        },
+        {
+          data: 'created_at',
+          name: 'created_at'
+        },
+        {
+          data: 'customer_name',
+          name: 'customer.display_name'
+        },
+        {
+          data: 'status',
+          name: 'status.name',
+          orderable: false
+        },
+        {
+          data: 'grand_total',
+          name: 'grand_total'
+        },
+        {
+          data: 'actions',
+          name: 'actions',
+          orderable: false,
+          searchable: false,
+          className: 'd-flex justify-content-end pr-4'
+        }
         ],
         order: [
           [1, 'desc']
@@ -182,26 +203,26 @@
           searchPlaceholder: "Quick search...",
           search: ""
         },
-        drawCallback: function() {
+        drawCallback: function () {
           // Tooltips inside table (for action icons)
           if ($.fn.tooltip) $('[data-toggle="tooltip"]').tooltip();
         }
       });
 
       // Make the built-in search input use enterprise input look (without adding page CSS)
-      setTimeout(function() {
+      setTimeout(function () {
         $('.dataTables_filter input')
           .addClass('form-control ent-control')
           .css('width', '260px');
       }, 0);
 
       // Apply filters
-      $('#btn_apply_filters').on('click', function() {
+      $('#btn_apply_filters').on('click', function () {
         table.ajax.reload();
       });
 
       // Clear filters
-      $('#btn_reset_filters').on('click', function() {
+      $('#btn_reset_filters').on('click', function () {
         $('#filter_customer').val('').trigger('change');
         $('#filter_status').val('');
         $('#filter_date_from').val('');
