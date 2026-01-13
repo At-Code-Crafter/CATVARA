@@ -206,6 +206,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
                 Route::get('payments/data', [\App\Http\Controllers\Admin\Accounting\PaymentController::class, 'data'])->name('payments.data');
                 Route::get('payments/stats', [\App\Http\Controllers\Admin\Accounting\PaymentController::class, 'stats'])->name('payments.stats');
                 Route::get('payments/unallocated', [\App\Http\Controllers\Admin\Accounting\PaymentController::class, 'unallocated'])->name('payments.unallocated');
+                Route::get('payments/customer-documents', [\App\Http\Controllers\Admin\Accounting\PaymentController::class, 'customerDocuments'])->name('payments.customer-documents');
                 Route::post('payments/{payment}/confirm', [\App\Http\Controllers\Admin\Accounting\PaymentController::class, 'confirm'])->name('payments.confirm');
                 Route::post('payments/{payment}/cancel', [\App\Http\Controllers\Admin\Accounting\PaymentController::class, 'cancel'])->name('payments.cancel');
                 Route::post('payments/{payment}/apply', [\App\Http\Controllers\Admin\Accounting\PaymentController::class, 'apply'])->name('payments.apply');

@@ -498,6 +498,57 @@ class PaymentController extends Controller
     }
 
     /**
+     * Get customer's pending orders/invoices for payment allocation
+     */
+    public function customerDocuments(Company $company, Request $request)
+    {
+        $companyId = $company->id;
+        $customerId = $request->customer_id;
+        $type = $request->type ?? 'order';
+
+        if (!$customerId) {
+            return response()->json([]);
+        }
+
+        if ($type === 'order') {
+            // Get orders that are not fully paid
+            $orders = Order::where('company_id', $companyId)
+                ->where('customer_id', $customerId)
+                ->whereHas('status', function ($query) {
+                    // Only get orders with active (non-final) statuses
+                    $query->where('is_final', false)->where('is_active', true);
+                })
+                ->with(['paymentApplications', 'status'])
+                ->orderBy('created_at', 'desc')
+                ->get()
+                ->map(function ($order) {
+                    $paidAmount = $order->paymentApplications->sum('amount');
+                    $balance = $order->grand_total - $paidAmount;
+
+                    return [
+                        'id' => $order->id,
+                        'number' => $order->order_number,
+                        'date' => $order->created_at->format('M d, Y'),
+                        'total' => (float) $order->grand_total,
+                        'paid' => (float) $paidAmount,
+                        'balance' => (float) $balance,
+                        'status' => $order->status?->name ?? 'Unknown',
+                        'text' => $order->order_number . ' - Balance: ' . number_format($balance, 2),
+                    ];
+                })
+                ->filter(function ($order) {
+                    return $order['balance'] > 0; // Only show orders with balance due
+                })
+                ->values();
+
+            return response()->json($orders);
+        }
+
+        // For invoices (if implemented)
+        return response()->json([]);
+    }
+
+    /**
      * Ensure payment belongs to active company
      */
     protected function ensureCompanyAccess(Payment $payment): void

@@ -226,35 +226,39 @@
           </div>
 
           <div class="card-body" id="apply-section" style="{{ $order ? '' : 'display: none;' }}">
+            <p class="text-muted mb-3">
+              <i class="fas fa-info-circle"></i> Select a customer above to see their pending orders/invoices.
+            </p>
+
             <div class="row">
               <div class="col-md-4">
                 <div class="form-group">
                   <label for="apply_to_type">Document Type</label>
                   <select name="apply_to_type" id="apply_to_type" class="form-control">
-                    <option value="">Select Type</option>
                     <option value="order" {{ $order ? 'selected' : '' }}>Sales Order</option>
                     <option value="invoice">Invoice</option>
                   </select>
                 </div>
               </div>
 
-              <div class="col-md-4">
+              <div class="col-md-5">
                 <div class="form-group">
-                  <label for="apply_to_id">Document</label>
-                  <select name="apply_to_id" id="apply_to_id" class="form-control select2">
-                    <option value="">Select Document</option>
+                  <label for="apply_to_id">Document (Outstanding Balance)</label>
+                  <select name="apply_to_id" id="apply_to_id" class="form-control">
+                    <option value="">Select Customer First</option>
                     @if($order)
-                      <option value="{{ $order->id }}" selected>{{ $order->order_number }} - {{ number_format($order->grand_total, 2) }}</option>
+                      <option value="{{ $order->id }}" selected>{{ $order->order_number }} - Balance: {{ number_format($order->grand_total, 2) }}</option>
                     @endif
                   </select>
                 </div>
               </div>
 
-              <div class="col-md-4">
+              <div class="col-md-3">
                 <div class="form-group">
-                  <label for="apply_amount">Apply Amount</label>
+                  <label for="apply_amount">Amount to Apply</label>
                   <input type="number" step="0.01" min="0.01" name="apply_amount" id="apply_amount"
-                    class="form-control" value="{{ old('apply_amount', $order?->grand_total) }}">
+                    class="form-control" value="{{ old('apply_amount', $order?->grand_total) }}"
+                    placeholder="Auto-filled">
                 </div>
               </div>
             </div>
@@ -266,6 +270,23 @@
                 (Total: {{ number_format($order->grand_total, 2) }})
               </div>
             @endif
+
+            <div id="document-info" class="alert alert-light mt-3 mb-0" style="display: none;">
+              <div class="row">
+                <div class="col-md-4">
+                  <small class="text-muted">Order Total</small>
+                  <div class="font-weight-bold" id="doc-total">-</div>
+                </div>
+                <div class="col-md-4">
+                  <small class="text-muted">Already Paid</small>
+                  <div class="font-weight-bold text-success" id="doc-paid">-</div>
+                </div>
+                <div class="col-md-4">
+                  <small class="text-muted">Balance Due</small>
+                  <div class="font-weight-bold text-danger" id="doc-balance">-</div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -323,6 +344,13 @@
         $('#apply-section').toggle(this.checked);
         if (!this.checked) {
           $('#apply_to_type, #apply_to_id, #apply_amount').val('');
+          $('#document-info').hide();
+        } else {
+          // Load documents if customer is already selected
+          var customerId = $('#customer_id').val();
+          if (customerId) {
+            loadCustomerDocuments(customerId, $('#apply_to_type').val() || 'order');
+          }
         }
       });
 
@@ -345,28 +373,111 @@
         }
       });
 
-      // Load documents based on type
+      // Load customer's pending orders when customer is selected
+      $('#customer_id').on('change', function() {
+        var customerId = $(this).val();
+        var $docSelect = $('#apply_to_id');
+        var $typeSelect = $('#apply_to_type');
+
+        // Clear existing options
+        $docSelect.html('<option value="">Select Document</option>');
+        $('#apply_amount').val('');
+        $('#document-info').hide();
+
+        if (!customerId) {
+          return;
+        }
+
+        // Auto-set document type to order if not set
+        if (!$typeSelect.val()) {
+          $typeSelect.val('order');
+        }
+
+        // Load documents and auto-enable apply section if documents found
+        loadCustomerDocuments(customerId, $typeSelect.val(), true);
+      });
+
+      // Load documents based on type change
       $('#apply_to_type').on('change', function() {
         var type = $(this).val();
         var customerId = $('#customer_id').val();
 
-        if (!type) {
+        if (!type || !customerId) {
           $('#apply_to_id').html('<option value="">Select Document</option>');
           return;
         }
 
-        // In production, load via AJAX
-        // For now, placeholder
-        $('#apply_to_id').html('<option value="">Loading...</option>');
+        loadCustomerDocuments(customerId, type, false);
+      });
 
-        var url = type === 'order'
-          ? '{{ company_route("sales-orders.data") }}'
-          : '{{ company_route("invoices.data") ?? "#" }}';
+      // Function to load customer documents
+      function loadCustomerDocuments(customerId, type, autoEnable) {
+        var $docSelect = $('#apply_to_id');
+        $docSelect.html('<option value="">Loading...</option>');
 
-        // Simple placeholder - implement proper AJAX in production
-        setTimeout(function() {
-          $('#apply_to_id').html('<option value="">Select Document</option>');
-        }, 500);
+        $.ajax({
+          url: '{{ company_route("accounting.payments.customer-documents") }}',
+          data: { customer_id: customerId, type: type },
+          success: function(documents) {
+            $docSelect.empty();
+            $docSelect.append('<option value="">Select Document</option>');
+
+            if (documents.length === 0) {
+              $docSelect.append('<option value="" disabled>No pending documents found</option>');
+              $('#document-info').hide();
+              return;
+            }
+
+            documents.forEach(function(doc) {
+              var option = $('<option></option>')
+                .val(doc.id)
+                .text(doc.number + ' - Balance: ' + doc.balance.toFixed(2))
+                .data('balance', doc.balance)
+                .data('total', doc.total)
+                .data('paid', doc.paid);
+              $docSelect.append(option);
+            });
+
+            // Auto-enable apply section and select first document if requested
+            if (autoEnable && documents.length > 0) {
+              // Enable the toggle and show section
+              $('#apply_toggle').prop('checked', true);
+              $('#apply-section').show();
+
+              // Auto-select first document
+              $docSelect.find('option:eq(1)').prop('selected', true);
+              $docSelect.trigger('change');
+            }
+          },
+          error: function() {
+            $docSelect.html('<option value="">Error loading documents</option>');
+            $('#document-info').hide();
+          }
+        });
+      }
+
+      // Auto-fill apply amount when document is selected and show info
+      $('#apply_to_id').on('change', function() {
+        var $selected = $(this).find(':selected');
+        var balance = $selected.data('balance');
+        var total = $selected.data('total');
+        var paid = $selected.data('paid');
+
+        if (balance) {
+          $('#apply_amount').val(balance.toFixed(2));
+          // Also update main amount if empty
+          if (!$('#amount').val()) {
+            $('#amount').val(balance.toFixed(2));
+          }
+
+          // Show document info
+          $('#doc-total').text(total.toFixed(2));
+          $('#doc-paid').text(paid.toFixed(2));
+          $('#doc-balance').text(balance.toFixed(2));
+          $('#document-info').show();
+        } else {
+          $('#document-info').hide();
+        }
       });
 
       // File attachment preview
