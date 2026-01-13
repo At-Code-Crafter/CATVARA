@@ -164,7 +164,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
                 // Route::get('roles/{role}/permissions', [RolePermissionController::class, 'edit'])
                 //     ->name('roles.permissions.edit');
-    
+
                 // Route::put('roles/{role}/permissions', [RolePermissionController::class, 'update'])
                 //     ->name('roles.permissions.update');
             });
@@ -174,6 +174,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
              */
             Route::resource('customers', \App\Http\Controllers\Admin\CustomerController::class);
             Route::get('customers/load/stats', [\App\Http\Controllers\Admin\CustomerController::class, 'stats'])->name('customers.stats');
+            Route::get('customers-search', [\App\Http\Controllers\Admin\CustomerController::class, 'search'])->name('customers.search');
 
             /**
              * Quotes Management (DISABLED)
@@ -184,7 +185,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             // Route::post('quotes/{quote}/accept', [\App\Http\Controllers\Admin\QuoteController::class, 'accept'])->name('quotes.accept');
             // Route::post('quotes/{quote}/cancel', [\App\Http\Controllers\Admin\QuoteController::class, 'cancel'])->name('quotes.cancel');
             // Route::post('quotes/{quote}/convert-to-order', [\App\Http\Controllers\Admin\QuoteController::class, 'convertToOrder'])->name('quotes.convertToOrder');
-    
+
             // Custom routes BEFORE resource to avoid conflicts
             Route::get('sales-orders/{sales_order}/print', [\App\Http\Controllers\Admin\Sales\SalesOrderController::class, 'printOrder'])->name('sales-orders.print');
             Route::post('sales-orders/{sales_order}/generate-invoice', [\App\Http\Controllers\Admin\Accounting\InvoiceController::class, 'storeFromOrder'])->name('sales-orders.generate-invoice');
@@ -196,6 +197,22 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('load-products', [\App\Http\Controllers\Admin\Sales\OrderController::class, 'loadProducts'])->name('load-products');
             Route::get('load-payment-terms', [\App\Http\Controllers\Admin\Sales\OrderController::class, 'loadPaymentTerms'])->name('load-payment-terms');
             Route::get('load-currencies', [\App\Http\Controllers\Admin\Sales\OrderController::class, 'loadCurrencies'])->name('load-currencies');
+
+            /**
+             * Accounting Management
+             */
+            Route::prefix('accounting')->as('accounting.')->group(function () {
+                // Payments
+                Route::get('payments/data', [\App\Http\Controllers\Admin\Accounting\PaymentController::class, 'data'])->name('payments.data');
+                Route::get('payments/stats', [\App\Http\Controllers\Admin\Accounting\PaymentController::class, 'stats'])->name('payments.stats');
+                Route::get('payments/unallocated', [\App\Http\Controllers\Admin\Accounting\PaymentController::class, 'unallocated'])->name('payments.unallocated');
+                Route::post('payments/{payment}/confirm', [\App\Http\Controllers\Admin\Accounting\PaymentController::class, 'confirm'])->name('payments.confirm');
+                Route::post('payments/{payment}/cancel', [\App\Http\Controllers\Admin\Accounting\PaymentController::class, 'cancel'])->name('payments.cancel');
+                Route::post('payments/{payment}/apply', [\App\Http\Controllers\Admin\Accounting\PaymentController::class, 'apply'])->name('payments.apply');
+                Route::delete('payments/applications/{application}', [\App\Http\Controllers\Admin\Accounting\PaymentController::class, 'removeApplication'])->name('payments.applications.remove');
+                Route::delete('payments/{payment}/attachment', [\App\Http\Controllers\Admin\Accounting\PaymentController::class, 'deleteAttachment'])->name('payments.deleteAttachment');
+                Route::resource('payments', \App\Http\Controllers\Admin\Accounting\PaymentController::class);
+            });
         });
 
     // Invoice preview - OUTSIDE company group to avoid model binding

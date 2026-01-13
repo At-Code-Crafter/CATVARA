@@ -3,6 +3,7 @@
 namespace App\Models\Sales;
 
 use App\Models\Accounting\Payment;
+use App\Models\Accounting\PaymentApplication;
 use App\Models\Accounting\PaymentTerm;
 use App\Models\Common\Address;
 use App\Models\Company\Company;
@@ -91,9 +92,68 @@ class Order extends Model
         return $this->belongsTo(User::class, 'created_by');
     }
 
+    /**
+     * Legacy morphMany - if payments are linked directly to order
+     */
     public function payments()
     {
         return $this->morphMany(Payment::class, 'payable');
+    }
+
+    /**
+     * Payment applications (new structure)
+     * Get all payment applications for this order
+     */
+    public function paymentApplications()
+    {
+        return $this->morphMany(PaymentApplication::class, 'paymentable');
+    }
+
+    /**
+     * Get total amount paid for this order
+     */
+    public function getTotalPaidAttribute(): float
+    {
+        return (float) $this->paymentApplications()
+            ->whereHas('payment', fn($q) => $q->whereHas('status', fn($s) => $s->where('code', 'CONFIRMED')))
+            ->sum('amount');
+    }
+
+    /**
+     * Get outstanding balance for this order
+     */
+    public function getOutstandingBalanceAttribute(): float
+    {
+        return max(0, (float) $this->grand_total - $this->total_paid);
+    }
+
+    /**
+     * Check if order is fully paid
+     */
+    public function isFullyPaid(): bool
+    {
+        return $this->outstanding_balance <= 0;
+    }
+
+    /**
+     * Check if order is partially paid
+     */
+    public function isPartiallyPaid(): bool
+    {
+        return $this->total_paid > 0 && !$this->isFullyPaid();
+    }
+
+    /**
+     * Get payment status label
+     */
+    public function getPaymentStatusLabelAttribute(): string
+    {
+        if ($this->isFullyPaid()) {
+            return 'PAID';
+        } elseif ($this->isPartiallyPaid()) {
+            return 'PARTIAL';
+        }
+        return 'UNPAID';
     }
 
     public function addresses()

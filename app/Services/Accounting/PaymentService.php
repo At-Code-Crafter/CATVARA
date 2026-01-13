@@ -7,179 +7,386 @@ use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 
 use App\Models\Accounting\Payment;
+use App\Models\Accounting\PaymentApplication;
 use App\Models\Accounting\PaymentMethod;
-use App\Models\Accounting\PaymentAllocation;
+use App\Models\Accounting\PaymentStatus;
 use App\Models\Company\Company;
+use App\Models\Sales\Order;
 
 class PaymentService
 {
     /**
-     * Create a single payment (money movement).
-     * Allocation is OPTIONAL and handled separately.
+     * Generate unique payment number
+     */
+    public function generatePaymentNumber(int $companyId): string
+    {
+        $prefix = 'PAY';
+        $year = date('Y');
+
+        $lastPayment = Payment::where('company_id', $companyId)
+            ->where('payment_number', 'like', "{$prefix}-{$year}-%")
+            ->orderByRaw('CAST(SUBSTRING_INDEX(payment_number, "-", -1) AS UNSIGNED) DESC')
+            ->first();
+
+        if ($lastPayment) {
+            $lastNumber = (int) substr($lastPayment->payment_number, -5);
+            $nextNumber = $lastNumber + 1;
+        } else {
+            $nextNumber = 1;
+        }
+
+        return sprintf('%s-%s-%05d', $prefix, $year, $nextNumber);
+    }
+
+    /**
+     * Create a new payment
      */
     public function create(array $data): Payment
     {
         return DB::transaction(function () use ($data) {
-
             $this->validateCreatePayload($data);
-
-            // Idempotency protection
-            if (!empty($data['idempotency_key'])) {
-                $existing = Payment::where('company_id', $data['company_id'])
-                    ->where('idempotency_key', $data['idempotency_key'])
-                    ->first();
-
-                if ($existing) {
-                    return $existing;
-                }
-            }
 
             $company = Company::findOrFail($data['company_id']);
 
+            // Get payment method
             $method = PaymentMethod::where('company_id', $company->id)
-                ->where('code', strtoupper($data['method_code']))
+                ->where('id', $data['payment_method_id'])
                 ->where('is_active', true)
                 ->first();
 
             if (!$method) {
-                throw new \RuntimeException("Payment method not configured: {$data['method_code']}");
+                throw new \RuntimeException('Payment method not found or inactive.');
             }
 
             if ($method->requires_reference && empty($data['reference'])) {
-                throw new \RuntimeException('Payment reference is required.');
+                throw new \RuntimeException('Payment reference is required for this method.');
             }
 
-            $paymentCurrencyId = (int) $data['payment_currency_id'];
-            $baseCurrencyId    = (int) ($data['base_currency_id'] ?? $company->base_currency_id);
+            // Get or set default status
+            $status = PaymentStatus::where('code', $data['status'] ?? 'CONFIRMED')->first();
+            if (!$status) {
+                $status = PaymentStatus::where('code', 'CONFIRMED')->first();
+            }
 
+            // Calculate base amount
+            $amount = (string) $data['amount'];
             $exchangeRate = (string) ($data['exchange_rate'] ?? '1.00000000');
-            $amount       = (string) $data['amount'];
-
             $baseAmount = bcmul($amount, $exchangeRate, 6);
 
-            return Payment::create([
+            $payment = Payment::create([
                 'uuid' => (string) Str::uuid(),
-
                 'company_id' => $company->id,
+                'customer_id' => $data['customer_id'] ?? null,
                 'payment_method_id' => $method->id,
-
-                // SOURCE ONLY (NOT accounting logic)
-                'payable_type' => $data['payable_type'] ?? null,
-                'payable_id'   => $data['payable_id'] ?? null,
-
-                'payment_currency_id' => $paymentCurrencyId,
-                'base_currency_id'    => $baseCurrencyId,
-
-                'amount'        => $amount,
-                'exchange_rate' => $exchangeRate,
-                'base_amount'   => $baseAmount,
-                'fx_difference' => '0.000000',
-
+                'status_id' => $status->id,
+                'payment_number' => $this->generatePaymentNumber($company->id),
+                'source' => $data['source'] ?? 'MANUAL',
                 'direction' => $data['direction'] ?? 'IN',
-                'status'    => $data['status'] ?? 'SUCCESS',
-
-                'source'            => $data['source'] ?? null,
-                'document_no'       => $data['document_no'] ?? null,
-                'reference'         => $data['reference'] ?? null,
+                'currency_id' => $data['currency_id'],
+                'amount' => $amount,
+                'exchange_rate' => $exchangeRate,
+                'base_amount' => $baseAmount,
+                'unallocated_amount' => $amount, // Initially all unallocated
+                'reference' => $data['reference'] ?? null,
+                'description' => $data['description'] ?? null,
                 'gateway_reference' => $data['gateway_reference'] ?? null,
-                'gateway_payload'   => $data['gateway_payload'] ?? null,
-
-                'idempotency_key' => $data['idempotency_key'] ?? null,
+                'gateway_payload' => $data['gateway_payload'] ?? null,
                 'paid_at' => $data['paid_at'] ?? Carbon::now(),
+                'received_by' => $data['received_by'] ?? null,
+                'created_by' => $data['created_by'] ?? auth()->id(),
+                'confirmed_by' => $status->code === 'CONFIRMED' ? auth()->id() : null,
+                'confirmed_at' => $status->code === 'CONFIRMED' ? Carbon::now() : null,
             ]);
+
+            return $payment;
         });
     }
 
     /**
-     * ✅ CREATE MULTIPLE PAYMENTS (POS / WEB SPLIT PAYMENTS)
+     * Update an existing payment
      */
-    public function createMany(array $payments, array $context): void
-    {
-        foreach ($payments as $payment) {
-            $this->create(array_merge($payment, $context));
-        }
-    }
-
-    /**
-     * Allocate payment to ANY document
-     * (Order / Invoice / Credit Note / Multiple Orders)
-     */
-    public function allocate(Payment $payment, array $data): PaymentAllocation
+    public function update(Payment $payment, array $data): Payment
     {
         return DB::transaction(function () use ($payment, $data) {
-
-            $this->validateAllocationPayload($data);
-
-            $allocatedAmount = (string) $data['allocated_amount'];
-
-            if (bccomp($allocatedAmount, '0', 6) <= 0) {
-                throw new \RuntimeException('Allocated amount must be greater than zero.');
+            if (!$payment->canBeEdited()) {
+                throw new \RuntimeException('This payment cannot be edited.');
             }
 
-            $exchangeRate = (string) ($data['exchange_rate'] ?? $payment->exchange_rate);
-            $baseAllocated = bcmul($allocatedAmount, $exchangeRate, 6);
+            // Recalculate base amount if amount or rate changed
+            if (isset($data['amount']) || isset($data['exchange_rate'])) {
+                $amount = (string) ($data['amount'] ?? $payment->amount);
+                $exchangeRate = (string) ($data['exchange_rate'] ?? $payment->exchange_rate);
+                $data['base_amount'] = bcmul($amount, $exchangeRate, 6);
+                $data['unallocated_amount'] = $amount; // Reset unallocated
+            }
 
-            return PaymentAllocation::create([
-                'uuid' => (string) Str::uuid(),
+            $payment->update($data);
 
-                'company_id' => $payment->company_id,
-                'payment_id' => $payment->id,
-
-                'allocatable_type' => $data['allocatable_type'],
-                'allocatable_id'   => $data['allocatable_id'],
-
-                'payment_currency_id' => $payment->payment_currency_id,
-                'base_currency_id'    => $payment->base_currency_id,
-
-                'allocated_amount'      => $allocatedAmount,
-                'exchange_rate'         => $exchangeRate,
-                'base_allocated_amount' => $baseAllocated,
-
-                'allocated_at' => $data['allocated_at'] ?? Carbon::now(),
-            ]);
+            return $payment->fresh();
         });
     }
 
     /**
-     * Allocate payment to multiple documents
+     * Confirm a pending payment
      */
-    public function allocateMany(Payment $payment, array $allocations): void
+    public function confirm(Payment $payment): Payment
     {
-        foreach ($allocations as $allocation) {
-            $this->allocate($payment, $allocation);
+        return DB::transaction(function () use ($payment) {
+            if ($payment->isConfirmed()) {
+                throw new \RuntimeException('Payment is already confirmed.');
+            }
+
+            $confirmedStatus = PaymentStatus::where('code', 'CONFIRMED')->first();
+            if (!$confirmedStatus) {
+                throw new \RuntimeException('Confirmed status not found.');
+            }
+
+            $payment->update([
+                'status_id' => $confirmedStatus->id,
+                'confirmed_by' => auth()->id(),
+                'confirmed_at' => Carbon::now(),
+            ]);
+
+            return $payment->fresh();
+        });
+    }
+
+    /**
+     * Cancel a payment
+     */
+    public function cancel(Payment $payment): Payment
+    {
+        return DB::transaction(function () use ($payment) {
+            if (!$payment->canBeCancelled()) {
+                throw new \RuntimeException('This payment cannot be cancelled.');
+            }
+
+            // Check if any applications exist
+            if ($payment->applications()->count() > 0) {
+                throw new \RuntimeException('Cannot cancel payment with existing applications. Remove applications first.');
+            }
+
+            $cancelledStatus = PaymentStatus::where('code', 'CANCELLED')->first();
+            if (!$cancelledStatus) {
+                throw new \RuntimeException('Cancelled status not found.');
+            }
+
+            $payment->update([
+                'status_id' => $cancelledStatus->id,
+            ]);
+
+            return $payment->fresh();
+        });
+    }
+
+    /**
+     * Apply payment to a document (Order, Invoice, etc.)
+     */
+    public function apply(Payment $payment, array $data): PaymentApplication
+    {
+        return DB::transaction(function () use ($payment, $data) {
+            $this->validateApplicationPayload($data);
+
+            if (!$payment->isConfirmed()) {
+                throw new \RuntimeException('Cannot apply an unconfirmed payment.');
+            }
+
+            $applyAmount = (string) $data['amount'];
+
+            if (bccomp($applyAmount, '0', 6) <= 0) {
+                throw new \RuntimeException('Application amount must be greater than zero.');
+            }
+
+            // Check unallocated amount
+            $unallocated = $payment->calculateUnallocatedAmount();
+            if (bccomp($applyAmount, $unallocated, 6) > 0) {
+                throw new \RuntimeException("Cannot apply more than unallocated amount ({$unallocated}).");
+            }
+
+            // Calculate base amount
+            $exchangeRate = (string) ($data['exchange_rate'] ?? $payment->exchange_rate);
+            $baseAmount = bcmul($applyAmount, $exchangeRate, 6);
+
+            $application = PaymentApplication::create([
+                'uuid' => (string) Str::uuid(),
+                'company_id' => $payment->company_id,
+                'payment_id' => $payment->id,
+                'paymentable_type' => $data['paymentable_type'],
+                'paymentable_id' => $data['paymentable_id'],
+                'currency_id' => $payment->currency_id,
+                'amount' => $applyAmount,
+                'exchange_rate' => $exchangeRate,
+                'base_amount' => $baseAmount,
+                'notes' => $data['notes'] ?? null,
+                'applied_by' => auth()->id(),
+                'applied_at' => $data['applied_at'] ?? Carbon::now(),
+            ]);
+
+            // Update unallocated amount on payment
+            $payment->update([
+                'unallocated_amount' => $payment->calculateUnallocatedAmount(),
+            ]);
+
+            // Update order payment status if applicable
+            if ($data['paymentable_type'] === Order::class) {
+                $this->updateOrderPaymentStatus($data['paymentable_id']);
+            }
+
+            return $application;
+        });
+    }
+
+    /**
+     * Remove a payment application
+     */
+    public function removeApplication(PaymentApplication $application): void
+    {
+        DB::transaction(function () use ($application) {
+            $payment = $application->payment;
+            $paymentableType = $application->paymentable_type;
+            $paymentableId = $application->paymentable_id;
+
+            $application->delete();
+
+            // Update unallocated amount on payment
+            $payment->update([
+                'unallocated_amount' => $payment->calculateUnallocatedAmount(),
+            ]);
+
+            // Update order payment status if applicable
+            if ($paymentableType === Order::class) {
+                $this->updateOrderPaymentStatus($paymentableId);
+            }
+        });
+    }
+
+    /**
+     * Apply payment to multiple documents
+     */
+    public function applyMany(Payment $payment, array $applications): array
+    {
+        $results = [];
+        foreach ($applications as $appData) {
+            $results[] = $this->apply($payment, $appData);
+        }
+        return $results;
+    }
+
+    /**
+     * Create payment and immediately apply to document
+     */
+    public function createAndApply(array $paymentData, array $applicationData): array
+    {
+        return DB::transaction(function () use ($paymentData, $applicationData) {
+            $payment = $this->create($paymentData);
+            $application = $this->apply($payment, $applicationData);
+
+            return [
+                'payment' => $payment,
+                'application' => $application,
+            ];
+        });
+    }
+
+    /**
+     * Get total payments received for a document
+     */
+    public function getTotalPaidForDocument(string $type, int $id): string
+    {
+        return (string) PaymentApplication::where('paymentable_type', $type)
+            ->where('paymentable_id', $id)
+            ->whereHas('payment', fn($q) => $q->confirmed())
+            ->sum('amount');
+    }
+
+    /**
+     * Get outstanding balance for a document
+     */
+    public function getOutstandingBalance(string $type, int $id): string
+    {
+        $document = $type::findOrFail($id);
+        $totalPaid = $this->getTotalPaidForDocument($type, $id);
+        $grandTotal = (string) $document->grand_total;
+
+        return bcsub($grandTotal, $totalPaid, 6);
+    }
+
+    /**
+     * Update order payment status based on applications
+     */
+    protected function updateOrderPaymentStatus(int $orderId): void
+    {
+        $order = Order::find($orderId);
+        if (!$order) {
+            return;
+        }
+
+        $totalPaid = $this->getTotalPaidForDocument(Order::class, $orderId);
+        $grandTotal = (string) $order->grand_total;
+
+        if (bccomp($totalPaid, '0', 6) === 0) {
+            $status = 'UNPAID';
+        } elseif (bccomp($totalPaid, $grandTotal, 6) >= 0) {
+            $status = 'PAID';
+        } else {
+            $status = 'PARTIAL';
+        }
+
+        $order->update(['payment_status' => $status]);
+    }
+
+    /**
+     * Validate create payload
+     */
+    protected function validateCreatePayload(array $data): void
+    {
+        $required = ['company_id', 'payment_method_id', 'currency_id', 'amount'];
+
+        foreach ($required as $field) {
+            if (empty($data[$field])) {
+                throw new \InvalidArgumentException("Field '{$field}' is required.");
+            }
+        }
+
+        if ((float) $data['amount'] <= 0) {
+            throw new \InvalidArgumentException('Amount must be greater than zero.');
         }
     }
 
     /**
-     * Refund helper (OUT)
+     * Validate application payload
      */
-    public function refund(array $data): Payment
+    protected function validateApplicationPayload(array $data): void
     {
-        $data['direction'] = 'OUT';
-        $data['status']    = $data['status'] ?? 'REFUNDED';
+        $required = ['paymentable_type', 'paymentable_id', 'amount'];
 
-        return $this->create($data);
-    }
-
-    protected function validateCreatePayload(array $data): void
-    {
-        foreach (
-            ['company_id', 'method_code', 'payment_currency_id', 'amount'] as $field
-        ) {
-            if (!isset($data[$field])) {
-                throw new \InvalidArgumentException("Missing payment field: {$field}");
+        foreach ($required as $field) {
+            if (empty($data[$field])) {
+                throw new \InvalidArgumentException("Field '{$field}' is required.");
             }
         }
     }
 
-    protected function validateAllocationPayload(array $data): void
+    /**
+     * Get payments summary for a company
+     */
+    public function getSummary(int $companyId, ?string $dateFrom = null, ?string $dateTo = null): array
     {
-        foreach (
-            ['allocatable_type', 'allocatable_id', 'allocated_amount'] as $field
-        ) {
-            if (!isset($data[$field])) {
-                throw new \InvalidArgumentException("Missing allocation field: {$field}");
-            }
+        $query = Payment::forCompany($companyId)->confirmed();
+
+        if ($dateFrom) {
+            $query->whereDate('paid_at', '>=', $dateFrom);
         }
+
+        if ($dateTo) {
+            $query->whereDate('paid_at', '<=', $dateTo);
+        }
+
+        return [
+            'total_received' => (string) (clone $query)->incoming()->sum('base_amount'),
+            'total_refunded' => (string) (clone $query)->outgoing()->sum('base_amount'),
+            'total_unallocated' => (string) (clone $query)->sum('unallocated_amount'),
+            'payment_count' => (clone $query)->count(),
+        ];
     }
 }

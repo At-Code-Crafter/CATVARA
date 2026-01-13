@@ -22,7 +22,7 @@
   $hasPos = Route::has('company.pos.orders.index') || Route::has('company.pos.returns.index');
   $hasWeb = Route::has('company.web.orders.index');
   $hasAccounting =
-      Route::has('payments.index') ||
+      Route::has('accounting.payments.index') ||
       Route::has('allocations.index') ||
       Route::has('refunds.index') ||
       Route::has('payment-methods.index');
@@ -245,18 +245,21 @@
           @can('view', 'payments')
             @if ($hasAccounting)
               <li
-                class="nav-item has-treeview {{ $isActive(['payments.*', 'allocations.*', 'refunds.*', 'payment-methods.*']) ? 'menu-open' : '' }}">
+                class="nav-item has-treeview {{ $isActive(['accounting.payments.*', 'allocations.*', 'refunds.*', 'payment-methods.*']) ? 'menu-open' : '' }}">
                 <a href="#"
-                  class="nav-link {{ $isActive(['payments.*', 'allocations.*', 'refunds.*', 'payment-methods.*']) ? 'active' : '' }}">
+                  class="nav-link {{ $isActive(['accounting.payments.*', 'allocations.*', 'refunds.*', 'payment-methods.*']) ? 'active' : '' }}">
                   <i class="nav-icon fas fa-file-invoice-dollar"></i>
                   <p>Accounting <i class="right fas fa-angle-left"></i></p>
                 </a>
                 <ul class="nav nav-treeview">
-                  @if (Route::has('payments.index'))
-                    <li class="nav-item"><a href="{{ company_route('payments.index') }}" class="nav-link"><i
-                          class="far fa-circle nav-icon"></i>
+                  @if (Route::has('accounting.payments.index'))
+                    <li class="nav-item">
+                      <a href="{{ company_route('accounting.payments.index') }}"
+                        class="nav-link {{ $isActive('accounting.payments.*') ? 'active' : '' }}">
+                        <i class="far fa-circle nav-icon"></i>
                         <p>Payments</p>
-                      </a></li>
+                      </a>
+                    </li>
                   @endif
                   @can('view', 'allocations')
                     @if (Route::has('allocations.index'))

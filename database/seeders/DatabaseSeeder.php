@@ -18,6 +18,7 @@ class DatabaseSeeder extends Seeder
         $this->call(CurrencySeeder::class);
         $this->call(CountriesStatesSeeder::class);
         $this->call(OrderSeeder::class);
+        $this->call(PaymentSeeder::class);
 
         //keep in last
         $this->call(VapeShopSeeder::class);

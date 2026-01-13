@@ -132,7 +132,7 @@ class CustomerController extends Controller
     }
 
     /**
-     * Stats API for dashboard cards
+         * Stats API for dashboard cards
      */
     public function stats(Request $request, Company $company)
     {
@@ -151,6 +151,30 @@ class CustomerController extends Controller
             'company_customers' => $companies,
             'individual_customers' => $individuals,
         ]);
+    }
+
+    /**
+     * Search customers for Select2 AJAX
+     */
+    public function search(Request $request, Company $company)
+    {
+        $search = $request->input('q', '');
+        $perPage = 15;
+
+        $query = Customer::where('company_id', $company->id)
+            ->where('is_active', true);
+
+        if ($search) {
+            $query->where(function($q) use ($search) {
+                $q->where('display_name', 'LIKE', "%{$search}%")
+                  ->orWhere('legal_name', 'LIKE', "%{$search}%")
+                  ->orWhere('email', 'LIKE', "%{$search}%")
+                  ->orWhere('phone', 'LIKE', "%{$search}%");
+            });
+        }
+
+        return $query->orderBy('display_name')
+            ->paginate($perPage, ['id', 'display_name', 'email', 'phone']);
     }
 
     /**
