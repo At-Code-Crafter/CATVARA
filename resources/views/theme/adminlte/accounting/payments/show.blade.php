@@ -390,49 +390,130 @@
   {{-- Apply Payment Modal --}}
   @if($payment->isConfirmed() && (float)$payment->unallocated_amount > 0)
     <div class="modal fade" id="applyModal" tabindex="-1" role="dialog" aria-labelledby="applyModalLabel" aria-hidden="true">
-      <div class="modal-dialog" role="document">
+      <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
-          <form action="{{ company_route('accounting.payments.apply', ['payment' => $payment->id]) }}" method="POST">
+          <form action="{{ company_route('accounting.payments.apply', ['payment' => $payment->id]) }}" method="POST" id="applyPaymentForm">
             @csrf
-            <div class="modal-header">
-              <h5 class="modal-title" id="applyModalLabel">Apply Payment</h5>
-              <button type="button" class="close" data-dismiss="modal" data-bs-dismiss="modal" aria-label="Close">
+            <div class="modal-header bg-primary text-white">
+              <h5 class="modal-title" id="applyModalLabel">
+                <i class="fas fa-link mr-2"></i>Apply Payment to Order/Invoice
+              </h5>
+              <button type="button" class="close text-white" data-dismiss="modal" data-bs-dismiss="modal" aria-label="Close">
                 <span aria-hidden="true">&times;</span>
               </button>
             </div>
             <div class="modal-body">
-              <div class="alert alert-info">
-                <strong>Available:</strong> {{ $payment->currency?->symbol }}{{ number_format((float)$payment->unallocated_amount, 2) }}
+              {{-- Available Amount Banner --}}
+              <div class="alert alert-info d-flex align-items-center justify-content-between mb-4">
+                <div>
+                  <i class="fas fa-wallet mr-2"></i>
+                  <strong>Available to Apply:</strong>
+                </div>
+                <div class="h4 mb-0">
+                  {{ $payment->currency?->symbol }}<span id="availableAmount">{{ number_format((float)$payment->unallocated_amount, 2) }}</span>
+                </div>
               </div>
 
+              <div class="row">
+                <div class="col-md-6">
+                  {{-- Document Type --}}
+                  <div class="form-group">
+                    <label><i class="fas fa-file-alt mr-1"></i> Document Type <span class="text-danger">*</span></label>
+                    <select name="paymentable_type" id="docType" class="form-control" required>
+                      <option value="">Select Type</option>
+                      <option value="order" selected>Sales Order</option>
+                      <option value="invoice">Invoice</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  {{-- Customer Filter (optional) --}}
+                  <div class="form-group">
+                    <label><i class="fas fa-user mr-1"></i> Filter by Customer</label>
+                    <select id="customerFilter" class="form-control">
+                      <option value="">All Customers</option>
+                      @if($payment->customer)
+                        <option value="{{ $payment->customer->id }}" selected>{{ $payment->customer->display_name }}</option>
+                      @endif
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              {{-- Order/Invoice Selection --}}
               <div class="form-group">
-                <label>Document Type</label>
-                <select name="paymentable_type" class="form-control" required>
-                  <option value="">Select Type</option>
-                  <option value="order">Sales Order</option>
-                  <option value="invoice">Invoice</option>
+                <label><i class="fas fa-search mr-1"></i> Select Order/Invoice <span class="text-danger">*</span></label>
+                <select name="paymentable_id" id="documentSelect" class="form-control" required>
+                  <option value="">Search or select a document...</option>
                 </select>
+                <small class="text-muted">Search by order number or select from the list</small>
               </div>
 
-              <div class="form-group">
-                <label>Document ID</label>
-                <input type="number" name="paymentable_id" class="form-control" required placeholder="Enter document ID">
+              {{-- Selected Document Info --}}
+              <div id="documentInfo" class="card bg-light mb-3" style="display: none;">
+                <div class="card-body py-2">
+                  <div class="row text-center">
+                    <div class="col-4">
+                      <small class="text-muted d-block">Order Total</small>
+                      <strong id="docTotal">—</strong>
+                    </div>
+                    <div class="col-4">
+                      <small class="text-muted d-block">Already Paid</small>
+                      <strong id="docPaid" class="text-success">—</strong>
+                    </div>
+                    <div class="col-4">
+                      <small class="text-muted d-block">Balance Due</small>
+                      <strong id="docBalance" class="text-danger">—</strong>
+                    </div>
+                  </div>
+                </div>
               </div>
 
-              <div class="form-group">
-                <label>Amount to Apply</label>
-                <input type="number" step="0.01" name="amount" class="form-control" required
-                  max="{{ $payment->unallocated_amount }}" value="{{ $payment->unallocated_amount }}">
+              <div class="row">
+                <div class="col-md-6">
+                  {{-- Amount to Apply --}}
+                  <div class="form-group">
+                    <label><i class="fas fa-money-bill mr-1"></i> Amount to Apply <span class="text-danger">*</span></label>
+                    <div class="input-group">
+                      <div class="input-group-prepend">
+                        <span class="input-group-text">{{ $payment->currency?->symbol ?? '₹' }}</span>
+                      </div>
+                      <input type="number" step="0.01" name="amount" id="applyAmount" class="form-control" required
+                        min="0.01" max="{{ $payment->unallocated_amount }}" value="{{ $payment->unallocated_amount }}"
+                        data-max-available="{{ $payment->unallocated_amount }}">
+                    </div>
+                    <small class="text-muted">Max: <span id="maxApplyHint">{{ $payment->currency?->symbol }}{{ number_format((float)$payment->unallocated_amount, 2) }}</span></small>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  {{-- Quick Amount Buttons --}}
+                  <div class="form-group">
+                    <label>&nbsp;</label>
+                    <div class="btn-group btn-block" role="group">
+                      <button type="button" class="btn btn-outline-secondary btn-sm" id="btnApplyBalance" title="Apply full balance">
+                        <i class="fas fa-balance-scale"></i> Full Balance
+                      </button>
+                      <button type="button" class="btn btn-outline-secondary btn-sm" id="btnApplyAvailable" title="Apply all available">
+                        <i class="fas fa-wallet"></i> All Available
+                      </button>
+                    </div>
+                  </div>
+                </div>
               </div>
 
+              {{-- Notes --}}
               <div class="form-group">
-                <label>Notes</label>
-                <textarea name="notes" class="form-control" rows="2"></textarea>
+                <label><i class="fas fa-sticky-note mr-1"></i> Notes (Optional)</label>
+                <textarea name="notes" class="form-control" rows="2" placeholder="Add any notes about this allocation..."></textarea>
               </div>
             </div>
             <div class="modal-footer">
-              <button type="button" class="btn btn-secondary" data-dismiss="modal" data-bs-dismiss="modal">Cancel</button>
-              <button type="submit" class="btn btn-primary">Apply Payment</button>
+              <button type="button" class="btn btn-secondary" data-dismiss="modal" data-bs-dismiss="modal">
+                <i class="fas fa-times mr-1"></i> Cancel
+              </button>
+              <button type="submit" class="btn btn-primary" id="btnApplySubmit">
+                <i class="fas fa-check mr-1"></i> Apply Payment
+              </button>
             </div>
           </form>
         </div>
@@ -441,10 +522,173 @@
   @endif
 @endsection
 
+@push('styles')
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link href="https://cdn.jsdelivr.net/npm/@ttskch/select2-bootstrap4-theme@1.5.2/dist/select2-bootstrap4.min.css" rel="stylesheet" />
+<style>
+  #applyModal .select2-container { width: 100% !important; }
+  #applyModal .select2-selection { min-height: 38px; }
+  #documentInfo { border-left: 4px solid #17a2b8; }
+</style>
+@endpush
+
 @push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script>
 $(document).ready(function() {
-  // Fallback modal trigger for Bootstrap compatibility
+  const currencySymbol = '{{ $payment->currency?->symbol ?? "₹" }}';
+  const maxAvailable = parseFloat('{{ $payment->unallocated_amount }}');
+  const customerId = '{{ $payment->customer_id ?? "" }}';
+  let selectedDocBalance = 0;
+
+  // Initialize Select2 for document selection
+  $('#documentSelect').select2({
+    theme: 'bootstrap4',
+    placeholder: 'Search by order number...',
+    allowClear: true,
+    dropdownParent: $('#applyModal'),
+    ajax: {
+      url: '{{ company_route("accounting.payments.customer-documents") }}',
+      dataType: 'json',
+      delay: 250,
+      data: function(params) {
+        return {
+          customer_id: $('#customerFilter').val() || customerId,
+          type: $('#docType').val() || 'order',
+          q: params.term
+        };
+      },
+      processResults: function(data) {
+        return {
+          results: data.map(function(doc) {
+            return {
+              id: doc.id,
+              text: doc.number + ' - Balance: ' + currencySymbol + parseFloat(doc.balance).toFixed(2),
+              total: doc.total,
+              paid: doc.paid,
+              balance: doc.balance,
+              status: doc.status
+            };
+          })
+        };
+      },
+      cache: true
+    },
+    minimumInputLength: 0
+  });
+
+  // Load documents on modal open
+  $('#applyModal').on('shown.bs.modal show.bs.modal', function() {
+    loadDocuments();
+  });
+
+  // Reload when type or customer changes
+  $('#docType, #customerFilter').on('change', function() {
+    $('#documentSelect').val(null).trigger('change');
+    loadDocuments();
+  });
+
+  // Load documents into dropdown
+  function loadDocuments() {
+    const type = $('#docType').val() || 'order';
+    const customer = $('#customerFilter').val() || customerId;
+
+    $.get('{{ company_route("accounting.payments.customer-documents") }}', {
+      customer_id: customer,
+      type: type
+    }, function(data) {
+      $('#documentSelect').empty().append('<option value="">Select a document...</option>');
+      data.forEach(function(doc) {
+        const text = doc.number + ' - ' + doc.status + ' - Balance: ' + currencySymbol + parseFloat(doc.balance).toFixed(2);
+        $('#documentSelect').append(new Option(text, doc.id, false, false));
+        // Store data
+        $('#documentSelect option[value="' + doc.id + '"]').data('doc', doc);
+      });
+    });
+  }
+
+  // When document is selected
+  $('#documentSelect').on('select2:select change', function(e) {
+    const docId = $(this).val();
+    if (!docId) {
+      $('#documentInfo').hide();
+      selectedDocBalance = 0;
+      updateAmountHint();
+      return;
+    }
+
+    // Get doc data from Select2 or from stored data
+    let doc = null;
+    if (e.params && e.params.data) {
+      doc = e.params.data;
+    } else {
+      doc = $('#documentSelect option:selected').data('doc');
+    }
+
+    if (doc) {
+      selectedDocBalance = parseFloat(doc.balance) || 0;
+      $('#docTotal').text(currencySymbol + parseFloat(doc.total).toFixed(2));
+      $('#docPaid').text(currencySymbol + parseFloat(doc.paid).toFixed(2));
+      $('#docBalance').text(currencySymbol + selectedDocBalance.toFixed(2));
+      $('#documentInfo').show();
+
+      // Auto-fill amount with min(balance, available)
+      const suggestedAmount = Math.min(selectedDocBalance, maxAvailable);
+      $('#applyAmount').val(suggestedAmount.toFixed(2));
+      updateAmountHint();
+    }
+  });
+
+  // Update max hint
+  function updateAmountHint() {
+    const maxApply = selectedDocBalance > 0 ? Math.min(selectedDocBalance, maxAvailable) : maxAvailable;
+    $('#maxApplyHint').text(currencySymbol + maxApply.toFixed(2));
+    $('#applyAmount').attr('max', maxApply);
+  }
+
+  // Quick buttons
+  $('#btnApplyBalance').on('click', function() {
+    if (selectedDocBalance > 0) {
+      const amount = Math.min(selectedDocBalance, maxAvailable);
+      $('#applyAmount').val(amount.toFixed(2));
+    }
+  });
+
+  $('#btnApplyAvailable').on('click', function() {
+    $('#applyAmount').val(maxAvailable.toFixed(2));
+  });
+
+  // Validate on submit
+  $('#applyPaymentForm').on('submit', function(e) {
+    const amount = parseFloat($('#applyAmount').val()) || 0;
+    const docId = $('#documentSelect').val();
+
+    if (!docId) {
+      e.preventDefault();
+      alert('Please select a document to apply payment to.');
+      return false;
+    }
+
+    if (amount <= 0) {
+      e.preventDefault();
+      alert('Please enter a valid amount.');
+      return false;
+    }
+
+    if (amount > maxAvailable) {
+      e.preventDefault();
+      alert('Amount cannot exceed available balance (' + currencySymbol + maxAvailable.toFixed(2) + ')');
+      return false;
+    }
+
+    if (selectedDocBalance > 0 && amount > selectedDocBalance) {
+      e.preventDefault();
+      alert('Amount cannot exceed document balance (' + currencySymbol + selectedDocBalance.toFixed(2) + ')');
+      return false;
+    }
+  });
+
+  // Modal trigger fallback
   $('[data-target="#applyModal"]').on('click', function(e) {
     e.preventDefault();
     $('#applyModal').modal('show');

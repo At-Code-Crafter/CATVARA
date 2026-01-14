@@ -498,28 +498,37 @@ class PaymentController extends Controller
     }
 
     /**
-     * Get customer's pending orders/invoices for payment allocation
+     * Get pending orders/invoices for payment allocation
+     * Supports filtering by customer and search by order number
      */
     public function customerDocuments(Company $company, Request $request)
     {
         $companyId = $company->id;
         $customerId = $request->customer_id;
         $type = $request->type ?? 'order';
-
-        if (!$customerId) {
-            return response()->json([]);
-        }
+        $search = $request->q ?? $request->search ?? null;
 
         if ($type === 'order') {
             // Get orders that are not fully paid
-            $orders = Order::where('company_id', $companyId)
-                ->where('customer_id', $customerId)
-                ->whereHas('status', function ($query) {
+            $query = Order::where('company_id', $companyId)
+                ->whereHas('status', function ($q) {
                     // Only get orders with active (non-final) statuses
-                    $query->where('is_final', false)->where('is_active', true);
+                    $q->where('is_final', false)->where('is_active', true);
                 })
-                ->with(['paymentApplications', 'status'])
-                ->orderBy('created_at', 'desc')
+                ->with(['paymentApplications', 'status', 'customer']);
+
+            // Filter by customer if provided
+            if ($customerId) {
+                $query->where('customer_id', $customerId);
+            }
+
+            // Search by order number
+            if ($search) {
+                $query->where('order_number', 'like', "%{$search}%");
+            }
+
+            $orders = $query->orderBy('created_at', 'desc')
+                ->limit(50)
                 ->get()
                 ->map(function ($order) {
                     $paidAmount = $order->paymentApplications->sum('amount');
@@ -533,6 +542,7 @@ class PaymentController extends Controller
                         'paid' => (float) $paidAmount,
                         'balance' => (float) $balance,
                         'status' => $order->status?->name ?? 'Unknown',
+                        'customer' => $order->customer?->display_name ?? 'Walk-in',
                         'text' => $order->order_number . ' - Balance: ' . number_format($balance, 2),
                     ];
                 })
