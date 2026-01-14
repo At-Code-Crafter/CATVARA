@@ -15,22 +15,22 @@ class WarehouseController extends Controller
     public function index(Request $request)
     {
         $this->authorize('view', 'warehouses');
-        
-        $warehouses = Warehouse::where('company_id', $request->company->id)->paginate(10);
-        return view('theme.adminlte.inventory.warehouses.index', compact('warehouses'));
+
+        $warehouses = Warehouse::where('company_id', $request->company->id)->latest()->get();
+        return view('catvara.inventory.warehouses.index', compact('warehouses'));
     }
 
     public function create()
     {
         $this->authorize('create', 'warehouses');
-        
-        return view('theme.adminlte.inventory.warehouses.create');
+
+        return view('catvara.inventory.warehouses.form');
     }
 
     public function store(Requests\Inventory\StoreWarehouseRequest $request)
     {
         $this->authorize('create', 'warehouses');
-        
+
         $warehouse = new Warehouse();
         $warehouse->uuid = Str::uuid();
         $warehouse->company_id = $request->company->id;
@@ -58,17 +58,17 @@ class WarehouseController extends Controller
     public function edit(Company $company, Warehouse $warehouse)
     {
         $this->authorize('edit', 'warehouses');
-        
+
         if ($warehouse->company_id !== $company->id) {
             abort(403);
         }
-        return view('theme.adminlte.inventory.warehouses.edit', compact('warehouse'));
+        return view('catvara.inventory.warehouses.form', compact('warehouse'));
     }
 
     public function update(Requests\Inventory\UpdateWarehouseRequest $request, Company $company, Warehouse $warehouse)
     {
         $this->authorize('edit', 'warehouses');
-        
+
         if ($warehouse->company_id !== $company->id) {
             abort(403);
         }
@@ -93,23 +93,23 @@ class WarehouseController extends Controller
     public function destroy(Company $company, Warehouse $warehouse)
     {
         $this->authorize('delete', 'warehouses');
-        
+
         if ($warehouse->company_id !== $company->id) {
             abort(403);
         }
-        
+
         try {
             // Check if stock exists? For now assume soft delete or force delete logic
             // Ideally we check balances first.
-            if($warehouse->inventoryLocation && $warehouse->inventoryLocation->balances()->sum('quantity') > 0) {
-                 return back()->with('error', 'Cannot delete warehouse with active stock.');
+            if ($warehouse->inventoryLocation && $warehouse->inventoryLocation->balances()->sum('quantity') > 0) {
+                return back()->with('error', 'Cannot delete warehouse with active stock.');
             }
-            
-            if($warehouse->inventoryLocation) {
+
+            if ($warehouse->inventoryLocation) {
                 $warehouse->inventoryLocation->delete();
             }
             $warehouse->delete();
-            
+
             return redirect()->back()->with('success', 'Warehouse deleted successfully.');
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Error deleting warehouse.');

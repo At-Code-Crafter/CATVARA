@@ -27,36 +27,52 @@ class ProductController extends Controller
             $query = Product::where('company_id', $request->company->id)
                 ->with(['category', 'variants', 'attachments']); // Eager load attachments for thumbnail
 
-            // Optional: Filter by Category
             if ($request->filled('category_id')) {
                 $query->where('category_id', $request->category_id);
             }
+
+            if ($request->filled('status')) {
+                $query->where('is_active', $request->status);
+            }
+
+            // Note: Stock filtering might require a Join or a specific whereHas on variants.
+            // For now, implementing Status as it was specifically mentioned.
 
             return DataTables::of($query)
                 ->addIndexColumn()
                 ->editColumn('name', function ($row) {
                     $img = $row->image;
-                    $src = $img ? asset('storage/'.$img) : asset('theme/adminlte/dist/img/default-150x150.png');
+                    $src = $img ? asset('storage/' . $img) : asset('theme/adminlte/dist/img/default-150x150.png');
 
-                    return '<div class="d-flex align-items-center">
-                                <img src="'.e($src).'" class="img-thumbnail mr-2" style="width: 50px; height: 50px; object-fit: cover;">
-                                <div>
-                                    <div class="font-weight-bold">'.e($row->name).'</div>
-                                    <small class="text-muted">'.e($row->slug).'</small>
-                                </div>
-                            </div>';
+                    return '
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 border border-slate-100 shadow-sm">
+                                <img src="' . e($src) . '" class="w-full h-full object-cover">
+                            </div>
+                            <div class="min-w-0">
+                                <div class="text-sm font-bold text-slate-800 truncate">' . e($row->name) . '</div>
+                                <div class="text-[10px] font-medium text-slate-400 truncate uppercase tracking-tight">' . e($row->slug) . '</div>
+                            </div>
+                        </div>';
                 })
                 ->addColumn('category_name', function ($row) {
-                    return $row->category ? e($row->category->name) : '<span class="text-muted">Uncategorized</span>';
+                    return $row->category
+                        ? '<span class="text-sm font-medium text-slate-600">' . e($row->category->name) . '</span>'
+                        : '<span class="text-xs text-slate-300 italic">Uncategorized</span>';
                 })
                 ->addColumn('variants_count', function ($row) {
-                    return '<span class="badge badge-info">'.$row->variants->count().' Variants</span>';
+                    return '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-brand-50 text-brand-600 border border-brand-100">' . $row->variants->count() . ' Variants</span>';
                 })
                 ->addColumn('action', function ($row) {
-                    $compact['editUrl'] = company_route('catalog.products.edit', ['product' => $row->id]);
-                    $compact['deleteUrl'] = company_route('catalog.products.destroy', ['product' => $row->id]);
+                    $editUrl = company_route('catalog.products.edit', ['product' => $row->id]);
 
-                    return view('theme.adminlte.components._table-actions', $compact)->render();
+                    return '
+                        <div class="flex items-center justify-end gap-2">
+                             <a href="' . $editUrl . '" class="text-slate-400 hover:text-brand-600 transition-colors p-1" title="Edit Product">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                        </div>
+                    ';
                 })
                 ->rawColumns(['name', 'category_name', 'variants_count', 'action'])
                 ->make(true);
@@ -64,7 +80,7 @@ class ProductController extends Controller
 
         $categories = Category::where('company_id', $request->company->id)->get();
 
-        return view('theme.adminlte.catalog.products.index', compact('categories'));
+        return view('catvara.catalog.products.index', compact('categories'));
     }
 
     public function create()
@@ -74,7 +90,7 @@ class ProductController extends Controller
         $categories = Category::where('company_id', request()->company->id)->get();
         $attributes = Attribute::where('company_id', request()->company->id)->with('values')->get();
 
-        return view('theme.adminlte.catalog.products.create', compact('categories', 'attributes'));
+        return view('catvara.catalog.products.create', compact('categories', 'attributes'));
     }
 
     protected $productService;
@@ -97,7 +113,7 @@ class ProductController extends Controller
         $locations = InventoryLocation::where('company_id', $company->id)->with('locatable')->get();
         $currency = Currency::first(); // Default currency
 
-        return view('theme.adminlte.catalog.products.edit', compact('product', 'categories', 'attributes', 'channels', 'locations', 'currency'));
+        return view('catvara.catalog.products.edit', compact('product', 'categories', 'attributes', 'channels', 'locations', 'currency'));
     }
 
     public function update(Request $request, \App\Models\Company\Company $company, $id)
@@ -166,7 +182,7 @@ class ProductController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
 
-            return redirect()->back()->with('error', 'Error updating product: '.$e->getMessage());
+            return redirect()->back()->with('error', 'Error updating product: ' . $e->getMessage());
         }
     }
 
@@ -190,7 +206,7 @@ class ProductController extends Controller
             $product->company_id = $request->company->id;
             $product->category_id = $request->category_id;
             $product->name = $request->name;
-            $product->slug = Str::slug($request->name).'-'.time();
+            $product->slug = Str::slug($request->name) . '-' . time();
             $product->description = $request->description;
 
             // Save first to get ID
@@ -204,7 +220,7 @@ class ProductController extends Controller
                 $file = $request->file('image');
 
                 $ext = strtolower($file->getClientOriginalExtension() ?: 'jpg');
-                $safeName = Str::slug($product->name).'-'.$product->id.'-'.Str::random(6).'.'.$ext;
+                $safeName = Str::slug($product->name) . '-' . $product->id . '-' . Str::random(6) . '.' . $ext;
 
                 $path = $file->storeAs('products', $safeName, 'public'); // returns products/xxx.jpg
 
@@ -221,7 +237,7 @@ class ProductController extends Controller
                 $variant->uuid = (string) Str::uuid();
                 $variant->company_id = $request->company->id;
                 $variant->product_id = $product->id;
-                $variant->sku = $v['sku'] ?? ($product->slug.'-'.Str::random(4));
+                $variant->sku = $v['sku'] ?? ($product->slug . '-' . Str::random(4));
                 $variant->barcode = $v['barcode'] ?? null;
                 $variant->cost_price = $v['cost'] ?? null;
                 $variant->save();

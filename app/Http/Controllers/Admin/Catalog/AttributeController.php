@@ -19,8 +19,8 @@ class AttributeController extends Controller
         $companyId = $request->company->id;
 
         $prefix = DB::getTablePrefix();
-        $attrTable = $prefix.'attributes';
-        $avTable = $prefix.'attribute_values';
+        $attrTable = $prefix . 'attributes';
+        $avTable = $prefix . 'attribute_values';
 
         $query = DB::table('attributes')
             ->where('attributes.company_id', $companyId)
@@ -33,8 +33,8 @@ class AttributeController extends Controller
             ])
             ->selectRaw(
                 '(SELECT GROUP_CONCAT(av.value ORDER BY av.sort_order SEPARATOR ", ")
-              FROM '.$avTable.' av
-              WHERE av.attribute_id = '.$attrTable.'.id
+              FROM ' . $avTable . ' av
+              WHERE av.attribute_id = ' . $attrTable . '.id
             ) as values_list'
             );
 
@@ -46,27 +46,27 @@ class AttributeController extends Controller
             return DataTables::of($query)
                 ->addIndexColumn()
 
-                ->editColumn('code', fn ($row) => '<code>'.e($row->code).'</code>')
+                ->editColumn('code', fn($row) => '<code class="text-xs font-mono text-slate-500 bg-slate-100 px-2 py-0.5 rounded">' . e($row->code) . '</code>')
 
                 ->addColumn('values_badges', function ($row) {
                     $list = trim((string) ($row->values_list ?? ''));
 
                     if ($list === '') {
-                        return '<span class="text-muted">—</span>';
+                        return '<span class="text-slate-300 text-xs">—</span>';
                     }
 
                     $items = array_values(array_filter(array_map('trim', explode(',', $list))));
-                    $max = 6;
+                    $max = 5;
 
-                    $html = '<div class="d-flex flex-wrap" style="gap:6px;">';
+                    $html = '<div class="flex flex-wrap gap-1.5">';
                     foreach (array_slice($items, 0, $max) as $val) {
-                        $html .= '<span class="badge badge-secondary">'.e($val).'</span>';
+                        $html .= '<span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-slate-100 text-slate-600 border border-slate-200">' . e($val) . '</span>';
                     }
 
                     if (count($items) > $max) {
                         $more = count($items) - $max;
                         $full = e(implode(', ', $items));
-                        $html .= '<span class="badge badge-light border" data-toggle="tooltip" title="'.$full.'">+'.$more.' more</span>';
+                        $html .= '<span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-brand-50 text-brand-700 border border-brand-100 cursor-help" title="' . $full . '">+' . $more . ' more</span>';
                     }
 
                     $html .= '</div>';
@@ -74,43 +74,34 @@ class AttributeController extends Controller
                     return $html;
                 })
 
-                ->addColumn('status_badge', fn ($row) => ((int) $row->is_active === 1)
-                    ? '<span class="badge badge-success">Active</span>'
-                    : '<span class="badge badge-danger">Inactive</span>')
+                ->addColumn('status_badge', fn($row) => ((int) $row->is_active === 1)
+                    ? '<span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-600/20">Active</span>'
+                    : '<span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-slate-50 text-slate-600 ring-1 ring-inset ring-slate-500/20">Inactive</span>')
 
                 ->addColumn('action', function ($row) {
                     $editUrl = company_route('catalog.attributes.edit', ['attribute' => $row->id]);
 
                     return '
-                  <div class="d-inline-flex align-items-center" style="gap:8px;">
-                    <a href="'.e($editUrl).'" class="btn btn-sm btn-outline-primary"
-                       data-toggle="tooltip" title="Edit Attribute">
-                       <i class="fas fa-pen"></i>
-                    </a>
-                  </div>
-                ';
-                })
-                ->addColumn('action', function ($row) {
-                    $compact['showUrl'] = null;
-                    $compact['editUrl'] = company_route('catalog.attributes.edit', ['attribute' => $row->id]);
-                    $compact['deleteUrl'] = null;
-                    $compact['editSidebar'] = false;
-
-                    return view('theme.adminlte.components._table-actions', $compact)->render();
+                        <div class="flex items-center justify-end gap-2">
+                            <a href="' . $editUrl . '" class="text-slate-400 hover:text-brand-600 transition-colors p-1" title="Edit">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                        </div>
+                    ';
                 })
 
                 ->rawColumns(['code', 'values_badges', 'status_badge', 'action'])
                 ->make(true);
         }
 
-        return view('theme.adminlte.catalog.attributes.index');
+        return view('catvara.catalog.attributes.index');
     }
 
     public function create()
     {
         $this->authorize('create', 'attributes');
 
-        return view('theme.adminlte.catalog.attributes.form');
+        return view('catvara.catalog.attributes.form');
     }
 
     public function store(Request $request)
@@ -137,7 +128,7 @@ class AttributeController extends Controller
         // Process values
         $values = array_map('trim', explode(',', $request->values));
         foreach ($values as $val) {
-            if (! empty($val)) {
+            if (!empty($val)) {
                 $attribute->values()->create(['value' => $val]);
             }
         }
@@ -154,7 +145,7 @@ class AttributeController extends Controller
             abort(403);
         }
 
-        return view('theme.adminlte.catalog.attributes.form', compact('attribute'));
+        return view('catvara.catalog.attributes.form', compact('attribute'));
     }
 
     public function update(Request $request, \App\Models\Company\Company $company, Attribute $attribute)
@@ -194,7 +185,7 @@ class AttributeController extends Controller
             foreach ($values as $val) {
                 // Determine case-insensitive duplicate check? Seeder did it, but let's be safe
                 // For now, strict check
-                if (! empty($val) && ! in_array($val, $existing)) {
+                if (!empty($val) && !in_array($val, $existing)) {
                     $attribute->values()->create([
                         'value' => $val,
                         'is_active' => true,

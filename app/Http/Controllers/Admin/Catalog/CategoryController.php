@@ -19,13 +19,13 @@ class CategoryController extends Controller
         $company = $request->company;
 
         // Non-ajax page load: provide parent list for filter dropdown
-        if (! $request->ajax()) {
+        if (!$request->ajax()) {
             $parents = Category::query()
                 ->where('company_id', $company->id)
                 ->orderBy('name')
                 ->get(['id', 'name']);
 
-            return view('theme.adminlte.catalog.categories.index', compact('parents'));
+            return view('catvara.catalog.categories.index', compact('parents'));
         }
 
         // Ajax: DataTables
@@ -37,61 +37,62 @@ class CategoryController extends Controller
             ->addColumn('name_html', function ($row) {
                 // WordPress-like indentation (supports up to 2 levels via parent + grandparent joins)
                 $depth = 0;
-                if (! empty($row->parent_id)) {
+                if (!empty($row->parent_id)) {
                     $depth = 1;
                 }
-                if (! empty($row->grandparent_id)) {
+                if (!empty($row->grandparent_id)) {
                     $depth = 2;
                 }
 
                 $indent = '';
                 for ($i = 0; $i < $depth; $i++) {
-                    $indent .= '<span class="text-muted mr-1">—</span>';
+                    $indent .= '<span class="text-slate-300 mr-2">—</span>';
                 }
 
                 $sub = '';
-                if (! empty($row->grandparent_name) && ! empty($row->parent_name)) {
-                    $sub = '<div class="text-muted small">In: '.e($row->grandparent_name).' → '.e($row->parent_name).'</div>';
-                } elseif (! empty($row->parent_name)) {
-                    $sub = '<div class="text-muted small">In: '.e($row->parent_name).'</div>';
-                } else {
-                    $sub = '<div class="text-muted small">Parent category</div>';
+                if (!empty($row->grandparent_name) && !empty($row->parent_name)) {
+                    // Clean up sub-text if needed, or remove it for cleaner look unless essential
+                    //$sub = '<div class="text-slate-400 text-xs mt-0.5">In: '.e($row->grandparent_name).' → '.e($row->parent_name).'</div>';
+                    $sub = '';
+                } elseif (!empty($row->parent_name)) {
+                    //$sub = '<div class="text-slate-400 text-xs mt-0.5">In: '.e($row->parent_name).'</div>';
+                    $sub = '';
                 }
 
                 return '
-                    <div>
-                      <div class="font-weight-bold text-dark">'.$indent.e($row->name).'</div>
-                      '.$sub.'
+                    <div class="flex items-center">
+                      <div class="font-medium text-slate-800">' . $indent . e($row->name) . '</div>
+                      ' . $sub . '
                     </div>
                 ';
             })
 
-            ->addColumn('slug_html', fn ($row) => '<span class="ent-chip"><i class="fas fa-link"></i> '.e($row->slug).'</span>'
+            ->addColumn(
+                'slug_html',
+                fn($row) => '<span class="text-xs font-mono text-slate-500 bg-slate-100 px-2 py-0.5 rounded">' . e($row->slug) . '</span>'
             )
 
             ->addColumn('parent_html', function ($row) {
-                if (! empty($row->parent_name)) {
-                    return '<span class="badge badge-info px-2 py-1">'.e($row->parent_name).'</span>';
+                if (!empty($row->parent_name)) {
+                    return '<span class="text-xs font-medium text-slate-600 bg-slate-100 px-2 py-1 rounded-md border border-slate-200">' . e($row->parent_name) . '</span>';
                 }
 
-                return '<span class="text-muted">—</span>';
+                return '<span class="text-slate-300 text-xs">—</span>';
             })
 
             ->addColumn('children_html', function ($row) {
                 $count = (int) ($row->children_count ?? 0);
                 if ($count > 0) {
-                    $label = $count === 1 ? 'child' : 'children';
-
-                    return '<span class="badge badge-light px-2 py-1"><i class="fas fa-level-down-alt mr-1"></i>'.$count.' '.$label.'</span>';
+                    return '<span class="text-xs font-semibold text-brand-600 bg-brand-50 px-2 py-0.5 rounded-full ring-1 ring-inset ring-brand-500/10">' . $count . '</span>';
                 }
 
-                return '<span class="text-muted">—</span>';
+                return '<span class="text-slate-300 text-xs">—</span>';
             })
 
             ->addColumn('status_badge', function ($row) {
                 return ((int) $row->is_active === 1)
-                    ? '<span class="badge badge-success px-2 py-1">Active</span>'
-                    : '<span class="badge badge-danger px-2 py-1">Inactive</span>';
+                    ? '<span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-600/20">Active</span>'
+                    : '<span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-slate-50 text-slate-600 ring-1 ring-inset ring-slate-500/20">Inactive</span>';
             })
 
             ->editColumn('created_at', function ($row) {
@@ -102,14 +103,16 @@ class CategoryController extends Controller
                 $editUrl = company_route('catalog.categories.edit', ['category' => $row->id]);
                 $deleteUrl = company_route('catalog.categories.destroy', ['category' => $row->id]);
 
-                return view('theme.adminlte.components._table-actions', [
-                    'row' => $row,
-                    'showUrl' => null,
-                    'editUrl' => $editUrl,
-                    'deleteUrl' => $deleteUrl,
-                    'restoreUrl' => null,
-                    'editSidebar' => false,
-                ])->render();
+                return '
+                   <div class="flex items-center justify-end gap-2">
+                        <a href="' . $editUrl . '" class="text-slate-400 hover:text-brand-600 transition-colors p-1" title="Edit">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                         <button type="button" class="text-slate-400 hover:text-red-600 transition-colors p-1" title="Delete" onclick="confirmDelete(\'' . $deleteUrl . '\')">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                   </div>
+                   ';
             })
 
             ->rawColumns([
@@ -155,20 +158,20 @@ class CategoryController extends Controller
         $table = (new Category)->getTable(); // "categories"
 
         // Because prefix also affects aliases on your connection, reference prefixed aliases in raw expressions
-        $c = $prefix.'c';
-        $p = $prefix.'p';
-        $gp = $prefix.'gp';
-        $cc = $prefix.'cc';
+        $c = $prefix . 'c';
+        $p = $prefix . 'p';
+        $gp = $prefix . 'gp';
+        $cc = $prefix . 'cc';
 
         // children count (direct children per category)
-        $childrenCount = DB::table($table.' as c2')
+        $childrenCount = DB::table($table . ' as c2')
             ->select('c2.parent_id', DB::raw('COUNT(*) as children_count'))
             ->where('c2.company_id', $company->id)
             ->groupBy('c2.parent_id');
 
-        $q = DB::table($table.' as c')
-            ->leftJoin($table.' as p', 'p.id', '=', 'c.parent_id')
-            ->leftJoin($table.' as gp', 'gp.id', '=', 'p.parent_id')
+        $q = DB::table($table . ' as c')
+            ->leftJoin($table . ' as p', 'p.id', '=', 'c.parent_id')
+            ->leftJoin($table . ' as gp', 'gp.id', '=', 'p.parent_id')
             ->leftJoinSub($childrenCount, 'cc', function ($join) {
                 $join->on('cc.parent_id', '=', 'c.id');
             })
@@ -230,7 +233,7 @@ class CategoryController extends Controller
         // Load all attributes for selection
         $attributes = \App\Models\Catalog\Attribute::where('company_id', request()->company->id)->get();
 
-        return view('theme.adminlte.catalog.categories.form', compact('categories', 'attributes'));
+        return view('catvara.catalog.categories.form', compact('categories', 'attributes'));
     }
 
     /**
@@ -279,7 +282,7 @@ class CategoryController extends Controller
         // Load all attributes for selection
         $attributes = \App\Models\Catalog\Attribute::where('company_id', $company->id)->get();
 
-        return view('theme.adminlte.catalog.categories.form', compact('category', 'categories', 'attributes'));
+        return view('catvara.catalog.categories.form', compact('category', 'categories', 'attributes'));
     }
 
     /**

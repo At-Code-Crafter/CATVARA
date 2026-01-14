@@ -57,7 +57,7 @@
       <div class="nav-group">
         <button
           class="w-full flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg transition-all group
-                              {{ $isSalesActive ? 'bg-slate-50 text-slate-900' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' }}"
+                                  {{ $isSalesActive ? 'bg-slate-50 text-slate-900' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' }}"
           onclick="$(this).next('div').slideToggle(200); $(this).find('.arrow').toggleClass('rotate-180')">
           <div class="flex items-center">
             <i
@@ -79,12 +79,43 @@
         </div>
       </div>
 
-      <!-- Inventory -->
-      @php $isInvActive = $isActive(['inventory.*', 'catalog.*']); @endphp
+      <!-- Catalog -->
+      @php $isCatalogActive = $isActive(['catalog.*']); @endphp
       <div class="nav-group">
         <button
           class="w-full flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg transition-all group
-                              {{ $isInvActive ? 'bg-slate-50 text-slate-900' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' }}"
+                                  {{ $isCatalogActive ? 'bg-slate-50 text-slate-900' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' }}"
+          onclick="$(this).next('div').slideToggle(200); $(this).find('.arrow').toggleClass('rotate-180')">
+          <div class="flex items-center">
+            <i
+              class="fas fa-tags w-6 {{ $isCatalogActive ? 'text-brand-600' : 'text-slate-400 group-hover:text-slate-500' }}"></i>
+            <span class="sidebar-text">Catalog</span>
+          </div>
+          <i
+            class="fas fa-chevron-down text-xs text-slate-400 transition-transform arrow {{ $isCatalogActive ? 'rotate-180' : '' }}"></i>
+        </button>
+        <div class="space-y-1 pl-9 mt-1 {{ $isCatalogActive ? '' : 'hidden' }}">
+          <a href="{{ company_route('catalog.products.index') }}"
+            class="block py-2 text-sm {{ $isActive('catalog.products.index') ? 'text-brand-600 font-medium' : 'text-slate-500 hover:text-slate-900' }}">
+            <span class="sidebar-text">Products</span>
+          </a>
+          <a href="{{ company_route('catalog.categories.index') }}"
+            class="block py-2 text-sm {{ $isActive(['catalog.categories.*']) ? 'text-brand-600 font-medium' : 'text-slate-500 hover:text-slate-900' }}">
+            <span class="sidebar-text">Categories</span>
+          </a>
+          <a href="{{ company_route('catalog.attributes.index') }}"
+            class="block py-2 text-sm {{ $isActive('catalog.attributes.index') ? 'text-brand-600 font-medium' : 'text-slate-500 hover:text-slate-900' }}">
+            <span class="sidebar-text">Attributes</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Inventory -->
+      @php $isInvActive = $isActive(['inventory.*']); @endphp
+      <div class="nav-group">
+        <button
+          class="w-full flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg transition-all group
+                                  {{ $isInvActive ? 'bg-slate-50 text-slate-900' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' }}"
           onclick="$(this).next('div').slideToggle(200); $(this).find('.arrow').toggleClass('rotate-180')">
           <div class="flex items-center">
             <i
@@ -95,10 +126,6 @@
             class="fas fa-chevron-down text-xs text-slate-400 transition-transform arrow {{ $isInvActive ? 'rotate-180' : '' }}"></i>
         </button>
         <div class="space-y-1 pl-9 mt-1 {{ $isInvActive ? '' : 'hidden' }}">
-          <a href="{{ company_route('catalog.products.index') }}"
-            class="block py-2 text-sm {{ $isActive('catalog.products.index') ? 'text-brand-600 font-medium' : 'text-slate-500 hover:text-slate-900' }}">
-            <span class="sidebar-text">Products</span>
-          </a>
           <a href="{{ company_route('inventory.inventory.index') }}"
             class="block py-2 text-sm {{ $isActive('inventory.inventory.index') ? 'text-brand-600 font-medium' : 'text-slate-500 hover:text-slate-900' }}">
             <span class="sidebar-text">Stock</span>
@@ -109,7 +136,7 @@
       <!-- Customers -->
       <a href="{{ company_route('customers.index') }}"
         class="flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-all group nav-link
-                     {{ $isActive(['customers.*']) ? 'bg-brand-50 text-brand-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' }}">
+                         {{ $isActive(['customers.*']) ? 'bg-brand-50 text-brand-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' }}">
         <i
           class="fas fa-users w-6 {{ $isActive(['customers.*']) ? 'text-brand-600' : 'text-slate-400 group-hover:text-slate-500' }}"></i>
         <span class="sidebar-text">Customers</span>
@@ -121,7 +148,7 @@
 
       <a href="{{ safe_route('tenants.index') }}"
         class="flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-all group nav-link
-                     {{ $isActive(['tenants.*']) ? 'bg-brand-50 text-brand-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' }}">
+                         {{ $isActive(['tenants.*']) ? 'bg-brand-50 text-brand-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' }}">
         <i
           class="fas fa-building w-6 {{ $isActive(['tenants.*']) ? 'text-brand-600' : 'text-slate-400 group-hover:text-slate-500' }}"></i>
         <span class="sidebar-text">Companies</span>

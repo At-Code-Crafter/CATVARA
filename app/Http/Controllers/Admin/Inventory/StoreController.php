@@ -16,15 +16,15 @@ class StoreController extends Controller
     {
         $this->authorize('view', 'stores');
 
-        $stores = Store::where('company_id', $request->company->id)->paginate(10);
-        return view('theme.adminlte.inventory.stores.index', compact('stores'));
+        $stores = Store::where('company_id', $request->company->id)->latest()->get();
+        return view('catvara.inventory.stores.index', compact('stores'));
     }
 
     public function create()
     {
         $this->authorize('create', 'stores');
 
-        return view('theme.adminlte.inventory.stores.create');
+        return view('catvara.inventory.stores.form');
     }
 
     public function store(Requests\Inventory\StoreStoreRequest $request)
@@ -63,7 +63,7 @@ class StoreController extends Controller
         if ($store->company_id !== $company->id) {
             abort(403);
         }
-        return view('theme.adminlte.inventory.stores.edit', compact('store'));
+        return view('catvara.inventory.stores.form', compact('store'));
     }
 
     public function update(Requests\Inventory\UpdateStoreRequest $request, Company $company, Store $store)
@@ -101,11 +101,11 @@ class StoreController extends Controller
 
         try {
             // Check balances logic would go here
-             if($store->inventoryLocation && $store->inventoryLocation->balances()->sum('quantity') > 0) {
-                 return back()->with('error', 'Cannot delete store with active stock.');
+            if ($store->inventoryLocation && $store->inventoryLocation->balances()->sum('quantity') > 0) {
+                return back()->with('error', 'Cannot delete store with active stock.');
             }
 
-            if($store->inventoryLocation) {
+            if ($store->inventoryLocation) {
                 $store->inventoryLocation->delete();
             }
             $store->delete();

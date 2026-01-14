@@ -86,8 +86,8 @@
     /* Select2 Modernization */
     .select2-container .select2-selection--single {
       height: 40px !important;
-      border-color: #e2e8f0 !important;
-      /* Slate 200 */
+      border-color: #cbd5e1 !important;
+      /* Slate 300 */
       border-radius: 0.5rem !important;
       display: flex !important;
       align-items: center !important;
@@ -150,7 +150,37 @@
     table.dataTable tbody td {
       padding: 1rem 1rem !important;
       color: #334155;
-      border-bottom: 1px solid #f8fafc;
+      border-bottom: 1px solid #f1f5f9;
+    }
+
+    /* Professional Zebra Striping */
+    table tbody tr:nth-child(even) {
+      background-color: rgba(248, 250, 252, 0.8) !important;
+      /* Slate 50 with alpha */
+    }
+
+    table tbody tr:hover {
+      background-color: rgba(241, 245, 249, 1) !important;
+      /* Slate 100 on hover */
+    }
+
+    /* Global Input Contrast */
+    input[type="text"],
+    input[type="number"],
+    input[type="email"],
+    input[type="password"],
+    textarea,
+    select {
+      border-color: #cbd5e1 !important;
+      /* Slate 300 */
+    }
+
+    input:focus,
+    textarea:focus,
+    select:focus {
+      border-color: #6366f1 !important;
+      /* Brand 500 */
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1) !important;
     }
 
     /* Utility */
@@ -271,12 +301,6 @@
     }
   </style>
   @stack('styles')
-  <script>
-    // Apply preference immediately to avoid flash
-    if (localStorage.getItem('sidebar-collapsed') === 'true') {
-      document.documentElement.classList.add('sidebar-collapsed'); // Add to HTML or Body logic below
-    }
-  </script>
 </head>
 
 <body
@@ -466,6 +490,36 @@
         }, 300);
       });
     });
+
+    // Global Delete Confirmation
+    window.confirmDelete = function (url) {
+      Swal.fire({
+        title: 'Are you sure?',
+        text: "You won't be able to revert this!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#4f46e5', // Brand 600
+        cancelButtonColor: '#94a3b8', // Slate 400
+        confirmButtonText: 'Yes, delete it!',
+        customClass: {
+          popup: 'rounded-2xl',
+          confirmButton: 'rounded-xl px-5 py-2.5 btn-primary',
+          cancelButton: 'rounded-xl px-5 py-2.5'
+        }
+      }).then((result) => {
+        if (result.isConfirmed) {
+          let form = document.createElement('form');
+          form.action = url;
+          form.method = 'POST';
+          form.innerHTML = `
+              <input type="hidden" name="_token" value="${$('meta[name="csrf-token"]').attr('content')}">
+              <input type="hidden" name="_method" value="DELETE">
+            `;
+          document.body.appendChild(form);
+          form.submit();
+        }
+      });
+    };
   </script>
   @stack('scripts')
 </body>
