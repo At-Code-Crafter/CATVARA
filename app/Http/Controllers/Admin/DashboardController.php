@@ -176,7 +176,7 @@ class DashboardController extends Controller
             ->join('product_variants', 'order_items.product_variant_id', '=', 'product_variants.id')
             ->join('products', 'product_variants.product_id', '=', 'products.id')
             ->where('orders.company_id', $companyId)
-            ->select('products.name', DB::raw('SUM(order_items.quantity) as total_qty'))
+            ->select('products.name', DB::raw('SUM(ec_order_items.quantity) as total_qty'))
             ->groupBy('products.id', 'products.name')
             ->orderByDesc('total_qty')
             ->limit(5)
@@ -208,7 +208,7 @@ class DashboardController extends Controller
             ],
         ];
 
-        return view('theme.adminlte.dashboard', compact('stats', 'charts'));
+        return view('catvara.dashboard', compact('stats', 'charts'));
     }
 
     public function redirectToCompanyDashboard()

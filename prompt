@@ -1,0 +1,49 @@
+1. I want you to create one proper templating and design
+
+using talwind and jquery and other plugins, everywhere select2 implemented
+
+neat and clean design, fully responsive.
+
+we can start from dashboard
+
+
+you can create different folder
+
+in resources/views/catvara
+
+and inside create layouts folder and keep app.blade.php
+
+and dashboard pages outside the layouts
+
+which will be under
+
+resources/views/catvara/dashboard.blade.php
+
+or you can group in folder as well
+
+
+and change the file path in controller 
+
+
+
+ensure this page must have nice design proper margin pading standard colors
+
+avoid high contrasting 
+
+keep enterprise gade
+
+
+proper aside sidebar, modal popups 
+
+input feilds nice design, buttons should match with design
+
+graphs, charts and stats colors
+
+small screen as much as data 
+
+
+include all sidebar navigation links
+
+step by step we will change all pages to new theme
+
+we will give this theme name is CATVARA Talwind Admin Panel Theme
