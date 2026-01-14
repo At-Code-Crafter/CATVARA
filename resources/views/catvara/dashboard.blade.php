@@ -1,346 +1,301 @@
 @extends('catvara.layouts.app')
 
-@section('page-title', 'Business Overview')
-
-@section('page-actions')
-  <div class="flex items-center space-x-3">
-    <div class="relative">
-      <input type="text" id="date_range"
-        class="pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:ring-accent focus:border-accent"
-        placeholder="Select date range">
-      <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-        <i data-lucide="calendar" class="w-4 h-4 text-slate-400"></i>
-      </div>
-    </div>
-    <button
-      class="flex items-center px-4 py-2 bg-accent text-white rounded-xl text-sm font-semibold hover:bg-accent/90 transition-all shadow-lg shadow-accent/20">
-      <i data-lucide="download" class="w-4 h-4 mr-2"></i>
-      Export Report
-    </button>
-  </div>
-@endsection
+@section('title', 'Overview')
 
 @section('content')
-  <!-- Stats Grid -->
-  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-    <!-- Revenue Card -->
-    <div class="card p-6 border-l-4 border-l-accent">
-      <div class="flex items-center justify-between mb-4">
-        <div class="p-2 bg-accent/10 rounded-lg text-accent">
-          <i data-lucide="dollar-sign" class="w-6 h-6"></i>
-        </div>
-        <span class="text-xs font-bold text-emerald-500 bg-emerald-50 px-2 py-1 rounded-full">+12.5%</span>
-      </div>
+  <div class="space-y-8">
+
+    <!-- Header Actions -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
       <div>
-        <h3 class="text-slate-500 text-sm font-medium mb-1">Total Revenue</h3>
-        <p class="text-2xl font-bold text-slate-800">{{ number_format($stats['total_revenue'] ?? 0, 2) }}</p>
+        <h2 class="text-2xl font-bold text-slate-800 tracking-tight">Welcome back, {{ auth()->user()->name }}</h2>
+        <p class="text-slate-500 text-sm mt-1">Here's what's happening with your business today.</p>
       </div>
-      <div class="mt-4 pt-4 border-t border-slate-50 flex items-center text-xs text-slate-400">
-        <i data-lucide="trending-up" class="w-3 h-3 mr-1 text-emerald-500"></i>
-        Vs last month
+      <div class="flex items-center gap-2">
+        <form action="{{ route('dashboard') }}" method="GET"
+          class="flex items-center gap-2 bg-white p-1 rounded-lg border border-slate-200 shadow-sm">
+          <input type="date" name="date_from" value="{{ $stats['date_from'] }}"
+            class="border-none text-xs text-slate-600 focus:ring-0 bg-transparent">
+          <input type="date" name="date_to" value="{{ $stats['date_to'] }}"
+            class="border-none text-xs text-slate-600 focus:ring-0 bg-transparent">
+          <button type="submit" class="bg-brand-50 text-brand-600 hover:bg-brand-100 p-1.5 rounded-md transition-colors">
+            <i class="fas fa-search"></i>
+          </button>
+        </form>
       </div>
     </div>
 
-    <!-- Orders Card -->
-    <div class="card p-6 border-l-4 border-l-indigo-500">
-      <div class="flex items-center justify-between mb-4">
-        <div class="p-2 bg-indigo-50 rounded-lg text-indigo-500">
-          <i data-lucide="shopping-bag" class="w-6 h-6"></i>
+    <!-- Stats Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <!-- Revenue -->
+      <div
+        class="bg-white p-6 rounded-2xl shadow-soft border border-slate-100 hover:shadow-lg transition-all duration-300 group">
+        <div class="flex justify-between items-start">
+          <div>
+            <p class="text-sm font-medium text-slate-500">Total Revenue</p>
+            <h3 class="text-2xl font-bold text-slate-900 mt-2">{{ number_format($stats['total_revenue'], 2) }}</h3>
+          </div>
+          <div class="p-3 bg-brand-50 rounded-xl text-brand-600 group-hover:scale-110 transition-transform">
+            <i class="fas fa-dollar-sign text-lg"></i>
+          </div>
         </div>
-        <span
-          class="text-xs font-bold text-indigo-500 bg-indigo-50 px-2 py-1 rounded-full">{{ $stats['new_orders_today'] ?? 0 }}
-          Today</span>
-      </div>
-      <div>
-        <h3 class="text-slate-500 text-sm font-medium mb-1">Total Orders</h3>
-        <p class="text-2xl font-bold text-slate-800">{{ number_format($stats['total_orders'] ?? 0) }}</p>
-      </div>
-      <div class="mt-4 pt-4 border-t border-slate-50 flex items-center text-xs text-slate-400">
-        <i data-lucide="clock" class="w-3 h-3 mr-1 text-indigo-500"></i>
-        Updated just now
-      </div>
-    </div>
-
-    <!-- Customers Card -->
-    <div class="card p-6 border-l-4 border-l-rose-500">
-      <div class="flex items-center justify-between mb-4">
-        <div class="p-2 bg-rose-50 rounded-lg text-rose-500">
-          <i data-lucide="users" class="w-6 h-6"></i>
-        </div>
-        <span
-          class="text-xs font-bold text-emerald-500 bg-emerald-50 px-2 py-1 rounded-full">+{{ $stats['new_customers_month'] ?? 0 }}
-          New</span>
-      </div>
-      <div>
-        <h3 class="text-slate-500 text-sm font-medium mb-1">Active Customers</h3>
-        <p class="text-2xl font-bold text-slate-800">{{ number_format($stats['total_customers'] ?? 0) }}</p>
-      </div>
-      <div class="mt-4 pt-4 border-t border-slate-50 flex items-center text-xs text-slate-400">
-        <i data-lucide="heart" class="w-3 h-3 mr-1 text-rose-500"></i>
-        Customer loyalty
-      </div>
-    </div>
-
-    <!-- Products Card -->
-    <div class="card p-6 border-l-4 border-l-amber-500">
-      <div class="flex items-center justify-between mb-4">
-        <div class="p-2 bg-amber-50 rounded-lg text-amber-500">
-          <i data-lucide="package" class="w-6 h-6"></i>
-        </div>
-        <span
-          class="text-xs font-bold text-amber-500 bg-amber-50 px-2 py-1 rounded-full">{{ number_format($stats['active_products'] ?? 0) }}
-          Active</span>
-      </div>
-      <div>
-        <h3 class="text-slate-500 text-sm font-medium mb-1">Total Inventory</h3>
-        <p class="text-2xl font-bold text-slate-800">{{ number_format($stats['total_products'] ?? 0) }}</p>
-      </div>
-      <div class="mt-4 pt-4 border-t border-slate-50 flex items-center text-xs text-slate-400">
-        <i data-lucide="alert-triangle" class="w-3 h-3 mr-1 text-amber-500"></i>
-        Check low stock
-      </div>
-    </div>
-  </div>
-
-  <!-- Charts Row -->
-  <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
-    <!-- Main Revenue Chart -->
-    <div class="lg:col-span-2 card">
-      <div class="p-6 border-b border-slate-50 flex items-center justify-between">
-        <h3 class="font-bold text-slate-800">Revenue Performance</h3>
-        <div class="flex items-center space-x-2">
-          <span class="flex items-center text-xs text-slate-500">
-            <span class="w-3 h-3 rounded-full bg-accent mr-1"></span> Revenue
+        <div class="mt-4 flex items-center text-xs">
+          <span class="text-emerald-600 font-semibold bg-emerald-50 px-2 py-0.5 rounded-full mr-2">
+            <i class="fas fa-arrow-up mr-1"></i> 12%
           </span>
-          <span class="flex items-center text-xs text-slate-500">
-            <span class="w-3 h-3 rounded-full bg-slate-200 mr-1"></span> Previous
+          <span class="text-slate-400 mt-0.5">vs last month</span>
+        </div>
+      </div>
+
+      <!-- Orders -->
+      <div
+        class="bg-white p-6 rounded-2xl shadow-soft border border-slate-100 hover:shadow-lg transition-all duration-300 group">
+        <div class="flex justify-between items-start">
+          <div>
+            <p class="text-sm font-medium text-slate-500">Total Orders</p>
+            <h3 class="text-2xl font-bold text-slate-900 mt-2">{{ number_format($stats['total_orders']) }}</h3>
+          </div>
+          <div class="p-3 bg-blue-50 rounded-xl text-blue-600 group-hover:scale-110 transition-transform">
+            <i class="fas fa-shopping-bag text-lg"></i>
+          </div>
+        </div>
+        <div class="mt-4 flex items-center text-xs">
+          <span class="text-brand-600 font-semibold mr-2">
+            {{ $stats['new_orders_today'] }} New
           </span>
+          <span class="text-slate-400 mt-0.5">orders today</span>
         </div>
       </div>
-      <div class="p-6">
-        <div id="revenueChart" class="min-h-[350px]"></div>
+
+      <!-- Customers -->
+      <div
+        class="bg-white p-6 rounded-2xl shadow-soft border border-slate-100 hover:shadow-lg transition-all duration-300 group">
+        <div class="flex justify-between items-start">
+          <div>
+            <p class="text-sm font-medium text-slate-500">Active Customers</p>
+            <h3 class="text-2xl font-bold text-slate-900 mt-2">{{ number_format($stats['total_customers']) }}</h3>
+          </div>
+          <div class="p-3 bg-purple-50 rounded-xl text-purple-600 group-hover:scale-110 transition-transform">
+            <i class="fas fa-users text-lg"></i>
+          </div>
+        </div>
+        <div class="mt-4 flex items-center text-xs">
+          <span class="text-emerald-600 font-semibold bg-emerald-50 px-2 py-0.5 rounded-full mr-2">
+            <i class="fas fa-plus mr-1"></i> {{ $stats['new_customers_month'] }}
+          </span>
+          <span class="text-slate-400 mt-0.5">this month</span>
+        </div>
+      </div>
+
+      <!-- Pending Actions -->
+      <div
+        class="bg-white p-6 rounded-2xl shadow-soft border border-slate-100 hover:shadow-lg transition-all duration-300 group relative overflow-hidden">
+        <div
+          class="absolute right-0 top-0 w-16 h-16 bg-gradient-to-br from-amber-100 to-transparent opacity-50 rounded-bl-full -mr-4 -mt-4">
+        </div>
+        <div class="flex justify-between items-start relative z-10">
+          <div>
+            <p class="text-sm font-medium text-slate-500">Pending Orders</p>
+            <h3 class="text-2xl font-bold text-slate-900 mt-2">{{ number_format($stats['pending_orders']) }}</h3>
+          </div>
+          <div class="p-3 bg-amber-50 rounded-xl text-amber-600">
+            <i class="fas fa-clock text-lg"></i>
+          </div>
+        </div>
+        @if($stats['pending_orders'] > 0)
+          <div class="mt-4">
+            <a href="{{ company_route('sales-orders.index') }}"
+              class="text-xs font-semibold text-amber-600 hover:text-amber-700 flex items-center">
+              Review Orders <i class="fas fa-arrow-right ml-1"></i>
+            </a>
+          </div>
+        @else
+          <div class="mt-4 text-xs text-slate-400 flex items-center">
+            <i class="fas fa-check text-emerald-500 mr-1"></i> All clear
+          </div>
+        @endif
       </div>
     </div>
 
-    <!-- Order Status Distribution -->
-    <div class="card">
-      <div class="p-6 border-b border-slate-50">
-        <h3 class="font-bold text-slate-800">Order Status</h3>
+    <!-- Charts Section -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <!-- Main Line Chart -->
+      <div class="bg-white p-6 rounded-2xl shadow-soft border border-slate-100 lg:col-span-2">
+        <div class="flex items-center justify-between mb-6">
+          <h3 class="text-lg font-bold text-slate-800">Revenue Analytics</h3>
+          <div class="flex gap-2">
+            <span class="flex items-center gap-1 text-xs text-brand-600 bg-brand-50 px-2 py-1 rounded-md font-medium">
+              <span class="w-2 h-2 rounded-full bg-brand-600"></span> Sales
+            </span>
+            <span class="flex items-center gap-1 text-xs text-slate-500 bg-slate-50 px-2 py-1 rounded-md font-medium">
+              <span class="w-2 h-2 rounded-full bg-blue-400"></span> Orders
+            </span>
+          </div>
+        </div>
+        <div class="relative h-72 w-full">
+          <canvas id="revenueChart"></canvas>
+        </div>
       </div>
-      <div class="p-6 flex flex-col justify-center items-center h-full">
-        <div id="orderStatusChart"></div>
-        <div class="grid grid-cols-2 gap-4 w-full mt-6">
-          @foreach ($charts['orderStatus']['labels'] as $index => $label)
-            <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
-              <div class="flex items-center">
-                <span class="w-2 h-2 rounded-full bg-accent mr-2"></span>
-                <span class="text-xs font-medium text-slate-600">{{ $label }}</span>
-              </div>
-              <span class="text-xs font-bold text-slate-800">{{ $charts['orderStatus']['data'][$index] }}</span>
-            </div>
-          @endforeach
+
+      <!-- Donut Chart -->
+      <div class="bg-white p-6 rounded-2xl shadow-soft border border-slate-100">
+        <h3 class="text-lg font-bold text-slate-800 mb-6">Order Status</h3>
+        <div class="relative h-64 flex justify-center items-center">
+          <canvas id="statusChart"></canvas>
+        </div>
+        <div class="mt-6 space-y-2">
+          <!-- Legend constructed in JS or simply shown here -->
+          <p class="text-center text-xs text-slate-400">Distribution of order statuses</p>
         </div>
       </div>
     </div>
-  </div>
 
-  <!-- Tables Row -->
-  <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-    <!-- Top Products -->
-    <div class="card">
+    <!-- Data Table Section -->
+    <div class="bg-white rounded-2xl shadow-soft border border-slate-100 overflow-hidden">
       <div class="p-6 border-b border-slate-50 flex items-center justify-between">
-        <h3 class="font-bold text-slate-800">Top Selling Products</h3>
-        <button class="text-xs font-bold text-accent hover:underline">View All</button>
+        <h3 class="text-lg font-bold text-slate-800">Top Performing Products</h3>
+        <button class="text-sm text-brand-600 font-medium hover:text-brand-700">View Report</button>
       </div>
-      <div class="overflow-x-auto">
+      <div class="p-0">
         <table class="w-full text-left border-collapse">
-          <thead>
-            <tr class="bg-slate-50/50">
-              <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Product</th>
-              <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Sold</th>
-              <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Trend</th>
+          <thead class="bg-slate-50 text-xs uppercase text-slate-500 font-semibold">
+            <tr>
+              <th class="px-6 py-4">Product</th>
+              <th class="px-6 py-4 text-right">Units Sold</th>
+              <th class="px-6 py-4 text-right">Trend</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-50">
-            @foreach ($charts['topProducts']['labels'] as $index => $name)
+            @foreach($charts['topProducts']['labels'] as $index => $name)
               <tr class="hover:bg-slate-50/50 transition-colors">
                 <td class="px-6 py-4">
-                  <div class="flex items-center">
-                    <div class="w-10 h-10 bg-slate-100 rounded-lg flex items-center justify-center text-slate-400 mr-3">
-                      <i data-lucide="image" class="w-5 h-5"></i>
+                  <div class="flex items-center gap-3">
+                    <div class="h-8 w-8 rounded bg-slate-100 flex items-center justify-center text-slate-400">
+                      <i class="fas fa-box"></i>
                     </div>
-                    <span class="text-sm font-semibold text-slate-700">{{ $name }}</span>
+                    <span class="text-sm font-medium text-slate-700">{{ $name }}</span>
                   </div>
                 </td>
-                <td class="px-6 py-4 text-right text-sm font-bold text-slate-800">
-                  {{ $charts['topProducts']['data'][$index] }}</td>
                 <td class="px-6 py-4 text-right">
-                  <span
-                    class="inline-flex items-center px-2 py-1 rounded-lg bg-emerald-50 text-emerald-600 text-[10px] font-bold">
-                    <i data-lucide="trending-up" class="w-3 h-3 mr-1"></i>
-                    Growth
-                  </span>
+                  <span class="text-sm font-bold text-slate-800">{{ $charts['topProducts']['data'][$index] }}</span>
+                </td>
+                <td class="px-6 py-4 text-right">
+                  <!-- Mock Trend -->
+                  <div
+                    class="inline-flex items-center text-emerald-600 text-xs font-semibold bg-emerald-50 px-2 py-0.5 rounded-full">
+                    <i class="fas fa-arrow-trend-up mr-1"></i> High
+                  </div>
                 </td>
               </tr>
             @endforeach
+            @if(empty($charts['topProducts']['labels']))
+              <tr>
+                <td colspan="3" class="px-6 py-8 text-center text-slate-400 text-sm">No data available</td>
+              </tr>
+            @endif
           </tbody>
         </table>
       </div>
     </div>
 
-    <!-- System Updates / Notifications -->
-    <div class="card">
-      <div class="p-6 border-b border-slate-50">
-        <h3 class="font-bold text-slate-800">Recent Activity</h3>
-      </div>
-      <div class="p-6">
-        <div
-          class="relative pl-8 space-y-6 before:absolute before:left-3 before:top-2 before:bottom-2 before:w-px before:bg-slate-100">
-          <div class="relative">
-            <div
-              class="absolute -left-8 top-1.5 w-6 h-6 rounded-full bg-accent flex items-center justify-center text-white border-4 border-white">
-              <i data-lucide="shopping-cart" class="w-3 h-3"></i>
-            </div>
-            <div>
-              <p class="text-sm text-slate-700"><span class="font-bold">New Order</span> #SO-2024-001 received from
-                <span class="font-bold text-accent">Tech Solutions</span></p>
-              <span class="text-xs text-slate-400">2 minutes ago</span>
-            </div>
-          </div>
-          <div class="relative">
-            <div
-              class="absolute -left-8 top-1.5 w-6 h-6 rounded-full bg-amber-500 flex items-center justify-center text-white border-4 border-white">
-              <i data-lucide="alert-circle" class="w-3 h-3"></i>
-            </div>
-            <div>
-              <p class="text-sm text-slate-700"><span class="font-bold">Inventory Alert:</span> "Wireless Headphones"
-                reached minimum stock level.</p>
-              <span class="text-xs text-slate-400">45 minutes ago</span>
-            </div>
-          </div>
-          <div class="relative">
-            <div
-              class="absolute -left-8 top-1.5 w-6 h-6 rounded-full bg-indigo-500 flex items-center justify-center text-white border-4 border-white">
-              <i data-lucide="user-plus" class="w-3 h-3"></i>
-            </div>
-            <div>
-              <p class="text-sm text-slate-700"><span class="font-bold">New Customer</span> registered: Sarah Williams
-                (Corporate)</p>
-              <span class="text-xs text-slate-400">3 hours ago</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
   </div>
 @endsection
 
-@section('scripts')
+@push('scripts')
   <script>
-    document.addEventListener('DOMContentLoaded', function() {
-      // Revenue Chart
-      var revenueOptions = {
-        series: [{
-          name: 'Revenue',
-          data: @json($charts['revenue']['data'])
-        }],
-        chart: {
-          height: 350,
-          type: 'area',
-          toolbar: {
-            show: false
-          },
-          fontFamily: 'Inter, sans-serif'
-        },
-        dataLabels: {
-          enabled: false
-        },
-        colors: ['#3b82f6'],
-        fill: {
-          type: 'gradient',
-          gradient: {
-            shadeIntensity: 1,
-            opacityFrom: 0.45,
-            opacityTo: 0.05,
-            stops: [20, 100, 100, 100]
-          }
-        },
-        stroke: {
-          curve: 'smooth',
-          width: 3
-        },
-        grid: {
-          borderColor: '#f1f5f9',
-          strokeDashArray: 4
-        },
-        xaxis: {
-          categories: @json($charts['revenue']['labels']),
-          axisBorder: {
-            show: false
-          },
-          axisTicks: {
-            show: false
-          },
-          labels: {
-            style: {
-              colors: '#64748b',
-              fontSize: '12px'
-            }
-          }
-        },
-        yaxis: {
-          labels: {
-            formatter: function(val) {
-              return '$' + val.toLocaleString();
-            },
-            style: {
-              colors: '#64748b',
-              fontSize: '12px'
-            }
-          }
-        }
-      };
-      var revenueChart = new ApexCharts(document.querySelector("#revenueChart"), revenueOptions);
-      revenueChart.render();
+    document.addEventListener('DOMContentLoaded', function () {
 
-      // Order Status Chart
-      var statusOptions = {
-        series: @json($charts['orderStatus']['data']),
-        chart: {
-          type: 'donut',
-          height: 250,
-        },
-        labels: @json($charts['orderStatus']['labels']),
-        colors: ['#3b82f6', '#10b981', '#f59e0b', '#64748b'],
-        legend: {
-          show: false
-        },
-        dataLabels: {
-          enabled: false
-        },
-        plotOptions: {
-          pie: {
-            donut: {
-              size: '75%',
-              labels: {
-                show: true,
-                total: {
-                  show: true,
-                  label: 'Total Orders',
-                  fontSize: '12px',
-                  fontWeight: 500,
-                  color: '#64748b',
-                  formatter: function(w) {
-                    return w.globals.seriesTotals.reduce((a, b) => a + b, 0)
-                  }
-                }
-              }
+      // --- Shared Chart Defaults ---
+      Chart.defaults.font.family = "'Inter', sans-serif";
+      Chart.defaults.color = '#64748b';
+
+      // --- Revenue Chart (Gradient) ---
+      const ctxRevenue = document.getElementById('revenueChart').getContext('2d');
+      const gradientRevenue = ctxRevenue.createLinearGradient(0, 0, 0, 400);
+      gradientRevenue.addColorStop(0, 'rgba(79, 70, 229, 0.2)'); // Brand 600
+      gradientRevenue.addColorStop(1, 'rgba(79, 70, 229, 0)');
+
+      new Chart(ctxRevenue, {
+        type: 'line',
+        data: {
+          labels: {!! json_encode($charts['revenue']['labels']) !!},
+          datasets: [
+            {
+              label: 'Revenue',
+              data: {!! json_encode($charts['revenue']['data']) !!},
+              borderColor: '#4f46e5',
+              backgroundColor: gradientRevenue,
+              borderWidth: 3,
+              pointBackgroundColor: '#ffffff',
+              pointBorderColor: '#4f46e5',
+              pointBorderWidth: 2,
+              pointRadius: 4,
+              pointHoverRadius: 6,
+              tension: 0.4,
+              fill: true,
+              yAxisID: 'y'
+            },
+            {
+              label: 'Orders',
+              data: {!! json_encode($charts['revenue']['orders']) !!},
+              borderColor: '#93c5fd', // Blue 300
+              borderWidth: 2,
+              borderDash: [5, 5],
+              pointRadius: 0,
+              tension: 0.4,
+              fill: false,
+              yAxisID: 'y1'
             }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: '#1e293b',
+              padding: 12,
+              titleFont: { size: 13 },
+              bodyFont: { size: 12 },
+              cornerRadius: 8,
+              displayColors: false
+            }
+          },
+          scales: {
+            x: { grid: { display: false } },
+            y: {
+              position: 'left',
+              grid: { borderDash: [4, 4], color: '#f1f5f9' },
+              ticks: { callback: function (value) { return '$' + value; } }
+            },
+            y1: { display: false }
           }
         }
-      };
-      var statusChart = new ApexCharts(document.querySelector("#orderStatusChart"), statusOptions);
-      statusChart.render();
+      });
+
+      // --- Status Chart (Modern Donut) ---
+      const ctxStatus = document.getElementById('statusChart').getContext('2d');
+      new Chart(ctxStatus, {
+        type: 'doughnut',
+        data: {
+          labels: {!! json_encode($charts['orderStatus']['labels']) !!},
+          datasets: [{
+            data: {!! json_encode($charts['orderStatus']['data']) !!},
+            backgroundColor: ['#4f46e5', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'],
+            borderWidth: 0,
+            hoverOffset: 4
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: '75%',
+          plugins: {
+            legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 8, padding: 20 } }
+          }
+        }
+      });
     });
   </script>
-@endsection
+@endpush
