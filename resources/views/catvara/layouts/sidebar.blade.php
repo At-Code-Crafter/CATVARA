@@ -20,52 +20,109 @@
       <h3 class="text-xs uppercase text-slate-500 font-semibold pl-3 mb-4 tracking-wider">Main Menu</h3>
       <ul class="space-y-1">
         <!-- Dashboard -->
-        <li class="px-3 py-2 rounded-xl bg-slate-800/50 mb-0.5 last:mb-0">
-          <a class="flex items-center text-white hover:text-white transition duration-150 truncate"
-            href="{{ route('dashboard') }}">
-            <i data-lucide="layout-grid" class="shrink-0 h-5 w-5 mr-3 text-accent"></i>
+        <li
+          class="px-3 py-2 rounded-xl {{ request()->routeIs('company.dashboard') ? 'bg-accent/10 text-accent' : 'bg-transparent text-slate-300' }} mb-0.5 last:mb-0">
+          <a class="flex items-center transition duration-150 truncate"
+            href="{{ route('company.dashboard', ['company' => active_company()->uuid]) }}">
+            <i data-lucide="layout-grid"
+              class="shrink-0 h-5 w-5 mr-3 {{ request()->routeIs('company.dashboard') ? 'text-accent' : 'text-slate-500' }}"></i>
             <span class="text-sm font-medium">Dashboard</span>
           </a>
         </li>
 
-        <!-- Sales -->
-        <li class="px-3 py-2 rounded-xl hover:bg-slate-800/30 mb-0.5 last:mb-0 group transition-all">
-          <a class="flex items-center text-slate-300 group-hover:text-white transition duration-150 truncate"
-            href="#">
-            <i data-lucide="shopping-cart"
-              class="shrink-0 h-5 w-5 mr-3 text-slate-500 group-hover:text-accent transition-colors"></i>
-            <span class="text-sm font-medium">Sales Orders</span>
+        <!-- Sales (Dropdown) -->
+        <li class="px-3 py-2 rounded-xl hover:bg-slate-800/30 mb-0.5 last:mb-0 group transition-all"
+          x-data="{ open: false }">
+          <a
+            class="flex items-center justify-between text-slate-300 group-hover:text-white transition duration-150 truncate cursor-pointer sidebar-dropdown-toggle">
+            <div class="flex items-center">
+              <i data-lucide="shopping-cart"
+                class="shrink-0 h-5 w-5 mr-3 text-slate-500 group-hover:text-accent transition-colors"></i>
+              <span class="text-sm font-medium">Sales</span>
+            </div>
+            <i data-lucide="chevron-down"
+              class="shrink-0 h-4 w-4 text-slate-500 ml-2 transition-transform duration-200 sidebar-chevron"></i>
           </a>
+          <ul class="pl-9 mt-2 hidden sidebar-submenu space-y-2">
+            <li>
+              <a href="{{ route('company.sales-orders.index', ['company' => active_company()->uuid]) }}"
+                class="text-sm text-slate-400 hover:text-accent transition-colors block py-1">Sales Orders</a>
+            </li>
+            <li>
+              <a href="#"
+                class="text-sm text-slate-400 hover:text-accent transition-colors block py-1">Invoices</a>
+            </li>
+          </ul>
         </li>
 
-        <!-- Catalog -->
+        <!-- Catalog (Dropdown) -->
         <li class="px-3 py-2 rounded-xl hover:bg-slate-800/30 mb-0.5 last:mb-0 group transition-all">
-          <a class="flex items-center text-slate-300 group-hover:text-white transition duration-150 truncate"
-            href="#">
-            <i data-lucide="package"
-              class="shrink-0 h-5 w-5 mr-3 text-slate-500 group-hover:text-accent transition-colors"></i>
-            <span class="text-sm font-medium">Catalog</span>
+          <a
+            class="flex items-center justify-between text-slate-300 group-hover:text-white transition duration-150 truncate cursor-pointer sidebar-dropdown-toggle">
+            <div class="flex items-center">
+              <i data-lucide="package"
+                class="shrink-0 h-5 w-5 mr-3 text-slate-500 group-hover:text-accent transition-colors"></i>
+              <span class="text-sm font-medium">Catalog</span>
+            </div>
+            <i data-lucide="chevron-down"
+              class="shrink-0 h-4 w-4 text-slate-500 ml-2 transition-transform duration-200 sidebar-chevron"></i>
           </a>
+          <ul class="pl-9 mt-2 hidden sidebar-submenu space-y-2">
+            <li>
+              <a href="{{ route('company.catalog.products.index', ['company' => active_company()->uuid]) }}"
+                class="text-sm text-slate-400 hover:text-accent transition-colors block py-1">Products</a>
+            </li>
+            <li>
+              <a href="{{ route('company.catalog.categories.index', ['company' => active_company()->uuid]) }}"
+                class="text-sm text-slate-400 hover:text-accent transition-colors block py-1">Categories</a>
+            </li>
+            <li>
+              <a href="{{ route('company.catalog.attributes.index', ['company' => active_company()->uuid]) }}"
+                class="text-sm text-slate-400 hover:text-accent transition-colors block py-1">Attributes</a>
+            </li>
+          </ul>
         </li>
 
         <!-- Customers -->
         <li class="px-3 py-2 rounded-xl hover:bg-slate-800/30 mb-0.5 last:mb-0 group transition-all">
           <a class="flex items-center text-slate-300 group-hover:text-white transition duration-150 truncate"
-            href="#">
+            href="{{ route('company.customers.index', ['company' => active_company()->uuid]) }}">
             <i data-lucide="users"
               class="shrink-0 h-5 w-5 mr-3 text-slate-500 group-hover:text-accent transition-colors"></i>
             <span class="text-sm font-medium">Customers</span>
           </a>
         </li>
 
-        <!-- Inventory -->
+        <!-- Inventory (Dropdown) -->
         <li class="px-3 py-2 rounded-xl hover:bg-slate-800/30 mb-0.5 last:mb-0 group transition-all">
-          <a class="flex items-center text-slate-300 group-hover:text-white transition duration-150 truncate"
-            href="#">
-            <i data-lucide="database"
-              class="shrink-0 h-5 w-5 mr-3 text-slate-500 group-hover:text-accent transition-colors"></i>
-            <span class="text-sm font-medium">Inventory</span>
+          <a
+            class="flex items-center justify-between text-slate-300 group-hover:text-white transition duration-150 truncate cursor-pointer sidebar-dropdown-toggle">
+            <div class="flex items-center">
+              <i data-lucide="database"
+                class="shrink-0 h-5 w-5 mr-3 text-slate-500 group-hover:text-accent transition-colors"></i>
+              <span class="text-sm font-medium">Inventory</span>
+            </div>
+            <i data-lucide="chevron-down"
+              class="shrink-0 h-4 w-4 text-slate-500 ml-2 transition-transform duration-200 sidebar-chevron"></i>
           </a>
+          <ul class="pl-9 mt-2 hidden sidebar-submenu space-y-2">
+            <li>
+              <a href="{{ route('company.inventory.inventory.index', ['company' => active_company()->uuid]) }}"
+                class="text-sm text-slate-400 hover:text-accent transition-colors block py-1">Stock</a>
+            </li>
+            <li>
+              <a href="{{ route('company.inventory.transfers.index', ['company' => active_company()->uuid]) }}"
+                class="text-sm text-slate-400 hover:text-accent transition-colors block py-1">Transfers</a>
+            </li>
+            <li>
+              <a href="{{ route('company.inventory.warehouses.index', ['company' => active_company()->uuid]) }}"
+                class="text-sm text-slate-400 hover:text-accent transition-colors block py-1">Warehouses</a>
+            </li>
+            <li>
+              <a href="{{ route('company.inventory.stores.index', ['company' => active_company()->uuid]) }}"
+                class="text-sm text-slate-400 hover:text-accent transition-colors block py-1">Stores</a>
+            </li>
+          </ul>
         </li>
       </ul>
     </div>
@@ -102,3 +159,23 @@
     </div>
   </div>
 </aside>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Simple sidebar dropdown toggle using jQuery since it's available
+    $('.sidebar-dropdown-toggle').on('click', function(e) {
+      e.preventDefault();
+      const $parent = $(this).parent();
+      const $submenu = $parent.find('.sidebar-submenu');
+      const $chevron = $parent.find('.sidebar-chevron');
+
+      $submenu.slideToggle(200);
+
+      if ($chevron.css('transform') === 'none') {
+        $chevron.css('transform', 'rotate(-180deg)');
+      } else {
+        $chevron.css('transform', '');
+      }
+    });
+  });
+</script>
