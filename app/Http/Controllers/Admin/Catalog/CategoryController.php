@@ -246,7 +246,7 @@ class CategoryController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'parent_id' => 'nullable|exists:categories,id',
-            'attributes' => 'array',
+            'attributes' => 'required|array|min:1',
             'attributes.*' => 'exists:attributes,id',
         ]);
 
@@ -260,9 +260,7 @@ class CategoryController extends Controller
         $category->save();
 
         // Sync Attributes
-        if ($validated['attributes']) {
-            $category->attributes()->sync($validated['attributes']);
-        }
+        $category->attributes()->sync($validated['attributes']);
 
         return redirect(company_route('catalog.categories.index'))
             ->with('success', 'Category created successfully.');
@@ -299,7 +297,7 @@ class CategoryController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'parent_id' => 'nullable|exists:categories,id',
-            'attributes' => 'array',
+            'attributes' => 'required|array|min:1',
             'attributes.*' => 'exists:attributes,id',
         ]);
 
@@ -310,11 +308,7 @@ class CategoryController extends Controller
         $category->save();
 
         // Sync Attributes
-        if ($validated['attributes']) {
-            $category->attributes()->sync($validated['attributes']);
-        } else {
-            $category->attributes()->detach(); // If no attributes are selected, remove all
-        }
+        $category->attributes()->sync($validated['attributes']);
 
         return redirect(company_route('catalog.categories.index'))
             ->with('success', 'Category updated successfully.');

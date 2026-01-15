@@ -98,8 +98,9 @@
                   creation.</p>
               </div>
 
-              <label for="attributes" class="block text-sm font-semibold text-slate-700 mb-2">Select Attributes</label>
-              <select name="attributes[]" id="attributes" class="select2 w-full" multiple
+              <label for="attributes" class="block text-sm font-semibold text-slate-700 mb-2">Select Attributes <span
+                  class="text-red-500">*</span></label>
+              <select name="attributes[]" id="attributes" class="select2 w-full" multiple required
                 data-placeholder="Select attributes for this category">
                 @foreach ($attributes as $attr)
                   <option value="{{ $attr->id }}"
@@ -108,6 +109,9 @@
                   </option>
                 @endforeach
               </select>
+              @error('attributes')
+                <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
+              @enderror
             </div>
           </div>
         </div>
