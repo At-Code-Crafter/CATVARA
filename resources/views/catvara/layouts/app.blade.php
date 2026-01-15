@@ -8,10 +8,11 @@
 
   <title>{{ config('app.name', 'CATVARA') }}</title>
 
-  <!-- Google Fonts: Inter -->
+  <!-- Google Fonts: Nunito -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;500;600;700;800;900&display=swap"
+    rel="stylesheet">
 
   <!-- Tailwind CSS (CDN) -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -20,28 +21,35 @@
       theme: {
         extend: {
           fontFamily: {
-            sans: ['Inter', 'sans-serif'],
+            sans: ['Nunito', 'sans-serif'],
           },
           colors: {
             brand: {
-              50: '#eef2ff',
-              100: '#e0e7ff',
-              200: '#c7d2fe',
-              300: '#a5b4fc',
-              400: '#818cf8',
-              500: '#6366f1', // Indigo 500
-              600: '#4f46e5', // Indigo 600 (Primary Action)
-              700: '#4338ca',
-              800: '#3730a3',
-              900: '#312e81',
+              50: '#fff3e6',
+              100: '#ffe6cc',
+              200: '#ffcc99',
+              300: '#ffb366',
+              400: '#ff9f43', // Primary Orange
+              500: '#e68a33',
+              600: '#cc7a29',
+              700: '#b36b24',
+              800: '#995c1f',
+              900: '#804d1a',
             },
             slate: {
               850: '#1e293b',
+              950: '#0f172a',
             }
           },
           boxShadow: {
             'soft': '0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px -1px rgba(0, 0, 0, 0.02)',
-            'glow': '0 0 15px rgba(99, 102, 241, 0.15)',
+            'card': '0 8px 30px rgba(0, 0, 0, 0.04)',
+            'glow': '0 0 15px rgba(255, 159, 67, 0.15)',
+          },
+          borderRadius: {
+            'xl': '12px',
+            '2xl': '16px',
+            '3xl': '24px',
           }
         }
       }
@@ -58,25 +66,24 @@
   <!-- Custom Styles -->
   <style>
     body {
-      background-color: #f8fafc;
-      /* Slate 50 */
-      color: #18181b;
-      /* Zinc 900 */
+      background-color: #f7f8f9;
+      color: #334155;
+      font-size: 0.9375rem;
     }
 
     /* Custom Scrollbar */
     ::-webkit-scrollbar {
-      width: 6px;
-      height: 6px;
+      width: 5px;
+      height: 5px;
     }
 
     ::-webkit-scrollbar-track {
-      background: transparent;
+      background: #f1f5f9;
     }
 
     ::-webkit-scrollbar-thumb {
       background: #cbd5e1;
-      border-radius: 3px;
+      border-radius: 10px;
     }
 
     ::-webkit-scrollbar-thumb:hover {
@@ -85,10 +92,10 @@
 
     /* Select2 Modernization */
     .select2-container .select2-selection--single {
-      height: 40px !important;
-      border-color: #cbd5e1 !important;
-      /* Slate 300 */
-      border-radius: 0.5rem !important;
+      height: 42px !important;
+      border-color: #e2e8f0 !important;
+      border-radius: 10px !important;
+      font-size: 0.875rem !important;
       display: flex !important;
       align-items: center !important;
       box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
@@ -98,10 +105,16 @@
       height: 38px !important;
     }
 
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+      line-height: 40px !important;
+      padding-left: 12px !important;
+    }
+
     .select2-dropdown {
-      border-color: #e2e8f0 !important;
-      border-radius: 0.5rem !important;
-      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
+      border: none !important;
+      border-radius: 12px !important;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1) !important;
+      padding: 5px;
       overflow: hidden;
     }
 
@@ -111,46 +124,48 @@
     }
 
     .select2-results__option--highlighted {
-      background-color: #e0e7ff !important;
-      /* Indigo 100 */
-      color: #4338ca !important;
-      /* Indigo 700 */
+      background-color: #ffe6cc !important;
+      /* Brand 100 */
+      color: #b36b24 !important;
+      /* Brand 700 */
     }
 
-    /* DataTables Cleaning */
+    /* DataTables Premium Look */
     .dataTables_wrapper .dataTables_length select,
     .dataTables_wrapper .dataTables_filter input {
       border: 1px solid #e2e8f0;
-      border-radius: 0.375rem;
-      padding: 0.4rem 0.6rem;
-      font-size: 0.875rem;
-      color: #475569;
+      border-radius: 8px;
+      padding: 0.5rem 0.75rem;
+      font-size: 0.8125rem;
+      color: #64748b;
     }
 
     .dataTables_wrapper .dataTables_filter input:focus {
       outline: none;
-      border-color: #6366f1;
-      box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.1);
+      border-color: #ff9f43;
+      box-shadow: 0 0 0 2px rgba(255, 159, 67, 0.1);
     }
 
     table.dataTable.no-footer {
-      border-bottom: 1px solid #f1f5f9 !important;
+      border-bottom: none !important;
     }
 
     table.dataTable thead th {
-      border-bottom: 1px solid #e2e8f0 !important;
+      background-color: #f8fafc;
+      border-bottom: 1px solid #f1f5f9 !important;
       color: #64748b !important;
-      font-weight: 500 !important;
-      text-transform: uppercase;
+      font-weight: 600 !important;
       font-size: 0.75rem;
-      letter-spacing: 0.05em;
-      padding-bottom: 1rem !important;
+      letter-spacing: 0.025em;
+      padding: 1rem !important;
+      text-align: left;
     }
 
     table.dataTable tbody td {
-      padding: 1rem 1rem !important;
-      color: #334155;
       border-bottom: 1px solid #f1f5f9;
+      padding: 0.875rem 1rem !important;
+      font-size: 0.875rem;
+      color: #334155;
     }
 
     /* Professional Zebra Striping */
@@ -159,9 +174,8 @@
       /* Slate 50 with alpha */
     }
 
-    table tbody tr:hover {
-      background-color: rgba(241, 245, 249, 1) !important;
-      /* Slate 100 on hover */
+    table.dataTable tbody tr:hover {
+      background-color: #fff9f4 !important;
     }
 
     /* Global Input Contrast */
@@ -171,16 +185,7 @@
     input[type="password"],
     textarea,
     select {
-      border-color: #cbd5e1 !important;
-      /* Slate 300 */
-    }
-
-    input:focus,
-    textarea:focus,
-    select:focus {
-      border-color: #6366f1 !important;
-      /* Brand 500 */
-      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1) !important;
+      @apply border-slate-200 focus:border-brand-400 focus:ring focus:ring-brand-400/10 rounded-xl text-sm transition-all bg-white;
     }
 
     /* Utility */
@@ -189,11 +194,230 @@
       backdrop-filter: blur(10px);
     }
 
+    /* Premium UI Touches */
+    .btn {
+      @apply inline-flex items-center justify-center px-5 py-2.5 rounded-xl font-bold transition-all duration-300 cursor-pointer text-sm;
+    }
+
+    .btn-sm {
+      @apply px-4 py-2 text-xs;
+    }
+
+    .btn-primary {
+      @apply bg-brand-400 text-white hover:bg-brand-500 shadow-lg shadow-brand-400/20 active:scale-95 border-b-2 border-brand-600/20;
+    }
+
+    .btn-white {
+      @apply bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 shadow-sm active:scale-95;
+    }
+
+    /* Cards */
+    .card {
+      background-color: #ffffff !important;
+      border-radius: 1rem !important;
+      box-shadow: 0 4px 20px -5px rgba(0, 0, 0, 0.05), 0 2px 10px -5px rgba(0, 0, 0, 0.05) !important;
+      border: 1px solid #f1f5f9 !important;
+      overflow: hidden;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .card:hover {
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.04), 0 10px 10px -5px rgba(0, 0, 0, 0.02) !important;
+      transform: translateY(-2px);
+    }
+
+    /* Sidebar Links */
+    .nav-link.active {
+      @apply bg-brand-50 text-brand-400 relative overflow-hidden;
+    }
+
+    .nav-link.active::after {
+      content: '';
+      @apply absolute right-0 top-1/2 -translate-y-1/2 w-1.5 h-6 bg-brand-400 rounded-l-full;
+    }
+
+    /* Table Improvements */
+    .table-premium {
+      @apply w-full border-collapse;
+    }
+
+    .table-premium thead th {
+      @apply px-6 py-4 bg-slate-50/50 text-[11px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100;
+    }
+
+    .table-premium tbody td {
+      @apply px-6 py-5 border-b border-slate-50 text-sm font-medium text-slate-600;
+    }
+
+    /* Animations */
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .animate-fade-in {
+      animation: fadeIn 0.4s ease-out forwards;
+    }
+
+    /* Badges */
+    .badge {
+      @apply inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border;
+    }
+
+    .badge-success {
+      @apply bg-emerald-50 text-emerald-500 border-emerald-100;
+    }
+
+    .badge-warning {
+      @apply bg-orange-50 text-orange-500 border-orange-100;
+    }
+
+    .badge-danger {
+      @apply bg-red-50 text-red-500 border-red-100;
+    }
+
+    .badge-info {
+      @apply bg-blue-50 text-blue-500 border-blue-100;
+    }
+
+    .badge-secondary {
+      @apply bg-slate-50 text-slate-500 border-slate-100;
+    }
+
+    /* Dashboard High-Fidelity Styles */
+    .dashboard-stat-card {
+      position: relative;
+      overflow: hidden;
+      border-radius: 1rem;
+      padding: 1.5rem;
+      color: white;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s ease;
+    }
+
+    .dashboard-stat-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+
+    .stat-icon-wrapper {
+      height: 3rem;
+      width: 3rem;
+      border-radius: 0.75rem;
+      background: rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(8px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      margin-bottom: 1rem;
+    }
+
+    .list-item-hover {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.875rem;
+      border-radius: 0.75rem;
+      transition: all 0.2s ease;
+      cursor: pointer;
+    }
+
+    .list-item-hover:hover {
+      background-color: #f8fafc;
+    }
+
+    .trend-badge {
+      @apply px-2 py-0.5 rounded-full text-[10px] font-bold border;
+    }
+
+    .trend-up {
+      @apply bg-emerald-50 text-emerald-500 border-emerald-100;
+    }
+
+    .trend-down {
+      @apply bg-red-50 text-red-500 border-red-100;
+    }
+
+    /* Custom Colors from reference */
+    .bg-pos-orange {
+      background: linear-gradient(135deg, #ff9f43 0%, #ffb366 100%);
+    }
+
+    .bg-pos-dark {
+      background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+    }
+
+    .bg-pos-emerald {
+      background: linear-gradient(135deg, #28c76f 0%, #48d689 100%);
+    }
+
+    .bg-pos-blue {
+      background: linear-gradient(135deg, #00cfe8 0%, #33dcf0 100%);
+    }
+
+    .bg-pos-indigo {
+      background: linear-gradient(135deg, #7367f0 0%, #8e85f3 100%);
+    }
+
+    /* Tabs Styling */
+    .pos-tab {
+      @apply px-5 py-2 text-xs font-black text-slate-400 border-b-2 border-transparent transition-all cursor-pointer hover:text-slate-600;
+    }
+
+    .pos-tab.active {
+      @apply text-brand-400 border-brand-400;
+    }
+
+    /* Heatmap / Order Stats Grid */
+    .heatmap-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 4px;
+    }
+
+    .heatmap-cell {
+      @apply h-8 rounded-sm transition-all duration-300;
+    }
+
+    .heatmap-cell-0 {
+      @apply bg-orange-50/30;
+    }
+
+    .heatmap-cell-1 {
+      @apply bg-orange-100/50;
+    }
+
+    .heatmap-cell-2 {
+      @apply bg-orange-200;
+    }
+
+    .heatmap-cell-3 {
+      @apply bg-orange-300;
+    }
+
+    .heatmap-cell-4 {
+      @apply bg-brand-400;
+    }
+
+    /* Glass Effect */
+    .glass-sidebar {
+      background: rgba(255, 255, 255, 0.8);
+      backdrop-filter: blur(10px);
+    }
+
     /* --- Sidebar Collapse Logic --- */
     :root {
-      --sidebar-width: 16rem;
+      --sidebar-width: 260px;
       /* w-64 */
-      --sidebar-collapsed-width: 5rem;
+      --sidebar-collapsed-width: 80px;
       /* w-20 */
       --header-height: 4rem;
     }
@@ -219,11 +443,6 @@
       opacity: 0;
       width: 0;
       display: none;
-    }
-
-    /* Hide Submenus when Collapsed (and not hovered) */
-    body.sidebar-collapsed:not(:hover) .nav-group>div {
-      display: none !important;
     }
 
     /* Center Icons when Collapsed */
@@ -299,6 +518,17 @@
       /* Fixed width for icon consistency */
       text-align: center;
     }
+
+    /* Sidebar Responsive Sidebar Overlay */
+    @media (max-width: 1024px) {
+      .sidebar-open #mainSidebar {
+        transform: translateX(0);
+      }
+
+      .sidebar-overlay {
+        @apply fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-40 transition-opacity;
+      }
+    }
   </style>
   @stack('styles')
 </head>
@@ -348,7 +578,7 @@
           </button>
 
           <!-- Company Selector -->
-          @if(active_company())
+          @if (active_company())
             <div
               class="hidden md:flex items-center px-3 py-1.5 bg-brand-50 text-brand-700 rounded-full text-xs font-semibold border border-brand-100">
               <i class="fas fa-building mr-2"></i>
@@ -379,7 +609,8 @@
               </div>
 
               <div class="py-1">
-                <a href="#" class="block px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 hover:text-brand-600">Your
+                <a href="#"
+                  class="block px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 hover:text-brand-600">Your
                   Profile</a>
                 <a href="#"
                   class="block px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 hover:text-brand-600">Company
@@ -402,14 +633,14 @@
       <!-- Main Content -->
       <main class="w-full flex-1 p-8">
         <!-- Alerts (Same) -->
-        @if(session('success'))
+        @if (session('success'))
           <div
             class="mb-6 p-4 rounded-lg bg-emerald-50 border border-emerald-100 text-emerald-700 flex items-center shadow-sm">
             <i class="fas fa-check-circle mr-3 text-emerald-500"></i>
             <span class="text-sm font-medium">{{ session('success') }}</span>
           </div>
         @endif
-        @if(session('error'))
+        @if (session('error'))
           <div class="mb-6 p-4 rounded-lg bg-red-50 border border-red-100 text-red-700 flex items-center shadow-sm">
             <i class="fas fa-exclamation-circle mr-3 text-red-500"></i>
             <span class="text-sm font-medium">{{ session('error') }}</span>
@@ -437,7 +668,7 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <script>
-    $(document).ready(function () {
+    $(document).ready(function() {
       $('.select2').select2({
         width: '100%'
       });
@@ -492,7 +723,7 @@
     });
 
     // Global Delete Confirmation
-    window.confirmDelete = function (url) {
+    window.confirmDelete = function(url) {
       Swal.fire({
         title: 'Are you sure?',
         text: "You won't be able to revert this!",

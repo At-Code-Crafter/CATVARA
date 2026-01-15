@@ -38,6 +38,7 @@ class DashboardController extends Controller
             if ($dateTo) {
                 $query->where('created_at', '<=', $dateTo);
             }
+
             return $query;
         };
 
@@ -77,7 +78,7 @@ class DashboardController extends Controller
             'total_warehouses' => Warehouse::where('company_id', $companyId)->count(),
             'total_stores' => Store::where('company_id', $companyId)->count(),
             'pending_transfers' => InventoryTransfer::where('company_id', $companyId)
-                ->whereHas('status', fn($q) => $q->where('code', 'PENDING'))
+                ->whereHas('status', fn ($q) => $q->where('code', 'PENDING'))
                 ->count(),
 
             // Status IDs for links
@@ -96,10 +97,10 @@ class DashboardController extends Controller
             ->where('status_id', $confirmedStatus?->id)
             ->where('created_at', '>=', Carbon::now()->subMonths(6)->startOfMonth())
             ->select(
-                DB::raw('YEAR(created_at) as year'),
-                DB::raw('MONTH(created_at) as month'),
-                DB::raw('SUM(grand_total) as revenue'),
-                DB::raw('COUNT(*) as order_count')
+                db_raw('YEAR(created_at) as year'),
+                db_raw('MONTH(created_at) as month'),
+                db_raw('SUM(grand_total) as revenue'),
+                db_raw('COUNT(*) as order_count')
             )
             ->groupBy('year', 'month')
             ->orderBy('year')
@@ -126,7 +127,7 @@ class DashboardController extends Controller
 
         // 2. Order Status Distribution - Donut Chart
         $ordersByStatus = Order::where('company_id', $companyId)
-            ->select('status_id', DB::raw('COUNT(*) as count'))
+            ->select('status_id', db_raw('COUNT(*) as count'))
             ->groupBy('status_id')
             ->with('status')
             ->get()
@@ -140,7 +141,7 @@ class DashboardController extends Controller
 
         // 3. Customer Types - Pie Chart
         $customersByType = Customer::where('company_id', $companyId)
-            ->select('type', DB::raw('COUNT(*) as count'))
+            ->select('type', db_raw('COUNT(*) as count'))
             ->groupBy('type')
             ->get();
 
@@ -148,9 +149,9 @@ class DashboardController extends Controller
         $monthlyOrders = Order::where('company_id', $companyId)
             ->where('created_at', '>=', Carbon::now()->subMonths(6)->startOfMonth())
             ->select(
-                DB::raw('YEAR(created_at) as year'),
-                DB::raw('MONTH(created_at) as month'),
-                DB::raw('COUNT(*) as count')
+                db_raw('YEAR(created_at) as year'),
+                db_raw('MONTH(created_at) as month'),
+                db_raw('COUNT(*) as count')
             )
             ->groupBy('year', 'month')
             ->orderBy('year')
@@ -176,7 +177,7 @@ class DashboardController extends Controller
             ->join('product_variants', 'order_items.product_variant_id', '=', 'product_variants.id')
             ->join('products', 'product_variants.product_id', '=', 'products.id')
             ->where('orders.company_id', $companyId)
-            ->select('products.name', DB::raw('SUM(order_items.quantity) as total_qty'))
+            ->select('products.name', db_raw('SUM(order_items.quantity) as total_qty'))
             ->groupBy('products.id', 'products.name')
             ->orderByDesc('total_qty')
             ->limit(5)
@@ -216,7 +217,7 @@ class DashboardController extends Controller
         // Uses helper active_company() you already asked me to implement
         $company = active_company();
 
-        if (!$company) {
+        if (! $company) {
             return redirect()->route('company.select');
         }
 

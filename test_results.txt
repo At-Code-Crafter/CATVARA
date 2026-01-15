@@ -1,0 +1,20 @@
+Active Prefix: ec_
+
+IN:  products.name
+OUT: ec_products.name
+
+IN:  YEAR(created_at)
+OUT: YEAR(created_at)
+
+IN:  SUM(order_items.quantity) as total
+OUT: SUM(ec_order_items.quantity) as total
+
+IN:  name = 'products.name'
+OUT: name = 'products.name'
+
+IN:  `order_items`.quantity
+OUT: `order_items`.quantity
+
+IN:  `order_items` . `quantity`
+OUT: `order_items` . `quantity`
+
