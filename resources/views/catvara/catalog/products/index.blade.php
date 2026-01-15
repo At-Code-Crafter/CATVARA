@@ -16,46 +16,57 @@
   </div>
 
   {{-- Filters --}}
-  <div class="card p-6 border-slate-100 bg-white shadow-soft mb-8">
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-      <div class="space-y-1.5">
-        <label for="filter_category"
-          class="text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-1">Category</label>
-        <select id="filter_category" class="select2 w-full">
-          <option value="">All Categories</option>
-          @foreach ($categories as $cat)
-            <option value="{{ $cat->id }}">{{ $cat->name }}</option>
-          @endforeach
-        </select>
-      </div>
-      <div class="space-y-1.5">
-        <label for="filter_status"
-          class="text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-1">Status</label>
-        <select id="filter_status" class="select2 w-full">
-          <option value="">All Status</option>
-          <option value="1">Active</option>
-          <option value="0">Inactive</option>
-        </select>
-      </div>
-      <div class="space-y-1.5">
-        <label for="filter_stock" class="text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-1">Stock
-          Level</label>
-        <select id="filter_stock" class="select2 w-full">
-          <option value="">All Stock</option>
-          <option value="in_stock">In Stock</option>
-          <option value="low_stock">Low Stock</option>
-          <option value="out_of_stock">Out of Stock</option>
-        </select>
-      </div>
+  <div class="card border-slate-100 bg-white shadow-soft mb-8">
+    <div class="p-6 border-b border-slate-50 flex justify-between items-center bg-slate-50/20">
+      <h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
+        <i class="fas fa-filter text-brand-400"></i> Filters
+      </h3>
+      <button
+        class="filter-toggle-btn h-8 w-8 rounded-lg hover:bg-slate-100 flex items-center justify-center text-slate-400 transition-all">
+        <i class="fas fa-chevron-up filter-toggle-icon"></i>
+      </button>
     </div>
-    <div class="flex items-center justify-end gap-3 mt-6 pt-6 border-t border-slate-50">
-      <button id="btn_reset_filters" class="btn btn-white min-w-[120px]">Reset</button>
-      <button id="btn_apply_filters" class="btn btn-primary min-w-[120px]">Filter</button>
+    <div class="p-6 filter-card-content">
+      <div class="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 gap-6">
+        <div class="space-y-1.5">
+          <label for="filter_category"
+            class="text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-1">Category</label>
+          <select id="filter_category" class="select2 w-full" data-placeholder="All Categories">
+            <option value="">All Categories</option>
+            @foreach ($categories as $cat)
+              <option value="{{ $cat->id }}">{{ $cat->name }}</option>
+            @endforeach
+          </select>
+        </div>
+        <div class="space-y-1.5">
+          <label for="filter_status"
+            class="text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-1">Status</label>
+          <select id="filter_status" class="select2 w-full" data-placeholder="All Status">
+            <option value="">All Status</option>
+            <option value="1">Active</option>
+            <option value="0">Inactive</option>
+          </select>
+        </div>
+        <div class="space-y-1.5">
+          <label for="filter_stock" class="text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-1">Stock
+            Level</label>
+          <select id="filter_stock" class="select2 w-full" data-placeholder="All Stock">
+            <option value="">All Stock</option>
+            <option value="in_stock">In Stock</option>
+            <option value="low_stock">Low Stock (≤ 5)</option>
+            <option value="out_of_stock">Out of Stock</option>
+          </select>
+        </div>
+      </div>
+      <div class="filter-actions">
+        <button id="btn_reset_filters" class="btn btn-white min-w-[120px]">Clear Filter</button>
+        <button id="btn_apply_filters" class="btn btn-primary min-w-[123px]">Apply Filter</button>
+      </div>
     </div>
   </div>
 
   <div class="card bg-white border-slate-100 shadow-soft overflow-hidden">
-    <div class="p-0">
+    <div class="p-6">
       <table class="table-premium w-full text-left" id="productsTable">
         <thead>
           <tr>

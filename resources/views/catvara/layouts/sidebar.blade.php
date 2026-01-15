@@ -82,7 +82,7 @@
         <div class="space-y-1 mt-1 {{ $isSalesActive ? '' : 'hidden' }}">
           <a href="{{ company_route('sales-orders.index') }}"
             class="flex items-center py-2 pl-12 pr-4 text-xs font-medium {{ $isActive('sales-orders.index') ? 'text-brand-400' : 'text-slate-500 hover:text-brand-400' }}">
-            <span class="sidebar-text">All Orders</span>
+            <span class="sidebar-text">Orders</span>
           </a>
           <a href="{{ company_route('invoices.index') }}"
             class="flex items-center py-2 pl-12 pr-4 text-xs font-medium {{ $isActive('invoices.index') ? 'text-brand-400' : 'text-slate-500 hover:text-brand-400' }}">
@@ -146,6 +146,14 @@
             class="flex items-center py-2 pl-12 pr-4 text-xs font-medium {{ $isActive('inventory.inventory.index') ? 'text-brand-400' : 'text-slate-500 hover:text-brand-400' }}">
             <span class="sidebar-text">Stock</span>
           </a>
+          <a href="{{ company_route('inventory.stores.index') }}"
+            class="flex items-center py-2 pl-12 pr-4 text-xs font-medium {{ $isActive('inventory.stores.index') ? 'text-brand-400' : 'text-slate-500 hover:text-brand-400' }}">
+            <span class="sidebar-text">Stores</span>
+          </a>
+          <a href="{{ company_route('inventory.warehouses.index') }}"
+            class="flex items-center py-2 pl-12 pr-4 text-xs font-medium {{ $isActive('inventory.warehouses.index') ? 'text-brand-400' : 'text-slate-500 hover:text-brand-400' }}">
+            <span class="sidebar-text">Warehouses</span>
+          </a>
         </div>
       </div>
 
@@ -160,18 +168,40 @@
         <span class="sidebar-text">Customers</span>
       </a>
 
-      <p class="px-3 pt-6 mb-2 text-[11px] font-bold text-slate-400 uppercase tracking-widest nav-group-header">Settings
-      </p>
+      <p class="px-3 pt-6 mb-2 text-[11px] font-bold text-slate-400 uppercase tracking-widest nav-group-header">System
+        Maintenance</p>
 
-      <a href="{{ safe_route('tenants.index') }}"
-        class="flex items-center px-4 py-3 text-sm font-semibold rounded-xl transition-all group nav-link
-        {{ $isActive(['tenants.*']) ? 'bg-brand-50 text-brand-400' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900' }}">
-        <div class="w-8 flex justify-start items-center">
+      @php $isSettingsActive = $isActive(['tenants.*', 'users.*', 'company.settings.roles.*']); @endphp
+      <div class="nav-group">
+        <button
+          class="w-full flex items-center justify-between px-4 py-3 text-sm font-semibold rounded-xl transition-all group
+          {{ $isSettingsActive ? 'text-slate-900 bg-slate-50' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900' }}"
+          onclick="$(this).next('div').slideToggle(200); $(this).find('.arrow').toggleClass('rotate-180')">
+          <div class="flex items-center">
+            <div class="w-8 flex justify-start items-center">
+              <i
+                class="fas fa-cog {{ $isSettingsActive ? 'text-brand-400' : 'text-slate-400 group-hover:text-slate-500' }}"></i>
+            </div>
+            <span class="sidebar-text">Settings</span>
+          </div>
           <i
-            class="fas fa-building {{ $isActive(['tenants.*']) ? 'text-brand-400' : 'text-slate-400 group-hover:text-slate-500' }}"></i>
+            class="fas fa-chevron-right text-[10px] text-slate-300 transition-transform arrow {{ $isSettingsActive ? 'rotate-90' : '' }}"></i>
+        </button>
+        <div class="space-y-1 mt-1 {{ $isSettingsActive ? '' : 'hidden' }}">
+          <a href="{{ safe_route('tenants.index') }}"
+            class="flex items-center py-2 pl-12 pr-4 text-xs font-medium {{ $isActive('tenants.*') ? 'text-brand-400' : 'text-slate-500 hover:text-brand-400' }}">
+            <span class="sidebar-text">Companies</span>
+          </a>
+          <a href="{{ route('users.index') }}"
+            class="flex items-center py-2 pl-12 pr-4 text-xs font-medium {{ $isActive('users.*') ? 'text-brand-400' : 'text-slate-500 hover:text-brand-400' }}">
+            <span class="sidebar-text">Users</span>
+          </a>
+          <a href="{{ route('settings.roles.index', ['company' => $company->uuid]) }}"
+            class="flex items-center py-2 pl-12 pr-4 text-xs font-medium {{ $isActive(['settings.roles.*']) ? 'text-brand-400' : 'text-slate-500 hover:text-brand-400' }}">
+            <span class="sidebar-text">Roles</span>
+          </a>
         </div>
-        <span class="sidebar-text">Companies</span>
-      </a>
+      </div>
     @endif
 
   </div>

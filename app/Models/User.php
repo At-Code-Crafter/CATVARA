@@ -23,6 +23,7 @@ class User extends Authenticatable
      * @var list<string>
      */
     protected $fillable = [
+        'uuid',
         'name',
         'email',
         'password',
@@ -68,6 +69,14 @@ class User extends Authenticatable
             Role::class,
             'company_user_role'
         )->wherePivot('company_id', $companyId);
+    }
+
+    public function allCompanyRoles()
+    {
+        return $this->belongsToMany(
+            Role::class,
+            'company_user_role'
+        )->withPivot('company_id')->withTimestamps();
     }
 
     public function isSuperAdmin(): bool

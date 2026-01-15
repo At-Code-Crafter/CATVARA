@@ -35,8 +35,23 @@ class ProductController extends Controller
                 $query->where('is_active', $request->status);
             }
 
-            // Note: Stock filtering might require a Join or a specific whereHas on variants.
-            // For now, implementing Status as it was specifically mentioned.
+            if ($request->filled('stock_level')) {
+                $status = $request->stock_level;
+                if ($status === 'in_stock') {
+                    $query->whereHas('variants.inventory', function ($q) {
+                        $q->where('quantity', '>', 0);
+                    });
+                } elseif ($status === 'low_stock') {
+                    $query->whereHas('variants.inventory', function ($q) {
+                        $q->where('quantity', '>', 0)->where('quantity', '<=', 5);
+                    });
+                } elseif ($status === 'out_of_stock') {
+                    // Products that do NOT have any inventory > 0
+                    $query->whereDoesntHave('variants.inventory', function ($q) {
+                        $q->where('quantity', '>', 0);
+                    });
+                }
+            }
 
             return DataTables::of($query)
                 ->addIndexColumn()

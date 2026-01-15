@@ -118,6 +118,7 @@ class AttributeController extends Controller
         $attribute->company_id = $request->company->id;
         $attribute->name = $request->name;
         $attribute->code = Str::slug($request->code);
+        $attribute->is_active = $request->has('is_active');
 
         if (Attribute::where('company_id', $request->company->id)->where('code', $attribute->code)->exists()) {
             return back()->withErrors(['code' => 'Code already exists for this company.']);
@@ -163,6 +164,7 @@ class AttributeController extends Controller
         ]);
 
         $attribute->name = $request->name;
+        $attribute->is_active = $request->has('is_active');
         $attribute->save();
 
         // 1. Update Existing Values (Status)

@@ -64,7 +64,7 @@ class RoleController extends Controller
                 )
 
                 ->addColumn('action', function ($row) use ($company) {
-                    $editUrl = route('company.settings.roles.edit', ['company' => $company->uuid, 'role' => $row->id]);
+                    $editUrl = route('settings.roles.edit', ['company' => $company->uuid, 'role' => $row->id]);
 
                     return '
                     <div class="dropdown">
@@ -83,7 +83,7 @@ class RoleController extends Controller
                 ->make(true);
         }
 
-        return view('theme.adminlte.settings.roles.index', compact('company'));
+        return view('catvara.roles.index', compact('company'));
     }
 
     public function create(Company $company)
@@ -98,7 +98,7 @@ class RoleController extends Controller
             ->orderBy('name')
             ->get();
 
-        return view('theme.adminlte.settings.roles.create', compact('company', 'modules'));
+        return view('catvara.roles.create', compact('company', 'modules'));
     }
 
     public function store(Company $company, RoleStoreRequest $request)
@@ -124,7 +124,7 @@ class RoleController extends Controller
 
             DB::commit();
 
-            $redirect = route('company.settings.roles.index', ['company' => $company->uuid]);
+            $redirect = route('settings.roles.index', ['company' => $company->uuid]);
 
             if ($request->ajax()) {
                 return response()->json([
@@ -162,7 +162,7 @@ class RoleController extends Controller
 
         $selected = $role->permissions()->pluck('permissions.id')->toArray();
 
-        return view('theme.adminlte.settings.roles.edit', compact('company', 'role', 'modules', 'selected'));
+        return view('catvara.roles.edit', compact('company', 'role', 'modules', 'selected'));
     }
 
     public function update(Company $company, RoleUpdateRequest $request, Role $role)
@@ -188,7 +188,7 @@ class RoleController extends Controller
 
             DB::commit();
 
-            $redirect = route('company.settings.roles.index', ['company' => $company->uuid]);
+            $redirect = route('settings.roles.index', ['company' => $company->uuid]);
 
             if ($request->ajax()) {
                 return response()->json([

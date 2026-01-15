@@ -62,9 +62,13 @@
   <link href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css" rel="stylesheet" />
   <link href="https://cdn.datatables.net/responsive/2.4.1/css/responsive.dataTables.min.css" rel="stylesheet" />
   <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.12/dist/sweetalert2.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+  <link href="https://unpkg.com/filepond/dist/filepond.css" rel="stylesheet" />
+  <link href="https://unpkg.com/filepond-plugin-image-preview/dist/filepond-plugin-image-preview.css"
+    rel="stylesheet" />
 
   <!-- Custom Styles -->
-  <style>
+  <style type="text/tailwindcss">
     body {
       background-color: #f7f8f9;
       color: #334155;
@@ -185,7 +189,7 @@
     input[type="password"],
     textarea,
     select {
-      @apply border-slate-200 focus:border-brand-400 focus:ring focus:ring-brand-400/10 rounded-xl text-sm transition-all bg-white;
+      @apply border border-slate-300 focus:border-brand-400 focus:ring focus:ring-brand-400/10 rounded-xl text-sm transition-all bg-white px-3;
     }
 
     /* Utility */
@@ -529,6 +533,41 @@
         @apply fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-40 transition-opacity;
       }
     }
+
+    /* Filter Cards - Collapsible */
+    .filter-card-content {
+      transition: all 0.3s ease-in-out;
+      overflow: hidden;
+      max-height: 1000px;
+    }
+
+    .filter-card-content.collapsed {
+      max-height: 0 !important;
+      padding-top: 0 !important;
+      padding-bottom: 0 !important;
+      margin-top: 0 !important;
+      opacity: 0;
+    }
+
+    .filter-toggle-icon {
+      transition: transform 0.3s ease;
+    }
+
+    .filter-toggle-icon.rotated {
+      transform: rotate(180deg);
+    }
+
+    /* Standard Button Row for Filters */
+    .filter-actions {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 0.75rem;
+      margin-top: 1.5rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid #f1f5f9;
+      width: 100%;
+    }
   </style>
   @stack('styles')
 </head>
@@ -666,11 +705,35 @@
   <script src="https://cdn.datatables.net/responsive/2.4.1/js/dataTables.responsive.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.12/dist/sweetalert2.all.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+  <script src="https://unpkg.com/filepond-plugin-image-preview/dist/filepond-plugin-image-preview.js"></script>
+  <script src="https://unpkg.com/filepond/dist/filepond.js"></script>
 
   <script>
     $(document).ready(function() {
-      $('.select2').select2({
+      // Auto-initialize Select2 on all selects except opted-out
+      $('select:not(.no-select2)').select2({
         width: '100%'
+      });
+
+      // Auto-initialize Flatpickr on date inputs
+      $('.datepicker, input[type="date"]').flatpickr({
+        altInput: true,
+        altFormat: "F j, Y",
+        dateFormat: "Y-m-d",
+        disableMobile: true
+      });
+
+      // Collapsible Card Logic
+      $(document).on('click', '.filter-toggle-btn', function() {
+        const card = $(this).closest('.card');
+        const content = card.find('.filter-card-content');
+        const icon = $(this).find('.filter-toggle-icon');
+
+        content.toggleClass('collapsed');
+        icon.toggleClass('rotated');
+
+        // Save state if needed (optional)
       });
 
       $('.datatable').DataTable({

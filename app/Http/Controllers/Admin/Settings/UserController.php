@@ -85,14 +85,14 @@ class UserController extends Controller
                 ->rawColumns(['photo', 'user_type', 'is_active', 'last_login_at', 'action'])
                 ->make(true);
         }
-        return view('theme.adminlte.settings.users.index');
+        return view('catvara.users.index');
     }
 
     public function create()
     {
         $this->authorize('create', 'users');
 
-        return view('theme.adminlte.settings.users.create');
+        return view('catvara.users.create');
     }
 
     public function store(UserStoreRequest $request)
@@ -154,13 +154,13 @@ class UserController extends Controller
                 $q->select('companies.id', 'companies.uuid', 'companies.name', 'companies.code')
                     ->withPivot(['is_owner', 'is_active'])
                     ->withTimestamps();
-            }])
+            }, 'allCompanyRoles'])
             ->findOrFail($id);
 
         // all companies for assignment dropdown
         $companies = Company::query()->select('id', 'uuid', 'name', 'code')->orderBy('name')->get();
 
-        return view('theme.adminlte.settings.users.show', compact('user', 'companies'));
+        return view('catvara.users.show', compact('user', 'companies'));
     }
 
     public function edit(string $id)
@@ -168,7 +168,7 @@ class UserController extends Controller
         $this->authorize('edit', 'users');
 
         $user = User::findOrFail($id);
-        return view('theme.adminlte.settings.users.edit', compact('user'));
+        return view('catvara.users.edit', compact('user'));
     }
 
     public function update(UserUpdateRequest $request, string $id)
@@ -265,11 +265,21 @@ class UserController extends Controller
                 ]
             ]);
 
-            // Sync the role (Company User Role)
-            DB::table('company_user_role')->updateOrInsert(
-                ['company_id' => $data['company_id'], 'user_id' => $user->id],
-                ['role_id' => $data['role_id'], 'updated_at' => now(), 'created_at' => now()]
-            );
+            // Sync the roles (Company User Role)
+            DB::table('company_user_role')
+                ->where('company_id', $data['company_id'])
+                ->where('user_id', $user->id)
+                ->delete();
+
+            foreach ($data['role_ids'] as $roleId) {
+                DB::table('company_user_role')->insert([
+                    'company_id' => $data['company_id'],
+                    'user_id' => $user->id,
+                    'role_id' => $roleId,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
 
             DB::commit();
 

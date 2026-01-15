@@ -18,38 +18,54 @@
     </div>
 
     <!-- Filters Card -->
-    <div class="card p-6 border-slate-100 bg-white shadow-soft">
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div class="space-y-1.5">
-          <label class="text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-1">Customer</label>
-          <select id="filter_customer" class="select2 w-full">
-            <option value="">All Customers</option>
-            @foreach ($customers as $customer)
-              <option value="{{ $customer->id }}">{{ $customer->display_name }}</option>
-            @endforeach
-          </select>
-        </div>
-        <div class="space-y-1.5">
-          <label class="text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-1">Status</label>
-          <select id="filter_status" class="w-full">
-            <option value="">All Statuses</option>
-            @foreach ($statuses as $status)
-              <option value="{{ $status->id }}">{{ $status->name }}</option>
-            @endforeach
-          </select>
-        </div>
-        <div class="space-y-1.5">
-          <label class="text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-1">Date From</label>
-          <input type="date" id="filter_date_from" class="w-full">
-        </div>
-        <div class="space-y-1.5">
-          <label class="text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-1">Date To</label>
-          <input type="date" id="filter_date_to" class="w-full">
-        </div>
+    <div class="card border-slate-100 bg-white shadow-soft">
+      <div class="p-6 border-b border-slate-50 flex justify-between items-center bg-slate-50/20">
+        <h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
+          <i class="fas fa-filter text-brand-400"></i> Filters
+        </h3>
+        <button
+          class="filter-toggle-btn h-8 w-8 rounded-lg hover:bg-slate-100 flex items-center justify-center text-slate-400 transition-all">
+          <i class="fas fa-chevron-up filter-toggle-icon"></i>
+        </button>
       </div>
-      <div class="mt-6 flex justify-end gap-3 pt-6 border-t border-slate-50">
-        <button id="btn_reset_filters" class="btn btn-white">Reset</button>
-        <button id="btn_apply_filters" class="btn btn-primary px-8">Filter</button>
+      <div class="p-6 filter-card-content">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div class="space-y-1.5">
+            <label class="text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-1">Customer</label>
+            <select id="filter_customer" class="w-full">
+              <option value="">All Customers</option>
+              @foreach ($customers as $customer)
+                <option value="{{ $customer->id }}">{{ $customer->display_name }}</option>
+              @endforeach
+            </select>
+          </div>
+          <div class="space-y-1.5">
+            <label class="text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-1">Status</label>
+            <select id="filter_status" class="w-full">
+              <option value="">All Statuses</option>
+              @foreach ($statuses as $status)
+                <option value="{{ $status->id }}">{{ $status->name }}</option>
+              @endforeach
+            </select>
+          </div>
+          <div class="space-y-1.5 col-span-2">
+            <label class="text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-1">Date Range</label>
+            <div class="relative group">
+              <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                <i class="far fa-calendar-alt text-slate-400 group-focus-within:text-brand-400 transition-colors"></i>
+              </div>
+              <input type="text" id="filter_date_range"
+                class="w-full rounded-xl border-slate-200 text-sm pl-10 h-[44px] focus:border-brand-400 focus:ring-4 focus:ring-brand-400/10 transition-all"
+                placeholder="Select Date Range...">
+            </div>
+            <input type="hidden" id="filter_date_from">
+            <input type="hidden" id="filter_date_to">
+          </div>
+        </div>
+        <div class="filter-actions">
+          <button id="btn_reset_filters" class="btn btn-white min-w-[120px]">Clear Filter</button>
+          <button id="btn_apply_filters" class="btn btn-primary min-w-[123px]">Apply Filter</button>
+        </div>
       </div>
     </div>
 
@@ -79,10 +95,7 @@
 @push('scripts')
   <script>
     $(function() {
-      // Select2
-      $('#filter_customer').select2({
-        width: '100%'
-      });
+      // Select2 handled globally
 
       // DataTable
       var table = $('#orders-table').DataTable({
@@ -140,6 +153,21 @@
         }
       });
 
+      // Date Range Picker
+      flatpickr("#filter_date_range", {
+        mode: "range",
+        dateFormat: "Y-m-d",
+        onChange: function(selectedDates, dateStr, instance) {
+          if (selectedDates.length === 2) {
+            $('#filter_date_from').val(instance.formatDate(selectedDates[0], "Y-m-d"));
+            $('#filter_date_to').val(instance.formatDate(selectedDates[1], "Y-m-d"));
+          } else {
+            $('#filter_date_from').val('');
+            $('#filter_date_to').val('');
+          }
+        }
+      });
+
       $('#btn_apply_filters').on('click', function() {
         table.ajax.reload();
       });
@@ -147,8 +175,13 @@
       $('#btn_reset_filters').on('click', function() {
         $('#filter_customer').val('').trigger('change');
         $('#filter_status').val('');
+
+        // Reset Date Picker
+        const picker = document.querySelector("#filter_date_range")._flatpickr;
+        picker.clear();
         $('#filter_date_from').val('');
         $('#filter_date_to').val('');
+
         table.ajax.reload();
       });
     });

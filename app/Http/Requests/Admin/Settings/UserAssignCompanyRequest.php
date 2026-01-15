@@ -15,9 +15,10 @@ class UserAssignCompanyRequest extends FormRequest
     {
         return [
             'company_id' => ['required', 'integer', 'exists:companies,id'],
-            'role_id' => ['required', 'integer', 'exists:roles,id'],
-            'is_owner' => ['nullable', 'boolean'],
-            'is_active' => ['nullable', 'boolean'],
+            'role_ids' => ['required', 'array'],
+            'role_ids.*' => ['integer', 'exists:roles,id'],
+            'is_owner' => ['nullable'],
+            'is_active' => ['nullable'],
         ];
     }
 }
