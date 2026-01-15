@@ -387,6 +387,7 @@ class PaymentController extends Controller
             'paymentable_type' => 'required|in:order,invoice',
             'paymentable_id' => 'required|integer',
             'amount' => 'required|numeric|min:0.01',
+            'exchange_rate' => 'nullable|numeric|min:0.00000001',
             'notes' => 'nullable|string|max:500',
         ]);
 
@@ -397,6 +398,7 @@ class PaymentController extends Controller
                 'paymentable_type' => $type,
                 'paymentable_id' => $request->paymentable_id,
                 'amount' => $request->amount,
+                'exchange_rate' => $request->exchange_rate ?? 1,
                 'notes' => $request->notes,
             ]);
 
@@ -515,7 +517,7 @@ class PaymentController extends Controller
                     // Only get orders with active (non-final) statuses
                     $q->where('is_final', false)->where('is_active', true);
                 })
-                ->with(['paymentApplications', 'status', 'customer']);
+                ->with(['paymentApplications', 'status', 'customer', 'currency']);
 
             // Filter by customer if provided
             if ($customerId) {
@@ -531,7 +533,11 @@ class PaymentController extends Controller
                 ->limit(50)
                 ->get()
                 ->map(function ($order) {
-                    $paidAmount = $order->paymentApplications->sum('amount');
+                    // Use converted_amount (in document currency) for proper multi-currency balance calculation
+                    // Falls back to amount if converted_amount is null (same currency)
+                    $paidAmount = $order->paymentApplications->sum(function ($app) {
+                        return $app->converted_amount ?? $app->amount;
+                    });
                     $balance = $order->grand_total - $paidAmount;
 
                     return [
@@ -544,6 +550,10 @@ class PaymentController extends Controller
                         'status' => $order->status?->name ?? 'Unknown',
                         'customer' => $order->customer?->display_name ?? 'Walk-in',
                         'text' => $order->order_number . ' - Balance: ' . number_format($balance, 2),
+                        // Currency info for multi-currency support
+                        'currency_id' => $order->currency_id,
+                        'currency_code' => $order->currency?->code ?? 'AED',
+                        'currency_symbol' => $order->currency?->symbol ?? '',
                     ];
                 })
                 ->filter(function ($order) {

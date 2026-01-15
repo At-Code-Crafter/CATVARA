@@ -469,6 +469,44 @@
                 </div>
               </div>
 
+              {{-- Currency Mismatch Warning --}}
+              <div id="currencyMismatchWarning" class="alert alert-warning" style="display: none;">
+                <div class="d-flex align-items-center">
+                  <i class="fas fa-exchange-alt fa-2x mr-3"></i>
+                  <div>
+                    <strong>Currency Conversion Required</strong>
+                    <p class="mb-0 small">Payment is in <strong id="paymentCurrencyLabel">{{ $payment->currency?->code }}</strong> but order is in <strong id="orderCurrencyLabel">—</strong>. Enter the exchange rate below.</p>
+                  </div>
+                </div>
+              </div>
+
+              {{-- Exchange Rate Input (shown only for currency mismatch) --}}
+              <div id="exchangeRateGroup" class="form-group" style="display: none;">
+                <label><i class="fas fa-exchange-alt mr-1"></i> Exchange Rate <span class="text-danger">*</span></label>
+                <div class="row">
+                  <div class="col-md-6">
+                    <div class="input-group">
+                      <div class="input-group-prepend">
+                        <span class="input-group-text">1 <span id="paymentCurrencyCode">{{ $payment->currency?->code }}</span> =</span>
+                      </div>
+                      <input type="number" step="0.00000001" name="exchange_rate" id="exchangeRateInput" class="form-control" value="1" min="0.00000001">
+                      <div class="input-group-append">
+                        <span class="input-group-text" id="orderCurrencyCode">—</span>
+                      </div>
+                    </div>
+                    <small class="text-muted">Enter how many order currency units equal 1 payment currency unit</small>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="card bg-info text-white">
+                      <div class="card-body py-2 text-center">
+                        <small>Converted Amount</small>
+                        <div class="h5 mb-0"><span id="convertedAmount">—</span></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               <div class="row">
                 <div class="col-md-6">
                   {{-- Amount to Apply --}}
@@ -536,10 +574,17 @@
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script>
 $(document).ready(function() {
+  const paymentCurrencyCode = '{{ $payment->currency?->code ?? "AED" }}';
+  const paymentCurrencyId = {{ $payment->currency_id ?? 1 }};
   const currencySymbol = '{{ $payment->currency?->symbol ?? "₹" }}';
   const maxAvailable = parseFloat('{{ $payment->unallocated_amount }}');
   const customerId = '{{ $payment->customer_id ?? "" }}';
+
   let selectedDocBalance = 0;
+  let selectedDocCurrencyCode = '';
+  let selectedDocCurrencySymbol = '';
+  let selectedDocCurrencyId = null;
+  let isCurrencyMismatch = false;
 
   // Initialize Select2 for document selection
   $('#documentSelect').select2({
@@ -561,13 +606,17 @@ $(document).ready(function() {
       processResults: function(data) {
         return {
           results: data.map(function(doc) {
+            const docSymbol = doc.currency_symbol || '';
             return {
               id: doc.id,
-              text: doc.number + ' - Balance: ' + currencySymbol + parseFloat(doc.balance).toFixed(2),
+              text: doc.number + ' (' + doc.currency_code + ') - Balance: ' + docSymbol + parseFloat(doc.balance).toFixed(2),
               total: doc.total,
               paid: doc.paid,
               balance: doc.balance,
-              status: doc.status
+              status: doc.status,
+              currency_id: doc.currency_id,
+              currency_code: doc.currency_code,
+              currency_symbol: doc.currency_symbol
             };
           })
         };
@@ -586,6 +635,7 @@ $(document).ready(function() {
   $('#docType, #customerFilter').on('change', function() {
     $('#documentSelect').val(null).trigger('change');
     loadDocuments();
+    resetCurrencyMismatch();
   });
 
   // Load documents into dropdown
@@ -599,12 +649,47 @@ $(document).ready(function() {
     }, function(data) {
       $('#documentSelect').empty().append('<option value="">Select a document...</option>');
       data.forEach(function(doc) {
-        const text = doc.number + ' - ' + doc.status + ' - Balance: ' + currencySymbol + parseFloat(doc.balance).toFixed(2);
-        $('#documentSelect').append(new Option(text, doc.id, false, false));
+        const docSymbol = doc.currency_symbol || '';
+        const text = doc.number + ' (' + doc.currency_code + ') - ' + doc.status + ' - Balance: ' + docSymbol + parseFloat(doc.balance).toFixed(2);
+        const option = new Option(text, doc.id, false, false);
+        $('#documentSelect').append(option);
         // Store data
         $('#documentSelect option[value="' + doc.id + '"]').data('doc', doc);
       });
     });
+  }
+
+  // Reset currency mismatch UI
+  function resetCurrencyMismatch() {
+    isCurrencyMismatch = false;
+    selectedDocCurrencyCode = '';
+    selectedDocCurrencySymbol = '';
+    selectedDocCurrencyId = null;
+    $('#currencyMismatchWarning').hide();
+    $('#exchangeRateGroup').hide();
+    $('#exchangeRateInput').val(1);
+  }
+
+  // Check for currency mismatch and show/hide UI
+  function checkCurrencyMismatch() {
+    if (selectedDocCurrencyId && selectedDocCurrencyId !== paymentCurrencyId) {
+      isCurrencyMismatch = true;
+      $('#orderCurrencyLabel').text(selectedDocCurrencyCode);
+      $('#orderCurrencyCode').text(selectedDocCurrencyCode);
+      $('#currencyMismatchWarning').show();
+      $('#exchangeRateGroup').show();
+      updateConvertedAmount();
+    } else {
+      resetCurrencyMismatch();
+    }
+  }
+
+  // Update converted amount display
+  function updateConvertedAmount() {
+    const amount = parseFloat($('#applyAmount').val()) || 0;
+    const rate = parseFloat($('#exchangeRateInput').val()) || 1;
+    const converted = amount * rate;
+    $('#convertedAmount').text(selectedDocCurrencySymbol + converted.toFixed(2) + ' ' + selectedDocCurrencyCode);
   }
 
   // When document is selected
@@ -613,6 +698,7 @@ $(document).ready(function() {
     if (!docId) {
       $('#documentInfo').hide();
       selectedDocBalance = 0;
+      resetCurrencyMismatch();
       updateAmountHint();
       return;
     }
@@ -627,15 +713,34 @@ $(document).ready(function() {
 
     if (doc) {
       selectedDocBalance = parseFloat(doc.balance) || 0;
-      $('#docTotal').text(currencySymbol + parseFloat(doc.total).toFixed(2));
-      $('#docPaid').text(currencySymbol + parseFloat(doc.paid).toFixed(2));
-      $('#docBalance').text(currencySymbol + selectedDocBalance.toFixed(2));
+      selectedDocCurrencyId = doc.currency_id;
+      selectedDocCurrencyCode = doc.currency_code || 'AED';
+      selectedDocCurrencySymbol = doc.currency_symbol || '';
+
+      $('#docTotal').text(selectedDocCurrencySymbol + parseFloat(doc.total).toFixed(2));
+      $('#docPaid').text(selectedDocCurrencySymbol + parseFloat(doc.paid).toFixed(2));
+      $('#docBalance').text(selectedDocCurrencySymbol + selectedDocBalance.toFixed(2));
       $('#documentInfo').show();
 
-      // Auto-fill amount with min(balance, available)
+      // Check for currency mismatch
+      checkCurrencyMismatch();
+
+      // Auto-fill amount with min(balance, available) - in payment currency
+      // If mismatch, user needs to decide based on exchange rate
       const suggestedAmount = Math.min(selectedDocBalance, maxAvailable);
       $('#applyAmount').val(suggestedAmount.toFixed(2));
       updateAmountHint();
+
+      if (isCurrencyMismatch) {
+        updateConvertedAmount();
+      }
+    }
+  });
+
+  // Update converted amount when amount or rate changes
+  $('#applyAmount, #exchangeRateInput').on('input change', function() {
+    if (isCurrencyMismatch) {
+      updateConvertedAmount();
     }
   });
 
@@ -643,19 +748,29 @@ $(document).ready(function() {
   function updateAmountHint() {
     const maxApply = selectedDocBalance > 0 ? Math.min(selectedDocBalance, maxAvailable) : maxAvailable;
     $('#maxApplyHint').text(currencySymbol + maxApply.toFixed(2));
-    $('#applyAmount').attr('max', maxApply);
+    $('#applyAmount').attr('max', isCurrencyMismatch ? maxAvailable : maxApply);
   }
 
   // Quick buttons
   $('#btnApplyBalance').on('click', function() {
     if (selectedDocBalance > 0) {
-      const amount = Math.min(selectedDocBalance, maxAvailable);
-      $('#applyAmount').val(amount.toFixed(2));
+      if (isCurrencyMismatch) {
+        // For mismatch, need to calculate reverse using exchange rate
+        const rate = parseFloat($('#exchangeRateInput').val()) || 1;
+        const paymentAmount = selectedDocBalance / rate;
+        const amount = Math.min(paymentAmount, maxAvailable);
+        $('#applyAmount').val(amount.toFixed(2));
+      } else {
+        const amount = Math.min(selectedDocBalance, maxAvailable);
+        $('#applyAmount').val(amount.toFixed(2));
+      }
+      updateConvertedAmount();
     }
   });
 
   $('#btnApplyAvailable').on('click', function() {
     $('#applyAmount').val(maxAvailable.toFixed(2));
+    updateConvertedAmount();
   });
 
   // Validate on submit
@@ -681,10 +796,26 @@ $(document).ready(function() {
       return false;
     }
 
-    if (selectedDocBalance > 0 && amount > selectedDocBalance) {
-      e.preventDefault();
-      alert('Amount cannot exceed document balance (' + currencySymbol + selectedDocBalance.toFixed(2) + ')');
-      return false;
+    if (isCurrencyMismatch) {
+      const rate = parseFloat($('#exchangeRateInput').val()) || 0;
+      if (rate <= 0) {
+        e.preventDefault();
+        alert('Please enter a valid exchange rate.');
+        return false;
+      }
+
+      const convertedAmount = amount * rate;
+      if (selectedDocBalance > 0 && convertedAmount > selectedDocBalance * 1.001) { // Small tolerance
+        e.preventDefault();
+        alert('Converted amount (' + selectedDocCurrencySymbol + convertedAmount.toFixed(2) + ') exceeds document balance (' + selectedDocCurrencySymbol + selectedDocBalance.toFixed(2) + ')');
+        return false;
+      }
+    } else {
+      if (selectedDocBalance > 0 && amount > selectedDocBalance) {
+        e.preventDefault();
+        alert('Amount cannot exceed document balance (' + currencySymbol + selectedDocBalance.toFixed(2) + ')');
+        return false;
+      }
     }
   });
 

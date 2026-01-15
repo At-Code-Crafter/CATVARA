@@ -110,13 +110,19 @@ class Order extends Model
     }
 
     /**
-     * Get total amount paid for this order
+     * Get total amount paid for this order (in order's currency)
+     * Uses converted_amount for multi-currency payments, falls back to amount for same-currency
      */
     public function getTotalPaidAttribute(): float
     {
-        return (float) $this->paymentApplications()
+        $applications = $this->paymentApplications()
             ->whereHas('payment', fn($q) => $q->whereHas('status', fn($s) => $s->where('code', 'CONFIRMED')))
-            ->sum('amount');
+            ->get();
+
+        return (float) $applications->sum(function ($app) {
+            // Use converted_amount (in document/order currency) if available
+            return $app->converted_amount ?? $app->amount;
+        });
     }
 
     /**

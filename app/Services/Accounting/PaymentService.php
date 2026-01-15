@@ -181,6 +181,7 @@ class PaymentService
 
     /**
      * Apply payment to a document (Order, Invoice, etc.)
+     * Supports multi-currency: payment in AED can be applied to order in USD with exchange rate
      */
     public function apply(Payment $payment, array $data): PaymentApplication
     {
@@ -203,9 +204,26 @@ class PaymentService
                 throw new \RuntimeException("Cannot apply more than unallocated amount ({$unallocated}).");
             }
 
-            // Calculate base amount
-            $exchangeRate = (string) ($data['exchange_rate'] ?? $payment->exchange_rate);
-            $baseAmount = bcmul($applyAmount, $exchangeRate, 6);
+            // Get the document to determine its currency
+            $document = null;
+            $documentCurrencyId = $payment->currency_id; // Default to payment currency
+
+            if ($data['paymentable_type'] === Order::class) {
+                $document = Order::find($data['paymentable_id']);
+                if ($document) {
+                    $documentCurrencyId = $document->currency_id;
+                }
+            }
+
+            // Exchange rate: How many document currency units per 1 payment currency unit
+            // e.g., Payment in AED, Order in USD: 1 AED = 0.27 USD, so rate = 0.27
+            $exchangeRate = (string) ($data['exchange_rate'] ?? '1.00000000');
+
+            // Calculate converted amount (in document currency)
+            $convertedAmount = bcmul($applyAmount, $exchangeRate, 6);
+
+            // Calculate base amount (for company base currency - using payment's own exchange rate)
+            $baseAmount = bcmul($applyAmount, (string) $payment->exchange_rate, 6);
 
             $application = PaymentApplication::create([
                 'uuid' => (string) Str::uuid(),
@@ -214,7 +232,9 @@ class PaymentService
                 'paymentable_type' => $data['paymentable_type'],
                 'paymentable_id' => $data['paymentable_id'],
                 'currency_id' => $payment->currency_id,
+                'document_currency_id' => $documentCurrencyId,
                 'amount' => $applyAmount,
+                'converted_amount' => $convertedAmount,
                 'exchange_rate' => $exchangeRate,
                 'base_amount' => $baseAmount,
                 'notes' => $data['notes'] ?? null,

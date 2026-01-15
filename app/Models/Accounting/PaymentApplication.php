@@ -20,7 +20,9 @@ class PaymentApplication extends Model
         'paymentable_type',
         'paymentable_id',
         'currency_id',
+        'document_currency_id',
         'amount',
+        'converted_amount',
         'exchange_rate',
         'base_amount',
         'notes',
@@ -29,10 +31,11 @@ class PaymentApplication extends Model
     ];
 
     protected $casts = [
-        'amount'        => 'decimal:6',
-        'base_amount'   => 'decimal:6',
-        'exchange_rate' => 'decimal:8',
-        'applied_at'    => 'datetime',
+        'amount'           => 'decimal:6',
+        'converted_amount' => 'decimal:6',
+        'base_amount'      => 'decimal:6',
+        'exchange_rate'    => 'decimal:8',
+        'applied_at'       => 'datetime',
     ];
 
     /* ==========================
@@ -57,9 +60,20 @@ class PaymentApplication extends Model
         return $this->morphTo();
     }
 
+    /**
+     * Payment currency (the currency the payment was made in)
+     */
     public function currency()
     {
         return $this->belongsTo(Currency::class);
+    }
+
+    /**
+     * Document currency (the currency of the order/invoice being paid)
+     */
+    public function documentCurrency()
+    {
+        return $this->belongsTo(Currency::class, 'document_currency_id');
     }
 
     public function applier()
