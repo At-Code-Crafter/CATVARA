@@ -11,4 +11,16 @@ class PriceChannel extends Model
         'name',
         'is_active',
     ];
+
+    protected $casts = [
+        'is_active' => 'boolean',
+    ];
+
+    /**
+     * Get variant prices for this channel.
+     */
+    public function variantPrices()
+    {
+        return $this->hasMany(VariantPrice::class, 'price_channel_id');
+    }
 }

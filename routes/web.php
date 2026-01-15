@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\Settings\CurrencyController;
 use App\Http\Controllers\Admin\Settings\ModuleController;
 use App\Http\Controllers\Admin\Settings\PaymentTermController;
 use App\Http\Controllers\Admin\Settings\PermissionController;
+use App\Http\Controllers\Admin\Settings\PriceChannelController;
 use App\Http\Controllers\Admin\Settings\RoleController;
 use App\Http\Controllers\Admin\Settings\RolePermissionController;
 use App\Http\Controllers\Admin\Settings\StateController;
@@ -73,6 +74,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         Route::resource('currencies', CurrencyController::class);
         Route::resource('payment-terms', PaymentTermController::class);
+        Route::resource('price-channels', PriceChannelController::class);
 
         // Countries & States (Global Settings)
         Route::resource('countries', CountryController::class);

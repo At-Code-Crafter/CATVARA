@@ -547,6 +547,17 @@
           </li>
         @endcan
 
+        {{-- Price Channels --}}
+        @can('view', 'price-channels')
+          <li class="nav-item">
+            <a href="{{ safe_route('price-channels.index') }}"
+              class="nav-link {{ $isActive('price-channels.*') ? 'active' : '' }}">
+              <i class="nav-icon fas fa-tags"></i>
+              <p>Price Channels</p>
+            </a>
+          </li>
+        @endcan
+
         {{-- Countries & States --}}
         @can('view', 'countries')
           <li class="nav-item has-treeview {{ $isActive(['countries.*', 'states.*']) ? 'menu-open' : '' }}">

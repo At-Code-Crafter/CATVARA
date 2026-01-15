@@ -149,6 +149,10 @@ class AuthenticationSeeder extends Seeder
                 'name' => 'Payment Terms',
                 'permissions' => ['view', 'create', 'edit', 'delete'],
             ],
+            'price-channels' => [
+                'name' => 'Price Channels',
+                'permissions' => ['view', 'create', 'edit', 'delete'],
+            ],
             'countries' => [
                 'name' => 'Countries',
                 'permissions' => ['view', 'create', 'edit', 'delete'],
