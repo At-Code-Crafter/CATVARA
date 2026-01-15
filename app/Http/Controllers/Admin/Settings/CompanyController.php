@@ -73,28 +73,27 @@ class CompanyController extends Controller
                     $name = $row->company_status ?? 'N/A';
                     $code = strtoupper($row->company_status_code ?? '');
 
-                    $badge = 'secondary';
-                    if ($code === 'ACTIVE') $badge = 'success';
-                    if ($code === 'SUSPENDED') $badge = 'warning';
-                    if ($code === 'EXPIRED') $badge = 'danger';
-                    if ($code === 'CLOSED') $badge = 'danger';
+                    $bg = 'bg-slate-100 text-slate-700';
+                    if ($code === 'ACTIVE') $bg = 'bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-600/20';
+                    if ($code === 'SUSPENDED') $bg = 'bg-amber-50 text-amber-700 ring-1 ring-inset ring-amber-600/10';
+                    if ($code === 'EXPIRED' || $code === 'CLOSED') $bg = 'bg-rose-50 text-rose-700 ring-1 ring-inset ring-rose-600/10';
 
-                    return '<span class="badge badge-' . $badge . '">' . e($name) . '</span>';
+                    return '<span class="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ' . $bg . '">' . e($name) . '</span>';
                 })
 
                 ->editColumn('website_url', function ($row) {
-                    if (!$row->website_url) return '<span class="text-muted">—</span>';
+                    if (!$row->website_url) return '<span class="text-slate-400">—</span>';
 
                     $url = $row->website_url;
                     $label = parse_url($url, PHP_URL_HOST) ?: $url;
 
-                    return '<a href="' . e($url) . '" target="_blank" class="text-primary">
-                              <i class="fas fa-external-link-alt mr-1"></i>' . e($label) . '
+                    return '<a href="' . e($url) . '" target="_blank" class="text-accent hover:underline flex items-center">
+                              <i data-lucide="external-link" class="w-3 h-3 mr-1"></i>' . e($label) . '
                             </a>';
                 })
 
                 ->editColumn('users_count', function ($row) {
-                    return '<span class="badge badge-info"><i class="fas fa-users mr-1"></i>' . (int) $row->users_count . '</span>';
+                    return '<span class="inline-flex items-center text-slate-600 font-bold"><i data-lucide="users" class="w-3 h-3 mr-1 text-slate-400"></i>' . (int) $row->users_count . '</span>';
                 })
 
                 ->editColumn('created_at', function ($row) {
@@ -108,7 +107,7 @@ class CompanyController extends Controller
                     $compact['deleteUrl'] = null;
                     $compact['editSidebar'] = false;
 
-                    return view('theme.adminlte.components._table-actions', $compact)->render();
+                    return view('catvara.components._table-actions', $compact)->render();
                 })
 
                 ->rawColumns([
@@ -125,7 +124,7 @@ class CompanyController extends Controller
         }
 
         $statuses = CompanyStatus::query()->orderBy('name')->get();
-        return view('theme.adminlte.settings.companies.index', compact('statuses'));
+        return view('catvara.settings.companies.index', compact('statuses'));
     }
 
     /**
@@ -162,7 +161,7 @@ class CompanyController extends Controller
 
         $data['statuses'] = $statuses;
 
-        return view('theme.adminlte.settings.companies.create', $data);
+        return view('catvara.settings.companies.create', $data);
     }
 
     /**
@@ -244,7 +243,7 @@ class CompanyController extends Controller
         $currencies = \App\Models\Pricing\Currency::where('is_active', true)->get();
         $paymentTerms = \App\Models\Accounting\PaymentTerm::where('is_active', true)->get();
 
-        return view('theme.adminlte.settings.companies.edit', compact('company', 'statuses', 'currencies', 'paymentTerms'));
+        return view('catvara.settings.companies.edit', compact('company', 'statuses', 'currencies', 'paymentTerms'));
     }
 
     /**

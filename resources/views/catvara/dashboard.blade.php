@@ -36,8 +36,8 @@
       {{-- Products --}}
       <div class="card p-6 border-b-4 border-b-blue-400 hover:-translate-y-1 transition-transform duration-300">
         <div class="flex justify-between items-start mb-4">
-          <div class="h-10 w-10 rounded-xl bg-blue-50 text-blue-500 flex items-center justify-center">
-            <i class="fas fa-box text-lg"></i>
+          <div class="h-10 w-10 rounded-xl bg-blue-50 text-blue-500 flex items-center justify-center text-xl">
+            <i data-lucide="package"></i>
           </div>
           <span
             class="px-2 py-0.5 bg-slate-100 text-slate-500 rounded text-[9px] font-black uppercase tracking-wider">Total</span>
@@ -51,7 +51,7 @@
           </div>
           <div class="flex justify-between text-[10px]">
             <span class="text-slate-500 font-bold">Low Stock</span>
-            <span class="font-black text-red-500">{{ number_format($stats['low_stock_variants']) }}</span>
+            <span class="font-black text-rose-500">{{ number_format($stats['low_stock_variants']) }}</span>
           </div>
         </div>
       </div>
@@ -59,8 +59,8 @@
       {{-- Categories --}}
       <div class="card p-6 border-b-4 border-b-indigo-400 hover:-translate-y-1 transition-transform duration-300">
         <div class="flex justify-between items-start mb-4">
-          <div class="h-10 w-10 rounded-xl bg-indigo-50 text-indigo-500 flex items-center justify-center">
-            <i class="fas fa-layer-group text-lg"></i>
+          <div class="h-10 w-10 rounded-xl bg-indigo-50 text-indigo-500 flex items-center justify-center text-xl">
+            <i data-lucide="layers"></i>
           </div>
           <span
             class="px-2 py-0.5 bg-slate-100 text-slate-500 rounded text-[9px] font-black uppercase tracking-wider">Total</span>
@@ -69,7 +69,7 @@
         <p class="text-2xl font-black text-slate-800">{{ number_format($stats['total_categories']) }}</p>
         <div class="mt-4 pt-3 border-t border-slate-50">
           <div class="flex items-center gap-1 text-[10px] text-slate-400">
-            <i class="fas fa-check-circle text-emerald-500"></i> Active Catalog
+            <i data-lucide="check-circle" class="w-3 h-3 text-emerald-500"></i> Active Catalog
           </div>
         </div>
       </div>
@@ -77,8 +77,8 @@
       {{-- Customers --}}
       <div class="card p-6 border-b-4 border-b-emerald-400 hover:-translate-y-1 transition-transform duration-300">
         <div class="flex justify-between items-start mb-4">
-          <div class="h-10 w-10 rounded-xl bg-emerald-50 text-emerald-500 flex items-center justify-center">
-            <i class="fas fa-users text-lg"></i>
+          <div class="h-10 w-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl">
+            <i data-lucide="users"></i>
           </div>
           <span
             class="px-2 py-0.5 bg-slate-100 text-slate-500 rounded text-[9px] font-black uppercase tracking-wider">Clients</span>
@@ -87,11 +87,11 @@
         <p class="text-2xl font-black text-slate-800">{{ number_format($stats['total_customers']) }}</p>
         <div class="mt-4 pt-3 border-t border-slate-50 space-y-1">
           <div class="flex justify-between text-[10px]">
-            <span class="text-slate-500 font-bold"><i class="fas fa-building mr-1"></i> B2B (Company)</span>
+            <span class="text-slate-500 font-bold">B2B (Company)</span>
             <span class="font-black text-slate-700">{{ number_format($stats['b2b_customers']) }}</span>
           </div>
           <div class="flex justify-between text-[10px]">
-            <span class="text-slate-500 font-bold"><i class="fas fa-user mr-1"></i> B2C (Individual)</span>
+            <span class="text-slate-500 font-bold">B2C (Individual)</span>
             <span class="font-black text-slate-700">{{ number_format($stats['b2c_customers']) }}</span>
           </div>
         </div>
@@ -100,8 +100,8 @@
       {{-- Orders --}}
       <div class="card p-6 border-b-4 border-b-orange-400 hover:-translate-y-1 transition-transform duration-300">
         <div class="flex justify-between items-start mb-4">
-          <div class="h-10 w-10 rounded-xl bg-orange-50 text-orange-500 flex items-center justify-center">
-            <i class="fas fa-shopping-cart text-lg"></i>
+          <div class="h-10 w-10 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center text-xl">
+            <i data-lucide="shopping-cart"></i>
           </div>
           <span
             class="px-2 py-0.5 bg-orange-100 text-orange-600 rounded text-[9px] font-black uppercase tracking-wider">Filtered</span>
@@ -125,8 +125,8 @@
         class="card p-6 border-b-4 border-b-teal-400 hover:-translate-y-1 transition-transform duration-300 bg-teal-50/20">
         <div class="flex justify-between items-start mb-4">
           <div
-            class="h-10 w-10 rounded-xl bg-teal-100 text-teal-600 flex items-center justify-center shadow-lg shadow-teal-500/20">
-            <i class="fas fa-file-invoice-dollar text-lg"></i>
+            class="h-10 w-10 rounded-xl bg-teal-100 text-teal-600 flex items-center justify-center text-xl shadow-lg shadow-teal-500/20">
+            <i data-lucide="banknote"></i>
           </div>
           <span
             class="px-2 py-0.5 bg-teal-100 text-teal-600 rounded text-[9px] font-black uppercase tracking-wider">Revenue</span>
@@ -140,7 +140,7 @@
           </div>
           <div class="flex justify-between text-[10px]">
             <span class="text-slate-500 font-bold">Unpaid</span>
-            <span class="font-black text-red-500">${{ number_format($stats['unpaid_sales'], 2) }}</span>
+            <span class="font-black text-rose-500">${{ number_format($stats['unpaid_sales'], 2) }}</span>
           </div>
         </div>
       </div>
@@ -153,17 +153,19 @@
       <div class="lg:col-span-2 card p-8">
         <div class="flex justify-between items-center mb-8">
           <h3 class="flex items-center gap-3 font-black text-slate-800">
-            <i class="fas fa-chart-line text-brand-400"></i>
+            <div class="p-2 bg-brand-50 text-brand-400 rounded-lg">
+              <i data-lucide="trending-up" class="w-5 h-5"></i>
+            </div>
             Financial Overview
           </h3>
           <div class="flex items-center gap-4">
             <div class="flex items-center gap-2">
               <span class="h-3 w-3 rounded-full bg-emerald-400"></span>
-              <span class="text-[10px] font-bold text-slate-500 uppercase">Sales</span>
+              <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Sales</span>
             </div>
             <div class="flex items-center gap-2">
-              <span class="h-3 w-3 rounded-full bg-red-400"></span>
-              <span class="text-[10px] font-bold text-slate-500 uppercase">Expenses</span>
+              <span class="h-3 w-3 rounded-full bg-rose-400"></span>
+              <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Expenses</span>
             </div>
           </div>
         </div>
@@ -175,7 +177,9 @@
       {{-- Pie Chart --}}
       <div class="card p-8">
         <h3 class="flex items-center gap-3 font-black text-slate-800 mb-8">
-          <i class="fas fa-chart-pie text-indigo-400"></i>
+          <div class="p-2 bg-indigo-50 text-indigo-400 rounded-lg">
+            <i data-lucide="pie-chart" class="w-5 h-5"></i>
+          </div>
           Distribution
         </h3>
         <div class="h-[250px] relative flex justify-center">
@@ -191,7 +195,7 @@
           </div>
           <div class="flex justify-between items-center p-3 bg-slate-50 rounded-xl">
             <div class="flex items-center gap-3">
-              <span class="h-3 w-3 rounded-md bg-red-400"></span>
+              <span class="h-3 w-3 rounded-md bg-rose-400"></span>
               <span class="text-xs font-bold text-slate-600">Total Expenses</span>
             </div>
             <span
@@ -207,7 +211,7 @@
       {{-- Top Selling Products --}}
       <div class="card p-6">
         <h3 class="flex items-center gap-3 font-black text-slate-800 mb-6 pb-4 border-b border-slate-50">
-          <i class="fas fa-crown text-yellow-400"></i>
+          <i data-lucide="award" class="text-yellow-500 w-5 h-5"></i>
           Top Selling Products
         </h3>
         <div class="space-y-4">
@@ -218,13 +222,13 @@
                 @if ($top->image)
                   <img src="{{ Storage::url($top->image) }}" class="h-full w-full object-cover">
                 @else
-                  <i class="fas fa-box text-slate-300"></i>
+                  <i data-lucide="box" class="text-slate-300"></i>
                 @endif
               </div>
               <div class="flex-1 min-w-0">
                 <p class="text-sm font-black text-slate-700 truncate group-hover:text-brand-400 transition-colors">
                   {{ $top->name }}</p>
-                <p class="text-[10px] text-slate-400 font-bold">{{ $top->order_count }} Orders found</p>
+                <p class="text-[10px] text-slate-400 font-bold">{{ $top->order_count }} Orders</p>
               </div>
               <div class="text-right">
                 <span class="block text-sm font-black text-emerald-500">{{ number_format($top->total_qty) }}</span>
@@ -232,7 +236,7 @@
               </div>
             </div>
           @empty
-            <div class="text-center py-8 text-slate-400 text-xs italic">No top selling products found.</div>
+            <div class="text-center py-8 text-slate-400 text-xs italic">No sales in this range.</div>
           @endforelse
         </div>
       </div>
@@ -240,19 +244,19 @@
       {{-- Low Stock Products --}}
       <div class="card p-6">
         <h3 class="flex items-center gap-3 font-black text-slate-800 mb-6 pb-4 border-b border-slate-50">
-          <i class="fas fa-exclamation-triangle text-red-500"></i>
-          Low Stock Products
+          <i data-lucide="alert-triangle" class="text-rose-500 w-5 h-5"></i>
+          Low Stock Alert
         </h3>
         <div class="space-y-4">
           @forelse($lowStockProducts as $variant)
-            <div class="flex items-center gap-4 group p-2 rounded-xl hover:bg-red-50/10 transition-colors">
+            <div class="flex items-center gap-4 group p-2 rounded-xl hover:bg-rose-50/10 transition-colors">
               <div
                 class="h-12 w-12 rounded-xl bg-white border border-slate-100 flex items-center justify-center overflow-hidden shrink-0">
                 @if ($variant->product->image)
                   <img src="{{ Storage::url($variant->product->image) }}"
                     class="h-full w-full object-cover opacity-70">
                 @else
-                  <i class="fas fa-box text-slate-300"></i>
+                  <i data-lucide="box" class="text-slate-300"></i>
                 @endif
               </div>
               <div class="flex-1 min-w-0">
@@ -260,15 +264,15 @@
                 <p class="text-[10px] text-slate-400 font-bold truncate">{{ $variant->name }}</p>
               </div>
               <div class="text-right">
-                <span class="px-2 py-1 bg-red-100 text-red-600 rounded-lg text-xs font-black border border-red-200">
-                  {{ $variant->stock_sum }}
+                <span class="px-2 py-1 bg-rose-100 text-rose-600 rounded-lg text-xs font-black border border-rose-200">
+                  {{ (int) $variant->stock_sum }}
                 </span>
               </div>
             </div>
           @empty
             <div class="text-center py-8 text-slate-400 text-xs italic">
-              <i class="fas fa-check-circle text-emerald-400 mb-2 text-2xl block"></i>
-              All stock levels healthy!
+              <i data-lucide="check-circle-2" class="text-emerald-400 mb-3 w-8 h-8 mx-auto block"></i>
+              Stock levels healthy!
             </div>
           @endforelse
         </div>
@@ -277,8 +281,8 @@
       {{-- Recent Sales --}}
       <div class="card p-6 lg:col-span-1">
         <h3 class="flex items-center gap-3 font-black text-slate-800 mb-6 pb-4 border-b border-slate-50">
-          <i class="fas fa-receipt text-blue-400"></i>
-          Recent Sales
+          <i data-lucide="clock" class="text-blue-500 w-5 h-5"></i>
+          Recent Activity
         </h3>
         <div class="space-y-4">
           @forelse($recentSales as $sale)
@@ -286,68 +290,141 @@
               class="flex items-center gap-3 p-2 rounded-xl hover:bg-slate-50 transition-colors border-b border-dashed border-slate-100 last:border-0">
               <div
                 class="h-10 w-10 bg-brand-50 rounded-lg flex items-center justify-center text-brand-600 font-bold text-xs shrink-0">
-                {{ $sale->customer->initials }}
+                {{ substr($sale->customer->display_name ?? 'C', 0, 1) }}
               </div>
               <div class="flex-1 min-w-0">
-                <p class="text-xs font-black text-slate-700 truncate">{{ $sale->customer->display_name }}</p>
+                <p class="text-xs font-black text-slate-700 truncate">{{ $sale->customer->display_name ?? 'Guest' }}</p>
                 <p class="text-[10px] text-slate-400">{{ $sale->created_at->format('M d, h:i A') }}</p>
               </div>
               <div class="text-right">
                 <p class="text-xs font-black text-slate-800">${{ number_format($sale->grand_total, 2) }}</p>
-                <span class="text-[9px] font-bold text-emerald-500 uppercase tracking-tight">Confirmed</span>
+                <span class="text-[9px] font-bold text-emerald-500 uppercase tracking-tight">Success</span>
               </div>
             </div>
           @empty
-            <div class="text-center py-8 text-slate-400 text-xs italic">No orders in this range.</div>
+            <div class="text-center py-8 text-slate-400 text-xs italic">No recent activity.</div>
           @endforelse
         </div>
       </div>
-
     </div>
   </div>
 @endsection
 
 @push('scripts')
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
-    function toggleChartFilter(btn) {
-      document.querySelectorAll('.chart-filter-btn').forEach(b => {
-        b.classList.remove('bg-white', 'shadow-sm', 'text-brand-400', 'active');
-        b.classList.add('text-slate-400', 'hover:text-slate-600');
-      });
-      btn.classList.add('bg-white', 'shadow-sm', 'text-brand-400', 'active');
-      btn.classList.remove('text-slate-400', 'hover:text-slate-600');
-      // Logic to update chart data would go here
-    }
-
     document.addEventListener('DOMContentLoaded', function() {
+      // Common Chart Options
       Chart.defaults.font.family = "'Nunito', sans-serif";
-      Chart.defaults.color = '#64748b';
-      Chart.defaults.font.weight = '700';
+      Chart.defaults.color = '#94a3b8';
+      Chart.defaults.font.weight = '600';
 
-      // --- Sales & Purchase Chart (Stacked Bars) ---
-      const ctxSales = document.getElementById('salesPurchaseChart').getContext('2d');
-      new Chart(ctxSales, {
-        type: 'bar',
+      // --- Financial Chart (Sales vs Expenses) ---
+      const ctxFin = document.getElementById('financialChart').getContext('2d');
+      const salesData = @json($charts['financials']['sales']);
+      const expensesData = @json($charts['financials']['expenses']);
+      const labels = @json($charts['financials']['labels']);
+
+      // Gradient for Sales
+      const salesGradient = ctxFin.createLinearGradient(0, 0, 0, 350);
+      salesGradient.addColorStop(0, 'rgba(52, 211, 153, 0.2)');
+      salesGradient.addColorStop(1, 'rgba(52, 211, 153, 0)');
+
+      new Chart(ctxFin, {
+        type: 'line',
         data: {
-          labels: ['2 am', '4 am', '6 am', '8 am', '10 am', '12 am', '14 pm', '16 pm', '18 pm', '20 pm', '22 pm',
-            '24 pm'
-          ],
+          labels: labels,
           datasets: [{
-              label: 'Purchase',
-              data: [20, 25, 15, 20, 30, 20, 25, 30, 45, 10, 25, 20],
-              backgroundColor: '#ff9f43',
-              borderRadius: 6,
-              barThickness: 20,
+              label: 'Sales',
+              data: salesData,
+              borderColor: '#10b981',
+              backgroundColor: salesGradient,
+              fill: true,
+              tension: 0.4,
+              borderWidth: 3,
+              pointRadius: 0,
+              pointHoverRadius: 6,
+              pointHoverBackgroundColor: '#10b981',
+              pointHoverBorderColor: '#fff',
+              pointHoverBorderWidth: 3,
             },
             {
-              label: 'Sales',
-              data: [40, 35, 35, 45, 55, 40, 35, 45, 50, 20, 35, 30],
-              backgroundColor: 'rgba(255, 159, 67, 0.15)',
-              borderRadius: 6,
-              barThickness: 20,
+              label: 'Expenses',
+              data: expensesData,
+              borderColor: '#f43f5e',
+              backgroundColor: 'transparent',
+              fill: false,
+              tension: 0.4,
+              borderWidth: 2,
+              borderDash: [5, 5],
+              pointRadius: 0,
             }
           ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: {
+            intersect: false,
+            mode: 'index'
+          },
+          plugins: {
+            legend: {
+              display: false
+            },
+            tooltip: {
+              backgroundColor: '#1e293b',
+              padding: 12,
+              titleFont: {
+                size: 14,
+                weight: 'bold'
+              },
+              bodyFont: {
+                size: 13
+              },
+              cornerRadius: 8,
+              displayColors: true
+            }
+          },
+          scales: {
+            x: {
+              grid: {
+                display: false
+              },
+              border: {
+                display: false
+              },
+            },
+            y: {
+              grid: {
+                color: '#f1f5f9',
+                drawTicks: false
+              },
+              border: {
+                display: false
+              },
+              ticks: {
+                padding: 10
+              }
+            }
+          }
+        }
+      });
+
+      // --- Distribution Chart (Pie/Doughnut) ---
+      const ctxDist = document.getElementById('distributionChart').getContext('2d');
+      const pieData = @json($charts['pie']['data']);
+
+      new Chart(ctxDist, {
+        type: 'doughnut',
+        data: {
+          labels: ['Sales', 'Expenses'],
+          datasets: [{
+            data: pieData,
+            backgroundColor: ['#34d399', '#f43f5e'],
+            hoverOffset: 10,
+            borderWidth: 0,
+            cutout: '75%'
+          }]
         },
         options: {
           responsive: true,
@@ -359,152 +436,12 @@
             tooltip: {
               backgroundColor: '#1e293b',
               padding: 12,
-              titleFont: {
-                size: 12,
-                weight: '900'
-              },
-              bodyFont: {
-                size: 11
-              },
-              cornerRadius: 8,
-              displayColors: false
-            }
-          },
-          scales: {
-            x: {
-              stacked: true,
-              grid: {
-                display: false
-              },
-              border: {
-                display: false
-              }
-            },
-            y: {
-              stacked: true,
-              grid: {
-                color: '#f8fafc',
-                drawTicks: false
-              },
-              border: {
-                dash: [5, 5],
-                display: false
-              },
-              ticks: {
-                stepSize: 20
-              }
+              cornerRadius: 8
             }
           }
         }
       });
 
-      // --- Revenue vs Expense Chart ---
-      const ctxRevExp = document.getElementById('revenueExpenseChart').getContext('2d');
-      new Chart(ctxRevExp, {
-        type: 'bar',
-        data: {
-          labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-          datasets: [{
-              label: 'Revenue',
-              data: [15, 25, 20, 25, 18, 22, 28, 20, 15, 25, 20, 22],
-              backgroundColor: '#28c76f',
-              borderRadius: 4,
-            },
-            {
-              label: 'Expense',
-              data: [-12, -18, -15, -20, -12, -16, -24, -15, -10, -18, -12, -15],
-              backgroundColor: '#ff9f43',
-              borderRadius: 4,
-            }
-          ]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: {
-              display: false
-            }
-          },
-          scales: {
-            x: {
-              grid: {
-                display: false
-              },
-              border: {
-                display: false
-              }
-            },
-            y: {
-              grid: {
-                color: '#f8fafc'
-              },
-              border: {
-                dash: [5, 5],
-                display: false
-              },
-              min: -30,
-              max: 30
-            }
-          }
-        }
-      });
-
-      // --- Category Donut Chart ---
-      const ctxCat = document.getElementById('categoryDonutChart').getContext('2d');
-      new Chart(ctxCat, {
-        type: 'doughnut',
-        data: {
-          labels: ['Electronics', 'Sports', 'Lifestyles'],
-          datasets: [{
-            data: [40, 35, 25],
-            backgroundColor: ['#1e293b', '#ff9f43', '#cbd5e1'],
-            borderWidth: 0,
-            hoverOffset: 15
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: {
-              display: false
-            }
-          },
-          cutout: '75%'
-        }
-      });
-
-      // --- Customer Overview Donut ---
-      const ctxCust = document.getElementById('customerDonutChart').getContext('2d');
-      new Chart(ctxCust, {
-        type: 'doughnut',
-        data: {
-          datasets: [{
-              data: [75, 25],
-              backgroundColor: ['#00cfe8', '#f1f5f9'],
-              borderWidth: 0,
-              cutout: '80%',
-            },
-            {
-              data: [60, 40],
-              backgroundColor: ['#ff9f43', '#f1f5f9'],
-              borderWidth: 0,
-              cutout: '65%',
-              radius: '85%'
-            }
-          ]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: {
-              display: false
-            }
-          }
-        }
-      });
       // --- Date Range Picker (Flatpickr) ---
       flatpickr("#date_range", {
         mode: "range",

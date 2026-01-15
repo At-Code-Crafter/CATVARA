@@ -706,11 +706,14 @@
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.12/dist/sweetalert2.all.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
   <script src="https://unpkg.com/filepond-plugin-image-preview/dist/filepond-plugin-image-preview.js"></script>
   <script src="https://unpkg.com/filepond/dist/filepond.js"></script>
 
   <script>
     $(document).ready(function() {
+      // Initialize Lucide Icons
+      lucide.createIcons();
       // Auto-initialize Select2 on all selects except opted-out
       $('select:not(.no-select2)').select2({
         width: '100%'
