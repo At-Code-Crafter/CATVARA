@@ -199,6 +199,67 @@
     });
   </script>
 
+  <!-- Session Flash Messages (Toasts) -->
+  @if (session('success'))
+    <script>
+      Swal.fire({
+        icon: 'success',
+        title: 'Success',
+        text: '{{ session('success') }}',
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true
+      });
+    </script>
+  @endif
+
+  @if (session('error'))
+    <script>
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: '{{ session('error') }}',
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 5000,
+        timerProgressBar: true
+      });
+    </script>
+  @endif
+
+  @if (session('warning'))
+    <script>
+      Swal.fire({
+        icon: 'warning',
+        title: 'Warning',
+        text: '{{ session('warning') }}',
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 4000,
+        timerProgressBar: true
+      });
+    </script>
+  @endif
+
+  @if (session('info'))
+    <script>
+      Swal.fire({
+        icon: 'info',
+        title: 'Info',
+        text: '{{ session('info') }}',
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true
+      });
+    </script>
+  @endif
+
   <!-- Custom JS -->
   <script src="{{ asset('assets/js/form.js') }}"></script>
   <script src="{{ asset('assets/js/navbar.js') }}"></script>

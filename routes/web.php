@@ -135,6 +135,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
                 Route::resource('inventory', \App\Http\Controllers\Admin\Inventory\InventoryController::class);
                 Route::get('balances/data', [\App\Http\Controllers\Admin\Inventory\InventoryController::class, 'balancesData'])->name('balances.data');
                 Route::get('inventory/adjust', [\App\Http\Controllers\Admin\Inventory\InventoryController::class, 'create'])->name('inventory.adjust');
+                Route::get('adjust', [\App\Http\Controllers\Admin\Inventory\InventoryController::class, 'create'])->name('adjust');
                 Route::post('adjust', [\App\Http\Controllers\Admin\Inventory\InventoryController::class, 'store'])->name('store');
                 Route::post('transfer', [\App\Http\Controllers\Admin\Inventory\InventoryController::class, 'transfer'])->name('transfer');
 

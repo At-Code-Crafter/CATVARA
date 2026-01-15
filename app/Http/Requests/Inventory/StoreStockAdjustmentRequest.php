@@ -22,4 +22,16 @@ class StoreStockAdjustmentRequest extends FormRequest
             'redirect_to' => 'nullable|url',
         ];
     }
+
+    /**
+     * Get the URL to redirect to on a validation error.
+     */
+    protected function getRedirectUrl()
+    {
+        $company = $this->route('company');
+        if ($company) {
+            return route('inventory.adjust', ['company' => $company->uuid]);
+        }
+        return url()->previous();
+    }
 }

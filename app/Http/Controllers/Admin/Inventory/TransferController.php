@@ -36,12 +36,13 @@ class TransferController extends Controller
                 ->with(['fromLocation.locatable', 'toLocation.locatable', 'status']);
 
             return DataTables::of($query)
+                ->addColumn('transfer_no', fn ($r) => $r->transfer_no)
                 ->addColumn('from', fn ($r) => $r->fromLocation->locatable->name ?? '-')
                 ->addColumn('to', fn ($r) => $r->toLocation->locatable->name ?? '-')
                 ->addColumn('status_badge', fn ($r) => '<span class="badge badge-'.$this->statusColor($r->status->code).'">'.$r->status->name.'</span>')
                 ->addColumn('items_count', fn ($r) => $r->items->count())
-                ->addColumn('actions', function ($r) {
-                    return '<a href="'.company_route('inventory.transfers.show', $r).'" class="btn btn-xs btn-info"><i class="fas fa-eye"></i></a>';
+                ->addColumn('actions', function ($r) use ($request) {
+                    return '<a href="'.route('inventory.transfers.show', ['company' => $request->company->uuid, 'transfer' => $r->id]).'" class="btn btn-xs btn-info"><i class="fas fa-eye"></i></a>';
                 })
                 ->rawColumns(['status_badge', 'actions'])
                 ->make(true);

@@ -72,9 +72,12 @@ class InventoryController extends Controller
             ->addColumn('location_name', fn ($r) => $r->location->locatable->name ?? $r->location->type)
             ->editColumn('quantity', fn ($r) => '<span class="badge badge-'.($r->quantity > 0 ? 'success' : 'danger').'">'.(float) $r->quantity.'</span>')
             ->addColumn('last_movement', fn ($r) => $r->last_movement_at ? $r->last_movement_at->diffForHumans() : '-')
-            ->addColumn('actions', function ($r) {
+            ->addColumn('actions', function ($r) use ($request) {
                 // Link to Variant Details
-                $url = company_route('inventory.variant.details', ['id' => $r->product_variant_id]);
+                $url = route('inventory.variant.details', [
+                    'company' => $request->company->uuid,
+                    'product_variant' => $r->product_variant_id
+                ]);
 
                 return '<a href="'.$url.'" class="btn btn-xs btn-primary"><i class="fas fa-eye"></i> Manage</a>';
             })

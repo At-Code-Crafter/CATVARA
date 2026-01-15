@@ -43,24 +43,28 @@
         serverSide: true,
         ajax: '{{ company_route('inventory.transfers.index') }}',
         columns: [{
-            data: 'reference',
-            name: 'reference'
+            data: 'transfer_no',
+            name: 'transfer_no'
           },
           {
             data: 'from',
-            name: 'from'
+            name: 'from',
+            orderable: false
           },
           {
             data: 'to',
-            name: 'to'
+            name: 'to',
+            orderable: false
           },
           {
             data: 'items_count',
-            name: 'items_count'
+            name: 'items_count',
+            orderable: false
           },
           {
             data: 'status_badge',
-            name: 'status_badge'
+            name: 'status_badge',
+            orderable: false
           },
           {
             data: 'created_at',
