@@ -7,21 +7,20 @@
     <!-- Header & Date Filter -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
       <div>
-        <h1 class="text-3xl font-black text-slate-800 tracking-tight">Dashboard Overview</h1>
+        <h1 class="text-3xl font-bold text-slate-800 tracking-tight">Dashboard Overview</h1>
         <p class="text-slate-400 text-sm font-bold flex items-center gap-2">
           Real-time business intelligence for <span class="text-brand-400">{{ active_company()->name }}</span>
         </p>
       </div>
       <form action="{{ route('company.dashboard', ['company' => active_company()->uuid]) }}" method="GET"
         class="flex items-center gap-3">
-        <div class="relative group">
+        <div class="input-icon-group group">
+          <i class="far fa-calendar-alt text-brand-400 group-hover:scale-110 transition-transform"></i>
           <input type="text" name="date_range" id="date_range"
-            class="bg-white px-10 py-2.5 rounded-xl border border-slate-200 shadow-sm text-xs font-bold text-slate-600 focus:ring-2 focus:ring-brand-400 outline-none w-64 cursor-pointer group-hover:border-brand-200 transition-all placeholder:text-slate-400"
+            class="bg-white py-2.5 rounded-xl border border-slate-200 shadow-sm text-xs font-bold text-slate-600 focus:ring-2 focus:ring-brand-400 outline-none w-64 cursor-pointer group-hover:border-brand-200 transition-all placeholder:text-slate-400"
             placeholder="Select Date Range">
           <input type="hidden" name="date_from" id="date_from" value="{{ $dateFrom->format('Y-m-d') }}">
           <input type="hidden" name="date_to" id="date_to" value="{{ $dateTo->format('Y-m-d') }}">
-          <i
-            class="far fa-calendar-alt text-brand-400 absolute left-4 top-1/2 -translate-y-1/2 group-hover:scale-110 transition-transform"></i>
           <i class="fas fa-chevron-down text-slate-300 absolute right-4 top-1/2 -translate-y-1/2 text-[10px]"></i>
         </div>
         <button type="submit" class="btn btn-primary shadow-lg shadow-brand-500/30">

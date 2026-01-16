@@ -31,7 +31,7 @@
         <div class="space-y-1.5">
           <label for="filter_category"
             class="text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-1">Category</label>
-          <select id="filter_category" class="select2 w-full" data-placeholder="All Categories">
+          <select id="filter_category" class="w-full">
             <option value="">All Categories</option>
             @foreach ($categories as $cat)
               <option value="{{ $cat->id }}">{{ $cat->name }}</option>
@@ -41,7 +41,7 @@
         <div class="space-y-1.5">
           <label for="filter_status"
             class="text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-1">Status</label>
-          <select id="filter_status" class="select2 w-full" data-placeholder="All Status">
+          <select id="filter_status" class="w-full">
             <option value="">All Status</option>
             <option value="1">Active</option>
             <option value="0">Inactive</option>
@@ -50,12 +50,20 @@
         <div class="space-y-1.5">
           <label for="filter_stock" class="text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-1">Stock
             Level</label>
-          <select id="filter_stock" class="select2 w-full" data-placeholder="All Stock">
+          <select id="filter_stock" class="w-full">
             <option value="">All Stock</option>
             <option value="in_stock">In Stock</option>
             <option value="low_stock">Low Stock (≤ 5)</option>
             <option value="out_of_stock">Out of Stock</option>
           </select>
+        </div>
+        <div class="space-y-1.5">
+          <label for="filter_date_range"
+            class="text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-1">Created Date</label>
+          <div class="input-icon-group group date-range-fix">
+            <i class="far fa-calendar-alt text-slate-400 group-focus-within:text-brand-400 transition-colors"></i>
+            <input type="text" id="filter_date_range" class="w-full pl-10" placeholder="Select date range...">
+          </div>
         </div>
       </div>
       <div class="filter-actions">
@@ -87,6 +95,19 @@
 @push('scripts')
   <script>
     $(document).ready(function() {
+      // Date Range
+      const dateRangePicker = flatpickr("#filter_date_range", {
+        mode: "range",
+        dateFormat: "Y-m-d",
+        altInput: true,
+        altFormat: "M j, Y",
+        onReady: (selectedDates, dateStr, instance) => {
+          $(instance.altInput).addClass(
+            'w-full pl-10 border-slate-200 rounded-xl text-sm h-[44px] font-semibold transition-all focus:border-brand-400 focus:ring-4 focus:ring-brand-400/10'
+          );
+        }
+      });
+
       const table = $('#productsTable').DataTable({
         processing: true,
         serverSide: true,
@@ -97,27 +118,68 @@
             d.category_id = $('#filter_category').val();
             d.status = $('#filter_status').val();
             d.stock_level = $('#filter_stock').val();
+
+            const dateRange = $('#filter_date_range').val();
+            if (dateRange && dateRange.includes(' to ')) {
+              const dates = dateRange.split(' to ');
+              d.date_from = dates[0];
+              d.date_to = dates[1];
+            }
           }
         },
         columns: [{
             data: 'name',
-            name: 'name'
+            name: 'name',
+            className: 'px-8 py-4',
+            render: (data, type, row) => {
+              const img = row.image_url || '{{ asset('theme/adminlte/dist/img/default-150x150.png') }}';
+              return `
+                 <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 border border-slate-100 shadow-sm">
+                        <img src="${img}" class="w-full h-full object-cover">
+                    </div>
+                    <div class="min-w-0">
+                        <div class="text-sm font-bold text-slate-800 truncate">${data}</div>
+                        <div class="text-[10px] font-medium text-slate-400 truncate uppercase tracking-tight">${row.slug}</div>
+                    </div>
+                </div>`;
+            }
           },
           {
             data: 'category_name',
-            name: 'category_name'
+            name: 'category_name',
+            className: 'py-4',
+            render: (data) => data ?
+              `<span class="text-sm font-medium text-slate-600">${data}</span>` :
+              `<span class="text-xs text-slate-300 italic">Uncategorized</span>`
           },
           {
             data: 'variants_count',
             name: 'variants_count',
-            searchable: false
+            searchable: false,
+            className: 'py-4',
+            render: (data) =>
+              `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-brand-50 text-brand-600 border border-brand-100">${data} Variants</span>`
           },
           {
-            data: 'action',
+            data: 'action', // This can stay server-side or move to client-side. Let's keep server-side for now as it uses route helpers, or we can pass ID and build it here. 
+            // Better to standardise: I'll use the ID from row to build it client side to avoid HTML in controller.
             name: 'action',
             orderable: false,
             searchable: false,
-            className: 'text-right'
+            className: 'text-right px-8',
+            render: function(data, type, row) {
+              // We need the edit URL. Since we can't easily generate Laravel routes in JS string, 
+              // we'll rely on the server validation for the URL or just assume a pattern if safe.
+              // Safest: The controller sends the `edit_url` in the row data.
+              return `
+                  <div class="flex items-center justify-end gap-2">
+                       <a href="${row.edit_url}" class="text-slate-400 hover:text-brand-600 transition-colors p-1" title="Edit Product">
+                          <i class="fas fa-edit"></i>
+                      </a>
+                  </div>
+                `;
+            }
           }
         ],
         language: {
@@ -133,7 +195,8 @@
       });
 
       $('#btn_reset_filters').on('click', function() {
-        $('#filter_category, #filter_status, #filter_stock').val('').trigger('change');
+        $('#filter_category, #filter_status, #filter_stock').val('');
+        dateRangePicker.clear();
         table.ajax.reload();
       });
     });

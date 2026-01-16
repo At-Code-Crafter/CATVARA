@@ -1,236 +1,296 @@
 @extends('catvara.layouts.app')
 
-@section('page-title', 'Create Company')
-
-@section('page-actions')
-  <a href="{{ route('tenants.index') }}"
-    class="inline-flex items-center px-4 py-2 border border-slate-200 rounded-xl text-sm font-semibold text-slate-600 bg-white hover:bg-slate-50 transition-all">
-    <i data-lucide="arrow-left" class="w-4 h-4 mr-2"></i>
-    Back to List
-  </a>
-@endsection
+@section('title', 'Create New Tenant')
 
 @section('content')
-  <form action="{{ route('tenants.store') }}" class="ajax-form" method="POST" enctype="multipart/form-data">
-    @csrf
+  <div class="w-full mx-auto pb-24 animate-fade-in">
+    {{-- Header --}}
+    <div class="flex items-center justify-between mb-8">
+      <div>
+        <div class="flex items-center gap-2 mb-2">
+          <a href="{{ route('tenants.index') }}" class="text-slate-400 hover:text-brand-600 transition-colors">
+            <i class="fas fa-arrow-left"></i>
+          </a>
+          <span
+            class="text-[10px] font-black px-2 py-0.5 rounded bg-slate-100 text-slate-500 uppercase tracking-widest">Administration</span>
+        </div>
+        <h1 class="text-3xl font-bold text-slate-800 tracking-tight">Onboard New Tenant</h1>
+        <p class="text-slate-500 font-medium mt-1">Register a new company into the system ecosystem.</p>
+      </div>
+    </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-      <!-- Left Col: Main Info -->
-      <div class="lg:col-span-2 space-y-8">
-        <!-- Basic Info Card -->
-        <div class="card overflow-hidden">
-          <div class="p-6 border-b border-slate-50 flex items-center">
-            <div class="w-8 h-8 bg-accent/10 rounded-lg flex items-center justify-center text-accent mr-3">
-              <i data-lucide="building-2" class="w-4 h-4"></i>
+    <form action="{{ route('tenants.store') }}" class="ajax-form space-y-8" method="POST" enctype="multipart/form-data">
+      @csrf
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {{-- Left Column: Forms --}}
+        <div class="lg:col-span-2 space-y-8">
+          {{-- Section 1: Core Identity --}}
+          <div class="card p-8 bg-white border-slate-100 shadow-soft relative overflow-hidden group">
+            <div class="absolute top-0 left-0 w-1 h-full bg-brand-400"></div>
+            <div class="flex items-center gap-4 mb-8">
+              <div class="h-10 w-10 rounded-xl bg-brand-50 text-brand-500 flex items-center justify-center shadow-sm">
+                <i class="fas fa-building"></i>
+              </div>
+              <div>
+                <h3 class="text-lg font-black text-slate-800 tracking-tight">Core Identity</h3>
+                <p class="text-xs text-slate-400 font-bold uppercase tracking-widest">Base Subscription Details</p>
+              </div>
             </div>
-            <h3 class="font-bold text-slate-800">Company Information</h3>
-          </div>
-          <div class="p-6 space-y-6">
+
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div class="space-y-2">
-                <label class="text-xs font-bold text-slate-500 uppercase">Company Name <span
-                    class="text-rose-500">*</span></label>
-                <input type="text" name="name" value="{{ old('name') }}"
-                  class="block w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-accent focus:border-accent transition-all @error('name') border-rose-500 @enderror"
-                  placeholder="e.g. London Trade">
+              {{-- Company Name --}}
+              <div class="space-y-1.5 md:col-span-2">
+                <label class="text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-1">Company Display Name
+                  <span class="text-rose-500">*</span></label>
+                <div class="input-icon-group">
+                  <i class="fas fa-signature"></i>
+                  <input type="text" name="name" value="{{ old('name') }}" required
+                    class="w-full py-2.5 font-semibold placeholder:font-normal" placeholder="e.g. Acme Corporation">
+                </div>
                 @error('name')
-                  <p class="text-xs text-rose-500 mt-1">{{ $message }}</p>
+                  <p class="text-[10px] font-bold text-rose-500 mt-1">{{ $message }}</p>
                 @enderror
               </div>
-              <div class="space-y-2">
-                <label class="text-xs font-bold text-slate-500 uppercase">Legal Name <span
-                    class="text-rose-500">*</span></label>
-                <input type="text" name="legal_name" value="{{ old('legal_name') }}"
-                  class="block w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-accent focus:border-accent transition-all @error('legal_name') border-rose-500 @enderror"
-                  placeholder="e.g. London Trade Limited">
-                @error('legal_name')
-                  <p class="text-xs text-rose-500 mt-1">{{ $message }}</p>
-                @enderror
-              </div>
-            </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div class="space-y-2">
-                <label class="text-xs font-bold text-slate-500 uppercase">Company Code <span
-                    class="text-rose-500">*</span></label>
-                <input type="text" name="code" value="{{ old('code') }}"
-                  class="block w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-accent focus:border-accent transition-all @error('code') border-rose-500 @enderror"
-                  placeholder="e.g. UK-TRADE">
-                <p class="text-[10px] text-slate-400">Unique internal code (uppercase recommended).</p>
-                @error('code')
-                  <p class="text-xs text-rose-500 mt-1">{{ $message }}</p>
+              {{-- Legal Name --}}
+              <div class="space-y-1.5 md:col-span-2">
+                <label class="text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-1">Legal Registered Name
+                  <span class="text-rose-500">*</span></label>
+                <div class="input-icon-group">
+                  <i class="fas fa-landmark"></i>
+                  <input type="text" name="legal_name" value="{{ old('legal_name') }}" required
+                    class="w-full py-2.5 font-semibold placeholder:font-normal" placeholder="e.g. Acme Corp LLC">
+                </div>
+                @error('legal_name')
+                  <p class="text-[10px] font-bold text-rose-500 mt-1">{{ $message }}</p>
                 @enderror
               </div>
-              <div class="space-y-2">
-                <label class="text-xs font-bold text-slate-500 uppercase">Status <span
+
+              {{-- System Code --}}
+              <div class="space-y-1.5">
+                <label class="text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-1">Internal Code <span
                     class="text-rose-500">*</span></label>
-                <select name="company_status_id" class="select2 @error('company_status_id') border-rose-500 @enderror">
-                  <option value="">-- Select Status --</option>
+                <div class="input-icon-group">
+                  <i class="fas fa-fingerprint"></i>
+                  <input type="text" name="code" value="{{ old('code') }}" required
+                    class="w-full py-2.5 font-semibold placeholder:font-normal uppercase" placeholder="e.g. ACME-01">
+                </div>
+                @error('code')
+                  <p class="text-[10px] font-bold text-rose-500 mt-1">{{ $message }}</p>
+                @enderror
+              </div>
+
+              {{-- Status --}}
+              <div class="space-y-1.5">
+                <label class="text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-1">Lifecycle Status <span
+                    class="text-rose-500">*</span></label>
+                <select name="company_status_id" class="w-full pt-1">
+                  <option value="">Select Status</option>
                   @foreach ($statuses as $st)
                     <option value="{{ $st->id }}" {{ old('company_status_id') == $st->id ? 'selected' : '' }}>
                       {{ $st->name }}</option>
                   @endforeach
                 </select>
                 @error('company_status_id')
-                  <p class="text-xs text-rose-500 mt-1">{{ $message }}</p>
+                  <p class="text-[10px] font-bold text-rose-500 mt-1">{{ $message }}</p>
+                @enderror
+              </div>
+
+              {{-- Website --}}
+              <div class="space-y-1.5 md:col-span-2">
+                <label class="text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-1">Official
+                  Website</label>
+                <div class="input-icon-group">
+                  <i class="fas fa-globe"></i>
+                  <input type="url" name="website_url" value="{{ old('website_url') }}"
+                    class="w-full py-2.5 font-semibold placeholder:font-normal" placeholder="https://www.acme.com">
+                </div>
+                @error('website_url')
+                  <p class="text-[10px] font-bold text-rose-500 mt-1">{{ $message }}</p>
                 @enderror
               </div>
             </div>
+          </div>
 
-            <div class="space-y-2">
-              <label class="text-xs font-bold text-slate-500 uppercase">Website URL</label>
-              <div class="relative">
-                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-                  <i data-lucide="globe" class="w-4 h-4"></i>
-                </div>
-                <input type="text" name="website_url" value="{{ old('website_url') }}"
-                  class="block w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-accent focus:border-accent transition-all @error('website_url') border-rose-500 @enderror"
-                  placeholder="https://example.com">
+          {{-- Section 2: Document Sequencing --}}
+          <div class="card p-8 bg-white border-slate-100 shadow-soft relative overflow-hidden group">
+            <div class="absolute top-0 left-0 w-1 h-full bg-indigo-400"></div>
+            <div class="flex items-center gap-4 mb-8">
+              <div class="h-10 w-10 rounded-xl bg-indigo-50 text-indigo-500 flex items-center justify-center shadow-sm">
+                <i class="fas fa-file-invoice"></i>
               </div>
-              @error('website_url')
-                <p class="text-xs text-rose-500 mt-1">{{ $message }}</p>
-              @enderror
+              <div>
+                <h3 class="text-lg font-black text-slate-800 tracking-tight">Document Sequencing</h3>
+                <p class="text-xs text-slate-400 font-bold uppercase tracking-widest">Prefixes & Numbers</p>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+              {{-- Invoice Group --}}
+              <div class="space-y-4 pt-2">
+                <p class="text-[10px] font-black text-brand-400 uppercase tracking-widest flex items-center gap-2">
+                  <span class="w-1.5 h-1.5 rounded-full bg-brand-400"></span> Sales Invoices
+                </p>
+                <div class="grid grid-cols-2 gap-4">
+                  <div class="space-y-1.5">
+                    <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Prefix</label>
+                    <input type="text" name="invoice_prefix" value="{{ old('invoice_prefix', 'INV') }}"
+                      class="w-full py-2 bg-slate-50 border-slate-200 text-xs font-bold uppercase placeholder:font-normal"
+                      placeholder="INV">
+                  </div>
+                  <div class="space-y-1.5">
+                    <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Suffix</label>
+                    <input type="text" name="invoice_postfix" value="{{ old('invoice_postfix') }}"
+                      class="w-full py-2 bg-slate-50 border-slate-200 text-xs font-bold uppercase" placeholder="2025">
+                  </div>
+                </div>
+              </div>
+
+              {{-- Quotes Group --}}
+              <div class="space-y-4 pt-2">
+                <p class="text-[10px] font-black text-indigo-400 uppercase tracking-widest flex items-center gap-2">
+                  <span class="w-1.5 h-1.5 rounded-full bg-indigo-400"></span> Quotations
+                </p>
+                <div class="grid grid-cols-2 gap-4">
+                  <div class="space-y-1.5">
+                    <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Prefix</label>
+                    <input type="text" name="quote_prefix" value="{{ old('quote_prefix', 'QT') }}"
+                      class="w-full py-2 bg-slate-50 border-slate-200 text-xs font-bold uppercase" placeholder="QT">
+                  </div>
+                  <div class="space-y-1.5">
+                    <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Suffix</label>
+                    <input type="text" name="quote_postfix" value="{{ old('quote_postfix') }}"
+                      class="w-full py-2 bg-slate-50 border-slate-200 text-xs font-bold uppercase" placeholder="2025">
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {{-- Section 3: Localization & Tax --}}
+          <div class="card p-8 bg-white border-slate-100 shadow-soft relative overflow-hidden group">
+            <div class="absolute top-0 left-0 w-1 h-full bg-rose-400"></div>
+            <div class="flex items-center gap-4 mb-8">
+              <div class="h-10 w-10 rounded-xl bg-rose-50 text-rose-500 flex items-center justify-center shadow-sm">
+                <i class="fas fa-map-marker-alt"></i>
+              </div>
+              <div>
+                <h3 class="text-lg font-black text-slate-800 tracking-tight">Localization & Tax</h3>
+                <p class="text-xs text-slate-400 font-bold uppercase tracking-widest">Regional Settings</p>
+              </div>
+            </div>
+
+            <div class="space-y-6">
+              <div class="space-y-1.5">
+                <label class="text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-1">Headquarters
+                  Address</label>
+                <textarea name="address" rows="3" class="w-full py-2.5 font-semibold bg-slate-50 border-slate-200"
+                  placeholder="Full physical office address">{{ old('address') }}</textarea>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+                <div class="space-y-1.5">
+                  <label class="text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-1">Tax Registration No
+                    (TRN)</label>
+                  <div class="input-icon-group">
+                    <i class="fas fa-percent"></i>
+                    <input type="text" name="tax_number" value="{{ old('tax_number') }}"
+                      class="w-full py-2.5 font-semibold placeholder:font-normal" placeholder="e.g. 100-XXX-XXX">
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
-        <!-- Document Settings Card -->
-        <div class="card overflow-hidden">
-          <div class="p-6 border-b border-slate-50 flex items-center">
-            <div class="w-8 h-8 bg-indigo-50 rounded-lg flex items-center justify-center text-indigo-600 mr-3">
-              <i data-lucide="file-text" class="w-4 h-4"></i>
-            </div>
-            <h3 class="font-bold text-slate-800">Document Settings</h3>
-          </div>
-          <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div class="space-y-2">
-              <label class="text-xs font-bold text-slate-500 uppercase">Invoice Prefix</label>
-              <input type="text" name="invoice_prefix" value="{{ old('invoice_prefix') }}"
-                class="block w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-accent focus:border-accent transition-all"
-                placeholder="e.g. INV">
-            </div>
-            <div class="space-y-2">
-              <label class="text-xs font-bold text-slate-500 uppercase">Invoice Postfix</label>
-              <input type="text" name="invoice_postfix" value="{{ old('invoice_postfix') }}"
-                class="block w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-accent focus:border-accent transition-all"
-                placeholder="e.g. 2025">
-            </div>
-            <div class="space-y-2">
-              <label class="text-xs font-bold text-slate-500 uppercase">Quote Prefix</label>
-              <input type="text" name="quote_prefix" value="{{ old('quote_prefix') }}"
-                class="block w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-accent focus:border-accent transition-all"
-                placeholder="e.g. QT">
-            </div>
-            <div class="space-y-2">
-              <label class="text-xs font-bold text-slate-500 uppercase">Quote Postfix</label>
-              <input type="text" name="quote_postfix" value="{{ old('quote_postfix') }}"
-                class="block w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-accent focus:border-accent transition-all"
-                placeholder="e.g. 2025">
-            </div>
-          </div>
-        </div>
+        {{-- Right Column: Assets & Actions --}}
+        <div class="space-y-8">
+          {{-- Brand Asset --}}
+          <div class="card p-8 bg-white border-slate-100 shadow-soft text-center">
+            <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest mb-6 border-b border-slate-50 pb-4">
+              Brand Asset</h3>
 
-        <!-- Address & Tax Card -->
-        <div class="card overflow-hidden">
-          <div class="p-6 border-b border-slate-50 flex items-center">
-            <div class="w-8 h-8 bg-rose-50 rounded-lg flex items-center justify-center text-rose-600 mr-3">
-              <i data-lucide="map-pin" class="w-4 h-4"></i>
-            </div>
-            <h3 class="font-bold text-slate-800">Address & Tax</h3>
-          </div>
-          <div class="p-6 space-y-6">
-            <div class="space-y-2">
-              <label class="text-xs font-bold text-slate-500 uppercase">Full Address</label>
-              <textarea name="address" rows="3"
-                class="block w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-accent focus:border-accent transition-all"
-                placeholder="Company physical address">{{ old('address') }}</textarea>
-            </div>
-            <div class="space-y-2">
-              <label class="text-xs font-bold text-slate-500 uppercase">Tax Number / TRN</label>
-              <input type="text" name="tax_number" value="{{ old('tax_number') }}"
-                class="block w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-accent focus:border-accent transition-all"
-                placeholder="VAT / TRN / GST">
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Right Col: Logo & Actions -->
-      <div class="space-y-8">
-        <!-- Logo Card -->
-        <div class="card overflow-hidden">
-          <div class="p-6 border-b border-slate-50 flex items-center">
-            <div class="w-8 h-8 bg-amber-50 rounded-lg flex items-center justify-center text-amber-600 mr-3">
-              <i data-lucide="image" class="w-4 h-4"></i>
-            </div>
-            <h3 class="font-bold text-slate-800">Identity</h3>
-          </div>
-          <div class="p-6">
-            <div class="flex flex-col items-center justify-center">
-              <div class="relative w-32 h-32 mb-4">
+            <div class="relative group/logo mx-auto w-40 h-40 mb-6">
+              <div
+                class="w-full h-full rounded-2xl bg-slate-50 border-2 border-dashed border-slate-200 flex items-center justify-center overflow-hidden transition-all group-hover/logo:border-brand-400/50">
                 <img id="logoPreview"
                   src="https://ui-avatars.com/api/?name=Company&background=f8fafc&color=cbd5e1&size=128"
-                  class="w-full h-full object-contain rounded-2xl border-2 border-dashed border-slate-200 p-2"
+                  class="w-full h-full object-contain p-4 transition-transform duration-500 group-hover/logo:scale-110"
                   alt="Logo Preview">
-                <label for="logoInput"
-                  class="absolute bottom-0 right-0 p-2 bg-white rounded-xl shadow-lg border border-slate-100 cursor-pointer hover:bg-slate-50 transition-all text-accent">
-                  <i data-lucide="camera" class="w-4 h-4"></i>
-                  <input type="file" name="logo" id="logoInput" class="hidden" accept="image/*">
-                </label>
               </div>
-              <p class="text-[10px] text-slate-400 uppercase font-bold tracking-tight">Logo Preview</p>
-              <p class="text-[10px] text-slate-400 mt-1">Recommended size: 512x512</p>
+              <label for="logoInput"
+                class="absolute -bottom-2 -right-2 h-10 w-10 bg-white rounded-xl shadow-xl border border-slate-100 flex items-center justify-center cursor-pointer hover:bg-brand-50 hover:text-brand-500 transition-all text-slate-400 z-10">
+                <i class="fas fa-camera text-sm"></i>
+                <input type="file" name="logo" id="logoInput" class="hidden" accept="image/*">
+              </label>
+            </div>
+
+            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Company Logo</p>
+            <p class="text-[10px] text-slate-400 font-medium">Recommended: Square PNG/SVG (512px)</p>
+          </div>
+
+          {{-- Execution Card --}}
+          <div class="card p-8 bg-slate-900 border-none shadow-2xl shadow-slate-900/40 relative overflow-hidden">
+            <div class="absolute top-0 right-0 p-4 opacity-10">
+              <i class="fas fa-rocket text-6xl text-white"></i>
+            </div>
+            <h3 class="text-white font-black text-lg mb-4 relative z-10">Execute Onboarding</h3>
+            <p class="text-slate-400 text-xs font-bold mb-8 leading-relaxed relative z-10">
+              Review all fields before saving. This will initialize the tenant container in the multisite ecosystem.
+            </p>
+
+            <div class="space-y-4">
+              <button type="submit"
+                class="w-full btn btn-primary py-4 shadow-xl shadow-brand-500/20 font-black tracking-tight flex items-center justify-center gap-3">
+                <i class="fas fa-check-circle opacity-50"></i> Initialize Tenant
+              </button>
+              <a href="{{ route('tenants.index') }}"
+                class="w-full flex items-center justify-center py-4 text-xs font-black text-slate-400 hover:text-white transition-colors uppercase tracking-widest">
+                Abort Process
+              </a>
             </div>
           </div>
-        </div>
 
-        <!-- Actions Card -->
-        <div class="card p-6">
-          <div class="space-y-3">
-            <button type="submit"
-              class="w-full flex justify-center items-center px-6 py-3 bg-accent text-white rounded-xl text-sm font-bold shadow-lg shadow-accent/20 hover:bg-accent/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent transition-all">
-              <i data-lucide="save" class="w-4 h-4 mr-2"></i>
-              Save Company
-            </button>
-            <a href="{{ route('tenants.index') }}"
-              class="w-full flex justify-center items-center px-6 py-3 border border-slate-200 text-slate-600 rounded-xl text-sm font-bold hover:bg-slate-50 transition-all">
-              Cancel
-            </a>
+          {{-- Help Widget --}}
+          <div class="bg-brand-50/50 rounded-2xl p-6 border border-brand-100">
+            <h4 class="text-[11px] font-black text-brand-600 uppercase tracking-widest mb-4 flex items-center gap-2">
+              <i class="fas fa-lightbulb"></i> Deployment Guide
+            </h4>
+            <ul class="space-y-3">
+              <li class="flex items-start gap-2.5">
+                <div
+                  class="h-4 w-4 rounded-full bg-brand-500 text-white flex items-center justify-center text-[8px] mt-0.5">
+                  1</div>
+                <p class="text-[11px] text-slate-600 font-bold leading-tight">Code must be unique across all system
+                  clusters.</p>
+              </li>
+              <li class="flex items-start gap-2.5">
+                <div
+                  class="h-4 w-4 rounded-full bg-brand-500 text-white flex items-center justify-center text-[8px] mt-0.5">
+                  2</div>
+                <p class="text-[11px] text-slate-600 font-bold leading-tight">Document prefixes cannot be changed after
+                  first invoice.</p>
+              </li>
+            </ul>
           </div>
         </div>
-
-        <!-- Tips / Info Card -->
-        <div class="bg-primary/5 rounded-2xl p-6 border border-primary/10">
-          <h4 class="text-xs font-bold text-primary uppercase mb-3 flex items-center">
-            <i data-lucide="info" class="w-4 h-4 mr-2"></i>
-            Quick Help
-          </h4>
-          <ul class="space-y-3">
-            <li class="text-xs text-slate-600 flex items-start">
-              <i data-lucide="check-circle" class="w-3 h-3 mr-2 mt-0.5 text-accent"></i>
-              Ensure company code is unique.
-            </li>
-            <li class="text-xs text-slate-600 flex items-start">
-              <i data-lucide="check-circle" class="w-3 h-3 mr-2 mt-0.5 text-accent"></i>
-              Set correct document prefixes.
-            </li>
-          </ul>
-        </div>
       </div>
-    </div>
-  </form>
+    </form>
+  </div>
 @endsection
 
 @push('scripts')
   <script>
     $(function() {
-      // Logo preview
+      // Logo Preview Engine
       $('#logoInput').on('change', function(e) {
         const file = e.target.files && e.target.files[0] ? e.target.files[0] : null;
         if (file) {
           const reader = new FileReader();
           reader.onload = function(ev) {
-            $('#logoPreview').attr('src', ev.target.result);
+            $('#logoPreview').attr('src', ev.target.result).addClass('animate-pulse-slow');
+            setTimeout(() => $('#logoPreview').removeClass('animate-pulse-slow'), 1000);
           };
           reader.readAsDataURL(file);
         }

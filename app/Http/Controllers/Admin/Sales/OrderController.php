@@ -22,6 +22,15 @@ class OrderController extends Controller
         return response()->json($paymentTerms);
     }
 
+    public function loadPaymentMethods()
+    {
+        $methods = \App\Models\Accounting\PaymentMethod::where('company_id', request()->company->id)
+            ->active()
+            ->select(['id', 'name', 'code', 'type'])
+            ->get();
+        return response()->json($methods);
+    }
+
     public function loadCurrencies()
     {
         $currencies = request()->company->currencies->map(function ($currency) {
@@ -42,6 +51,7 @@ class OrderController extends Controller
                 'id' => $customer->id,
                 'initial' => $customer->initials,
                 'name' => $customer->display_name,
+                'legal_name' => $customer->legal_name,
                 'address' => optional($customer->address)->render() ?? null,
                 'phone' => $customer->phone,
                 'email' => $customer->email,

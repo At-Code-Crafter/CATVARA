@@ -30,7 +30,7 @@
         </button>
       </div>
       <div class="p-6 filter-card-content">
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div class="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 gap-6">
           <div class="space-y-1.5">
             <label class="text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-1">User Type</label>
             <select id="filterType" class="w-full">

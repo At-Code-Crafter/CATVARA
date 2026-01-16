@@ -1,25 +1,27 @@
 @extends('catvara.layouts.app')
 
-@section('title', 'Roles')
+@section('title', 'Role Management')
 
 @section('content')
   <div class="space-y-8 animate-fade-in">
     <!-- Header -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
       <div>
-        <h2 class="text-3xl font-bold text-slate-800 tracking-tight">Role Directory</h2>
-        <p class="text-slate-400 text-sm mt-1 font-medium">Define and manage access roles for <b>{{ $company->name }}</b>.
+        <h2 class="text-3xl font-bold text-slate-800 tracking-tight">Access Roles</h2>
+        <p class="text-slate-400 text-sm mt-1 font-medium">Define and manage permission sets for
+          <b>{{ $company->name }}</b>.
         </p>
       </div>
       <div>
-        <a href="{{ route('settings.roles.create', ['company' => $company->uuid]) }}" class="btn btn-primary">
+        <a href="{{ route('settings.roles.create', ['company' => $company->uuid]) }}"
+          class="btn btn-primary shadow-lg shadow-brand-500/30">
           <i class="fas fa-plus-circle mr-2"></i> Create New Role
         </a>
       </div>
     </div>
 
     <!-- Filters Card -->
-    <div class="card border-slate-100 bg-white shadow-soft">
+    <div class="card border-slate-100 bg-white shadow-soft mb-8">
       <div class="p-6 border-b border-slate-50 flex justify-between items-center bg-slate-50/20">
         <h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
           <i class="fas fa-filter text-brand-400"></i> Filters
@@ -30,9 +32,10 @@
         </button>
       </div>
       <div class="p-6 filter-card-content">
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div class="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 gap-6">
           <div class="space-y-1.5">
-            <label class="text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-1">Status</label>
+            <label for="filterActive" class="text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-1">Status
+              Filter</label>
             <select id="filterActive" class="w-full">
               <option value="">All Statuses</option>
               <option value="1">Active</option>
@@ -40,9 +43,9 @@
             </select>
           </div>
         </div>
-        <div class="filter-actions mt-6 flex justify-end gap-3">
-          <button id="btnClear" class="btn btn-white min-w-[120px]">Clear Filter</button>
-          <button id="btnApply" class="btn btn-primary min-w-[123px]">Apply Filter</button>
+        <div class="filter-actions mt-6">
+          <button id="btnClearFilters" class="btn btn-white min-w-[120px]">Clear Filter</button>
+          <button id="btnApplyFilters" class="btn btn-primary min-w-[123px]">Apply Filter</button>
         </div>
       </div>
     </div>
@@ -53,12 +56,12 @@
         <table class="table-premium w-full text-left" id="roles-table">
           <thead>
             <tr>
-              <th class="px-8! w-[60px]">#</th>
-              <th>Role Identification</th>
-              <th>System Slug</th>
+              <th class="px-8! w-[80px]">#</th>
+              <th>Role Name</th>
+              <th>Slug</th>
               <th class="text-center">Permissions</th>
               <th class="text-center">Status</th>
-              <th>Created On</th>
+              <th>Created</th>
               <th class="text-right px-8!">Actions</th>
             </tr>
           </thead>
@@ -87,72 +90,65 @@
         },
         columns: [{
             data: 'DT_RowIndex',
-            name: 'DT_RowIndex',
             orderable: false,
             searchable: false,
-            className: 'px-8 py-5'
+            className: 'px-8 py-4 font-bold text-slate-400 text-xs'
           },
           {
             data: 'name',
-            name: 'name',
-            className: 'py-5',
-            render: function(data) {
-              return `<span class="font-bold text-slate-800 text-sm">${data}</span>`;
-            }
+            className: 'py-4 font-bold text-slate-800'
           },
           {
             data: 'slug',
-            name: 'slug',
-            className: 'py-5',
-            render: function(data) {
-              return data ?
-                `<code class="text-[10px] px-1.5 py-0.5 bg-slate-50 border border-slate-100 rounded text-slate-500 font-bold">${data}</code>` :
-                '<span class="text-slate-300">—</span>';
-            }
+            className: 'py-4',
+            render: (data) =>
+              `<span class="px-2 py-0.5 rounded bg-slate-100 text-slate-500 text-[10px] font-black uppercase tracking-wider border border-slate-200">${data}</span>`
           },
           {
             data: 'permissions_count',
-            name: 'permissions_count',
-            className: 'text-center py-5',
-            render: (data) =>
-              `<span class="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-50 text-blue-500 border border-blue-100 rounded-md text-[10px] font-bold"><i class="fas fa-key text-[8px]"></i> ${data}</span>`
+            className: 'text-center py-4',
+            render: (data) => `<div class="flex items-center justify-center gap-1.5 py-1 px-3 bg-indigo-50 border border-indigo-100 rounded-lg w-fit mx-auto">
+                <i class="fas fa-key text-indigo-400 text-[10px]"></i>
+                <span class="text-xs font-bold text-indigo-600">${data}</span>
+              </div>`
           },
           {
             data: 'is_active',
-            name: 'is_active',
-            className: 'text-center py-5'
+            className: 'text-center py-4'
           },
           {
             data: 'created_at',
-            name: 'created_at',
-            className: 'py-5 text-slate-500 font-medium text-xs'
+            className: 'py-4 text-xs font-bold text-slate-500'
           },
           {
             data: 'action',
             orderable: false,
             searchable: false,
-            className: 'text-right px-8 py-5'
+            className: 'text-right px-8 py-4'
           },
-        ],
-        order: [
-          [1, 'asc']
         ],
         dom: '<"flex justify-between items-center p-6"lBf>rt<"flex justify-between items-center p-6"ip>',
         language: {
           searchPlaceholder: "Search roles...",
           search: "",
-          processing: '<i class="fas fa-spinner fa-spin text-brand-400"></i>'
+          processing: '<i class="fas fa-spinner fa-spin text-brand-400 text-2xl"></i>'
+        },
+        drawCallback: function() {
+          // Apply Tailwind to dynamic elements if needed
         }
       });
 
       // Filter Toggle
       $('.filter-toggle-btn').on('click', function() {
-        $('.filter-card-content').slideToggle(300);
-        $(this).find('.filter-toggle-icon').toggleClass('rotate-180');
+        const $cardContent = $('.filter-card-content');
+        const $icon = $('.filter-toggle-icon');
+
+        $cardContent.slideToggle(300);
+        $icon.toggleClass('fa-chevron-up fa-chevron-down');
       });
 
-      $('#btnApply').on('click', () => table.ajax.reload());
-      $('#btnClear').on('click', () => {
+      $('#btnApplyFilters').on('click', () => table.ajax.reload());
+      $('#btnClearFilters').on('click', () => {
         $('#filterActive').val('');
         table.ajax.reload();
       });

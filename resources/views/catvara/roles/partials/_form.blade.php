@@ -2,124 +2,122 @@
   $isEdit = !empty($role);
 @endphp
 
-<div class="card border-slate-100 bg-white shadow-soft overflow-hidden">
-  <div class="p-6 border-b border-slate-50 bg-slate-50/20">
-    <h3 class="text-xs font-bold text-slate-800 uppercase tracking-widest flex items-center gap-2">
-      <i class="fas fa-user-shield text-brand-400"></i> Role Details
-    </h3>
-  </div>
-
-  <div class="p-8">
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+<div class="space-y-8">
+  <div class="card p-8 bg-white border-slate-100">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+      {{-- Role Name --}}
       <div class="space-y-1.5">
         <label class="text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-1">Role Name <span
-            class="text-red-400">*</span></label>
-        <div class="relative group">
-          <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-            <i
-              class="fas fa-signature text-slate-400 group-focus-within:text-brand-400 transition-colors text-[10px]"></i>
-          </div>
-          <input type="text" name="name" value="{{ old('name', $role->name ?? '') }}"
-            class="w-full rounded-xl border-slate-200 text-sm pl-10 h-[44px] focus:border-brand-400 focus:ring-4 focus:ring-brand-400/10 transition-all @error('name') border-red-400 @enderror"
-            placeholder="e.g. Sales Manager">
+            class="text-rose-500">*</span></label>
+        <div class="input-icon-group">
+          <i class="fas fa-user-shield"></i>
+          <input type="text" name="name" value="{{ old('name', $role->name ?? '') }}" required
+            class="w-full py-2.5 font-semibold placeholder:font-normal" placeholder="e.g. Sales Manager">
         </div>
         @error('name')
-          <p class="text-[10px] text-red-500 font-bold mt-1 ml-1">{{ $message }}</p>
+          <p class="text-[10px] font-bold text-rose-500 mt-1">{{ $message }}</p>
         @enderror
       </div>
 
+      {{-- Role Slug --}}
       <div class="space-y-1.5">
-        <label class="text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-1">System Slug</label>
-        <div class="relative group">
-          <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-            <i class="fas fa-code text-slate-400 group-focus-within:text-brand-400 transition-colors text-[10px]"></i>
-          </div>
+        <label class="text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-1">Role Slug (Optional)</label>
+        <div class="input-icon-group">
+          <i class="fas fa-fingerprint"></i>
           <input type="text" name="slug" value="{{ old('slug', $role->slug ?? '') }}"
-            class="w-full rounded-xl border-slate-200 text-sm pl-10 h-[44px] focus:border-brand-400 focus:ring-4 focus:ring-brand-400/10 transition-all @error('slug') border-red-400 @enderror"
-            placeholder="e.g. sales-manager">
+            class="w-full py-2.5 font-semibold placeholder:font-normal" placeholder="e.g. sales-manager">
         </div>
-        <p class="text-[10px] text-slate-400 font-medium ml-1 mt-1">Leave blank for auto-generation.</p>
+        <p class="text-[10px] text-slate-400 font-medium ml-1">Leave blank to auto-generate.</p>
         @error('slug')
-          <p class="text-[10px] text-red-500 font-bold mt-1 ml-1">{{ $message }}</p>
+          <p class="text-[10px] font-bold text-rose-500 mt-1">{{ $message }}</p>
         @enderror
       </div>
 
-      <div class="space-y-1.5">
-        <label class="text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-1">Status</label>
-        <div class="flex items-center h-[44px] px-4 bg-slate-50/50 rounded-xl border border-slate-100">
-          <label class="relative inline-flex items-center cursor-pointer">
-            <input type="checkbox" name="is_active" value="1" class="sr-only peer" id="isActiveSwitch"
-              {{ old('is_active', $role->is_active ?? true) ? 'checked' : '' }}>
-            <div
-              class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500">
-            </div>
-            <span class="ml-3 text-sm font-bold text-slate-600">Active Role</span>
-          </label>
-        </div>
-      </div>
-    </div>
-
-    <div class="pt-8 border-t border-slate-50">
-      <div class="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6">
+      {{-- Status --}}
+      <div class="md:col-span-2 pt-4 border-t border-slate-50 flex items-center justify-between">
         <div>
-          <h4 class="text-sm font-bold text-slate-800 tracking-tight">System Permissions</h4>
-          <p class="text-[11px] text-slate-400 font-medium mt-0.5">Define granular access for this role.</p>
+          <h4 class="font-bold text-slate-800 text-sm">Role Status</h4>
+          <p class="text-xs text-slate-400 font-medium">Deactivated roles cannot be assigned to users.</p>
         </div>
-        <div class="flex gap-2">
-          <button type="button" class="btn btn-white btn-xs px-3 font-bold text-slate-500" id="btnSelectAll">
-            <i class="fas fa-check-double mr-1.5 opacity-50"></i> Select All
-          </button>
-          <button type="button" class="btn btn-white btn-xs px-3 font-bold text-slate-500" id="btnClearAll">
-            <i class="fas fa-eraser mr-1.5 opacity-50"></i> Clear
-          </button>
-        </div>
-      </div>
-
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        @foreach ($modules as $module)
-          <div class="card border-slate-100 bg-slate-50/30 overflow-hidden">
-            <div class="px-4 py-3 border-b border-slate-100 bg-white flex justify-between items-center">
-              <span class="text-[11px] font-bold text-slate-700 uppercase tracking-wider flex items-center gap-2">
-                <i class="fas fa-layer-group text-slate-400"></i> {{ $module->name }}
-              </span>
-              <button type="button"
-                class="h-6 px-2 text-[10px] font-bold text-brand-400 hover:bg-brand-50 rounded-md transition-colors moduleToggle"
-                data-module="{{ $module->id }}">
-                TOGGLE
-              </button>
-            </div>
-            <div class="p-4 space-y-2.5">
-              @forelse($module->permissions as $perm)
-                @php
-                  $checked = in_array($perm->id, old('permissions', $selected ?? []), true);
-                @endphp
-                <label class="relative inline-flex items-center cursor-pointer group w-full">
-                  <input type="checkbox" class="sr-only peer perm-checkbox perm-module-{{ $module->id }}"
-                    id="perm{{ $perm->id }}" name="permissions[]" value="{{ $perm->id }}"
-                    {{ $checked ? 'checked' : '' }}>
-                  <div
-                    class="w-8 h-4.5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2.5px] after:left-[2.5px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3.5 after:w-3.5 after:transition-all peer-checked:bg-brand-400">
-                  </div>
-                  <span
-                    class="ml-2.5 text-[12px] font-medium text-slate-500 group-hover:text-slate-700 transition-colors">{{ $perm->name }}</span>
-                </label>
-              @empty
-                <p class="text-[10px] text-slate-400 font-medium italic">No permissions available.</p>
-              @endforelse
-            </div>
+        <label class="relative inline-flex items-center cursor-pointer">
+          <input type="checkbox" name="is_active" value="1" class="sr-only peer"
+            {{ old('is_active', $role->is_active ?? true) ? 'checked' : '' }}>
+          <div
+            class="w-11 h-6 bg-slate-200 peer-focus:outline-none ring-4 ring-transparent peer-focus:ring-brand-100 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-500">
           </div>
-        @endforeach
+        </label>
       </div>
     </div>
   </div>
 
-  <div class="card-footer bg-slate-50/50 border-t border-slate-100 p-6 flex items-center justify-end gap-3">
+  {{-- Permissions Section --}}
+  <div class="space-y-4">
+    <div class="flex items-center justify-between">
+      <h3 class="text-lg font-black text-slate-800 tracking-tight flex items-center gap-3">
+        <div class="h-8 w-8 rounded-lg bg-indigo-50 text-indigo-500 flex items-center justify-center text-sm">
+          <i class="fas fa-lock-open"></i>
+        </div>
+        Module Permissions
+      </h3>
+      <div class="flex items-center gap-2">
+        <button type="button" id="btnSelectAll" class="btn btn-white btn-sm text-xs border-slate-200">
+          <i class="fas fa-check-double mr-1.5 text-emerald-500"></i> Select All
+        </button>
+        <button type="button" id="btnClearAll" class="btn btn-white btn-sm text-xs border-slate-200">
+          <i class="fas fa-eraser mr-1.5 text-rose-500"></i> Clear All
+        </button>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      @foreach ($modules as $module)
+        <div class="card p-0 bg-white border-slate-100 overflow-hidden group/module">
+          <div class="p-4 bg-slate-50/50 border-b border-slate-100 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <i class="fas fa-cube text-slate-400 text-xs"></i>
+              <span class="text-[11px] font-black text-slate-600 uppercase tracking-widest">{{ $module->name }}</span>
+            </div>
+            <button type="button"
+              class="moduleToggle h-6 w-6 rounded bg-white border border-slate-200 text-slate-400 hover:text-brand-500 hover:border-brand-200 transition-all flex items-center justify-center"
+              data-module="{{ $module->id }}">
+              <i class="fas fa-sync-alt text-[10px]"></i>
+            </button>
+          </div>
+          <div class="p-4 space-y-3">
+            @forelse($module->permissions as $perm)
+              @php
+                $checked = in_array($perm->id, old('permissions', $selected ?? []), true);
+              @endphp
+              <label
+                class="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-50 transition-colors cursor-pointer group/perm">
+                <div class="relative flex items-center">
+                  <input type="checkbox" name="permissions[]" value="{{ $perm->id }}"
+                    class="peer h-5 w-5 cursor-pointer appearance-none rounded-md border border-slate-300 transition-all checked:bg-brand-500 checked:border-brand-500 perm-checkbox perm-module-{{ $module->id }}"
+                    {{ $checked ? 'checked' : '' }}>
+                  <span
+                    class="absolute text-white opacity-0 peer-checked:opacity-100 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none">
+                    <i class="fas fa-check text-[10px]"></i>
+                  </span>
+                </div>
+                <span
+                  class="text-sm font-bold text-slate-600 group-hover/perm:text-slate-800 transition-colors">{{ $perm->name }}</span>
+              </label>
+            @empty
+              <p class="text-[10px] text-slate-400 font-bold uppercase py-4 text-center">No Permissions</p>
+            @endforelse
+          </div>
+        </div>
+      @endforeach
+    </div>
+  </div>
+
+  {{-- Footer Actions --}}
+  <div class="flex items-center justify-end gap-3 pt-8 border-t border-slate-100">
     <a href="{{ route('settings.roles.index', ['company' => $company->uuid]) }}" class="btn btn-white min-w-[120px]">
       Cancel
     </a>
-
-    <button type="submit" class="btn btn-primary min-w-[160px]">
-      <i class="fas fa-save mr-2"></i> {{ $isEdit ? 'Update Role Data' : 'Create Access Role' }}
+    <button type="submit" class="btn btn-primary min-w-[180px] shadow-lg shadow-brand-500/30 font-black">
+      <i class="fas fa-check-circle mr-2 opacity-50"></i> {{ $isEdit ? 'Update Role' : 'Create Access Role' }}
     </button>
   </div>
 </div>
@@ -138,7 +136,6 @@
       $('.moduleToggle').on('click', function() {
         const moduleId = $(this).data('module');
         const $items = $('.perm-module-' + moduleId);
-
         const anyUnchecked = $items.toArray().some(el => !el.checked);
         $items.prop('checked', anyUnchecked);
       });

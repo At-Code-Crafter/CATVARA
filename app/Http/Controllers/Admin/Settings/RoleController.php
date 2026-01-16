@@ -67,15 +67,10 @@ class RoleController extends Controller
                     $editUrl = route('settings.roles.edit', ['company' => $company->uuid, 'role' => $row->id]);
 
                     return '
-                    <div class="dropdown">
-                        <button class="btn btn-default btn-sm border dropdown-toggle" type="button" data-toggle="dropdown">
-                            <i class="fas fa-cog"></i>
-                        </button>
-                        <div class="dropdown-menu dropdown-menu-right shadow border-0">
-                            <a class="dropdown-item py-2" href="' . $editUrl . '">
-                                <i class="fas fa-edit mr-2 text-primary"></i> Edit Role
-                            </a>
-                        </div>
+                    <div class="flex items-center justify-end gap-2">
+                        <a href="' . $editUrl . '" class="text-slate-400 hover:text-brand-600 transition-colors p-1" title="Edit">
+                            <i class="fas fa-edit"></i>
+                        </a>
                     </div>';
                 })
 

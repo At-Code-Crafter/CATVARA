@@ -194,11 +194,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::post('sales-orders/{sales_order}/generate-invoice', [\App\Http\Controllers\Admin\Accounting\InvoiceController::class, 'storeFromOrder'])->name('sales-orders.generate-invoice');
             Route::get('invoices/{invoice}/print', [\App\Http\Controllers\Admin\Accounting\InvoiceController::class, 'print'])->name('invoices.print');
             Route::get('sales-orders-data', [\App\Http\Controllers\Admin\Sales\SalesOrderController::class, 'data'])->name('sales-orders.data');
+
             Route::resource('sales-orders', \App\Http\Controllers\Admin\Sales\SalesOrderController::class);
 
             Route::get('load-customers', [\App\Http\Controllers\Admin\Sales\OrderController::class, 'loadCustomers'])->name('load-customers');
             Route::get('load-products', [\App\Http\Controllers\Admin\Sales\OrderController::class, 'loadProducts'])->name('load-products');
             Route::get('load-payment-terms', [\App\Http\Controllers\Admin\Sales\OrderController::class, 'loadPaymentTerms'])->name('load-payment-terms');
+            Route::get('load-payment-methods', [\App\Http\Controllers\Admin\Sales\OrderController::class, 'loadPaymentMethods'])->name('load-payment-methods');
+            Route::get('customers/create', [\App\Http\Controllers\Admin\Sales\OrderController::class, 'createCustomer'])->name('customers.create');
+            Route::post('customers', [\App\Http\Controllers\Admin\Sales\OrderController::class, 'storeCustomer'])->name('customers.store');
             Route::get('load-currencies', [\App\Http\Controllers\Admin\Sales\OrderController::class, 'loadCurrencies'])->name('load-currencies');
 
             /**
@@ -223,4 +227,4 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('{company}/invoice-preview/{orderid}', [\App\Http\Controllers\Admin\Sales\SalesOrderController::class, 'invoicePreview'])->whereUuid('company')->whereNumber('orderid')->name('invoice-preview');
 });
 
-require __DIR__ . '/auth.php';
+require __DIR__.'/auth.php';

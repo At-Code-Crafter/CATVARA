@@ -95,7 +95,7 @@ class SalesOrderController extends Controller
     {
         $this->authorize('create', 'orders');
 
-        return view('theme.adminlte.sales.orders.create');
+        return view('catvara.sales-orders.create');
     }
 
     public function store(Request $request)
@@ -196,12 +196,13 @@ class SalesOrderController extends Controller
                     'product_id' => (string) optional($item->productVariant)->product->uuid,
                     'qty' => (float) $item->quantity,
                     'unitPrice' => (float) $item->unit_price,
-                    'discountPercent' => $item->discount_percent,
+                    'discountPercent' => (float) $item->discount_percent, // Cast to float
                     'attrs' => [],
                 ];
             })->values(),
 
-            'payment_term_id' => $order->payment_term_id,
+            // Default to customer payment term if order doesn't have one
+            'payment_term_id' => $order->payment_term_id ?? $sellToCustomer->payment_term_id,
             'shipping' => (float) $order->shipping_total,
 
             // You do NOT have additional_total column in orders migration.
@@ -219,7 +220,9 @@ class SalesOrderController extends Controller
             'status' => $order->status->code ?? 'DRAFT',
         ];
 
-        return view('theme.adminlte.sales.orders.edit', compact('sellToCustomer', 'billToCustomer', 'order', 'initialState'));
+        $customerDiscount = $sellToCustomer->percentage_discount ?? 0;
+
+        return view('catvara.sales-orders.edit', compact('sellToCustomer', 'billToCustomer', 'order', 'initialState', 'customerDiscount'));
     }
 
     /**

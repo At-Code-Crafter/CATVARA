@@ -29,7 +29,7 @@
         </button>
       </div>
       <div class="p-6 filter-card-content">
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 gap-6">
           <div class="space-y-1.5">
             <label class="text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-1">Customer</label>
             <select id="filter_customer" class="w-full">
@@ -48,14 +48,12 @@
               @endforeach
             </select>
           </div>
-          <div class="space-y-1.5 col-span-2">
+          <div class="space-y-1.5">
             <label class="text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-1">Date Range</label>
-            <div class="relative group">
-              <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                <i class="far fa-calendar-alt text-slate-400 group-focus-within:text-brand-400 transition-colors"></i>
-              </div>
+            <div class="input-icon-group group">
+              <i class="far fa-calendar-alt text-slate-400 group-focus-within:text-brand-400 transition-colors"></i>
               <input type="text" id="filter_date_range"
-                class="w-full rounded-xl border-slate-200 text-sm pl-10 h-[44px] focus:border-brand-400 focus:ring-4 focus:ring-brand-400/10 transition-all"
+                class="w-full rounded-xl border-slate-200 text-sm h-[44px] focus:border-brand-400 focus:ring-4 focus:ring-brand-400/10 transition-all font-semibold"
                 placeholder="Select Date Range...">
             </div>
             <input type="hidden" id="filter_date_from">

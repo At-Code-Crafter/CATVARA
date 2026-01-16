@@ -51,8 +51,7 @@ class CompanyController extends Controller
                         ? asset('storage/' . $row->logo)
                         : asset('theme/adminlte/dist/img/AdminLTELogo.png');
 
-                    // requested: img-sm
-                    return '<img src="' . e($src) . '" class="img-sm company-logo" alt="Logo">';
+                    return '<img src="' . e($src) . '" class="company-logo" alt="Logo">';
                 })
 
                 ->editColumn('name', function ($row) {
@@ -73,12 +72,12 @@ class CompanyController extends Controller
                     $name = $row->company_status ?? 'N/A';
                     $code = strtoupper($row->company_status_code ?? '');
 
-                    $bg = 'bg-slate-100 text-slate-700';
-                    if ($code === 'ACTIVE') $bg = 'bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-600/20';
-                    if ($code === 'SUSPENDED') $bg = 'bg-amber-50 text-amber-700 ring-1 ring-inset ring-amber-600/10';
-                    if ($code === 'EXPIRED' || $code === 'CLOSED') $bg = 'bg-rose-50 text-rose-700 ring-1 ring-inset ring-rose-600/10';
+                    $bg = 'bg-slate-100 text-slate-700 border-slate-200';
+                    if ($code === 'ACTIVE') $bg = 'bg-emerald-50 text-emerald-600 border-emerald-100';
+                    if ($code === 'SUSPENDED') $bg = 'bg-amber-50 text-amber-600 border-amber-100';
+                    if ($code === 'EXPIRED' || $code === 'CLOSED') $bg = 'bg-rose-50 text-rose-600 border-rose-100';
 
-                    return '<span class="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ' . $bg . '">' . e($name) . '</span>';
+                    return '<span class="px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border ' . $bg . '">' . e($name) . '</span>';
                 })
 
                 ->editColumn('website_url', function ($row) {
@@ -103,11 +102,15 @@ class CompanyController extends Controller
                 })
 
                 ->addColumn('action', function ($row) {
-                    $compact['editUrl'] = route('tenants.edit', $row->id);
-                    $compact['deleteUrl'] = null;
-                    $compact['editSidebar'] = false;
+                    $editUrl = route('tenants.edit', $row->id);
 
-                    return view('catvara.components._table-actions', $compact)->render();
+                    return '
+                       <div class="flex items-center justify-end gap-2">
+                            <a href="' . $editUrl . '" class="text-slate-400 hover:text-brand-600 transition-colors p-1" title="Edit">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                       </div>
+                    ';
                 })
 
                 ->rawColumns([

@@ -1,287 +1,345 @@
 @extends('catvara.layouts.app')
 
-@section('page-title', 'Edit Company')
-
-@section('page-actions')
-  <a href="{{ route('tenants.index') }}"
-    class="inline-flex items-center px-4 py-2 border border-slate-200 rounded-xl text-sm font-semibold text-slate-600 bg-white hover:bg-slate-50 transition-all">
-    <i data-lucide="arrow-left" class="w-4 h-4 mr-2"></i>
-    Back to List
-  </a>
-@endsection
+@section('title', 'Edit Tenant Configuration')
 
 @section('content')
-  <form action="{{ route('tenants.update', $company->id) }}" class="ajax-form" method="POST" enctype="multipart/form-data">
-    @csrf
-    @method('PUT')
+  <div class="w-full mx-auto pb-24 animate-fade-in">
+    {{-- Header --}}
+    <div class="flex items-center justify-between mb-8">
+      <div>
+        <div class="flex items-center gap-2 mb-2">
+          <a href="{{ route('tenants.index') }}" class="text-slate-400 hover:text-brand-600 transition-colors">
+            <i class="fas fa-arrow-left"></i>
+          </a>
+          <span
+            class="text-[10px] font-black px-2 py-0.5 rounded bg-slate-100 text-slate-500 uppercase tracking-widest">Administration</span>
+        </div>
+        <h1 class="text-3xl font-bold text-slate-800 tracking-tight">Modify Tenant Hub</h1>
+        <p class="text-slate-500 font-medium mt-1">Configure parameters for <span
+            class="text-brand-500 font-black">{{ $company->name }}</span>.</p>
+      </div>
+    </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-      <!-- Left Col: Main Info & Financials -->
-      <div class="lg:col-span-2 space-y-8">
-        <!-- Basic Info Card -->
-        <div class="card overflow-hidden">
-          <div class="p-6 border-b border-slate-50 flex items-center">
-            <div class="w-8 h-8 bg-accent/10 rounded-lg flex items-center justify-center text-accent mr-3">
-              <i data-lucide="building-2" class="w-4 h-4"></i>
+    <form action="{{ route('tenants.update', $company->id) }}" class="ajax-form space-y-8" method="POST"
+      enctype="multipart/form-data">
+      @csrf
+      @method('PUT')
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {{-- Left Column: Configuration Panels --}}
+        <div class="lg:col-span-2 space-y-8">
+          {{-- Section 1: Core Identity --}}
+          <div class="card p-8 bg-white border-slate-100 shadow-soft relative overflow-hidden group">
+            <div class="absolute top-0 left-0 w-1 h-full bg-brand-400"></div>
+            <div class="flex items-center gap-4 mb-8">
+              <div class="h-10 w-10 rounded-xl bg-brand-50 text-brand-500 flex items-center justify-center shadow-sm">
+                <i class="fas fa-building"></i>
+              </div>
+              <div>
+                <h3 class="text-lg font-black text-slate-800 tracking-tight">Core Identity</h3>
+                <p class="text-xs text-slate-400 font-bold uppercase tracking-widest">Base Subscription Details</p>
+              </div>
             </div>
-            <h3 class="font-bold text-slate-800">Company Information</h3>
-          </div>
-          <div class="p-6 space-y-6">
+
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div class="space-y-2">
-                <label class="text-xs font-bold text-slate-500 uppercase">Company Name <span
-                    class="text-rose-500">*</span></label>
-                <input type="text" name="name" value="{{ old('name', $company->name) }}"
-                  class="block w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-accent focus:border-accent transition-all @error('name') border-rose-500 @enderror">
+              <div class="space-y-1.5 md:col-span-2">
+                <label class="text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-1">Company Display Name
+                  <span class="text-rose-500">*</span></label>
+                <div class="input-icon-group">
+                  <i class="fas fa-signature"></i>
+                  <input type="text" name="name" value="{{ old('name', $company->name) }}" required
+                    class="w-full py-2.5 font-semibold" placeholder="e.g. Acme Corporation">
+                </div>
                 @error('name')
-                  <p class="text-xs text-rose-500 mt-1">{{ $message }}</p>
+                  <p class="text-[10px] font-bold text-rose-500 mt-1">{{ $message }}</p>
                 @enderror
               </div>
-              <div class="space-y-2">
-                <label class="text-xs font-bold text-slate-500 uppercase">Legal Name <span
-                    class="text-rose-500">*</span></label>
-                <input type="text" name="legal_name" value="{{ old('legal_name', $company->legal_name) }}"
-                  class="block w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-accent focus:border-accent transition-all @error('legal_name') border-rose-500 @enderror">
-                @error('legal_name')
-                  <p class="text-xs text-rose-500 mt-1">{{ $message }}</p>
-                @enderror
-              </div>
-            </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div class="space-y-2">
-                <label class="text-xs font-bold text-slate-500 uppercase">Company Code <span
-                    class="text-rose-500">*</span></label>
-                <input type="text" name="code" value="{{ old('code', $company->code) }}"
-                  class="block w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-accent focus:border-accent transition-all @error('code') border-rose-500 @enderror">
-                @error('code')
-                  <p class="text-xs text-rose-500 mt-1">{{ $message }}</p>
+              <div class="space-y-1.5 md:col-span-2">
+                <label class="text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-1">Legal Registered Name
+                  <span class="text-rose-500">*</span></label>
+                <div class="input-icon-group">
+                  <i class="fas fa-landmark"></i>
+                  <input type="text" name="legal_name" value="{{ old('legal_name', $company->legal_name) }}" required
+                    class="w-full py-2.5 font-semibold" placeholder="e.g. Acme Corp LLC">
+                </div>
+                @error('legal_name')
+                  <p class="text-[10px] font-bold text-rose-500 mt-1">{{ $message }}</p>
                 @enderror
               </div>
-              <div class="space-y-2">
-                <label class="text-xs font-bold text-slate-500 uppercase">Status <span
+
+              <div class="space-y-1.5">
+                <label class="text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-1">Internal Code <span
                     class="text-rose-500">*</span></label>
-                <select name="company_status_id" class="select2 @error('company_status_id') border-rose-500 @enderror">
-                  <option value="">-- Select Status --</option>
+                <div class="input-icon-group">
+                  <i class="fas fa-fingerprint"></i>
+                  <input type="text" name="code" value="{{ old('code', $company->code) }}" required
+                    class="w-full py-2.5 font-semibold uppercase" placeholder="e.g. ACME-01">
+                </div>
+                @error('code')
+                  <p class="text-[10px] font-bold text-rose-500 mt-1">{{ $message }}</p>
+                @enderror
+              </div>
+
+              <div class="space-y-1.5">
+                <label class="text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-1">Lifecycle Status <span
+                    class="text-rose-500">*</span></label>
+                <select name="company_status_id" class="w-full pt-1">
                   @foreach ($statuses as $st)
                     <option value="{{ $st->id }}"
                       {{ old('company_status_id', $company->company_status_id) == $st->id ? 'selected' : '' }}>
                       {{ $st->name }}</option>
                   @endforeach
                 </select>
-                @error('company_status_id')
-                  <p class="text-xs text-rose-500 mt-1">{{ $message }}</p>
-                @enderror
               </div>
-            </div>
 
-            <div class="space-y-2">
-              <label class="text-xs font-bold text-slate-500 uppercase">Website URL</label>
-              <div class="relative">
-                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-                  <i data-lucide="globe" class="w-4 h-4"></i>
-                </div>
-                <input type="text" name="website_url" value="{{ old('website_url', $company->website_url) }}"
-                  class="block w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-accent focus:border-accent transition-all"
-                  placeholder="https://example.com">
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Financial & Document Settings -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <!-- Document Settings Card -->
-          <div class="card overflow-hidden">
-            <div class="p-6 border-b border-slate-50 flex items-center">
-              <div class="w-8 h-8 bg-indigo-50 rounded-lg flex items-center justify-center text-indigo-600 mr-3">
-                <i data-lucide="file-text" class="w-4 h-4"></i>
-              </div>
-              <h3 class="font-bold text-slate-800">Documents</h3>
-            </div>
-            <div class="p-6 space-y-4">
-              <div class="grid grid-cols-2 gap-4">
-                <div class="space-y-2">
-                  <label class="text-[10px] font-bold text-slate-500 uppercase">Invoice Prefix</label>
-                  <input type="text" name="invoice_prefix"
-                    value="{{ old('invoice_prefix', $company->detail?->invoice_prefix) }}"
-                    class="block w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-accent"
-                    placeholder="INV">
-                </div>
-                <div class="space-y-2">
-                  <label class="text-[10px] font-bold text-slate-500 uppercase">Postfix</label>
-                  <input type="text" name="invoice_postfix"
-                    value="{{ old('invoice_postfix', $company->detail?->invoice_postfix) }}"
-                    class="block w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-accent"
-                    placeholder="2025">
-                </div>
-              </div>
-              <div class="grid grid-cols-2 gap-4">
-                <div class="space-y-2">
-                  <label class="text-[10px] font-bold text-slate-500 uppercase">Quote Prefix</label>
-                  <input type="text" name="quote_prefix"
-                    value="{{ old('quote_prefix', $company->detail?->quote_prefix) }}"
-                    class="block w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-accent"
-                    placeholder="QT">
-                </div>
-                <div class="space-y-2">
-                  <label class="text-[10px] font-bold text-slate-500 uppercase">Postfix</label>
-                  <input type="text" name="quote_postfix"
-                    value="{{ old('quote_postfix', $company->detail?->quote_postfix) }}"
-                    class="block w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-accent"
-                    placeholder="2025">
+              <div class="space-y-1.5 md:col-span-2">
+                <label class="text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-1">Official
+                  Website</label>
+                <div class="input-icon-group">
+                  <i class="fas fa-globe"></i>
+                  <input type="url" name="website_url" value="{{ old('website_url', $company->website_url) }}"
+                    class="w-full py-2.5 font-semibold" placeholder="https://www.acme.com">
                 </div>
               </div>
             </div>
           </div>
 
-          <!-- Financial Settings Card -->
-          <div class="card overflow-hidden">
-            <div class="p-6 border-b border-slate-50 flex items-center">
-              <div class="w-8 h-8 bg-emerald-50 rounded-lg flex items-center justify-center text-emerald-600 mr-3">
-                <i data-lucide="banknote" class="w-4 h-4"></i>
+          {{-- Section 2: Financial Grid --}}
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {{-- Document Sequencing --}}
+            <div class="card p-8 bg-white border-slate-100 shadow-soft relative overflow-hidden group">
+              <div class="absolute top-0 left-0 w-1 h-full bg-indigo-400"></div>
+              <div class="flex items-center gap-4 mb-8">
+                <div class="h-10 w-10 rounded-xl bg-indigo-50 text-indigo-500 flex items-center justify-center shadow-sm">
+                  <i class="fas fa-file-invoice"></i>
+                </div>
+                <div>
+                  <h3 class="text-lg font-black text-slate-800 tracking-tight">Sequencing</h3>
+                  <p class="text-xs text-slate-400 font-bold uppercase tracking-widest">Document Formats</p>
+                </div>
               </div>
-              <h3 class="font-bold text-slate-800">Financials</h3>
-            </div>
-            <div class="p-6 space-y-4">
-              <div class="space-y-2">
-                <label class="text-[10px] font-bold text-slate-500 uppercase">Base Currency <span
-                    class="text-rose-500">*</span></label>
-                @if ($company->base_currency_id && $company->baseCurrency)
-                  <div
-                    class="flex items-center px-4 py-2.5 bg-slate-100 border border-slate-200 rounded-xl text-sm text-slate-500 cursor-not-allowed">
-                    <i data-lucide="lock" class="w-3 h-3 mr-2"></i>
-                    {{ $company->baseCurrency->code }} - {{ $company->baseCurrency->name }}
+
+              <div class="space-y-6">
+                <div class="space-y-3">
+                  <p
+                    class="text-[10px] font-black text-slate-400 uppercase tracking-widest border-l-2 border-brand-400 pl-2">
+                    Sales Invoices</p>
+                  <div class="grid grid-cols-2 gap-3">
+                    <input type="text" name="invoice_prefix"
+                      value="{{ old('invoice_prefix', $company->detail?->invoice_prefix) }}"
+                      class="py-2 bg-slate-50 border-slate-200 text-xs font-bold uppercase" placeholder="Prefix">
+                    <input type="text" name="invoice_postfix"
+                      value="{{ old('invoice_postfix', $company->detail?->invoice_postfix) }}"
+                      class="py-2 bg-slate-50 border-slate-200 text-xs font-bold uppercase" placeholder="Suffix">
                   </div>
-                  <p class="text-[10px] text-slate-400">Locked once set.</p>
-                @else
-                  <select name="base_currency_id" class="select2">
-                    <option value="">-- Select Currency --</option>
-                    @foreach ($currencies as $currency)
-                      <option value="{{ $currency->id }}"
-                        {{ old('base_currency_id', $company->base_currency_id) == $currency->id ? 'selected' : '' }}>
-                        {{ $currency->code }} - {{ $currency->name }}</option>
-                    @endforeach
-                  </select>
-                @endif
-              </div>
-              <div class="space-y-2">
-                <label class="text-[10px] font-bold text-slate-500 uppercase">Tax Number</label>
-                <input type="text" name="tax_number" value="{{ old('tax_number', $company->detail?->tax_number) }}"
-                  class="block w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-accent"
-                  placeholder="TRN / VAT">
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Address Card -->
-        <div class="card overflow-hidden">
-          <div class="p-6 border-b border-slate-50 flex items-center">
-            <div class="w-8 h-8 bg-rose-50 rounded-lg flex items-center justify-center text-rose-600 mr-3">
-              <i data-lucide="map-pin" class="w-4 h-4"></i>
-            </div>
-            <h3 class="font-bold text-slate-800">Address</h3>
-          </div>
-          <div class="p-6">
-            <textarea name="address" rows="3"
-              class="block w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-accent transition-all"
-              placeholder="Full address">{{ old('address', $company->detail?->address) }}</textarea>
-          </div>
-        </div>
-
-        <!-- Payment Terms Card -->
-        <div class="card overflow-hidden">
-          <div class="p-6 border-b border-slate-50 flex items-center">
-            <div class="w-8 h-8 bg-amber-50 rounded-lg flex items-center justify-center text-amber-600 mr-3">
-              <i data-lucide="clock" class="w-4 h-4"></i>
-            </div>
-            <h3 class="font-bold text-slate-800">Enabled Payment Terms</h3>
-          </div>
-          <div class="p-6 grid grid-cols-2 md:grid-cols-3 gap-4">
-            @foreach ($paymentTerms as $term)
-              <label
-                class="relative flex items-center p-3 rounded-xl border border-slate-100 hover:bg-slate-50 cursor-pointer transition-all group">
-                <input type="checkbox" name="payment_terms[]" value="{{ $term->id }}"
-                  class="w-4 h-4 rounded text-accent focus:ring-accent border-slate-300"
-                  {{ (is_array(old('payment_terms')) && in_array($term->id, old('payment_terms'))) || $company->paymentTerms->contains($term->id) ? 'checked' : '' }}>
-                <div class="ml-3">
-                  <span class="block text-xs font-bold text-slate-700">{{ $term->name }}</span>
-                  <span class="block text-[10px] text-slate-400 capitalize">{{ $term->code }}</span>
                 </div>
-              </label>
-            @endforeach
+                <div class="space-y-3">
+                  <p
+                    class="text-[10px] font-black text-slate-400 uppercase tracking-widest border-l-2 border-indigo-400 pl-2">
+                    Quotations</p>
+                  <div class="grid grid-cols-2 gap-3">
+                    <input type="text" name="quote_prefix"
+                      value="{{ old('quote_prefix', $company->detail?->quote_prefix) }}"
+                      class="py-2 bg-slate-50 border-slate-200 text-xs font-bold uppercase" placeholder="Prefix">
+                    <input type="text" name="quote_postfix"
+                      value="{{ old('quote_postfix', $company->detail?->quote_postfix) }}"
+                      class="py-2 bg-slate-50 border-slate-200 text-xs font-bold uppercase" placeholder="Suffix">
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {{-- Fiscal Settings --}}
+            <div class="card p-8 bg-white border-slate-100 shadow-soft relative overflow-hidden group">
+              <div class="absolute top-0 left-0 w-1 h-full bg-emerald-400"></div>
+              <div class="flex items-center gap-4 mb-8">
+                <div
+                  class="h-10 w-10 rounded-xl bg-emerald-50 text-emerald-500 flex items-center justify-center shadow-sm">
+                  <i class="fas fa-coins"></i>
+                </div>
+                <div>
+                  <h3 class="text-lg font-black text-slate-800 tracking-tight">Fiscal Base</h3>
+                  <p class="text-xs text-slate-400 font-bold uppercase tracking-widest">Currency & Tax</p>
+                </div>
+              </div>
+
+              <div class="space-y-6">
+                <div class="space-y-1.5">
+                  <label class="text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-1">Base Currency <span
+                      class="text-rose-500">*</span></label>
+                  @if ($company->base_currency_id && $company->baseCurrency)
+                    <div
+                      class="flex items-center px-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl text-xs font-black text-slate-500 group">
+                      <i class="fas fa-lock mr-2 text-slate-300"></i>
+                      {{ $company->baseCurrency->code }} — {{ $company->baseCurrency->name }}
+                    </div>
+                    <p class="text-[9px] text-slate-400 font-bold tracking-widest mt-1">LOCKED: PERMANENT SYSTEM SEED</p>
+                  @else
+                    <select name="base_currency_id" class="w-full pt-1">
+                      <option value="">Select Currency</option>
+                      @foreach ($currencies as $currency)
+                        <option value="{{ $currency->id }}"
+                          {{ old('base_currency_id', $company->base_currency_id) == $currency->id ? 'selected' : '' }}>
+                          {{ $currency->code }} - {{ $currency->name }}
+                        </option>
+                      @endforeach
+                    </select>
+                  @endif
+                </div>
+
+                <div class="space-y-1.5">
+                  <label class="text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-1">Tax Registration
+                    (TRN)</label>
+                  <div class="input-icon-group">
+                    <i class="fas fa-percent"></i>
+                    <input type="text" name="tax_number"
+                      value="{{ old('tax_number', $company->detail?->tax_number) }}"
+                      class="w-full py-2.5 font-semibold placeholder:font-normal" placeholder="e.g. 100-XXX-XXX">
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {{-- Section 3: Localization & Address --}}
+          <div class="card p-8 bg-white border-slate-100 shadow-soft relative overflow-hidden group">
+            <div class="absolute top-0 left-0 w-1 h-full bg-rose-400"></div>
+            <div class="flex items-center gap-4 mb-4">
+              <div class="h-10 w-10 rounded-xl bg-rose-50 text-rose-500 flex items-center justify-center shadow-sm">
+                <i class="fas fa-map-marker-alt"></i>
+              </div>
+              <div>
+                <h3 class="text-lg font-black text-slate-800 tracking-tight">Localization</h3>
+                <p class="text-xs text-slate-400 font-bold uppercase tracking-widest">Office Hub Details</p>
+              </div>
+            </div>
+            <textarea name="address" rows="3" class="w-full py-2.5 font-semibold bg-slate-50 border-slate-200 mt-4"
+              placeholder="Full physical headquarters address">{{ old('address', $company->detail?->address) }}</textarea>
+          </div>
+
+          {{-- Section 4: Payment Terms --}}
+          <div class="card p-8 bg-white border-slate-100 shadow-soft relative overflow-hidden group">
+            <div class="absolute top-0 left-0 w-1 h-full bg-amber-400"></div>
+            <div class="flex items-center gap-4 mb-8">
+              <div class="h-10 w-10 rounded-xl bg-amber-50 text-amber-500 flex items-center justify-center shadow-sm">
+                <i class="fas fa-calendar-alt"></i>
+              </div>
+              <div>
+                <h3 class="text-lg font-black text-slate-800 tracking-tight">Payment Terms</h3>
+                <p class="text-xs text-slate-400 font-bold uppercase tracking-widest">Credit & Settlements</p>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              @foreach ($paymentTerms as $term)
+                <label
+                  class="flex items-center gap-3 p-4 rounded-xl border border-slate-100 hover:bg-slate-50 transition-colors cursor-pointer group/term ring-4 ring-transparent hover:ring-slate-50">
+                  <div class="relative flex items-center">
+                    <input type="checkbox" name="payment_terms[]" value="{{ $term->id }}"
+                      class="peer h-5 w-5 cursor-pointer appearance-none rounded-md border border-slate-300 transition-all checked:bg-brand-500 checked:border-brand-500"
+                      {{ (is_array(old('payment_terms')) && in_array($term->id, old('payment_terms'))) || $company->paymentTerms->contains($term->id) ? 'checked' : '' }}>
+                    <span
+                      class="absolute text-white opacity-0 peer-checked:opacity-100 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none">
+                      <i class="fas fa-check text-[10px]"></i>
+                    </span>
+                  </div>
+                  <div class="flex flex-col">
+                    <span
+                      class="text-xs font-black text-slate-700 group-hover/term:text-brand-600 uppercase tracking-tight">{{ $term->name }}</span>
+                    <span
+                      class="text-[9px] text-slate-400 font-bold uppercase tracking-widest">{{ $term->code }}</span>
+                  </div>
+                </label>
+              @endforeach
+            </div>
           </div>
         </div>
-      </div>
 
-      <!-- Right Col: Identity & Actions -->
-      <div class="space-y-8">
-        <!-- Logo Card -->
-        <div class="card overflow-hidden">
-          <div class="p-6 border-b border-slate-50 flex items-center">
-            <div class="w-8 h-8 bg-amber-50 rounded-lg flex items-center justify-center text-amber-600 mr-3">
-              <i data-lucide="image" class="w-4 h-4"></i>
-            </div>
-            <h3 class="font-bold text-slate-800">Identity</h3>
-          </div>
-          <div class="p-6">
-            <div class="flex flex-col items-center justify-center">
+        {{-- Right Column: Brand & Metadata --}}
+        <div class="space-y-8">
+          {{-- Identity Widget --}}
+          <div class="card p-8 bg-white border-slate-100 shadow-soft text-center">
+            <h3
+              class="text-sm font-black text-slate-800 uppercase tracking-widest mb-6 border-b border-slate-50 pb-4 text-left flex items-center gap-2">
+              <i class="fas fa-image text-brand-400"></i> Corporate Brand
+            </h3>
+
+            <div class="relative group/logo mx-auto w-40 h-40 mb-6">
               @php
                 $logoSrc = $company->logo
                     ? asset('storage/' . $company->logo)
                     : 'https://ui-avatars.com/api/?name=' .
                         urlencode($company->name) .
-                        '&background=f1f5f9&color=64748b&size=128';
+                        '&background=f8fafc&color=cbd5e1&size=128';
               @endphp
-              <div class="relative w-32 h-32 mb-4">
+              <div
+                class="w-full h-full rounded-2xl bg-slate-50 border-2 border-dashed border-slate-200 flex items-center justify-center overflow-hidden transition-all group-hover/logo:border-brand-400/50">
                 <img id="logoPreview" src="{{ $logoSrc }}"
-                  class="w-full h-full object-contain rounded-2xl border-2 border-dashed border-slate-200 p-2 bg-white"
+                  class="w-full h-full object-contain p-4 transition-transform duration-500 group-hover/logo:scale-110"
                   alt="Logo Preview">
-                <label for="logoInput"
-                  class="absolute bottom-0 right-0 p-2 bg-white rounded-xl shadow-lg border border-slate-100 cursor-pointer hover:bg-slate-50 transition-all text-accent group">
-                  <i data-lucide="camera" class="w-4 h-4 group-hover:scale-110 transition-transform"></i>
-                  <input type="file" name="logo" id="logoInput" class="hidden" accept="image/*">
-                </label>
               </div>
-              <p class="text-[10px] text-slate-400 uppercase font-bold tracking-tight">Company Logo</p>
+              <label for="logoInput"
+                class="absolute -bottom-2 -right-2 h-10 w-10 bg-white rounded-xl shadow-xl border border-slate-100 flex items-center justify-center cursor-pointer hover:bg-brand-50 hover:text-brand-500 transition-all text-slate-400 z-10">
+                <i class="fas fa-camera text-sm"></i>
+                <input type="file" name="logo" id="logoInput" class="hidden" accept="image/*">
+              </label>
+            </div>
+
+            <div class="space-y-1">
+              <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Brandmark Identity</p>
+              <p class="text-[10px] text-slate-300 font-medium">SVG, PNG, JPG (Max 2MB)</p>
+            </div>
+          </div>
+
+          {{-- Execution & Info --}}
+          <div class="card p-8 bg-slate-900 border-none shadow-2xl shadow-slate-900/40">
+            <h3 class="text-white font-black text-lg mb-6 flex items-center gap-2">
+              <i class="fas fa-save text-brand-400"></i> Persist Hub
+            </h3>
+
+            <div class="space-y-6">
+              <button type="submit"
+                class="w-full btn btn-primary py-4 shadow-xl shadow-brand-500/20 font-black tracking-tight flex items-center justify-center gap-3">
+                <i class="fas fa-sync-alt opacity-50"></i> Update Configuration
+              </button>
+
+              <div class="pt-6 border-t border-slate-800 space-y-4">
+                <div class="flex items-center justify-between text-[10px] font-black uppercase tracking-widest">
+                  <span class="text-slate-500">System Integrity</span>
+                  <span class="text-emerald-400 flex items-center gap-1.5">
+                    <i class="fas fa-shield-alt"></i> Verified
+                  </span>
+                </div>
+                <div class="flex items-center justify-between text-[10px] font-black uppercase tracking-widest">
+                  <span class="text-slate-500">Member Since</span>
+                  <span class="text-slate-300">{{ $company->created_at->format('M Y') }}</span>
+                </div>
+              </div>
+
+              <a href="{{ route('tenants.index') }}"
+                class="w-full flex items-center justify-center py-2 text-[10px] font-black text-slate-500 hover:text-rose-400 transition-colors uppercase tracking-widest">
+                Discard Changes
+              </a>
             </div>
           </div>
         </div>
-
-        <!-- Actions Card -->
-        <div class="card p-6">
-          <div class="space-y-3">
-            <button type="submit"
-              class="w-full flex justify-center items-center px-6 py-3 bg-accent text-white rounded-xl text-sm font-bold shadow-lg shadow-accent/20 hover:bg-accent/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent transition-all">
-              <i data-lucide="refresh-cw" class="w-4 h-4 mr-2"></i>
-              Update Company
-            </button>
-            <a href="{{ route('tenants.index') }}"
-              class="w-full flex justify-center items-center px-6 py-3 border border-slate-200 text-slate-600 rounded-xl text-sm font-bold hover:bg-slate-50 transition-all">
-              Cancel
-            </a>
-          </div>
-          <div class="mt-6 pt-6 border-t border-slate-50 text-center">
-            <p class="text-[10px] text-slate-400 uppercase tracking-widest">Added On</p>
-            <p class="text-xs font-bold text-slate-600 mt-1">{{ $company->created_at->format('d M, Y') }}</p>
-          </div>
-        </div>
       </div>
-    </div>
-  </form>
+    </form>
+  </div>
 @endsection
 
 @push('scripts')
   <script>
     $(function() {
-      // Logo preview
+      // Identity Preview Engine
       $('#logoInput').on('change', function(e) {
         const file = e.target.files && e.target.files[0] ? e.target.files[0] : null;
         if (file) {
           const reader = new FileReader();
           reader.onload = function(ev) {
-            $('#logoPreview').attr('src', ev.target.result);
+            $('#logoPreview').attr('src', ev.target.result).parents('.w-40').addClass('ring-4 ring-brand-50');
+            setTimeout(() => $('#logoPreview').parents('.w-40').removeClass('ring-4 ring-brand-50'), 600);
           };
           reader.readAsDataURL(file);
         }

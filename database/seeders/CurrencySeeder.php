@@ -14,33 +14,12 @@ class CurrencySeeder extends Seeder
     {
         $currencies = [
             [
-                'code' => 'USD',
-                'name' => 'US Dollar',
-                'symbol' => '$',
-                'decimal_places' => 2,
-                'is_active' => true,
-            ],
-            [
-                'code' => 'EUR',
-                'name' => 'Euro',
-                'symbol' => '€',
-                'decimal_places' => 2,
-                'is_active' => true,
-            ],
-            [
                 'code' => 'GBP',
                 'name' => 'British Pound',
                 'symbol' => '£',
                 'decimal_places' => 2,
                 'is_active' => true,
-            ],
-            [
-                'code' => 'AED',
-                'name' => 'United Arab Emirates Dirham',
-                'symbol' => 'AED',
-                'decimal_places' => 2,
-                'is_active' => true,
-            ],
+            ]
         ];
 
         foreach ($currencies as $currency) {

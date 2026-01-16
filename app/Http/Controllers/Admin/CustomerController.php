@@ -53,24 +53,15 @@ class CustomerController extends Controller
                 $query->where('customers.payment_term_id', $request->payment_term_id);
             }
 
+            if ($request->filled('date_from') && $request->filled('date_to')) {
+                $query->whereBetween('customers.created_at', [
+                    $request->date_from . ' 00:00:00',
+                    $request->date_to . ' 23:59:59'
+                ]);
+            }
+
             return DataTables::of($query)
                 ->addIndexColumn()
-
-                ->editColumn('display_name', function ($row) {
-                    $name = e($row->display_name);
-                    if ($row->legal_name) {
-                        $name .= '<br><small class="text-muted">' . e($row->legal_name) . '</small>';
-                    }
-
-                    return $name;
-                })
-
-                ->addColumn('type_badge', function ($row) {
-                    $badge = $row->type === 'COMPANY' ? 'primary' : 'secondary';
-                    $icon = $row->type === 'COMPANY' ? 'building' : 'user';
-
-                    return '<span class="badge badge-' . $badge . '"><i class="fas fa-' . $icon . ' mr-1"></i>' . e($row->type) . '</span>';
-                })
 
                 ->editColumn('email', function ($row) {
                     return $row->email
@@ -115,10 +106,7 @@ class CustomerController extends Controller
                 })
 
                 ->rawColumns([
-                    'display_name',
-                    'type_badge',
                     'email',
-                    'phone',
                     'phone',
                     'status_badge',
                     'percentage_discount',
@@ -128,7 +116,7 @@ class CustomerController extends Controller
                 ->make(true);
         }
 
-        return view('theme.adminlte.customers.index', compact('company'));
+        return view('catvara.customers.index', compact('company'));
     }
 
     /**
@@ -137,6 +125,13 @@ class CustomerController extends Controller
     public function stats(Request $request, Company $company)
     {
         $baseQuery = Customer::where('company_id', $company->id);
+
+        if ($request->filled('date_from') && $request->filled('date_to')) {
+            $baseQuery->whereBetween('created_at', [
+                $request->date_from . ' 00:00:00',
+                $request->date_to . ' 23:59:59'
+            ]);
+        }
 
         $all = (clone $baseQuery)->count();
         $active = (clone $baseQuery)->where('is_active', true)->count();
@@ -187,7 +182,7 @@ class CustomerController extends Controller
         $countries = Country::active()->ordered()->get();
         $paymentTerms = \App\Models\Accounting\PaymentTerm::where('is_active', true)->get();
 
-        return view('theme.adminlte.customers.create', compact('company', 'countries', 'paymentTerms'));
+        return view('catvara.customers.create', compact('company', 'countries', 'paymentTerms'));
     }
 
     /**
@@ -212,7 +207,7 @@ class CustomerController extends Controller
                 'legal_name' => $data['legal_name'] ?? null,
                 'tax_number' => $data['tax_number'] ?? null,
                 'notes' => $data['notes'] ?? null,
-                'is_active' => $data['is_active'] ?? true,
+                'is_active' => (bool) ($data['is_active'] ?? true),
                 'payment_term_id' => $data['payment_term_id'] ?? null,
                 'percentage_discount' => $data['percentage_discount'] ?? 0,
             ]);
@@ -221,7 +216,7 @@ class CustomerController extends Controller
                 'company_id' => $company->id,
                 'addressable_id' => $customer->id,
                 'addressable_type' => Customer::class,
-                'address_line_1' => $data['address_line_1'],
+                'address_line_1' => $data['address_line_1'] ?? null,
                 'address_line_2' => $data['address_line_2'] ?? null,
                 'city' => $data['city'] ?? null,
                 'state_id' => $data['state_id'] ?? null,
@@ -233,6 +228,7 @@ class CustomerController extends Controller
 
             if ($request->ajax()) {
                 return response()->json([
+                    'status' => 'success',
                     'message' => 'Customer Created Successfully',
                     'redirect' => route('customers.index', $company->uuid),
                 ]);
@@ -247,6 +243,7 @@ class CustomerController extends Controller
 
             if ($request->ajax()) {
                 return response()->json([
+                    'status' => 'error',
                     'message' => $e->getMessage(),
                 ], 500);
             }
@@ -277,7 +274,7 @@ class CustomerController extends Controller
             'total_overdue' => \App\Models\Accounting\Invoice::where('customer_id', $customer->id)->whereHas('status', fn($q) => $q->where('code', 'OVERDUE'))->sum('grand_total'), // Or use balance due if available, assuming grand_total for now
         ];
 
-        return view('theme.adminlte.customers.show', compact('company', 'customer', 'stats'));
+        return view('catvara.customers.show', compact('company', 'customer', 'stats'));
     }
 
     /**
@@ -287,12 +284,12 @@ class CustomerController extends Controller
     {
         $this->authorize('edit', 'customers');
 
-        $customer = Customer::where('company_id', $company->id)->findOrFail($id);
+        $customer = Customer::where('company_id', $company->id)->with('address')->findOrFail($id);
         $countries = Country::active()->ordered()->get();
-        $states = State::where('country_id', $customer->country_id)->active()->ordered()->get();
+        $states = $customer->address?->country_id ? State::where('country_id', $customer->address->country_id)->active()->ordered()->get() : collect();
         $paymentTerms = \App\Models\Accounting\PaymentTerm::where('is_active', true)->get();
 
-        return view('theme.adminlte.customers.edit', compact('company', 'customer', 'countries', 'states', 'paymentTerms'));
+        return view('catvara.customers.edit', compact('company', 'customer', 'countries', 'states', 'paymentTerms'));
     }
 
     /**
@@ -361,4 +358,15 @@ class CustomerController extends Controller
     }
 
 
+    public function loadCustomers(Request $request, Company $company)
+    {
+        // Simple list for the Sales Order selection UI
+        $customers = Customer::where('company_id', $company->id)
+            ->where('is_active', true)
+            ->select('id', 'uuid', 'display_name', 'email', 'phone', 'type', 'legal_name')
+            ->orderBy('display_name')
+            ->get();
+            
+        return response()->json($customers);
+    }
 }

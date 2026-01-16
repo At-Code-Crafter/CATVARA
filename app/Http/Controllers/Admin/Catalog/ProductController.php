@@ -53,43 +53,27 @@ class ProductController extends Controller
                 }
             }
 
+            if ($request->filled('date_from') && $request->filled('date_to')) {
+                $query->whereBetween('products.created_at', [
+                    $request->date_from . ' 00:00:00',
+                    $request->date_to . ' 23:59:59'
+                ]);
+            }
+
             return DataTables::of($query)
                 ->addIndexColumn()
-                ->editColumn('name', function ($row) {
-                    $img = $row->image;
-                    $src = $img ? asset('storage/' . $img) : asset('theme/adminlte/dist/img/default-150x150.png');
-
-                    return '
-                        <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 border border-slate-100 shadow-sm">
-                                <img src="' . e($src) . '" class="w-full h-full object-cover">
-                            </div>
-                            <div class="min-w-0">
-                                <div class="text-sm font-bold text-slate-800 truncate">' . e($row->name) . '</div>
-                                <div class="text-[10px] font-medium text-slate-400 truncate uppercase tracking-tight">' . e($row->slug) . '</div>
-                            </div>
-                        </div>';
+                ->addColumn('image_url', function ($row) {
+                    return $row->image ? asset('storage/' . $row->image) : null;
                 })
                 ->addColumn('category_name', function ($row) {
-                    return $row->category
-                        ? '<span class="text-sm font-medium text-slate-600">' . e($row->category->name) . '</span>'
-                        : '<span class="text-xs text-slate-300 italic">Uncategorized</span>';
+                    return $row->category ? $row->category->name : null;
                 })
                 ->addColumn('variants_count', function ($row) {
-                    return '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-brand-50 text-brand-600 border border-brand-100">' . $row->variants->count() . ' Variants</span>';
+                    return $row->variants->count();
                 })
-                ->addColumn('action', function ($row) {
-                    $editUrl = company_route('catalog.products.edit', ['product' => $row->id]);
-
-                    return '
-                        <div class="flex items-center justify-end gap-2">
-                             <a href="' . $editUrl . '" class="text-slate-400 hover:text-brand-600 transition-colors p-1" title="Edit Product">
-                                <i class="fas fa-edit"></i>
-                            </a>
-                        </div>
-                    ';
+                ->addColumn('edit_url', function ($row) {
+                    return company_route('catalog.products.edit', ['product' => $row->id]);
                 })
-                ->rawColumns(['name', 'category_name', 'variants_count', 'action'])
                 ->make(true);
         }
 

@@ -1,138 +1,186 @@
 @extends('catvara.layouts.app')
 
-@section('title', 'Create Sales Order - Step 1')
+@section('title', 'Sales Order - Step 1')
 
 @section('content')
-  <div class="max-w-7xl mx-auto pb-24">
-    {{-- Header & Steps --}}
-    <div class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-6">
+  <style>
+    @keyframes fadeInSlide {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .animate-entry {
+      animation: fadeInSlide 0.4s ease-out forwards;
+      opacity: 0;
+      /* Start hidden for animation */
+    }
+  </style>
+
+  <div class="w-full px-8 pb-20 animate-fade-in">
+    {{-- Header --}}
+    <div class="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
       <div>
-        <div class="flex items-center gap-2 mb-2">
-          <a href="{{ company_route('sales-orders.index') }}" class="text-slate-400 hover:text-brand-600 transition-colors">
-            <i class="fas fa-arrow-left"></i>
+        <div class="flex items-center gap-2 mb-1">
+          <a href="{{ company_route('sales-orders.index') }}"
+            class="h-7 w-7 rounded-md bg-white border border-slate-200 flex items-center justify-center text-slate-400 hover:text-brand-600 hover:border-brand-200 hover:shadow-sm transition-all duration-300">
+            <i class="fas fa-arrow-left text-xs"></i>
           </a>
           <span
-            class="text-xs font-bold px-2 py-1 rounded bg-brand-50 text-brand-600 border border-brand-100 uppercase tracking-wider">Step
-            1 of 3</span>
+            class="px-2 py-0.5 rounded-[4px] bg-brand-50 text-brand-700 border border-brand-100 text-[10px] font-black uppercase tracking-widest">
+            Step 01 / 03
+          </span>
         </div>
-        <h1 class="text-3xl font-black text-slate-900 tracking-tight">Select Customer</h1>
-        <p class="text-slate-500 font-medium mt-1">Choose the customer for this order.</p>
+        <h1 class="text-2xl font-bold text-slate-800 tracking-tight">Initiate Order</h1>
       </div>
 
-      {{-- Steps Visual --}}
-      <div class="hidden md:flex items-center gap-2 bg-white px-4 py-2 rounded-xl shadow-sm border border-slate-100">
+      {{-- Progress --}}
+      <div class="hidden md:flex items-center gap-3 bg-white px-4 py-2.5 rounded-xl shadow-sm border border-slate-100">
         <div class="flex items-center gap-2">
           <div
-            class="w-8 h-8 rounded-full bg-brand-600 text-white flex items-center justify-center font-bold text-sm shadow-md shadow-brand-500/30">
-            1</div>
-          <span class="text-sm font-bold text-slate-800">Customer</span>
-        </div>
-        <div class="w-12 h-0.5 bg-slate-100"></div>
-        <div class="flex items-center gap-2 opacity-50">
-          <div
-            class="w-8 h-8 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center font-bold text-sm">2
+            class="w-6 h-6 rounded bg-brand-600 text-white flex items-center justify-center font-black text-[10px] shadow-lg shadow-brand-500/20 ring-2 ring-brand-100">
+            01
           </div>
-          <span class="text-sm font-medium text-slate-500">Items</span>
+          <span class="text-xs font-bold text-slate-800 uppercase tracking-wide">Customer</span>
         </div>
-        <div class="w-12 h-0.5 bg-slate-100"></div>
-        <div class="flex items-center gap-2 opacity-50">
+        <div class="w-8 h-0.5 bg-slate-100"></div>
+        <div class="flex items-center gap-2 opacity-40 grayscale">
           <div
-            class="w-8 h-8 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center font-bold text-sm">3
+            class="w-6 h-6 rounded bg-slate-100 text-slate-400 flex items-center justify-center font-black text-[10px]">02
           </div>
-          <span class="text-sm font-medium text-slate-500">Review</span>
+          <span class="text-xs font-bold text-slate-800 uppercase tracking-wide">Basket</span>
+        </div>
+        <div class="w-8 h-0.5 bg-slate-100"></div>
+        <div class="flex items-center gap-2 opacity-40 grayscale">
+          <div
+            class="w-6 h-6 rounded bg-slate-100 text-slate-400 flex items-center justify-center font-black text-[10px]">03
+          </div>
+          <span class="text-xs font-bold text-slate-800 uppercase tracking-wide">Finalize</span>
         </div>
       </div>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-      {{-- Main Selection Area --}}
-      <div class="lg:col-span-8 space-y-6">
-        {{-- Search & Filter --}}
-        <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
-          <div class="flex flex-col md:flex-row gap-4">
-            <div class="flex-1 relative">
-              <i class="fas fa-search absolute left-4 top-3.5 text-slate-400 text-lg"></i>
-              <input type="text" id="customerSearch"
-                class="w-full pl-12 pr-4 py-3 rounded-xl border-slate-300 focus:border-brand-500 focus:ring-brand-500 shadow-sm text-base font-medium placeholder-slate-400 transition-all"
-                placeholder="Search by name, email, or phone...">
-            </div>
-            <div class="md:w-48">
-              <select id="companyFilter"
-                class="w-full py-3 rounded-xl border-slate-300 focus:border-brand-500 focus:ring-brand-500 shadow-sm font-medium text-slate-600">
-                <option value="">All Types</option>
-                <option value="company">Company Only</option>
-                <option value="individual">Individual Only</option>
-              </select>
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      {{-- Main Content: Selection --}}
+      <div class="lg:col-span-8 space-y-4">
+
+        <!-- Search Card -->
+        <div class="card bg-white border-slate-100 shadow-soft overflow-hidden group">
+          <div class="p-4">
+            <div class="flex flex-col md:flex-row gap-3">
+              <div class="flex-1">
+                <div class="input-icon-group group/input">
+                  <i
+                    class="fas fa-search text-slate-400 group-focus-within/input:text-brand-400 transition-colors duration-300"></i>
+                  <input type="text" id="customerSearch"
+                    class="w-full pl-9 h-[40px] rounded-lg border-slate-200 text-sm font-semibold focus:border-brand-400 focus:ring-4 focus:ring-brand-400/10 transition-all duration-300 placeholder:text-slate-400"
+                    placeholder="Search by name, ID, email or phone...">
+                </div>
+              </div>
+              <div class="md:w-56">
+                <select id="companyFilter"
+                  class="w-full h-[40px] rounded-lg border-slate-200 text-sm font-semibold focus:border-brand-400 focus:ring-4 focus:ring-brand-400/10 transition-all duration-300 text-slate-600">
+                  <option value="">All Entity Types</option>
+                  <option value="COMPANY">Companies Only</option>
+                  <option value="INDIVIDUAL">Individuals Only</option>
+                </select>
+              </div>
             </div>
           </div>
         </div>
 
-        {{-- Customer List (Dynamic) --}}
-        <div id="sellToList" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- Results Grid -->
+        <div id="sellToList" class="grid grid-cols-1 md:grid-cols-2 gap-3 min-h-[300px]">
           {{-- Loaded via JS --}}
-          <div class="col-span-full py-12 text-center text-slate-400 animate-pulse">
-            <i class="fas fa-circle-notch fa-spin text-3xl mb-3 text-brand-300"></i>
-            <p class="font-medium">Loading customers...</p>
+          <div class="col-span-full py-12 text-center">
+            <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-slate-50 mb-3 animate-pulse">
+              <i class="fas fa-circle-notch fa-spin text-brand-400 text-lg"></i>
+            </div>
+            <p class="text-slate-400 font-medium text-xs">Retrieving customer directory...</p>
           </div>
         </div>
       </div>
 
-      {{-- Sidebar Summary --}}
-      <div class="lg:col-span-4 space-y-6">
-        <div
-          class="bg-white rounded-2xl shadow-lg shadow-slate-200/50 border border-slate-200 overflow-hidden sticky top-6">
-          <div class="p-6 border-b border-slate-50 bg-slate-50/50">
-            <h3 class="font-bold text-slate-800 flex items-center gap-2">
-              <i class="fas fa-clipboard-list text-brand-500"></i> Order Summary
+      {{-- Sidebar: Context & Actions --}}
+      <div class="lg:col-span-4 space-y-4">
+
+        <!-- Transaction Header -->
+        <div class="card bg-white border-slate-100 shadow-soft overflow-hidden sticky top-6">
+          <div class="p-4 border-b border-slate-50 bg-slate-50/30">
+            <h3 class="text-xs font-black text-slate-800 uppercase tracking-wider flex items-center gap-2">
+              <i class="fas fa-file-invoice text-slate-400"></i> Transaction Context
             </h3>
           </div>
 
-          <div class="p-6 space-y-6">
-            {{-- Selected Sell To --}}
+          <div class="p-4 space-y-4">
+            <!-- Selected Customer -->
             <div>
-              <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Sell To Customer</div>
+              <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Sell To
+                Customer</label>
+
               <div id="sellToSummary"
-                class="flex items-center gap-3 p-3 rounded-xl bg-slate-50 border border-slate-100 text-slate-500 text-sm italic">
-                <i class="fas fa-user-circle text-2xl opacity-50"></i>
-                <span>No customer selected</span>
+                class="relative overflow-hidden rounded-lg border-2 border-dashed border-slate-200 bg-slate-50/50 p-3 transition-all duration-300">
+                <div class="flex flex-col items-center justify-center text-center py-3 text-slate-400">
+                  <i class="fas fa-user-plus text-xl mb-1.5 opacity-50"></i>
+                  <span class="text-[11px] font-bold">No Customer Selected</span>
+                </div>
               </div>
             </div>
 
-            {{-- Billing Toggle --}}
+            <!-- Billing Toggle -->
             <div class="pt-4 border-t border-slate-100">
-              <div class="flex items-center justify-between mb-4">
-                <div class="text-xs font-bold text-slate-400 uppercase tracking-wider">Billing Address</div>
-                <label class="relative inline-flex items-center cursor-pointer">
-                  <input type="checkbox" id="sameAsSellTo" class="sr-only peer" checked>
-                  <div
-                    class="w-9 h-5 bg-slate-200 peer-focus:outline-none ring-2 ring-transparent peer-focus:ring-brand-100 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-brand-500">
-                  </div>
-                </label>
+              <div class="flex items-center justify-between mb-2">
+                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Bill To Customer</label>
+                <div class="flex items-center gap-2">
+                  <span class="text-[10px] font-bold text-slate-500" id="billingLabel">Same as Sell To</span>
+                  <label class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" id="sameAsSellTo" class="sr-only peer" checked>
+                    <div
+                      class="w-7 h-3.5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-2.5 after:w-2.5 after:transition-all after:duration-300 peer-checked:bg-slate-800">
+                    </div>
+                  </label>
+                </div>
               </div>
-              <p class="text-xs text-slate-500 mb-2" id="billingHelp">Same as Sell To customer.</p>
 
-              {{-- Bill To Summary (Hidden initially) --}}
-              <div id="billToSection" class="hidden">
+              <div id="billToSection" class="hidden mt-2">
                 <button id="selectBillToBtn"
-                  class="w-full py-2 border-2 border-dashed border-slate-300 rounded-xl text-slate-500 font-bold text-sm hover:border-brand-400 hover:text-brand-600 transition-all mb-2">
-                  Select Billing Customer
+                  class="btn btn-white w-full text-[11px] py-2 h-auto border-dashed hover:border-brand-400 hover:text-brand-600 transition-all duration-300">
+                  <i class="fas fa-sync-alt mr-1.5"></i> Select Bill-To Customer
                 </button>
+
                 <div id="billToSummary"
-                  class="hidden flex items-center gap-3 p-3 rounded-xl bg-slate-50 border border-slate-100 text-slate-500 text-sm">
-                  {{-- Populated via JS --}}
+                  class="hidden mt-2 p-2.5 bg-indigo-50/50 rounded-lg border border-indigo-100 animate-entry">
+                  {{-- JS Populated --}}
                 </div>
               </div>
             </div>
           </div>
+        </div>
 
-          {{-- Footer Action --}}
-          <div class="p-4 bg-slate-50 border-t border-slate-100">
+        <!-- Execution Card -->
+        <div class="bg-slate-900 rounded-xl shadow-xl shadow-slate-900/10 overflow-hidden text-white relative group">
+          <div class="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity duration-500">
+            <i class="fas fa-rocket text-5xl transform rotate-12"></i>
+          </div>
+          <div class="p-5 relative z-10">
+            <h3 class="text-base font-black tracking-tight mb-1">Initiate Draft</h3>
+            <p class="text-[11px] text-slate-400 font-medium mb-4">Create a new order draft and proceed to items.</p>
+
             <button id="continueBtn" disabled
-              class="w-full btn btn-primary py-3 shadow-lg shadow-brand-500/30 disabled:opacity-50 disabled:shadow-none disabled:cursor-not-allowed">
-              Next: Add Products <i class="fas fa-arrow-right ml-2"></i>
+              class="w-full btn bg-brand-500 hover:bg-brand-400 text-white border-0 py-3 h-auto shadow-lg shadow-brand-900/50 disabled:opacity-20 disabled:grayscale disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98]">
+              <span class="font-bold flex items-center justify-center gap-2 text-sm">
+                Create & Proceed <i class="fas fa-arrow-right"></i>
+              </span>
             </button>
           </div>
         </div>
+
       </div>
     </div>
   </div>
@@ -140,24 +188,21 @@
   {{-- Hidden Form for Submission --}}
   <form id="createOrderForm" action="{{ company_route('sales-orders.store') }}" method="POST" class="hidden">
     @csrf
-    <input type="hidden" name="customer_id" id="input_customer_id">
-    <input type="hidden" name="billing_customer_id" id="input_billing_customer_id">
-    {{-- Step 1 just creates the draft/redirects to items step, or we pass params --}}
-    {{-- For now, we will simulate the wizard by passing params to the next step or storing in local storage/session --}}
-    {{-- Actually, the old logic posted to 'store' then redirected. Let's see. --}}
+    <input type="hidden" name="sell_to" id="input_customer_id">
+    <input type="hidden" name="bill_to" id="input_billing_customer_id">
   </form>
-
 @endsection
 
 @push('scripts')
   <script>
-    const customersDataUrl = "{{ company_route('load-customers') }}"; // Ensure this route exists and returns JSON
+    const customersDataUrl = "{{ company_route('load-customers') }}";
     let allCustomers = [];
     let selectedSellTo = null;
     let selectedBillTo = null;
     let isBillingSame = true;
 
     $(document).ready(function() {
+      // Force initial load check
       loadCustomers();
 
       // Search Listener
@@ -174,33 +219,39 @@
       $('#sameAsSellTo').on('change', function() {
         isBillingSame = this.checked;
         if (isBillingSame) {
-          $('#billingHelp').text('Same as Sell To customer.');
+          $('#billingLabel').text('Same as Sell To');
           $('#billToSection').addClass('hidden');
-          selectedBillTo = null; // Reset explicit bill to
+          selectedBillTo = null;
         } else {
-          $('#billingHelp').text('Select a different customer for billing.');
+          $('#billingLabel').text('Custom Customer');
           $('#billToSection').removeClass('hidden');
-          // Could open a modal or just toggle the list mode to "Picking Bill To"
-          // For simplicity in this V1, let's assume we select from the same list?
-          // UX decision: Maybe showing the list again in a modal is better.
-          // Or: Changing the main list state to "Select Billing Customer" mode.
         }
         updateSummary();
       });
 
-      // Mode switching for Bill To selection (Simple implementation: Alert user)
-      // A better UX: Add a 'mode' state. 'selecting_sell_to' vs 'selecting_bill_to'.
+      // Mode switching for Bill To
       let selectionMode = 'sell_to';
 
       $('#selectBillToBtn').on('click', function() {
         selectionMode = 'bill_to';
         // Visual cue
-        $('#sellToList').addClass('ring-4 ring-indigo-100 rounded-xl p-2 bg-indigo-50/20');
+        $('#sellToList').addClass('ring-4 ring-indigo-100 rounded-xl p-2 bg-indigo-50/20 transition-all');
         $('html, body').animate({
           scrollTop: $("#customerSearch").offset().top - 100
         }, 500);
         $('#customerSearch').focus();
-        alert('Please select the Billing Customer from the list above.');
+
+        const toast = Swal.mixin({
+          toast: true,
+          position: 'top-end',
+          showConfirmButton: false,
+          timer: 3000,
+          timerProgressBar: true
+        });
+        toast.fire({
+          icon: 'info',
+          title: 'Select the Bill-To Customer from the list'
+        });
       });
 
       $(document).on('click', '.customer-card', function() {
@@ -211,11 +262,10 @@
 
         if (selectionMode === 'sell_to') {
           selectedSellTo = customer;
-          // If billing is same, visually update it implicitly
         } else {
           selectedBillTo = customer;
           selectionMode = 'sell_to'; // Revert back
-          $('#sellToList').removeClass('ring-4 ring-indigo-100 rounded-xl p-2 bg-indigo-50/20');
+          $('#sellToList').removeClass('ring-4 ring-indigo-100 rounded-xl p-2 bg-indigo-50/20 transition-all');
         }
 
         updateSummary();
@@ -225,26 +275,11 @@
       $('#continueBtn').on('click', function() {
         if (!selectedSellTo) return;
 
-        // Logic to proceed. 
-        // In the AdminLTE version, it likely submitted a form or redirected.
-        // We will redirect to a 'create-step-2' or similar, passing the customer ID.
-        // Or use the store method to create a DRAFT order and then redirect to edit/add-items.
+        $('#input_customer_id').val(selectedSellTo.uuid); // Controller uses UUID
+        $('#input_billing_customer_id').val(isBillingSame ? null : (selectedBillTo ? selectedBillTo.uuid : null));
 
-        // Let's assume we maintain the wizard flow.
-        // We'll construct a URL with params.
-        const url = new URL("{{ company_route('sales-orders.create-step-2') }}");
-        // WAIT, does create-step-2 exist? probably not yet.
-        // Use the form to POST to a 'start' endpoint? 
-        // The AdminLTE had `STORE_ORDER_URL`. 
-
-        // Let's create a hidden form and submit it to 'store' which creates the draft.
-        $('#input_customer_id').val(selectedSellTo.id);
-        $('#input_billing_customer_id').val(isBillingSame ? selectedSellTo.id : (selectedBillTo ? selectedBillTo
-          .id : selectedSellTo.id));
-
-        // Temporarily alert as step 2 isn't ready
-        alert('Proceeding to Step 2 (Product Selection)...');
-        // $('#createOrderForm').submit(); // Uncomment when backend is read
+        $(this).prop('disabled', true).html('<i class="fas fa-circle-notch fa-spin"></i> Creating Draft...');
+        $('#createOrderForm').submit();
       });
     });
 
@@ -253,13 +288,15 @@
         url: customersDataUrl,
         method: 'GET',
         success: function(response) {
-          allCustomers = response; // Assume response is array of customer objects
+          console.log('Customers loaded:', response.length); // Debug
+          allCustomers = response;
           renderCustomers();
         },
-        error: function() {
+        error: function(xhr, status, error) {
+          console.error('Failed to load customers:', error);
           $('#sellToList').html(
-            '<div class="col-span-full text-center text-red-500 py-8">Failed to load customers. Please refresh.</div>'
-            );
+            '<div class="col-span-full text-center text-red-500 py-8 text-xs font-bold">Failed to load directory. Please refresh.</div>'
+          );
         }
       });
     }
@@ -273,51 +310,82 @@
       if (search) {
         const lowerSearch = search.toLowerCase();
         filtered = filtered.filter(c =>
-          c.display_name.toLowerCase().includes(lowerSearch) ||
+          (c.name && c.name.toLowerCase().includes(lowerSearch)) ||
           (c.email && c.email.toLowerCase().includes(lowerSearch)) ||
-          (c.phone && c.phone.includes(search))
+          (c.phone && c.phone.includes(search)) ||
+          (c.legal_name && c.legal_name.toLowerCase().includes(lowerSearch))
         );
       }
 
       if (type) {
-        // Assume 'type' field exists. Adjust if it's 'is_company' boolean etc.
-        // If field is 'type' (company/individual)
-        filtered = filtered.filter(c => c.type === type);
+        filtered = filtered.filter(c => c.customerType === type);
       }
 
       if (filtered.length === 0) {
+        const isSearch = search !== '' || type !== '';
+
         container.html(`
-                <div class="col-span-full text-center py-12">
-                    <div class="bg-slate-50 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-3">
-                        <i class="fas fa-search text-slate-300 text-xl"></i>
+                <div class="col-span-full text-center py-10 fade-in">
+                    <div class="bg-slate-50 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-2">
+                        <i class="fas fa-search text-slate-300 text-lg"></i>
                     </div>
-                    <p class="text-slate-500 font-medium">No customers found.</p>
+                    <p class="text-slate-500 font-medium text-xs">${isSearch ? 'No customers found.' : 'No customers in directory.'}</p>
                 </div>
             `);
         return;
       }
 
-      filtered.forEach(c => {
-        const isSelected = (selectionMode === 'sell_to' && selectedSellTo && selectedSellTo.id === c.id) ||
-          (selectionMode === 'bill_to' && selectedBillTo && selectedBillTo.id === c.id);
+      filtered.forEach((c, index) => {
+        const isSellTo = selectedSellTo && selectedSellTo.id === c.id;
+        const isBillTo = selectedBillTo && selectedBillTo.id === c.id;
+        const isSelected = isSellTo || isBillTo;
 
-        const activeClass = isSelected ? 'border-brand-500 ring-4 ring-brand-500/10 bg-brand-50/30' :
-          'border-slate-200 hover:border-brand-300 hover:shadow-md';
+        // Use 'name' from API
+        const displayName = c.name || c.legal_name || 'Unknown Entity';
 
-        const initials = c.display_name.substring(0, 2).toUpperCase();
+        const activeClass = isSelected ?
+          (isSellTo ? 'border-brand-500 ring-2 ring-brand-500/10 bg-brand-50/30 shadow-md transform scale-[1.01]' :
+            'border-indigo-500 ring-2 ring-indigo-500/10 bg-indigo-50/20 shadow-md') :
+          'border-slate-200 hover:border-brand-300 hover:shadow-md bg-white hover:-translate-y-1';
+
+        const initials = displayName.substring(0, 2).toUpperCase();
+
+        // Use 'customerType' from API
+        const typeBadge = c.customerType === 'COMPANY' ?
+          '<span class="px-1.5 py-0.5 rounded-[4px] text-[9px] font-black bg-indigo-50 text-indigo-600 uppercase tracking-wide"><i class="fas fa-building mr-1"></i> Corp</span>' :
+          '<span class="px-1.5 py-0.5 rounded-[4px] text-[9px] font-black bg-amber-50 text-amber-600 uppercase tracking-wide"><i class="fas fa-user mr-1"></i> Indiv</span>';
+
+        // Checkmark logic
+        let checkmark = '';
+        if (isSellTo) checkmark =
+          '<div class="absolute top-3 right-3 text-brand-500 animate-entry"><i class="fas fa-check-circle text-lg"></i></div>';
+        if (isBillTo) checkmark =
+          '<div class="absolute top-3 right-3 text-indigo-500 animate-entry"><i class="fas fa-file-invoice-dollar text-lg"></i></div>';
+
+        // Add stagger effect via style
+        const delay = index * 0.05;
+        const style = `animation-delay: ${delay}s`;
+
+        const address = c.address || 'No Address';
 
         const card = `
-                <div class="customer-card cursor-pointer bg-white rounded-xl p-4 border transition-all duration-200 group flex items-start gap-4 ${activeClass}" data-id="${c.id}">
-                    <div class="w-12 h-12 rounded-lg bg-gradient-to-br from-slate-100 to-slate-200 text-slate-600 flex items-center justify-center font-bold text-lg shadow-inner">
+                <div class="customer-card relative cursor-pointer rounded-xl p-4 border transition-all duration-300 group flex items-start gap-3 ${activeClass} animate-entry" 
+                     style="${style}"
+                     data-id="${c.id}">
+                    <div class="w-10 h-10 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center font-black text-sm shadow-sm border border-slate-200 group-hover:bg-white group-hover:text-brand-600 group-hover:border-brand-200 transition-colors">
                         ${initials}
                     </div>
-                    <div>
-                        <h4 class="font-bold text-slate-800 text-sm group-hover:text-brand-600 transition-colors">${c.display_name}</h4>
-                        <p class="text-xs text-slate-500 mt-0.5">${c.email || 'No email'}</p>
-                        <p class="text-xs text-slate-400 mt-0.5">${c.phone || 'No phone'}</p>
-                        ${c.type ? `<span class="inline-block mt-2 px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-500 uppercase">${c.type}</span>` : ''}
+                    <div class="min-w-0 flex-1">
+                        <div class="flex items-center gap-2 mb-1">
+                            <h4 class="font-bold text-slate-800 text-sm group-hover:text-brand-600 transition-colors truncate">${displayName}</h4>
+                            ${typeBadge}
+                        </div>
+                        <p class="text-[11px] text-slate-500 truncate font-semibold">${c.email || 'No Email'} ${c.phone ? ' • ' + c.phone : ''}</p>
+                         <p class="text-[10px] text-slate-400 mt-1 flex items-center gap-1.5">
+                             <i class="fas fa-map-marker-alt text-slate-300"></i> ${address}
+                        </p>
                     </div>
-                    ${isSelected ? '<div class="ml-auto text-brand-500"><i class="fas fa-check-circle text-xl"></i></div>' : ''}
+                    ${checkmark}
                 </div>
             `;
         container.append(card);
@@ -327,40 +395,61 @@
     function updateSummary() {
       // Update Sell To
       if (selectedSellTo) {
+        const displayName = selectedSellTo.name || selectedSellTo.legal_name || 'Unknown Entity';
+        const address = selectedSellTo.address || 'No Address';
+
         $('#sellToSummary').html(`
-                <div class="w-8 h-8 rounded bg-brand-100 text-brand-600 flex items-center justify-center font-bold text-xs">
-                    ${selectedSellTo.display_name.substring(0, 2).toUpperCase()}
-                </div>
-                <div>
-                    <div class="font-bold text-slate-800 text-sm">${selectedSellTo.display_name}</div>
-                    <div class="text-xs text-slate-500">${selectedSellTo.email || ''}</div>
+                <div class="flex items-start gap-3 animate-entry">
+                    <div class="w-10 h-10 rounded-lg bg-brand-100 text-brand-600 flex items-center justify-center font-black text-[10px] shadow-sm shrink-0">
+                        ${displayName.substring(0, 2).toUpperCase()}
+                    </div>
+                    <div class="min-w-0 flex-1">
+                        <div class="font-bold text-slate-800 text-xs truncate mb-0.5">${displayName}</div>
+                        <div class="text-[10px] text-slate-500 truncate w-full mb-1">${selectedSellTo.email || 'No Email'}</div>
+                        <div class="text-[10px] text-slate-400 leading-tight bg-slate-50 p-1.5 rounded border border-slate-100">
+                           <i class="fas fa-map-marker-alt mr-1 text-slate-300"></i> ${address}
+                        </div>
+                    </div>
                 </div>
             `);
-        $('#sellToSummary').removeClass('bg-slate-50 border-slate-100 italic text-slate-500').addClass(
-          'bg-white border-brand-200 shadow-sm');
+        $('#sellToSummary').removeClass('border-dashed bg-slate-50/50').addClass(
+          'bg-white shadow-sm border-brand-100 border-solid');
       } else {
         $('#sellToSummary').html(`
-                <i class="fas fa-user-circle text-2xl opacity-50"></i>
-                <span>No customer selected</span>
+                <div class="flex flex-col items-center justify-center text-center py-4 text-slate-400">
+                   <div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center mb-2">
+                      <i class="fas fa-user-plus text-lg opacity-50"></i>
+                   </div>
+                   <span class="text-[11px] font-bold">Select from list</span>
+                 </div>
              `);
-        $('#sellToSummary').addClass('bg-slate-50 border-slate-100 italic text-slate-500').removeClass(
-          'bg-white border-brand-200 shadow-sm');
+        $('#sellToSummary').addClass('border-dashed bg-slate-50/50').removeClass(
+          'bg-white shadow-sm border-brand-100 border-solid');
       }
 
       // Update Bill To
-      const billTo = isBillingSame ? selectedSellTo : selectedBillTo;
-      if (billTo && !isBillingSame) {
+      const billTo = isBillingSame ? null : selectedBillTo;
+
+      if (billTo) {
+        const displayName = billTo.name || billTo.legal_name || 'Unknown Entity';
+
         $('#billToSummary').html(`
-                <div class="w-8 h-8 rounded bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold text-xs">
-                    ${billTo.display_name.substring(0, 2).toUpperCase()}
-                </div>
-                <div>
-                    <div class="font-bold text-slate-800 text-sm">${billTo.display_name}</div>
-                    <div class="text-xs text-slate-500">${billTo.email || ''}</div>
+                <div class="flex items-center gap-3 animate-entry">
+                    <div class="w-8 h-8 rounded bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold text-[10px]">
+                        ${displayName.substring(0, 2).toUpperCase()}
+                    </div>
+                    <div class="min-w-0">
+                        <div class="font-bold text-slate-800 text-xs truncate">${displayName}</div>
+                        <div class="text-[10px] text-slate-500 truncate">${billTo.email || ''}</div>
+                    </div>
                 </div>
             `).removeClass('hidden');
-      } else if (!isBillingSame) {
-        $('#billToSummary').addClass('hidden');
+      } else {
+        if ($('#billToSection').is(':visible') && !isBillingSame && !selectedBillTo) {
+          $('#billToSummary').html(
+              `<div class="text-center text-[10px] text-indigo-400 font-bold italic py-2">Select a payer above</div>`)
+            .removeClass('hidden');
+        }
       }
 
       // Enable/Disable Continue

@@ -168,10 +168,11 @@
         <span class="sidebar-text">Customers</span>
       </a>
 
-      <p class="px-3 pt-6 mb-2 text-[11px] font-bold text-slate-400 uppercase tracking-widest nav-group-header">System
-        Maintenance</p>
+      <!-- Administration -->
+      <p class="px-3 pt-6 mb-2 text-[11px] font-bold text-slate-400 uppercase tracking-widest nav-group-header">
+        Administration</p>
 
-      @php $isSettingsActive = $isActive(['tenants.*', 'users.*', 'company.settings.roles.*']); @endphp
+      @php $isSettingsActive = $isActive(['tenants.*', 'users.*', 'settings.roles.*']); @endphp
       <div class="nav-group">
         <button
           class="w-full flex items-center justify-between px-4 py-3 text-sm font-semibold rounded-xl transition-all group

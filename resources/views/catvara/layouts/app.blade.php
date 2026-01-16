@@ -192,15 +192,26 @@
       @apply border border-slate-300 focus:border-brand-400 focus:ring focus:ring-brand-400/10 rounded-xl text-sm transition-all bg-white px-3;
     }
 
-    /* Utility */
-    .glass {
-      background: rgba(255, 255, 255, 0.95);
-      backdrop-filter: blur(10px);
-    }
-
     /* Premium UI Touches */
     .btn {
       @apply inline-flex items-center justify-center px-5 py-2.5 rounded-xl font-bold transition-all duration-300 cursor-pointer text-sm;
+    }
+
+    /* Input with Icon patterns */
+    .input-icon-group {
+      @apply relative flex items-center;
+    }
+
+    .input-icon-group i {
+      @apply absolute left-4 text-slate-400 z-10 pointer-events-none transition-colors;
+    }
+
+    .input-icon-group input {
+      @apply pl-11 !important;
+    }
+
+    .input-icon-group:focus-within i {
+      @apply text-brand-400;
     }
 
     .btn-sm {

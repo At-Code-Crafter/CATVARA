@@ -67,19 +67,18 @@ class UserController extends Controller
                 })
 
                 ->addColumn('action', function ($row) {
-                    $view = route('users.show', $row->id);
-                    $edit = route('users.edit', $row->id);
+                    $viewUrl = route('users.show', $row->id);
+                    $editUrl = route('users.edit', $row->id);
 
                     return '
-        <div class="dropdown">
-            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-toggle="dropdown">
-                <i class="fas fa-cog"></i>
-            </button>
-            <div class="dropdown-menu dropdown-menu-right shadow-sm">
-                <a class="dropdown-item" href="' . $view . '"><i class="fas fa-eye mr-2 text-primary"></i>View Profile</a>
-                <a class="dropdown-item" href="' . $edit . '"><i class="fas fa-edit mr-2 text-info"></i>Edit</a>
-            </div>
-        </div>';
+                    <div class="flex items-center justify-end gap-2">
+                        <a href="' . $viewUrl . '" class="text-slate-400 hover:text-brand-600 transition-colors p-1" title="View Profile">
+                            <i class="fas fa-eye"></i>
+                        </a>
+                        <a href="' . $editUrl . '" class="text-slate-400 hover:text-brand-600 transition-colors p-1" title="Edit">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                    </div>';
                 })
 
                 ->rawColumns(['photo', 'user_type', 'is_active', 'last_login_at', 'action'])
@@ -157,8 +156,14 @@ class UserController extends Controller
             }, 'allCompanyRoles'])
             ->findOrFail($id);
 
-        // all companies for assignment dropdown
-        $companies = Company::query()->select('id', 'uuid', 'name', 'code')->orderBy('name')->get();
+        // all companies for assignment dropdown - now with roles
+        $companies = Company::query()
+            ->select('id', 'uuid', 'name', 'code')
+            ->with(['roles' => function ($q) {
+                $q->select('id', 'company_id', 'name')->where('is_active', true)->orderBy('name');
+            }])
+            ->orderBy('name')
+            ->get();
 
         return view('catvara.users.show', compact('user', 'companies'));
     }
@@ -259,8 +264,8 @@ class UserController extends Controller
             // Sync the main pivot (is_owner and is_active)
             $user->companies()->syncWithoutDetaching([
                 $data['company_id'] => [
-                    'is_owner' => $request->has('is_owner'), // Uses checkbox presence
-                    'is_active' => $request->has('is_active'),
+                    'is_owner' => (bool) ($data['is_owner'] ?? false),
+                    'is_active' => (bool) ($data['is_active'] ?? false),
                     'updated_at' => now(),
                 ]
             ]);
@@ -271,14 +276,16 @@ class UserController extends Controller
                 ->where('user_id', $user->id)
                 ->delete();
 
-            foreach ($data['role_ids'] as $roleId) {
-                DB::table('company_user_role')->insert([
-                    'company_id' => $data['company_id'],
-                    'user_id' => $user->id,
-                    'role_id' => $roleId,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
+            if (!empty($data['role_ids'])) {
+                foreach ($data['role_ids'] as $roleId) {
+                    DB::table('company_user_role')->insert([
+                        'company_id' => $data['company_id'],
+                        'user_id' => $user->id,
+                        'role_id' => $roleId,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                }
             }
 
             DB::commit();
