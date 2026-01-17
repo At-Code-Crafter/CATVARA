@@ -95,7 +95,7 @@ return new class extends Migration
             $table->decimal('unit_cost', 18, 6)->nullable();
 
             $table->string('reference_type')->nullable();
-            $table->unsignedBigInteger('reference_id')->nullable();
+            $table->string('reference_id')->nullable();
 
             $table->string('idempotency_key')->nullable();
 
