@@ -51,7 +51,7 @@ class InventoryController extends Controller
             ->take(5)
             ->get();
 
-        return view('theme.adminlte.inventory.index', compact('locations', 'stats', 'recentTransfers'));
+        return view('catvara.inventory.index', compact('locations', 'stats', 'recentTransfers'));
     }
 
     /**
@@ -79,7 +79,14 @@ class InventoryController extends Controller
                     'product_variant' => $r->product_variant_id
                 ]);
 
-                return '<a href="'.$url.'" class="btn btn-xs btn-primary"><i class="fas fa-eye"></i> Manage</a>';
+                // Determine if we are using adminlte or catvara route (URL is same, but class maybe different?)
+                // Returning simple HTML for datatables.
+                // NOTE: For Catvara we might want a different button style, but DataTables renders HTML.
+                // will return a simple link, and the JS in view will handle styling if needed or this HTML will be used.
+                // Let's use a generic generic class or the new one if we know it.
+                // But wait, the view will be new.
+                
+                return '<a href="'.$url.'" class="text-brand-600 hover:text-brand-800 font-medium text-sm">Manage</a>';
             })
             ->rawColumns(['quantity', 'actions'])
             ->make(true);
@@ -270,6 +277,6 @@ class InventoryController extends Controller
             ->count();
 
         // Pass to view
-        return view('theme.adminlte.inventory.variant_details', compact('variant', 'locations', 'balances', 'movementCount'));
+        return view('catvara.inventory.variant_details', compact('variant', 'locations', 'balances', 'movementCount'));
     }
 }

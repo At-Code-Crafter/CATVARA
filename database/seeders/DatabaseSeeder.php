@@ -21,6 +21,6 @@ class DatabaseSeeder extends Seeder
         $this->call(PaymentSeeder::class);
 
         //keep in last
-        $this->call(VapeShopSeeder::class);
+        // $this->call(VapeShopSeeder::class);
     }
 }
