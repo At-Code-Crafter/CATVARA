@@ -11,14 +11,14 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         // 1. Setup Company, Currency, Locations, Roles
-        $this->call(VapeShopSetupSeeder::class);
-        $this->call(InventorySeeder::class);
-        $this->call(AuthenticationSeeder::class);
-        $this->call(PaymentTermSeeder::class);
-        $this->call(CurrencySeeder::class);
-        $this->call(CountriesStatesSeeder::class);
-        $this->call(OrderSeeder::class);
-        $this->call(PaymentSeeder::class);
+        // $this->call(VapeShopSetupSeeder::class);
+        // $this->call(InventorySeeder::class);
+        // $this->call(AuthenticationSeeder::class);
+        // $this->call(PaymentTermSeeder::class);
+        // $this->call(CurrencySeeder::class);
+        // $this->call(CountriesStatesSeeder::class);
+        // $this->call(OrderSeeder::class);
+        // $this->call(PaymentSeeder::class);
 
         //keep in last
         // $this->call(VapeShopSeeder::class);

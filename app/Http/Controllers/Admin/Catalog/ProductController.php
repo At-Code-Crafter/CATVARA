@@ -292,125 +292,82 @@ class ProductController extends Controller
 
         $companyId = $request->company->id;
 
+        // 1. Get Dynamic Columns: Price Channels
+        $priceChannels = PriceChannel::all();
+
+        // 2. Get Dynamic Columns: Inventory Locations (Stores & Warehouses)
+        $locations = InventoryLocation::where('company_id', $companyId)
+            ->with('locatable')
+            ->get();
+
+        // Prepare Headers
+        $headers = [
+            'Category ID',
+            'Category Name',
+            'Product ID',
+            'Product Name',
+            'Status',
+            'Variant ID',
+            'Variant SKU',
+            'Cost',
+        ];
+
+        // Add Price Channel headers
+        foreach ($priceChannels as $channel) {
+            $headers[] = 'Price - ' . ($channel->name ?: $channel->code);
+        }
+
+        // Add Stock Location headers
+        foreach ($locations as $location) {
+            $locationName = $location->locatable->name ?? 'Unknown (' . $location->type . ')';
+            $headers[] = 'Stock - ' . $locationName;
+        }
+
+        $headers[] = 'Total Stock';
+
         // Get all products with variants, category, prices, and inventory
         $products = Product::where('company_id', $companyId)
             ->with([
                 'category',
-                'variants.attributeValues.attribute',
-                'variants.prices.priceChannel',
-                'variants.prices.currency',
-                'variants.inventory.location.locatable',
+                'variants.prices',
+                'variants.inventory',
             ])
             ->get();
 
-        // Prepare CSV data
         $csvData = [];
-
-        // Headers - structured for future import
-        $headers = [
-            'product_id',
-            'product_uuid',
-            'product_name',
-            'product_slug',
-            'product_description',
-            'product_is_active',
-            'category_id',
-            'category_name',
-            'variant_id',
-            'variant_uuid',
-            'variant_sku',
-            'variant_barcode',
-            'variant_cost_price',
-            'variant_is_active',
-            'variant_attributes',
-            'price_channel',
-            'price_currency',
-            'price_amount',
-            'warehouse_stock',
-            'store_stock',
-            'total_stock',
-        ];
-
         $csvData[] = $headers;
 
         foreach ($products as $product) {
-            if ($product->variants->isEmpty()) {
-                // Product without variants
-                $csvData[] = [
-                    $product->id,
-                    $product->uuid,
-                    $product->name,
-                    $product->slug,
-                    $product->description ?? '',
-                    $product->is_active ? 'Yes' : 'No',
+            foreach ($product->variants as $variant) {
+                $row = [
                     $product->category_id,
                     $product->category->name ?? '',
-                    '', // variant_id
-                    '', // variant_uuid
-                    '', // variant_sku
-                    '', // variant_barcode
-                    '', // variant_cost_price
-                    '', // variant_is_active
-                    '', // variant_attributes
-                    '', // price_channel
-                    '', // price_currency
-                    '', // price_amount
-                    0,  // warehouse_stock
-                    0,  // store_stock
-                    0,  // total_stock
+                    $product->id,
+                    $product->name,
+                    $product->is_active ? 'Active' : 'Inactive',
+                    $variant->id,
+                    '="' . $variant->sku . '"',
+                    $variant->cost_price ?? 0,
                 ];
-            } else {
-                foreach ($product->variants as $variant) {
-                    // Calculate stock by location type
-                    $warehouseStock = 0;
-                    $storeStock = 0;
 
-                    foreach ($variant->inventory as $balance) {
-                        $locationType = $balance->location->type ?? '';
-                        if ($locationType === 'warehouse') {
-                            $warehouseStock += (float) $balance->quantity;
-                        } elseif ($locationType === 'store') {
-                            $storeStock += (float) $balance->quantity;
-                        }
-                    }
-
-                    $totalStock = $warehouseStock + $storeStock;
-
-                    // Get variant attributes as string
-                    $attributes = $variant->attributeValues->map(function ($av) {
-                        return ($av->attribute->name ?? '') . ': ' . $av->value;
-                    })->implode(', ');
-
-                    // Get first active price (or most relevant)
-                    $price = $variant->prices->where('is_active', true)->first();
-                    $priceChannel = $price->priceChannel->code ?? '';
-                    $priceCurrency = $price->currency->code ?? '';
-                    $priceAmount = $price->price ?? '';
-
-                    $csvData[] = [
-                        $product->id,
-                        $product->uuid,
-                        $product->name,
-                        $product->slug,
-                        $product->description ?? '',
-                        $product->is_active ? 'Yes' : 'No',
-                        $product->category_id,
-                        $product->category->name ?? '',
-                        $variant->id,
-                        $variant->uuid,
-                        $variant->sku,
-                        $variant->barcode ?? '',
-                        $variant->cost_price ?? '',
-                        $variant->is_active ? 'Yes' : 'No',
-                        $attributes,
-                        $priceChannel,
-                        $priceCurrency,
-                        $priceAmount,
-                        $warehouseStock,
-                        $storeStock,
-                        $totalStock,
-                    ];
+                // Map Prices
+                foreach ($priceChannels as $channel) {
+                    $priceObj = $variant->prices->firstWhere('price_channel_id', $channel->id);
+                    $row[] = $priceObj ? $priceObj->price : '';
                 }
+
+                // Map Stock
+                $totalStock = 0;
+                foreach ($locations as $location) {
+                    $balance = $variant->inventory->firstWhere('inventory_location_id', $location->id);
+                    $qty = $balance ? (float) $balance->quantity : 0;
+                    $row[] = $qty;
+                    $totalStock += $qty;
+                }
+
+                $row[] = $totalStock;
+
+                $csvData[] = $row;
             }
         }
 
