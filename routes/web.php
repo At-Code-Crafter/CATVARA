@@ -181,6 +181,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             /**
              * Customers Management
              */
+            Route::get('customers/export', [\App\Http\Controllers\Admin\CustomerController::class, 'export'])->name('customers.export');
             Route::resource('customers', \App\Http\Controllers\Admin\CustomerController::class);
             Route::get('customers/load/stats', [\App\Http\Controllers\Admin\CustomerController::class, 'stats'])->name('customers.stats');
             Route::get('customers-search', [\App\Http\Controllers\Admin\CustomerController::class, 'search'])->name('customers.search');

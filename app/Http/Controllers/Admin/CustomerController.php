@@ -120,7 +120,7 @@ class CustomerController extends Controller
     }
 
     /**
-         * Stats API for dashboard cards
+     * Stats API for dashboard cards
      */
     public function stats(Request $request, Company $company)
     {
@@ -160,11 +160,11 @@ class CustomerController extends Controller
             ->where('is_active', true);
 
         if ($search) {
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('display_name', 'LIKE', "%{$search}%")
-                  ->orWhere('legal_name', 'LIKE', "%{$search}%")
-                  ->orWhere('email', 'LIKE', "%{$search}%")
-                  ->orWhere('phone', 'LIKE', "%{$search}%");
+                    ->orWhere('legal_name', 'LIKE', "%{$search}%")
+                    ->orWhere('email', 'LIKE', "%{$search}%")
+                    ->orWhere('phone', 'LIKE', "%{$search}%");
             });
         }
 
@@ -366,7 +366,77 @@ class CustomerController extends Controller
             ->select('id', 'uuid', 'display_name', 'email', 'phone', 'type', 'legal_name')
             ->orderBy('display_name')
             ->get();
-            
+
         return response()->json($customers);
+    }
+
+    /**
+     * Export customers to CSV.
+     */
+    public function export(Request $request, Company $company)
+    {
+        $this->authorize('view', 'customers');
+
+        $headers = [
+            'Customer ID',
+            'Customer Code',
+            'Name',
+            'Legal Name',
+            'Email',
+            'Phone',
+            'Tax Number',
+            'Address Line 1',
+            'Address Line 2',
+            'City/Town',
+            'State',
+            'Country',
+            'Postal Code',
+            'Discount Percentage',
+            'Payment Terms',
+        ];
+
+        $customers = Customer::where('company_id', $company->id)
+            ->with(['address.state', 'address.country', 'paymentTerm'])
+            ->get();
+
+        $csvData = [];
+        $csvData[] = $headers;
+
+        foreach ($customers as $customer) {
+            $csvData[] = [
+                $customer->id,
+                $customer->customer_code,
+                $customer->display_name,
+                $customer->legal_name ?? '',
+                $customer->email ?? '',
+                $customer->phone ?? '',
+                $customer->tax_number ?? '',
+                $customer->address->address_line_1 ?? '',
+                $customer->address->address_line_2 ?? '',
+                $customer->address->city ?? '',
+                $customer->address->state->name ?? '',
+                $customer->address->country->name ?? '',
+                $customer->address->zip_code ?? '',
+                (float) $customer->percentage_discount . '%',
+                $customer->paymentTerm->name ?? 'N/A',
+            ];
+        }
+
+        $filename = 'customers_export_' . date('Y-m-d_His') . '.csv';
+
+        $callback = function () use ($csvData) {
+            $file = fopen('php://output', 'w');
+            // Add BOM for Excel UTF-8 compatibility
+            fprintf($file, chr(0xEF) . chr(0xBB) . chr(0xBF));
+            foreach ($csvData as $row) {
+                fputcsv($file, $row);
+            }
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ]);
     }
 }

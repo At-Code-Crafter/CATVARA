@@ -14,7 +14,7 @@ class BrandController extends Controller
 {
     public function index(Request $request)
     {
-        $this->authorize('view', 'brands');
+        // $this->authorize('view', 'brands');
 
         $company = $request->company;
 
@@ -63,7 +63,7 @@ class BrandController extends Controller
 
     public function create()
     {
-        $this->authorize('create', 'brands');
+        // $this->authorize('create', 'brands');
         $company = request()->company;
 
         $brands = Brand::where('company_id', $company->id)->get();
@@ -73,7 +73,7 @@ class BrandController extends Controller
 
     public function store(Request $request)
     {
-        $this->authorize('create', 'brands');
+        // $this->authorize('create', 'brands');
 
         $request->validate([
             'name' => 'required|string|max:255',
@@ -102,7 +102,7 @@ class BrandController extends Controller
 
     public function edit(Company $company, Brand $brand)
     {
-        $this->authorize('edit', 'brands');
+        // $this->authorize('edit', 'brands');
 
         if ($brand->company_id !== $company->id) {
             abort(403);
@@ -117,7 +117,7 @@ class BrandController extends Controller
 
     public function update(Request $request, Company $company, Brand $brand)
     {
-        $this->authorize('edit', 'brands');
+        // $this->authorize('edit', 'brands');
 
         if ($brand->company_id !== $company->id) {
             abort(403);
@@ -147,7 +147,7 @@ class BrandController extends Controller
 
     public function destroy(Company $company, Brand $brand)
     {
-        $this->authorize('delete', 'brands');
+        // $this->authorize('delete', 'brands');
 
         if ($brand->company_id !== $company->id) {
             abort(403);

@@ -12,7 +12,11 @@
           Manage profiles for <span class="text-brand-500 font-bold">{{ $company->name }}</span>
         </p>
       </div>
-      <div>
+      <div class="flex items-center gap-3">
+        <a href="{{ route('customers.export', $company->uuid) }}"
+          class="btn btn-white shadow-sm hover:shadow-md transition-all">
+          <i class="fas fa-file-export mr-2 text-brand-500"></i> Export Customers
+        </a>
         <a href="{{ route('customers.create', $company->uuid) }}" class="btn btn-primary shadow-lg shadow-brand-500/30">
           <i class="fas fa-plus-circle mr-2"></i> Register Customer
         </a>
@@ -173,7 +177,7 @@
 
 @push('scripts')
   <script>
-    $(function() {
+    $(function () {
       // Date Range Picker Initialize
       const dateRangePicker = flatpickr("#filterDateRange", {
         mode: "range",
@@ -194,7 +198,7 @@
         autoWidth: false,
         ajax: {
           url: '{{ route('customers.index', $company->uuid) }}',
-          data: function(d) {
+          data: function (d) {
             d.type = $('#filterType').val();
             d.is_active = $('#filterStatus').val();
             d.payment_term_id = $('#filterPaymentTerm').val();
@@ -207,79 +211,79 @@
           }
         },
         columns: [{
-            data: 'display_name',
-            name: 'customers.display_name',
-            className: 'px-8 py-4',
-            render: (data, type, row) => `
-              <div class="flex items-center gap-3">
-                <div class="h-10 w-10 rounded-full bg-slate-50 border border-slate-200 flex items-center justify-center text-brand-500 font-black text-xs shadow-sm">
-                  ${data ? data.charAt(0).toUpperCase() : '?'}
-                </div>
-                <div>
-                  <div class="font-bold text-slate-800 leading-tight">${data}</div>
-                  <div class="text-[10px] text-slate-400 font-medium mt-0.5">
-                    ${row.type === 'COMPANY' ? (row.legal_name || 'Legal Entity Not Set') : 'Individual Profile'}
+          data: 'display_name',
+          name: 'customers.display_name',
+          className: 'px-8 py-4',
+          render: (data, type, row) => `
+                <div class="flex items-center gap-3">
+                  <div class="h-10 w-10 rounded-full bg-slate-50 border border-slate-200 flex items-center justify-center text-brand-500 font-black text-xs shadow-sm">
+                    ${data ? data.charAt(0).toUpperCase() : '?'}
                   </div>
-                </div>
-              </div>`
-          },
-          {
-            data: 'type',
-            name: 'customers.type',
-            className: 'py-4',
-            render: (data, type, row) => {
-              const isCompany = data === 'COMPANY';
-              return `<span class="px-2.5 py-1 rounded-lg ${isCompany ? 'bg-indigo-50 text-indigo-600' : 'bg-amber-50 text-amber-600'} text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 w-fit">
-                <i class="fas ${isCompany ? 'fa-building' : 'fa-user'}"></i>
-                ${data}
-              </span>`;
-            }
-          },
-          {
-            data: 'contact_info',
-            name: 'customers.email',
-            className: 'py-4',
-            orderable: false,
-            render: (data, type, row) => `
-              <div class="space-y-1">
-                <div class="flex items-center gap-2 text-xs font-semibold text-slate-600">
-                  <i class="far fa-envelope text-slate-300 w-4"></i>
-                  ${row.email || '<span class="text-slate-300">N/A</span>'}
-                </div>
-                <div class="flex items-center gap-2 text-xs font-semibold text-slate-600">
-                  <i class="fas fa-phone-alt text-slate-300 w-4"></i>
-                  ${row.phone || '<span class="text-slate-300">N/A</span>'}
-                </div>
-              </div>`
-          },
-          {
-            data: 'percentage_discount',
-            className: 'text-center py-4',
-            render: (data) => data > 0 ?
-              `<span class="bg-emerald-50 text-emerald-600 px-2 py-1 rounded font-black text-xs">-${parseFloat(data)}%</span>` :
-              `<span class="text-slate-300">-</span>`
-          },
-          {
-            data: 'status_badge',
-            name: 'customers.is_active',
-            className: 'text-center py-4',
-            render: (data, type, row) => row.is_active ?
-              `<span class="status-dot dot-success">Active</span>` :
-              `<span class="status-dot dot-danger">Inactive</span>`
-          },
-          {
-            data: 'created_at',
-            className: 'py-4',
-            render: (data) => `
-              <div class="text-[10px] font-black text-slate-500 uppercase tracking-widest leading-none">${data}</div>
-              <div class="text-[9px] text-slate-400 mt-1">Acquired Date</div>`
-          },
-          {
-            data: 'action',
-            orderable: false,
-            searchable: false,
-            className: 'text-right px-8 py-4'
+                  <div>
+                    <div class="font-bold text-slate-800 leading-tight">${data}</div>
+                    <div class="text-[10px] text-slate-400 font-medium mt-0.5">
+                      ${row.type === 'COMPANY' ? (row.legal_name || 'Legal Entity Not Set') : 'Individual Profile'}
+                    </div>
+                  </div>
+                </div>`
+        },
+        {
+          data: 'type',
+          name: 'customers.type',
+          className: 'py-4',
+          render: (data, type, row) => {
+            const isCompany = data === 'COMPANY';
+            return `<span class="px-2.5 py-1 rounded-lg ${isCompany ? 'bg-indigo-50 text-indigo-600' : 'bg-amber-50 text-amber-600'} text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 w-fit">
+                  <i class="fas ${isCompany ? 'fa-building' : 'fa-user'}"></i>
+                  ${data}
+                </span>`;
           }
+        },
+        {
+          data: 'contact_info',
+          name: 'customers.email',
+          className: 'py-4',
+          orderable: false,
+          render: (data, type, row) => `
+                <div class="space-y-1">
+                  <div class="flex items-center gap-2 text-xs font-semibold text-slate-600">
+                    <i class="far fa-envelope text-slate-300 w-4"></i>
+                    ${row.email || '<span class="text-slate-300">N/A</span>'}
+                  </div>
+                  <div class="flex items-center gap-2 text-xs font-semibold text-slate-600">
+                    <i class="fas fa-phone-alt text-slate-300 w-4"></i>
+                    ${row.phone || '<span class="text-slate-300">N/A</span>'}
+                  </div>
+                </div>`
+        },
+        {
+          data: 'percentage_discount',
+          className: 'text-center py-4',
+          render: (data) => data > 0 ?
+            `<span class="bg-emerald-50 text-emerald-600 px-2 py-1 rounded font-black text-xs">-${parseFloat(data)}%</span>` :
+            `<span class="text-slate-300">-</span>`
+        },
+        {
+          data: 'status_badge',
+          name: 'customers.is_active',
+          className: 'text-center py-4',
+          render: (data, type, row) => row.is_active ?
+            `<span class="status-dot dot-success">Active</span>` :
+            `<span class="status-dot dot-danger">Inactive</span>`
+        },
+        {
+          data: 'created_at',
+          className: 'py-4',
+          render: (data) => `
+                <div class="text-[10px] font-black text-slate-500 uppercase tracking-widest leading-none">${data}</div>
+                <div class="text-[9px] text-slate-400 mt-1">Acquired Date</div>`
+        },
+        {
+          data: 'action',
+          orderable: false,
+          searchable: false,
+          className: 'text-right px-8 py-4'
+        }
         ],
         dom: '<"flex justify-between items-center p-6"lBf>rt<"flex justify-between items-center p-6"ip>',
         language: {
@@ -290,7 +294,7 @@
       });
 
       // Filter Toggle
-      $('.filter-toggle-btn').on('click', function() {
+      $('.filter-toggle-btn').on('click', function () {
         $('.filter-card-content').slideToggle(300);
         $('.filter-toggle-icon').toggleClass('fa-chevron-up fa-chevron-down');
       });
@@ -310,7 +314,7 @@
           params.date_to = dates[1];
         }
 
-        $.get('{{ route('customers.stats', $company->uuid) }}', params).done(function(res) {
+        $.get('{{ route('customers.stats', $company->uuid) }}', params).done(function (res) {
           $('#statAllCustomers').text(res.all_customers).addClass('animate-pulse-once');
           $('#statActiveCustomers').text(res.active_customers).addClass('animate-pulse-once');
           $('#statCompanyCustomers').text(res.company_customers).addClass('animate-pulse-once');
