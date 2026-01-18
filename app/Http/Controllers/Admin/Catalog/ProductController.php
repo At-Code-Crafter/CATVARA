@@ -74,6 +74,9 @@ class ProductController extends Controller
                 ->addColumn('edit_url', function ($row) {
                     return company_route('catalog.products.edit', ['product' => $row->id]);
                 })
+                ->addColumn('action', function ($row) {
+                    return ''; // Actions are rendered client-side using edit_url
+                })
                 ->make(true);
         }
 
@@ -280,5 +283,153 @@ class ProductController extends Controller
         }
     }
 
+    /**
+     * Export products with variants to CSV
+     */
+    public function export(Request $request)
+    {
+        $this->authorize('view', 'products');
 
+        $companyId = $request->company->id;
+
+        // Get all products with variants, category, prices, and inventory
+        $products = Product::where('company_id', $companyId)
+            ->with([
+                'category',
+                'variants.attributeValues.attribute',
+                'variants.prices.priceChannel',
+                'variants.prices.currency',
+                'variants.inventory.location.locatable',
+            ])
+            ->get();
+
+        // Prepare CSV data
+        $csvData = [];
+
+        // Headers - structured for future import
+        $headers = [
+            'product_id',
+            'product_uuid',
+            'product_name',
+            'product_slug',
+            'product_description',
+            'product_is_active',
+            'category_id',
+            'category_name',
+            'variant_id',
+            'variant_uuid',
+            'variant_sku',
+            'variant_barcode',
+            'variant_cost_price',
+            'variant_is_active',
+            'variant_attributes',
+            'price_channel',
+            'price_currency',
+            'price_amount',
+            'warehouse_stock',
+            'store_stock',
+            'total_stock',
+        ];
+
+        $csvData[] = $headers;
+
+        foreach ($products as $product) {
+            if ($product->variants->isEmpty()) {
+                // Product without variants
+                $csvData[] = [
+                    $product->id,
+                    $product->uuid,
+                    $product->name,
+                    $product->slug,
+                    $product->description ?? '',
+                    $product->is_active ? 'Yes' : 'No',
+                    $product->category_id,
+                    $product->category->name ?? '',
+                    '', // variant_id
+                    '', // variant_uuid
+                    '', // variant_sku
+                    '', // variant_barcode
+                    '', // variant_cost_price
+                    '', // variant_is_active
+                    '', // variant_attributes
+                    '', // price_channel
+                    '', // price_currency
+                    '', // price_amount
+                    0,  // warehouse_stock
+                    0,  // store_stock
+                    0,  // total_stock
+                ];
+            } else {
+                foreach ($product->variants as $variant) {
+                    // Calculate stock by location type
+                    $warehouseStock = 0;
+                    $storeStock = 0;
+
+                    foreach ($variant->inventory as $balance) {
+                        $locationType = $balance->location->type ?? '';
+                        if ($locationType === 'warehouse') {
+                            $warehouseStock += (float) $balance->quantity;
+                        } elseif ($locationType === 'store') {
+                            $storeStock += (float) $balance->quantity;
+                        }
+                    }
+
+                    $totalStock = $warehouseStock + $storeStock;
+
+                    // Get variant attributes as string
+                    $attributes = $variant->attributeValues->map(function ($av) {
+                        return ($av->attribute->name ?? '') . ': ' . $av->value;
+                    })->implode(', ');
+
+                    // Get first active price (or most relevant)
+                    $price = $variant->prices->where('is_active', true)->first();
+                    $priceChannel = $price->priceChannel->code ?? '';
+                    $priceCurrency = $price->currency->code ?? '';
+                    $priceAmount = $price->price ?? '';
+
+                    $csvData[] = [
+                        $product->id,
+                        $product->uuid,
+                        $product->name,
+                        $product->slug,
+                        $product->description ?? '',
+                        $product->is_active ? 'Yes' : 'No',
+                        $product->category_id,
+                        $product->category->name ?? '',
+                        $variant->id,
+                        $variant->uuid,
+                        $variant->sku,
+                        $variant->barcode ?? '',
+                        $variant->cost_price ?? '',
+                        $variant->is_active ? 'Yes' : 'No',
+                        $attributes,
+                        $priceChannel,
+                        $priceCurrency,
+                        $priceAmount,
+                        $warehouseStock,
+                        $storeStock,
+                        $totalStock,
+                    ];
+                }
+            }
+        }
+
+        // Generate CSV
+        $filename = 'products_export_' . date('Y-m-d_His') . '.csv';
+
+        $callback = function () use ($csvData) {
+            $file = fopen('php://output', 'w');
+            // Add BOM for Excel UTF-8 compatibility
+            fprintf($file, chr(0xEF) . chr(0xBB) . chr(0xBF));
+            foreach ($csvData as $row) {
+                fputcsv($file, $row);
+            }
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ]);
+    }
 }
