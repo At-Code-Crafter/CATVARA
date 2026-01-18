@@ -315,6 +315,7 @@ class ProductController extends Controller
             'Status',
             'Variant ID',
             'Variant SKU',
+            'Variant Attributes',
             'Cost',
         ];
 
@@ -337,6 +338,7 @@ class ProductController extends Controller
                 'category',
                 'variants.prices',
                 'variants.inventory',
+                'variants.attributeValues.attribute',
             ])
             ->get();
 
@@ -353,6 +355,9 @@ class ProductController extends Controller
                     $product->is_active ? 'Active' : 'Inactive',
                     $variant->id,
                     '="' . $variant->sku . '"',
+                    $variant->attributeValues->groupBy(fn($av) => $av->attribute->name ?? 'Unknown')
+                        ->map(fn($vals, $name) => $name . ': ' . $vals->pluck('value')->join(', '))
+                        ->join('; '),
                     $variant->cost_price ?? 0,
                 ];
 
