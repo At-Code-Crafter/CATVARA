@@ -8,7 +8,10 @@
       <h1 class="text-3xl font-bold text-slate-800 tracking-tight">Product Catalog</h1>
       <p class="text-slate-400 mt-1 font-medium">Manage your complete product catalog and variants.</p>
     </div>
-    <div class="mt-4 sm:mt-0">
+    <div class="mt-4 sm:mt-0 flex gap-3">
+      <a href="{{ company_route('catalog.products.export') }}" class="btn btn-white">
+        <i class="fas fa-file-export mr-2"></i> Export
+      </a>
       <a href="{{ company_route('catalog.products.create') }}" class="btn btn-primary">
         <i class="fas fa-plus-circle mr-2"></i> Add Product
       </a>
@@ -162,14 +165,14 @@
               `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-brand-50 text-brand-600 border border-brand-100">${data} Variants</span>`
           },
           {
-            data: 'action', // This can stay server-side or move to client-side. Let's keep server-side for now as it uses route helpers, or we can pass ID and build it here. 
+            data: 'action', // This can stay server-side or move to client-side. Let's keep server-side for now as it uses route helpers, or we can pass ID and build it here.
             // Better to standardise: I'll use the ID from row to build it client side to avoid HTML in controller.
             name: 'action',
             orderable: false,
             searchable: false,
             className: 'text-right px-8',
             render: function(data, type, row) {
-              // We need the edit URL. Since we can't easily generate Laravel routes in JS string, 
+              // We need the edit URL. Since we can't easily generate Laravel routes in JS string,
               // we'll rely on the server validation for the URL or just assume a pattern if safe.
               // Safest: The controller sends the `edit_url` in the row data.
               return `

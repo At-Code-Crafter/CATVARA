@@ -127,6 +127,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
                 // Attributes
                 Route::resource('attributes', \App\Http\Controllers\Admin\Catalog\AttributeController::class)->except(['show', 'destroy']);
+
+                // Products
+                Route::get('products/export', [\App\Http\Controllers\Admin\Catalog\ProductController::class, 'export'])->name('products.export');
                 Route::resource('products', \App\Http\Controllers\Admin\Catalog\ProductController::class);
             });
 

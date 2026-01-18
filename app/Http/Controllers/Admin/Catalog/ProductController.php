@@ -74,6 +74,9 @@ class ProductController extends Controller
                 ->addColumn('edit_url', function ($row) {
                     return company_route('catalog.products.edit', ['product' => $row->id]);
                 })
+                ->addColumn('action', function ($row) {
+                    return ''; // Actions are rendered client-side using edit_url
+                })
                 ->make(true);
         }
 
@@ -280,5 +283,110 @@ class ProductController extends Controller
         }
     }
 
+    /**
+     * Export products with variants to CSV
+     */
+    public function export(Request $request)
+    {
+        $this->authorize('view', 'products');
 
+        $companyId = $request->company->id;
+
+        // 1. Get Dynamic Columns: Price Channels
+        $priceChannels = PriceChannel::all();
+
+        // 2. Get Dynamic Columns: Inventory Locations (Stores & Warehouses)
+        $locations = InventoryLocation::where('company_id', $companyId)
+            ->with('locatable')
+            ->get();
+
+        // Prepare Headers
+        $headers = [
+            'Category ID',
+            'Category Name',
+            'Product ID',
+            'Product Name',
+            'Status',
+            'Variant ID',
+            'Variant SKU',
+            'Cost',
+        ];
+
+        // Add Price Channel headers
+        foreach ($priceChannels as $channel) {
+            $headers[] = 'Price - ' . ($channel->name ?: $channel->code);
+        }
+
+        // Add Stock Location headers
+        foreach ($locations as $location) {
+            $locationName = $location->locatable->name ?? 'Unknown (' . $location->type . ')';
+            $headers[] = 'Stock - ' . $locationName;
+        }
+
+        $headers[] = 'Total Stock';
+
+        // Get all products with variants, category, prices, and inventory
+        $products = Product::where('company_id', $companyId)
+            ->with([
+                'category',
+                'variants.prices',
+                'variants.inventory',
+            ])
+            ->get();
+
+        $csvData = [];
+        $csvData[] = $headers;
+
+        foreach ($products as $product) {
+            foreach ($product->variants as $variant) {
+                $row = [
+                    $product->category_id,
+                    $product->category->name ?? '',
+                    $product->id,
+                    $product->name,
+                    $product->is_active ? 'Active' : 'Inactive',
+                    $variant->id,
+                    '="' . $variant->sku . '"',
+                    $variant->cost_price ?? 0,
+                ];
+
+                // Map Prices
+                foreach ($priceChannels as $channel) {
+                    $priceObj = $variant->prices->firstWhere('price_channel_id', $channel->id);
+                    $row[] = $priceObj ? $priceObj->price : '';
+                }
+
+                // Map Stock
+                $totalStock = 0;
+                foreach ($locations as $location) {
+                    $balance = $variant->inventory->firstWhere('inventory_location_id', $location->id);
+                    $qty = $balance ? (float) $balance->quantity : 0;
+                    $row[] = $qty;
+                    $totalStock += $qty;
+                }
+
+                $row[] = $totalStock;
+
+                $csvData[] = $row;
+            }
+        }
+
+        // Generate CSV
+        $filename = 'products_export_' . date('Y-m-d_His') . '.csv';
+
+        $callback = function () use ($csvData) {
+            $file = fopen('php://output', 'w');
+            // Add BOM for Excel UTF-8 compatibility
+            fprintf($file, chr(0xEF) . chr(0xBB) . chr(0xBF));
+            foreach ($csvData as $row) {
+                fputcsv($file, $row);
+            }
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ]);
+    }
 }
