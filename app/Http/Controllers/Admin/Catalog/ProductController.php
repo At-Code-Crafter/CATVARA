@@ -81,8 +81,9 @@ class ProductController extends Controller
         }
 
         $categories = Category::where('company_id', $request->company->id)->get();
+        $brands = \App\Models\Catalog\Brand::where('company_id', $request->company->id)->get();
 
-        return view('catvara.catalog.products.index', compact('categories'));
+        return view('catvara.catalog.products.index', compact('categories', 'brands'));
     }
 
     public function create()
@@ -90,9 +91,10 @@ class ProductController extends Controller
         $this->authorize('create', 'products');
 
         $categories = Category::where('company_id', request()->company->id)->get();
+        $brands = \App\Models\Catalog\Brand::where('company_id', request()->company->id)->get();
         $attributes = Attribute::where('company_id', request()->company->id)->with('values')->get();
 
-        return view('catvara.catalog.products.create', compact('categories', 'attributes'));
+        return view('catvara.catalog.products.create', compact('categories', 'brands', 'attributes'));
     }
 
     protected $productService;
@@ -109,13 +111,14 @@ class ProductController extends Controller
         // $company is passed via route model binding
         $product = Product::where('company_id', $company->id)->with(['variants.attributeValues', 'variants.prices', 'variants.inventory'])->findOrFail($id);
         $categories = Category::where('company_id', $company->id)->get();
+        $brands = \App\Models\Catalog\Brand::where('company_id', $company->id)->get();
         $attributes = Attribute::where('company_id', $company->id)->get();
 
         $channels = PriceChannel::get(); // Global channels
         $locations = InventoryLocation::where('company_id', $company->id)->with('locatable')->get();
         $currency = Currency::first(); // Default currency
 
-        return view('catvara.catalog.products.edit', compact('product', 'categories', 'attributes', 'channels', 'locations', 'currency'));
+        return view('catvara.catalog.products.edit', compact('product', 'categories', 'brands', 'attributes', 'channels', 'locations', 'currency'));
     }
 
     public function update(Request $request, \App\Models\Company\Company $company, $id)
@@ -125,6 +128,7 @@ class ProductController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'category_id' => 'required|exists:categories,id',
+            'brand_id' => 'nullable|exists:brands,id',
             'variants' => 'nullable|array',
             'prices' => 'nullable|array',
             'primary_image' => 'nullable|image|max:2048',
@@ -195,6 +199,7 @@ class ProductController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'category_id' => 'required',
+            'brand_id' => 'nullable|exists:brands,id',
             'description' => 'nullable|string',
             'variants' => 'required|array',
             'image' => 'nullable|image|max:5120', // 5MB
@@ -207,6 +212,7 @@ class ProductController extends Controller
             $product->uuid = (string) Str::uuid();
             $product->company_id = $request->company->id;
             $product->category_id = $request->category_id;
+            $product->brand_id = $request->brand_id;
             $product->name = $request->name;
             $product->slug = Str::slug($request->name) . '-' . time();
             $product->description = $request->description;

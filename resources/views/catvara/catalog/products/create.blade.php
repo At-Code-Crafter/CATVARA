@@ -57,6 +57,16 @@
             </div>
 
             <div>
+              <label for="brand_id" class="block text-sm font-semibold text-slate-700 mb-2">Brand</label>
+              <select name="brand_id" id="brand_id" class="select2 w-full">
+                <option value="">Select Brand (Optional)</option>
+                @foreach ($brands as $brand)
+                  <option value="{{ $brand->id }}">{{ $brand->name }}</option>
+                @endforeach
+              </select>
+            </div>
+
+            <div>
               <label for="description" class="block text-sm font-semibold text-slate-700 mb-2">Description</label>
               <textarea name="description" id="description" rows="4"
                 class="w-full rounded-xl focus:border-brand-500 focus:ring-brand-500 shadow-sm placeholder-slate-400 text-sm py-2.5 transition-all"
@@ -204,16 +214,16 @@
 
 @push('scripts')
   <script>
-    $(document).ready(function() {
+    $(document).ready(function () {
       // Category Based Attribute Loading
-      $('#category_id').on('change', function() {
+      $('#category_id').on('change', function () {
         const catId = $(this).val();
         if (!catId) return;
 
         const url = "{{ company_route('catalog.categories.attributes', ['category' => ':id']) }}".replace(':id',
           catId);
 
-        $.get(url, function(data) {
+        $.get(url, function (data) {
           const container = $('#attrContainer');
           container.empty();
 
@@ -223,15 +233,15 @@
             return;
           }
 
-          data.forEach(function(attr) {
+          data.forEach(function (attr) {
             const html = `
-                                                    <div>
-                                                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">${attr.name}</label>
-                                                        <select class="select2 w-full attribute-selector" data-attr-id="${attr.id}" data-attr-name="${attr.name}" multiple>
-                                                            ${(attr.values || []).map(v => `<option value="${v.id}">${v.value}</option>`).join('')}
-                                                        </select>
-                                                    </div>
-                                                `;
+                                                      <div>
+                                                          <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">${attr.name}</label>
+                                                          <select class="select2 w-full attribute-selector" data-attr-id="${attr.id}" data-attr-name="${attr.name}" multiple>
+                                                              ${(attr.values || []).map(v => `<option value="${v.id}">${v.value}</option>`).join('')}
+                                                          </select>
+                                                      </div>
+                                                  `;
             container.append(html);
           });
 
@@ -243,9 +253,9 @@
       });
 
       // Variant Generation Logic
-      $('#btnGenerate').on('click', function() {
+      $('#btnGenerate').on('click', function () {
         let selectedAttrs = [];
-        $('.attribute-selector').each(function() {
+        $('.attribute-selector').each(function () {
           let attrId = $(this).data('attr-id');
           let values = $(this).select2('data');
 
@@ -279,42 +289,42 @@
           const rowId = `row_${Date.now()}_${index}`;
 
           const tr = `
-                                                <tr id="${rowId}" class="variant-row group transition-colors hover:bg-slate-50/50">
-                                                    <td class="px-6 py-4 border-b border-slate-50">
-                                                        <div class="text-sm font-bold text-slate-800">${name}</div>
-                                                        <input type="hidden" name="variants[${index}][name]" value="${name}">
-                                                        ${attrIds.map(id => `<input type="hidden" name="variants[${index}][attributes][]" value="${id}">`).join('')}
-                                                    </td>
-                                                    <td class="px-6 py-4 border-b border-slate-50">
-                                                        <input type="text" name="variants[${index}][sku]" placeholder="Auto-gen SKU"
-                                                            class="w-full rounded-lg border-slate-300 focus:border-brand-500 focus:ring-brand-500 text-sm py-2">
-                                                    </td>
-                                                    <td class="px-6 py-4 border-b border-slate-50">
-                                                        <div class="flex items-center justify-end">
-                                                            <input type="number" step="0.01" name="variants[${index}][cost]" placeholder="0.00"
-                                                                class="w-24 rounded-lg border-slate-300 focus:border-brand-500 focus:ring-brand-500 text-sm py-2 text-right">
-                                                        </div>
-                                                    </td>
-                                                    <td class="px-6 py-4 border-b border-slate-50">
-                                                        <div class="flex items-center justify-end">
-                                                            <input type="number" step="0.01" name="variants[${index}][price]" placeholder="0.00"
-                                                                class="w-24 rounded-lg border-brand-200 focus:border-brand-500 focus:ring-brand-500 text-sm py-2 text-right font-bold text-brand-600 bg-brand-50/30">
-                                                        </div>
-                                                    </td>
-                                                    <td class="px-6 py-4 border-b border-slate-50 text-center">
-                                                        <button type="button" class="text-slate-300 hover:text-red-500 transition-colors" onclick="$('#${rowId}').remove(); refreshVariantCount();">
-                                                            <i class="fas fa-trash-alt"></i>
-                                                        </button>
-                                                    </td>
-                                                </tr>
-                                            `;
+                                                  <tr id="${rowId}" class="variant-row group transition-colors hover:bg-slate-50/50">
+                                                      <td class="px-6 py-4 border-b border-slate-50">
+                                                          <div class="text-sm font-bold text-slate-800">${name}</div>
+                                                          <input type="hidden" name="variants[${index}][name]" value="${name}">
+                                                          ${attrIds.map(id => `<input type="hidden" name="variants[${index}][attributes][]" value="${id}">`).join('')}
+                                                      </td>
+                                                      <td class="px-6 py-4 border-b border-slate-50">
+                                                          <input type="text" name="variants[${index}][sku]" placeholder="Auto-gen SKU"
+                                                              class="w-full rounded-lg border-slate-300 focus:border-brand-500 focus:ring-brand-500 text-sm py-2">
+                                                      </td>
+                                                      <td class="px-6 py-4 border-b border-slate-50">
+                                                          <div class="flex items-center justify-end">
+                                                              <input type="number" step="0.01" name="variants[${index}][cost]" placeholder="0.00"
+                                                                  class="w-24 rounded-lg border-slate-300 focus:border-brand-500 focus:ring-brand-500 text-sm py-2 text-right">
+                                                          </div>
+                                                      </td>
+                                                      <td class="px-6 py-4 border-b border-slate-50">
+                                                          <div class="flex items-center justify-end">
+                                                              <input type="number" step="0.01" name="variants[${index}][price]" placeholder="0.00"
+                                                                  class="w-24 rounded-lg border-brand-200 focus:border-brand-500 focus:ring-brand-500 text-sm py-2 text-right font-bold text-brand-600 bg-brand-50/30">
+                                                          </div>
+                                                      </td>
+                                                      <td class="px-6 py-4 border-b border-slate-50 text-center">
+                                                          <button type="button" class="text-slate-300 hover:text-red-500 transition-colors" onclick="$('#${rowId}').remove(); refreshVariantCount();">
+                                                              <i class="fas fa-trash-alt"></i>
+                                                          </button>
+                                                      </td>
+                                                  </tr>
+                                              `;
           tbody.append(tr);
         });
 
         refreshVariantCount();
       });
 
-      $('#btnClear').on('click', function() {
+      $('#btnClear').on('click', function () {
         $('.attribute-selector').val(null).trigger('change');
         $('#variantTable tbody').html(
           '<tr id="emptyRow"><td colspan="5" class="px-6 py-16 text-center text-slate-400">No variants generated yet.</td></tr>'
@@ -339,7 +349,7 @@
         return r;
       }
 
-      window.refreshVariantCount = function() {
+      window.refreshVariantCount = function () {
         const count = $('#variantTable tbody tr.variant-row').length;
         $('#variantCountDisplay').text(`${count} Variants`);
         if (count === 0 && $('#emptyRow').length === 0) {
@@ -385,11 +395,11 @@
           data: fd,
           processData: false,
           contentType: false,
-          success: function(res) {
+          success: function (res) {
             if (res.success) window.location.href = res.redirect;
             else Swal.fire('Error', res.message || 'Something went wrong', 'error');
           },
-          error: function(err) {
+          error: function (err) {
             Swal.fire('Error', err.responseJSON?.message || 'Server error occurred', 'error');
           }
         });

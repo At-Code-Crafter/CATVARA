@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\Attachment;
 use App\Models\Catalog\Attribute;
 use App\Models\Catalog\AttributeValue;
+use App\Models\Catalog\Brand;
 use App\Models\Catalog\Category;
 use App\Models\Catalog\Product;
 use App\Models\Catalog\ProductVariant;
@@ -113,17 +114,28 @@ class VapeShopSeeder extends Seeder
 
                 $product = Product::firstOrNew([
                     'company_id' => $company->id,
-                    'slug'       => $productSlug,
+                    'slug' => $productSlug,
                 ]);
 
                 if (!$product->exists) {
                     $product->uuid = (string) Str::uuid();
                 }
 
-                $product->category_id  = $category->id;
-                $product->name         = $title;
-                $product->description  = $item['body_html'] ?? '';
-                $product->is_active    = true;
+                // 2.1) BRAND
+                $brandName = !empty($item['vendor']) ? $item['vendor'] : null;
+                if ($brandName) {
+                    $brandSlug = Str::slug($brandName);
+                    $brand = Brand::firstOrCreate(
+                        ['company_id' => $company->id, 'slug' => $brandSlug],
+                        ['uuid' => (string) Str::uuid(), 'name' => $brandName, 'is_active' => true]
+                    );
+                    $product->brand_id = $brand->id;
+                }
+
+                $product->category_id = $category->id;
+                $product->name = $title;
+                $product->description = $item['body_html'] ?? '';
+                $product->is_active = true;
                 $product->save();
 
                 // We'll set product->image from FIRST found image (only if empty)
@@ -153,30 +165,30 @@ class VapeShopSeeder extends Seeder
 
                         $variant = ProductVariant::firstOrNew([
                             'company_id' => $company->id,
-                            'sku'        => $sku,
+                            'sku' => $sku,
                         ]);
 
                         if (!$variant->exists) {
                             $variant->uuid = (string) Str::uuid();
                         }
 
-                        $variant->product_id  = $product->id;
-                        $variant->cost_price  = $price * 0.5;
-                        $variant->barcode     = $variantData['barcode'] ?? null;
-                        $variant->is_active   = true;
+                        $variant->product_id = $product->id;
+                        $variant->cost_price = $price * 0.5;
+                        $variant->barcode = $variantData['barcode'] ?? null;
+                        $variant->is_active = true;
                         $variant->save();
 
                         VariantPrice::updateOrCreate(
                             [
-                                'company_id'         => $company->id,
+                                'company_id' => $company->id,
                                 'product_variant_id' => $variant->id,
-                                'price_channel_id'   => $channel->id,
-                                'currency_id'        => $currency->id,
+                                'price_channel_id' => $channel->id,
+                                'currency_id' => $currency->id,
                             ],
                             [
-                                'price'      => $price,
+                                'price' => $price,
                                 'valid_from' => now(),
-                                'is_active'  => true,
+                                'is_active' => true,
                             ]
                         );
 
@@ -191,7 +203,7 @@ class VapeShopSeeder extends Seeder
                                 }
 
                                 $lowerName = strtolower(trim($rawName));
-                                $normName  = $attrMap[$lowerName] ?? $rawName;
+                                $normName = $attrMap[$lowerName] ?? $rawName;
 
                                 $optionValue = $variantData['option' . ($index + 1)] ?? null;
                                 if (!$optionValue || $optionValue === 'Default Title') {
@@ -440,16 +452,16 @@ class VapeShopSeeder extends Seeder
 
         $attachment = Attachment::updateOrCreate(
             [
-                'company_id'       => $companyId,
-                'attachable_type'  => $attachableType,
-                'attachable_id'    => $attachableId,
-                'disk'             => 'public',
-                'path'             => $diskPath,
+                'company_id' => $companyId,
+                'attachable_type' => $attachableType,
+                'attachable_id' => $attachableId,
+                'disk' => 'public',
+                'path' => $diskPath,
             ],
             [
-                'file_name'   => $fileName,
-                'mime_type'   => $ext,
-                'is_primary'  => (bool) $isPrimary,
+                'file_name' => $fileName,
+                'mime_type' => $ext,
+                'is_primary' => (bool) $isPrimary,
             ]
         );
 

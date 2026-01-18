@@ -55,9 +55,19 @@
                 <label class="block text-sm font-semibold text-slate-700 mb-2">Category</label>
                 <select name="category_id" class="select2 w-full">
                   @foreach ($categories as $cat)
-                    <option value="{{ $cat->id }}"
-                      {{ old('category_id', $product->category_id) == $cat->id ? 'selected' : '' }}>
+                    <option value="{{ $cat->id }}" {{ old('category_id', $product->category_id) == $cat->id ? 'selected' : '' }}>
                       {{ $cat->name }}
+                    </option>
+                  @endforeach
+                </select>
+              </div>
+              <div>
+                <label class="block text-sm font-semibold text-slate-700 mb-2">Brand</label>
+                <select name="brand_id" class="select2 w-full">
+                  <option value="">Select Brand (Optional)</option>
+                  @foreach ($brands as $brand)
+                    <option value="{{ $brand->id }}" {{ old('brand_id', $product->brand_id) == $brand->id ? 'selected' : '' }}>
+                      {{ $brand->name }}
                     </option>
                   @endforeach
                 </select>
@@ -108,7 +118,8 @@
                   @foreach ($channels as $ch)
                     <th
                       class="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 text-right w-40">
-                      {{ strtoupper($ch->name) }}</th>
+                      {{ strtoupper($ch->name) }}
+                    </th>
                   @endforeach
                 </tr>
               </thead>
@@ -156,8 +167,7 @@
                         $val = $price ? $price->price : '';
                       @endphp
                       <td class="px-6 py-5 text-right">
-                        <input type="number" step="0.01" name="prices[{{ $variant->id }}][{{ $ch->id }}]"
-                          value="{{ $val }}"
+                        <input type="number" step="0.01" name="prices[{{ $variant->id }}][{{ $ch->id }}]" value="{{ $val }}"
                           class="w-32 rounded-lg border-brand-100 bg-brand-50/20 focus:border-brand-500 focus:ring-brand-500 text-sm py-1.5 text-right font-bold text-brand-600">
                       </td>
                     @endforeach
@@ -193,8 +203,7 @@
             </div>
             <label class="relative inline-flex items-center cursor-pointer shadow-sm">
               <input type="hidden" name="is_active" value="0">
-              <input type="checkbox" name="is_active" value="1" class="sr-only peer"
-                {{ $product->is_active ? 'checked' : '' }}>
+              <input type="checkbox" name="is_active" value="1" class="sr-only peer" {{ $product->is_active ? 'checked' : '' }}>
               <div
                 class="w-11 h-6 bg-slate-200 peer-focus:outline-none ring-4 ring-transparent peer-focus:ring-brand-100 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-600">
               </div>
@@ -250,7 +259,7 @@
 
 @push('scripts')
   <script>
-    $(document).ready(function() {
+    $(document).ready(function () {
       // FilePond Initialization
       FilePond.registerPlugin(FilePondPluginImagePreview);
 
@@ -260,7 +269,7 @@
         labelIdle: 'Drag & Drop your image or <span class="filepond--label-action">Browse</span>',
         credits: false,
         @if (!empty($product->image))
-          files: [{
+              files: [{
             source: '{{ asset('storage/' . $product->image) }}',
             options: {
               type: 'local'
@@ -268,11 +277,11 @@
           }],
         @endif
         server: {
-          load: (source, load, error, progress, abort, headers) => {
-            fetch(source).then(res => res.blob()).then(load);
-          }
+        load: (source, load, error, progress, abort, headers) => {
+          fetch(source).then(res => res.blob()).then(load);
         }
+      }
+        });
       });
-    });
   </script>
 @endpush

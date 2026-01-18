@@ -5,12 +5,12 @@
   $companyReady = company_selected();
 
   $isActive = function ($names) {
-      foreach ((array) $names as $n) {
-          if (request()->routeIs($n)) {
-              return true;
-          }
+    foreach ((array) $names as $n) {
+      if (request()->routeIs($n)) {
+        return true;
       }
-      return false;
+    }
+    return false;
   };
 @endphp
 
@@ -67,7 +67,7 @@
       <div class="nav-group">
         <button
           class="w-full flex items-center justify-between px-4 py-3 text-sm font-semibold rounded-xl transition-all group
-          {{ $isSalesActive ? 'text-slate-900 bg-slate-50' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900' }}"
+            {{ $isSalesActive ? 'text-slate-900 bg-slate-50' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900' }}"
           onclick="$(this).next('div').slideToggle(200); $(this).find('.arrow').toggleClass('rotate-180')">
           <div class="flex items-center">
             <div class="w-8 flex justify-start items-center">
@@ -96,7 +96,7 @@
       <div class="nav-group">
         <button
           class="w-full flex items-center justify-between px-4 py-3 text-sm font-semibold rounded-xl transition-all group
-          {{ $isCatalogActive ? 'text-slate-900 bg-slate-50' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900' }}"
+            {{ $isCatalogActive ? 'text-slate-900 bg-slate-50' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900' }}"
           onclick="$(this).next('div').slideToggle(200); $(this).find('.arrow').toggleClass('rotate-180')">
           <div class="flex items-center">
             <div class="w-8 flex justify-start items-center">
@@ -117,6 +117,10 @@
             class="flex items-center py-2 pl-12 pr-4 text-xs font-medium {{ $isActive(['catalog.categories.*']) ? 'text-brand-400' : 'text-slate-500 hover:text-brand-400' }}">
             <span class="sidebar-text">Categories</span>
           </a>
+          <a href="{{ company_route('catalog.brands.index') }}"
+            class="flex items-center py-2 pl-12 pr-4 text-xs font-medium {{ $isActive(['catalog.brands.*']) ? 'text-brand-400' : 'text-slate-500 hover:text-brand-400' }}">
+            <span class="sidebar-text">Brands</span>
+          </a>
           <a href="{{ company_route('catalog.attributes.index') }}"
             class="flex items-center py-2 pl-12 pr-4 text-xs font-medium {{ $isActive('catalog.attributes.index') ? 'text-brand-400' : 'text-slate-500 hover:text-brand-400' }}">
             <span class="sidebar-text">Attributes</span>
@@ -127,9 +131,8 @@
       <!-- Inventory -->
       @php $isInvActive = $isActive(['inventory.*']); @endphp
       <div class="nav-group">
-        <button
-          class="w-full flex items-center justify-between px-4 py-3 text-sm font-semibold rounded-xl transition-all group
-          {{ $isInvActive ? 'text-slate-900 bg-slate-50' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900' }}"
+        <button class="w-full flex items-center justify-between px-4 py-3 text-sm font-semibold rounded-xl transition-all group
+            {{ $isInvActive ? 'text-slate-900 bg-slate-50' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900' }}"
           onclick="$(this).next('div').slideToggle(200); $(this).find('.arrow').toggleClass('rotate-180')">
           <div class="flex items-center">
             <div class="w-8 flex justify-start items-center">
@@ -160,7 +163,7 @@
       <!-- Customers -->
       <a href="{{ company_route('customers.index') }}"
         class="flex items-center px-4 py-3 text-sm font-semibold rounded-xl transition-all group nav-link
-        {{ $isActive(['customers.*']) ? 'bg-brand-50 text-brand-400' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900' }}">
+          {{ $isActive(['customers.*']) ? 'bg-brand-50 text-brand-400' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900' }}">
         <div class="w-8 flex justify-start items-center">
           <i
             class="fas fa-users {{ $isActive(['customers.*']) ? 'text-brand-400' : 'text-slate-400 group-hover:text-slate-500' }}"></i>
@@ -176,7 +179,7 @@
       <div class="nav-group">
         <button
           class="w-full flex items-center justify-between px-4 py-3 text-sm font-semibold rounded-xl transition-all group
-          {{ $isSettingsActive ? 'text-slate-900 bg-slate-50' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900' }}"
+            {{ $isSettingsActive ? 'text-slate-900 bg-slate-50' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900' }}"
           onclick="$(this).next('div').slideToggle(200); $(this).find('.arrow').toggleClass('rotate-180')">
           <div class="flex items-center">
             <div class="w-8 flex justify-start items-center">

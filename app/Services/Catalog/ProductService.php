@@ -21,6 +21,7 @@ class ProductService
             $product->update([
                 'name' => $data['name'],
                 'category_id' => $data['category_id'],
+                'brand_id' => $data['brand_id'] ?? $product->brand_id,
                 'description' => $data['description'] ?? $product->description,
                 'is_active' => isset($data['is_active']),
             ]);
@@ -44,7 +45,7 @@ class ProductService
             if (!empty($data['prices'])) {
                 $currency = Currency::where('code', 'GBP')->first(); // Default base currency
                 // In a multi-currency system, this would be passed in or resolved from context
-                
+
                 foreach ($data['prices'] as $vid => $channelsData) {
                     foreach ($channelsData as $channelId => $priceVal) {
                         if (is_numeric($priceVal)) {

@@ -125,6 +125,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
                 Route::get('categories/{category}/attributes', [\App\Http\Controllers\Admin\Catalog\CategoryController::class, 'getAttributes'])
                     ->name('categories.attributes');
 
+                // Brands
+                Route::resource('brands', \App\Http\Controllers\Admin\Catalog\BrandController::class);
+
                 // Attributes
                 Route::resource('attributes', \App\Http\Controllers\Admin\Catalog\AttributeController::class)->except(['show', 'destroy']);
 
@@ -170,7 +173,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
                 // Route::get('roles/{role}/permissions', [RolePermissionController::class, 'edit'])
                 //     ->name('roles.permissions.edit');
-
+    
                 // Route::put('roles/{role}/permissions', [RolePermissionController::class, 'update'])
                 //     ->name('roles.permissions.update');
             });
@@ -191,7 +194,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             // Route::post('quotes/{quote}/accept', [\App\Http\Controllers\Admin\QuoteController::class, 'accept'])->name('quotes.accept');
             // Route::post('quotes/{quote}/cancel', [\App\Http\Controllers\Admin\QuoteController::class, 'cancel'])->name('quotes.cancel');
             // Route::post('quotes/{quote}/convert-to-order', [\App\Http\Controllers\Admin\QuoteController::class, 'convertToOrder'])->name('quotes.convertToOrder');
-
+    
             // Custom routes BEFORE resource to avoid conflicts
             Route::get('sales-orders/{sales_order}/print', [\App\Http\Controllers\Admin\Sales\SalesOrderController::class, 'printOrder'])->name('sales-orders.print');
             Route::post('sales-orders/{sales_order}/generate-invoice', [\App\Http\Controllers\Admin\Accounting\InvoiceController::class, 'storeFromOrder'])->name('sales-orders.generate-invoice');
@@ -204,8 +207,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('load-products', [\App\Http\Controllers\Admin\Sales\OrderController::class, 'loadProducts'])->name('load-products');
             Route::get('load-payment-terms', [\App\Http\Controllers\Admin\Sales\OrderController::class, 'loadPaymentTerms'])->name('load-payment-terms');
             Route::get('load-payment-methods', [\App\Http\Controllers\Admin\Sales\OrderController::class, 'loadPaymentMethods'])->name('load-payment-methods');
-            Route::get('customers/create', [\App\Http\Controllers\Admin\Sales\OrderController::class, 'createCustomer'])->name('customers.create');
-            Route::post('customers', [\App\Http\Controllers\Admin\Sales\OrderController::class, 'storeCustomer'])->name('customers.store');
+            // Route::get('customers/create', [\App\Http\Controllers\Admin\Sales\OrderController::class, 'createCustomer'])->name('customers.create');
+            // Route::post('customers', [\App\Http\Controllers\Admin\Sales\OrderController::class, 'storeCustomer'])->name('customers.store');
             Route::get('load-currencies', [\App\Http\Controllers\Admin\Sales\OrderController::class, 'loadCurrencies'])->name('load-currencies');
 
             /**
@@ -230,4 +233,4 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('{company}/invoice-preview/{orderid}', [\App\Http\Controllers\Admin\Sales\SalesOrderController::class, 'invoicePreview'])->whereUuid('company')->whereNumber('orderid')->name('invoice-preview');
 });
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';
