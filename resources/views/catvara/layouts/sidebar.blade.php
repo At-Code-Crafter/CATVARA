@@ -20,14 +20,19 @@
 
   <!-- Brand & Profile -->
   <div class="p-6 border-b border-slate-50">
-    <a href="{{ route('dashboard') }}" class="flex items-center mb-8">
-      <div
-        class="h-10 w-10 bg-brand-400 rounded-xl flex items-center justify-center text-white mr-3 shadow-lg shadow-brand-400/30 flex-shrink-0">
-        <i class="fas fa-rocket text-xl"></i>
-      </div>
-      <span
-        class="text-xl font-bold tracking-tight text-slate-800 logo-text">{{ setting('SITE_NAME', env('APP_NAME')) }}</span>
-    </a>
+    <div class="flex items-center justify-between mb-8">
+      <a href="{{ route('dashboard') }}" class="flex items-center">
+        <div
+          class="h-10 w-10 bg-brand-400 rounded-xl flex items-center justify-center text-white mr-3 shadow-lg shadow-brand-400/30 flex-shrink-0">
+          <i class="fas fa-rocket text-xl"></i>
+        </div>
+        <span
+          class="text-xl font-bold tracking-tight text-slate-800 logo-text">{{ setting('SITE_NAME', env('APP_NAME')) }}</span>
+      </a>
+      <button id="closeSidebar" class="lg:hidden text-slate-400 hover:text-rose-500 transition-colors">
+        <i class="fas fa-times fa-lg"></i>
+      </button>
+    </div>
 
     <!-- User Profile in Sidebar -->
     <div class="flex items-center p-3 bg-slate-50 rounded-2xl sidebar-text">

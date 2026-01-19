@@ -592,6 +592,9 @@
   </script>
 
   <div class="flex h-screen overflow-hidden">
+    <!-- Sidebar Overlay (Mobile) -->
+    <div id="sidebarOverlay" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-40 hidden lg:hidden"></div>
+
     <!-- Sidebar -->
     @include('catvara.layouts.sidebar')
 
@@ -603,7 +606,7 @@
         class="flex items-center justify-between px-8 py-4 bg-white/80 backdrop-blur-md sticky top-0 z-40 border-b border-slate-100">
         <div class="flex items-center gap-4">
           <!-- Mobile Toggle -->
-          <button class="text-slate-400 hover:text-slate-600 focus:outline-none lg:hidden" @click="sidebarOpen = true">
+          <button class="text-slate-400 hover:text-slate-600 focus:outline-none lg:hidden">
             <i class="fas fa-bars fa-lg"></i>
           </button>
 
@@ -761,12 +764,27 @@
 
       // Sidebar Mobile Toggle
       const sidebar = document.querySelector('#mainSidebar');
-      const mobileToggle = document.querySelector('header button.lg\\:hidden'); // Specifically targeted
-      if (mobileToggle) {
-        mobileToggle.addEventListener('click', () => {
-          sidebar.classList.toggle('-translate-x-full');
-        });
+      const mobileToggle = document.querySelector('header button.lg\\:hidden');
+      const overlay = document.querySelector('#sidebarOverlay');
+
+      function toggleMobileSidebar() {
+        sidebar.classList.toggle('-translate-x-full');
+        overlay.classList.toggle('hidden');
+        document.body.classList.toggle('overflow-hidden');
       }
+
+      if (mobileToggle) {
+        mobileToggle.addEventListener('click', toggleMobileSidebar);
+      }
+
+      if (overlay) {
+        overlay.addEventListener('click', toggleMobileSidebar);
+      }
+
+      // Handle close button inside sidebar if added
+      $(document).on('click', '#closeSidebar', function() {
+        toggleMobileSidebar();
+      });
 
       // Sidebar Desktop Collapse Logic
       const desktopToggle = document.getElementById('sidebarToggle');
