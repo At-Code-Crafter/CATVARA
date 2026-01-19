@@ -8,13 +8,14 @@ use App\Http\Requests\Admin\Settings\CompanyUpdateRequest;
 use App\Models\Company\Company;
 use App\Models\Company\CompanyDetail;
 use App\Models\Company\CompanyStatus;
+use App\Models\Company\DocumentSequence;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Yajra\DataTables\Facades\DataTables;
 
-class CompanyController extends Controller
+class TenantController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -48,10 +49,10 @@ class CompanyController extends Controller
 
                 ->editColumn('logo', function ($row) {
                     $src = $row->logo
-                        ? asset('storage/' . $row->logo)
+                        ? asset('storage/'.$row->logo)
                         : asset('theme/adminlte/dist/img/AdminLTELogo.png');
 
-                    return '<img src="' . e($src) . '" class="company-logo" alt="Logo">';
+                    return '<img src="'.e($src).'" class="company-logo" alt="Logo">';
                 })
 
                 ->editColumn('name', function ($row) {
@@ -64,7 +65,7 @@ class CompanyController extends Controller
 
                 ->editColumn('code', function ($row) {
                     return $row->code
-                        ? '<span class="badge badge-light border">' . e($row->code) . '</span>'
+                        ? '<span class="badge badge-light border">'.e($row->code).'</span>'
                         : '<span class="text-muted">—</span>';
                 })
 
@@ -73,26 +74,34 @@ class CompanyController extends Controller
                     $code = strtoupper($row->company_status_code ?? '');
 
                     $bg = 'bg-slate-100 text-slate-700 border-slate-200';
-                    if ($code === 'ACTIVE') $bg = 'bg-emerald-50 text-emerald-600 border-emerald-100';
-                    if ($code === 'SUSPENDED') $bg = 'bg-amber-50 text-amber-600 border-amber-100';
-                    if ($code === 'EXPIRED' || $code === 'CLOSED') $bg = 'bg-rose-50 text-rose-600 border-rose-100';
+                    if ($code === 'ACTIVE') {
+                        $bg = 'bg-emerald-50 text-emerald-600 border-emerald-100';
+                    }
+                    if ($code === 'SUSPENDED') {
+                        $bg = 'bg-amber-50 text-amber-600 border-amber-100';
+                    }
+                    if ($code === 'EXPIRED' || $code === 'CLOSED') {
+                        $bg = 'bg-rose-50 text-rose-600 border-rose-100';
+                    }
 
-                    return '<span class="px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border ' . $bg . '">' . e($name) . '</span>';
+                    return '<span class="px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border '.$bg.'">'.e($name).'</span>';
                 })
 
                 ->editColumn('website_url', function ($row) {
-                    if (!$row->website_url) return '<span class="text-slate-400">—</span>';
+                    if (! $row->website_url) {
+                        return '<span class="text-slate-400">—</span>';
+                    }
 
                     $url = $row->website_url;
                     $label = parse_url($url, PHP_URL_HOST) ?: $url;
 
-                    return '<a href="' . e($url) . '" target="_blank" class="text-accent hover:underline flex items-center">
-                              <i data-lucide="external-link" class="w-3 h-3 mr-1"></i>' . e($label) . '
+                    return '<a href="'.e($url).'" target="_blank" class="text-accent hover:underline flex items-center">
+                              <i data-lucide="external-link" class="w-3 h-3 mr-1"></i>'.e($label).'
                             </a>';
                 })
 
                 ->editColumn('users_count', function ($row) {
-                    return '<span class="inline-flex items-center text-slate-600 font-bold"><i data-lucide="users" class="w-3 h-3 mr-1 text-slate-400"></i>' . (int) $row->users_count . '</span>';
+                    return '<span class="inline-flex items-center text-slate-600 font-bold"><i data-lucide="users" class="w-3 h-3 mr-1 text-slate-400"></i>'.(int) $row->users_count.'</span>';
                 })
 
                 ->editColumn('created_at', function ($row) {
@@ -106,7 +115,7 @@ class CompanyController extends Controller
 
                     return '
                        <div class="flex items-center justify-end gap-2">
-                            <a href="' . $editUrl . '" class="text-slate-400 hover:text-brand-600 transition-colors p-1" title="Edit">
+                            <a href="'.$editUrl.'" class="text-slate-400 hover:text-brand-600 transition-colors p-1" title="Edit">
                                 <i class="fas fa-edit"></i>
                             </a>
                        </div>
@@ -121,12 +130,13 @@ class CompanyController extends Controller
                     'website_url',
                     'users_count',
                     'created_at',
-                    'action'
+                    'action',
                 ])
                 ->make(true);
         }
 
         $statuses = CompanyStatus::query()->orderBy('name')->get();
+
         return view('catvara.settings.companies.index', compact('statuses'));
     }
 
@@ -195,36 +205,49 @@ class CompanyController extends Controller
             CompanyDetail::updateOrCreate(
                 ['company_id' => $company->id],
                 [
-                    'invoice_prefix'  => $data['invoice_prefix'] ?? null,
-                    'invoice_postfix' => $data['invoice_postfix'] ?? null,
-                    'quote_prefix'    => $data['quote_prefix'] ?? null,
-                    'quote_postfix'   => $data['quote_postfix'] ?? null,
-                    'address'         => $data['address'] ?? null,
-                    'tax_number'      => $data['tax_number'] ?? null,
+                    'phone' => $data['phone'] ?? null,
+                    'email' => $data['email'] ?? null,
+                    'address' => $data['address'] ?? null,
+                    'tax_number' => $data['tax_number'] ?? null,
                 ]
             );
+
+            // 3. Update Sequences
+            if ($request->has('sequences')) {
+                foreach ($request->sequences as $type => $seqData) {
+                    DocumentSequence::updateOrCreate(
+                        [
+                            'company_id' => $company->id,
+                            'document_type' => strtoupper($type),
+                        ],
+                        [
+                            'prefix' => $seqData['prefix'] ?? '',
+                            'postfix' => $seqData['postfix'] ?? null,
+                        ]
+                    );
+                }
+            }
 
             DB::commit();
 
             if ($request->ajax()) {
                 return response()->json([
-                    'message'  => 'Company Created Successfully',
-                    'redirect' => route('companies.index'),
+                    'message' => 'Company Created Successfully',
+                    'redirect' => route('tenants.index'),
                 ]);
             }
 
             return redirect()
-                ->route('companies.index')
-                ->with('success', 'Company Created Successfully');
+                ->route('tenants.index')
+                ->with('success', 'Tenant Created Successfully');
         } catch (\Throwable $e) {
 
             DB::rollBack();
 
             // cleanup uploaded logo on failure
-            if (!empty($logoPath)) {
+            if (! empty($logoPath)) {
                 Storage::disk('public')->delete($logoPath);
             }
-
 
             if ($request->ajax()) {
                 return response()->json([
@@ -241,12 +264,14 @@ class CompanyController extends Controller
      */
     public function edit(string $id)
     {
-        $company = Company::with(['detail', 'baseCurrency', 'paymentTerms'])->findOrFail($id);
+        $company = Company::with(['detail', 'baseCurrency', 'priceChannels'])->findOrFail($id);
         $statuses = CompanyStatus::query()->orderBy('name')->get();
         $currencies = \App\Models\Pricing\Currency::where('is_active', true)->get();
-        $paymentTerms = \App\Models\Accounting\PaymentTerm::where('is_active', true)->get();
+        $priceChannels = \App\Models\Pricing\PriceChannel::where('is_active', true)->get();
 
-        return view('catvara.settings.companies.edit', compact('company', 'statuses', 'currencies', 'paymentTerms'));
+        $sequences = DocumentSequence::where('company_id', $company->id)->get()->keyBy('document_type');
+
+        return view('catvara.settings.companies.edit', compact('company', 'statuses', 'currencies', 'priceChannels', 'sequences'));
     }
 
     /**
@@ -266,7 +291,7 @@ class CompanyController extends Controller
             if ($request->hasFile('logo')) {
                 $newPath = $request->file('logo')->store('companies', 'public');
 
-                if (!empty($company->logo)) {
+                if (! empty($company->logo)) {
                     Storage::disk('public')->delete($company->logo);
                 }
 
@@ -281,42 +306,60 @@ class CompanyController extends Controller
                 'company_status_id' => $data['company_status_id'],
                 'logo' => $logoPath,
                 // Only update base currency if it's currently NULL
-                'base_currency_id' => is_null($company->base_currency_id) && isset($data['base_currency_id']) 
-                                        ? $data['base_currency_id'] 
+                'base_currency_id' => is_null($company->base_currency_id) && isset($data['base_currency_id'])
+                                        ? $data['base_currency_id']
                                         : $company->base_currency_id,
             ]);
 
             CompanyDetail::updateOrCreate(
                 ['company_id' => $company->id],
                 [
-                    'invoice_prefix'  => $data['invoice_prefix'] ?? null,
-                    'invoice_postfix' => $data['invoice_postfix'] ?? null,
-                    'quote_prefix'    => $data['quote_prefix'] ?? null,
-                    'quote_postfix'   => $data['quote_postfix'] ?? null,
-                    'address'         => $data['address'] ?? null,
-                    'tax_number'      => $data['tax_number'] ?? null,
+                    'phone' => $data['phone'] ?? null,
+                    'email' => $data['email'] ?? null,
+                    'address' => $data['address'] ?? null,
+                    'tax_number' => $data['tax_number'] ?? null,
                 ]
             );
 
-            // Sync Payment Terms
-            if (isset($data['payment_terms'])) {
-                // If we had a default term, we would pivot that here.
-                // For now just basic sync.
-                $company->paymentTerms()->sync($data['payment_terms']);
+            // 3. Update Sequences
+            if ($request->has('sequences')) {
+                foreach ($request->sequences as $type => $seqData) {
+                    DocumentSequence::updateOrCreate(
+                        [
+                            'company_id' => $company->id,
+                            'document_type' => strtoupper($type),
+                        ],
+                        [
+                            'prefix' => $seqData['prefix'] ?? '',
+                            'postfix' => $seqData['postfix'] ?? null,
+                        ]
+                    );
+                }
             }
+
+            // Sync Pricing Channels with Activity Logging
+            $oldChannels = $company->priceChannels->pluck('id')->toArray();
+            $newChannels = $data['price_channels'] ?? [];
+
+            // Sync the channels (all as active)
+            $syncData = [];
+            foreach ($newChannels as $channelId) {
+                $syncData[$channelId] = ['is_active' => true];
+            }
+            $company->priceChannels()->sync($syncData);
 
             DB::commit();
 
             if ($request->ajax()) {
                 return response()->json([
-                    'message'  => 'Company Updated Successfully',
+                    'message' => 'Company Updated Successfully',
                     'redirect' => route('tenants.index'),
                 ]);
             }
 
             return redirect()
                 ->route('tenants.index')
-                ->with('success', 'Company Updated Successfully');
+                ->with('success', 'Tenant Updated Successfully');
         } catch (\Throwable $e) {
 
             DB::rollBack();

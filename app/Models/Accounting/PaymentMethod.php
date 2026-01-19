@@ -27,6 +27,13 @@ class PaymentMethod extends Model
         'requires_reference' => 'boolean',
     ];
 
+    protected static function booted()
+    {
+        static::creating(function ($model) {
+            $model->uuid ??= (string) \Illuminate\Support\Str::uuid();
+        });
+    }
+
     /* ==========================
      | RELATIONSHIPS
      ========================== */
@@ -74,7 +81,7 @@ class PaymentMethod extends Model
      */
     public function getTypeLabelAttribute(): string
     {
-        return match($this->type) {
+        return match ($this->type) {
             'CASH' => 'Cash',
             'CARD' => 'Card',
             'GATEWAY' => 'Payment Gateway',

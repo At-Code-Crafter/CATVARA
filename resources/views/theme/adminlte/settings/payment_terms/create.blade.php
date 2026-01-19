@@ -6,7 +6,7 @@
       <h1 class="m-0">Create Payment Term</h1>
     </div>
     <div class="col-sm-6 d-flex justify-content-end">
-      <a href="{{ route('payment-terms.index') }}" class="btn btn-secondary">
+      <a href="{{ company_route('settings.payment-terms.index') }}" class="btn btn-secondary">
         <i class="fas fa-arrow-left mr-1"></i> Back
       </a>
     </div>
@@ -20,7 +20,7 @@
         <div class="card-header">
           <h3 class="card-title">New Payment Term</h3>
         </div>
-        <form action="{{ route('payment-terms.store') }}" method="POST">
+        <form action="{{ company_route('settings.payment-terms.store') }}" method="POST">
           @csrf
           <div class="card-body">
             @if ($errors->any())

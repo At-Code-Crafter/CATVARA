@@ -23,4 +23,10 @@ class PriceChannel extends Model
     {
         return $this->hasMany(VariantPrice::class, 'price_channel_id');
     }
+    public function companies()
+    {
+        return $this->belongsToMany(\App\Models\Company\Company::class, 'company_price_channels')
+            ->withPivot('is_active')
+            ->withTimestamps();
+    }
 }

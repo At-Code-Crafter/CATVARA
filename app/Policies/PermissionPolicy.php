@@ -7,14 +7,15 @@ use Illuminate\Auth\Access\HandlesAuthorization;
 
 /**
  * Generic Permission Policy for company-scoped permissions.
- * 
+ *
  * Usage in controllers:
  *   $this->authorize('view', 'warehouses');      // checks 'warehouses.view'
  *   $this->authorize('create', 'warehouses');    // checks 'warehouses.create'
  *   $this->authorize('edit', 'warehouses');      // checks 'warehouses.edit'
  *   $this->authorize('delete', 'warehouses');    // checks 'warehouses.delete'
- * 
+ *
  * Usage in Blade:
+ *
  *   @can('view', 'warehouses') ... @endcan
  *   @can('create', 'orders') ... @endcan
  */
@@ -31,6 +32,7 @@ class PermissionPolicy
         if ($user->isSuperAdmin()) {
             return true;
         }
+
         return null;
     }
 

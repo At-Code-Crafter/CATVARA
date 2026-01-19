@@ -1,6 +1,6 @@
 @extends('catvara.layouts.app')
 
-@section('title', 'Company Management')
+@section('title', 'Tenant Management')
 
 @section('content')
   <div class="space-y-8 animate-fade-in pb-12">

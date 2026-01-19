@@ -7,7 +7,7 @@
       <small class="text-muted">Manage payment terms.</small>
     </div>
     <div class="col-sm-6 d-flex justify-content-end">
-      <a href="{{ route('payment-terms.create') }}" class="btn btn-primary">
+      <a href="{{ company_route('settings.payment-terms.create') }}" class="btn btn-primary">
         <i class="fas fa-plus mr-1"></i> Create Payment Term
       </a>
     </div>
@@ -49,7 +49,7 @@
         serverSide: true,
         responsive: true,
         autoWidth: false,
-        ajax: "{{ route('payment-terms.index') }}",
+        ajax: "{{ company_route('settings.payment-terms.index') }}",
         columns: [{
             data: 'DT_RowIndex',
             name: 'DT_RowIndex',

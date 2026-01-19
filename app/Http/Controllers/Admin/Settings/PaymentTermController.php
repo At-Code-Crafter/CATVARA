@@ -6,64 +6,74 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Settings\StorePaymentTermRequest;
 use App\Http\Requests\Settings\UpdatePaymentTermRequest;
 use App\Models\Accounting\PaymentTerm;
+use App\Models\Company\Company;
 use Illuminate\Http\Request;
+use Yajra\DataTables\Facades\DataTables;
 
 class PaymentTermController extends Controller
 {
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $data = PaymentTerm::query();
+            $data = PaymentTerm::forCompany();
 
-            return \DataTables::of($data)
+            return DataTables::of($data)
                 ->addIndexColumn()
                 ->addColumn('action', function ($row) {
-                    $btn = '<a href="'.route('payment-terms.edit', $row->id).'" class="btn btn-primary btn-sm"><i class="fas fa-edit"></i></a>';
+                    $btn = '<a href="'.company_route('settings.payment-terms.edit', ['payment_term' => $row->id]).'" class="text-slate-400 hover:text-brand-600 transition-colors p-1" title="Edit"><i class="fas fa-edit"></i></a>';
 
-                    // Add delete button if needed, often handled via form or JS
-                    // $btn .= ' <button ... class="btn btn-danger btn-sm delete-btn" ...><i class="fas fa-trash"></i></button>';
                     return $btn;
                 })
                 ->editColumn('is_active', function ($row) {
                     return $row->is_active
-                        ? '<span class="badge badge-success">Active</span>'
-                        : '<span class="badge badge-danger">Inactive</span>';
+                        ? '<span class="px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-600 text-xs font-black uppercase tracking-wider border border-emerald-100">Active</span>'
+                        : '<span class="px-3 py-1.5 rounded-lg bg-slate-50 text-slate-600 text-xs font-black uppercase tracking-wider border border-slate-100">Inactive</span>';
                 })
                 ->rawColumns(['action', 'is_active'])
                 ->make(true);
         }
 
-        return view('theme.adminlte.settings.payment_terms.index');
+        return view('catvara.settings.payment-terms.index');
     }
 
     public function create()
     {
-        return view('theme.adminlte.settings.payment_terms.create');
+        return view('catvara.settings.payment-terms.form');
     }
 
     public function store(StorePaymentTermRequest $request)
     {
-        PaymentTerm::create($request->validated() + ['is_active' => $request->has('is_active')]);
+        PaymentTerm::create($request->validated() + [
+            'company_id' => active_company_id(),
+            'is_active' => $request->has('is_active'),
+        ]);
 
-        return redirect()->route('payment-terms.index')->with('success', 'Payment Term created successfully.');
+        return redirect()->route('settings.payment-terms.index', ['company' => active_company()->uuid])->with('success', 'Payment Term created successfully.');
     }
 
-    public function edit(PaymentTerm $payment_term)
+    public function edit(Company $company, $id)
     {
-        return view('theme.adminlte.settings.payment_terms.edit', compact('payment_term'));
+        $payment_term = PaymentTerm::where('company_id', $company->id)->findOrFail($id);
+
+        return view('catvara.settings.payment-terms.form', compact('payment_term'));
     }
 
-    public function update(UpdatePaymentTermRequest $request, PaymentTerm $payment_term)
+    public function update(UpdatePaymentTermRequest $request, Company $company, $id)
     {
-        $payment_term->update($request->validated() + ['is_active' => $request->has('is_active')]);
+        $payment_term = PaymentTerm::where('company_id', $company->id)->findOrFail($id);
+        $payment_term->update($request->validated() + [
+            'company_id' => $company->id,
+            'is_active' => $request->has('is_active'),
+        ]);
 
-        return redirect()->route('payment-terms.index')->with('success', 'Payment Term updated successfully.');
+        return redirect()->route('settings.payment-terms.index', ['company' => active_company()->uuid])->with('success', 'Payment Term updated successfully.');
     }
 
-    public function destroy(PaymentTerm $payment_term)
+    public function destroy(Company $company, $id)
     {
+        $payment_term = PaymentTerm::where('company_id', $company->id)->findOrFail($id);
         $payment_term->delete();
 
-        return redirect()->route('payment-terms.index')->with('success', 'Payment Term deleted successfully.');
+        return redirect()->route('settings.payment-terms.index', ['company' => active_company()->uuid])->with('success', 'Payment Term deleted successfully.');
     }
 }

@@ -43,7 +43,7 @@ return new class extends Migration
 
             $table->foreign('company_status_id')
                 ->references('id')
-                ->on(config('database.connections.mysql.prefix') . 'company_statuses');
+                ->on(config('database.connections.mysql.prefix').'company_statuses');
         });
 
         Schema::create('company_details', function (Blueprint $table) {
@@ -51,11 +51,8 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('company_id');
 
-            $table->string('invoice_prefix')->nullable();
-            $table->string('invoice_postfix')->nullable();
-
-            $table->string('quote_prefix')->nullable();
-            $table->string('quote_postfix')->nullable();
+            $table->string('phone')->nullable();
+            $table->string('email')->nullable();
 
             $table->text('address')->nullable();
             $table->string('tax_number')->nullable();
@@ -67,7 +64,7 @@ return new class extends Migration
 
             $table->foreign('company_id')
                 ->references('id')
-                ->on(config('database.connections.mysql.prefix') . 'companies')
+                ->on(config('database.connections.mysql.prefix').'companies')
                 ->cascadeOnDelete();
         });
 

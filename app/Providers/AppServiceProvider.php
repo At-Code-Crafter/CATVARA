@@ -4,7 +4,6 @@ namespace App\Providers;
 
 use App\Policies\PermissionPolicy;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -24,6 +23,16 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->registerRoutes();
         $this->registerPermissionPolicy();
+        $this->registerObservers();
+    }
+
+    /**
+     * Register model observers.
+     */
+    protected function registerObservers(): void
+    {
+        \App\Models\Pricing\CompanyPriceChannel::observe(\App\Observers\CompanyPriceChannelObserver::class);
+        \App\Models\Customer\Customer::observe(\App\Observers\CustomerObserver::class);
     }
 
     /**
@@ -50,7 +59,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy('string', PermissionPolicy::class);
 
         // Define gates for each action that delegate to PermissionPolicy
-        $policy = new PermissionPolicy();
+        $policy = new PermissionPolicy;
         $actions = ['view', 'create', 'edit', 'update', 'delete', 'access', 'adjust', 'transfer', 'cancel', 'assign', 'manage'];
 
         foreach ($actions as $action) {
@@ -60,6 +69,7 @@ class AppServiceProvider extends ServiceProvider
                 if ($before !== null) {
                     return $before;
                 }
+
                 return $policy->{$action}($user, $module);
             });
         }

@@ -240,7 +240,7 @@
           }
         },
         {
-          data: 'contact_info',
+          data: 'email',
           name: 'customers.email',
           className: 'py-4',
           orderable: false,

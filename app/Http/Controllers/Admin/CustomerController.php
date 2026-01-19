@@ -198,7 +198,6 @@ class CustomerController extends Controller
 
         try {
             $customer = Customer::create([
-                'uuid' => Str::uuid(),
                 'company_id' => $company->id,
                 'type' => $data['type'],
                 'display_name' => $data['display_name'],

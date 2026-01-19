@@ -3,7 +3,6 @@
 use App\Http\Controllers\Admin\CMS\TinyMCEController;
 use App\Http\Controllers\Admin\CompanyContextController;
 use App\Http\Controllers\Admin\DashboardController;
-use App\Http\Controllers\Admin\Settings\CompanyController;
 use App\Http\Controllers\Admin\Settings\CountryController;
 use App\Http\Controllers\Admin\Settings\CurrencyController;
 use App\Http\Controllers\Admin\Settings\ModuleController;
@@ -13,6 +12,7 @@ use App\Http\Controllers\Admin\Settings\PriceChannelController;
 use App\Http\Controllers\Admin\Settings\RoleController;
 use App\Http\Controllers\Admin\Settings\RolePermissionController;
 use App\Http\Controllers\Admin\Settings\StateController;
+use App\Http\Controllers\Admin\Settings\TenantController;
 use App\Http\Controllers\Admin\Settings\UserController;
 use App\Models\Company\Company;
 use App\Models\Sales\Order;
@@ -69,11 +69,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
      */
     Route::prefix('settings')->group(function () {
 
-        Route::resource('tenants', CompanyController::class)->except(['destroy']);
-        Route::get('tenants/load/stats', [CompanyController::class, 'stats'])->name('tenants.stats');
+        Route::resource('tenants', TenantController::class)->except(['destroy']);
+        Route::get('tenants/load/stats', [TenantController::class, 'stats'])->name('tenants.stats');
 
         Route::resource('currencies', CurrencyController::class);
-        Route::resource('payment-terms', PaymentTermController::class);
         Route::resource('price-channels', PriceChannelController::class);
 
         // Countries & States (Global Settings)
@@ -164,18 +163,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
                 // Variant Inventory Details
                 Route::get('variant/{product_variant}/details', [\App\Http\Controllers\Admin\Inventory\InventoryController::class, 'variantDetails'])->name('variant.details');
             });
-            /*
-             * Company-scoped Settings (Roles are company-wise)
-             */
             Route::prefix('settings')->as('settings.')->group(function () {
 
                 Route::resource('roles', RoleController::class)->except(['show', 'destroy']);
-
-                // Route::get('roles/{role}/permissions', [RolePermissionController::class, 'edit'])
-                //     ->name('roles.permissions.edit');
-    
-                // Route::put('roles/{role}/permissions', [RolePermissionController::class, 'update'])
-                //     ->name('roles.permissions.update');
+                Route::resource('payment-terms', PaymentTermController::class);
+                Route::resource('payment-methods', \App\Http\Controllers\Admin\Settings\PaymentMethodController::class);
+                Route::resource('users', \App\Http\Controllers\Admin\Company\CompanyUserController::class);
+                
+                Route::get('company-profile', [\App\Http\Controllers\Admin\Company\CompanyProfileController::class, 'edit'])->name('company-profile.edit');
+                Route::put('company-profile', [\App\Http\Controllers\Admin\Company\CompanyProfileController::class, 'update'])->name('company-profile.update');
             });
 
             /**
@@ -195,7 +191,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             // Route::post('quotes/{quote}/accept', [\App\Http\Controllers\Admin\QuoteController::class, 'accept'])->name('quotes.accept');
             // Route::post('quotes/{quote}/cancel', [\App\Http\Controllers\Admin\QuoteController::class, 'cancel'])->name('quotes.cancel');
             // Route::post('quotes/{quote}/convert-to-order', [\App\Http\Controllers\Admin\QuoteController::class, 'convertToOrder'])->name('quotes.convertToOrder');
-    
+
             // Custom routes BEFORE resource to avoid conflicts
             Route::get('sales-orders/{sales_order}/print', [\App\Http\Controllers\Admin\Sales\SalesOrderController::class, 'printOrder'])->name('sales-orders.print');
             Route::post('sales-orders/{sales_order}/generate-invoice', [\App\Http\Controllers\Admin\Accounting\InvoiceController::class, 'storeFromOrder'])->name('sales-orders.generate-invoice');
@@ -228,10 +224,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
                 Route::delete('payments/{payment}/attachment', [\App\Http\Controllers\Admin\Accounting\PaymentController::class, 'deleteAttachment'])->name('payments.deleteAttachment');
                 Route::resource('payments', \App\Http\Controllers\Admin\Accounting\PaymentController::class);
             });
+
+            /**
+             * Activity Logs
+             */
+            Route::get('activity-logs', [\App\Http\Controllers\Admin\ActivityLogController::class, 'index'])->name('activity-logs.index');
+            Route::get('activity-logs/{id}', [\App\Http\Controllers\Admin\ActivityLogController::class, 'show'])->name('activity-logs.show');
         });
 
     // Invoice preview - OUTSIDE company group to avoid model binding
     Route::get('{company}/invoice-preview/{orderid}', [\App\Http\Controllers\Admin\Sales\SalesOrderController::class, 'invoicePreview'])->whereUuid('company')->whereNumber('orderid')->name('invoice-preview');
 });
 
-require __DIR__ . '/auth.php';
+require __DIR__.'/auth.php';

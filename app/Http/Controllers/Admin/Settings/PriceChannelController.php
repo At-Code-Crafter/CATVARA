@@ -23,14 +23,15 @@ class PriceChannelController extends Controller
                 ->addIndexColumn()
                 ->addColumn('status_badge', function ($row) {
                     return $row->is_active
-                        ? '<span class="badge badge-success">Active</span>'
-                        : '<span class="badge badge-secondary">Inactive</span>';
+                        ? '<span class="px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-600 text-xs font-black uppercase tracking-wider border border-emerald-100">Active</span>'
+                        : '<span class="px-3 py-1.5 rounded-lg bg-slate-50 text-slate-600 text-xs font-black uppercase tracking-wider border border-slate-100">Inactive</span>';
                 })
                 ->addColumn('actions', function ($row) {
                     $editUrl = route('price-channels.edit', $row->id);
+
                     return '
-                        <a href="' . $editUrl . '" class="btn btn-xs btn-primary">
-                            <i class="fas fa-edit"></i> Edit
+                        <a href="'.$editUrl.'" class="text-slate-400 hover:text-brand-600 transition-colors p-1" title="Edit">
+                            <i class="fas fa-edit"></i>
                         </a>
                     ';
                 })
@@ -38,7 +39,7 @@ class PriceChannelController extends Controller
                 ->make(true);
         }
 
-        return view('theme.adminlte.settings.price-channels.index');
+        return view('catvara.settings.price-channels.index');
     }
 
     /**
@@ -48,7 +49,7 @@ class PriceChannelController extends Controller
     {
         $this->authorize('create', 'price-channels');
 
-        return view('theme.adminlte.settings.price-channels.form');
+        return view('catvara.settings.price-channels.form');
     }
 
     /**
@@ -81,7 +82,7 @@ class PriceChannelController extends Controller
     {
         $this->authorize('edit', 'price-channels');
 
-        return view('theme.adminlte.settings.price-channels.form', [
+        return view('catvara.settings.price-channels.form', [
             'priceChannel' => $priceChannel,
         ]);
     }
@@ -94,7 +95,7 @@ class PriceChannelController extends Controller
         $this->authorize('edit', 'price-channels');
 
         $validated = $request->validate([
-            'code' => 'required|string|max:50|alpha_dash:ascii|unique:price_channels,code,' . $priceChannel->id,
+            'code' => 'required|string|max:50|alpha_dash:ascii|unique:price_channels,code,'.$priceChannel->id,
             'name' => 'required|string|max:255',
             'is_active' => 'boolean',
         ]);

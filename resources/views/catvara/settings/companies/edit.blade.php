@@ -46,7 +46,7 @@
                 <label class="text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-1">Company Display Name
                   <span class="text-rose-500">*</span></label>
                 <div class="input-icon-group">
-                  <i class="fas fa-signature"></i>
+                  <i class="fas fa-signature text-xs"></i>
                   <input type="text" name="name" value="{{ old('name', $company->name) }}" required
                     class="w-full py-2.5 font-semibold" placeholder="e.g. Acme Corporation">
                 </div>
@@ -59,7 +59,7 @@
                 <label class="text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-1">Legal Registered Name
                   <span class="text-rose-500">*</span></label>
                 <div class="input-icon-group">
-                  <i class="fas fa-landmark"></i>
+                  <i class="fas fa-landmark text-xs"></i>
                   <input type="text" name="legal_name" value="{{ old('legal_name', $company->legal_name) }}" required
                     class="w-full py-2.5 font-semibold" placeholder="e.g. Acme Corp LLC">
                 </div>
@@ -72,7 +72,7 @@
                 <label class="text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-1">Internal Code <span
                     class="text-rose-500">*</span></label>
                 <div class="input-icon-group">
-                  <i class="fas fa-fingerprint"></i>
+                  <i class="fas fa-fingerprint text-xs"></i>
                   <input type="text" name="code" value="{{ old('code', $company->code) }}" required
                     class="w-full py-2.5 font-semibold uppercase" placeholder="e.g. ACME-01">
                 </div>
@@ -97,7 +97,7 @@
                 <label class="text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-1">Official
                   Website</label>
                 <div class="input-icon-group">
-                  <i class="fas fa-globe"></i>
+                  <i class="fas fa-globe text-xs"></i>
                   <input type="url" name="website_url" value="{{ old('website_url', $company->website_url) }}"
                     class="w-full py-2.5 font-semibold" placeholder="https://www.acme.com">
                 </div>
@@ -112,7 +112,7 @@
               <div class="absolute top-0 left-0 w-1 h-full bg-indigo-400"></div>
               <div class="flex items-center gap-4 mb-8">
                 <div class="h-10 w-10 rounded-xl bg-indigo-50 text-indigo-500 flex items-center justify-center shadow-sm">
-                  <i class="fas fa-file-invoice"></i>
+                  <i class="fas fa-list-ol"></i>
                 </div>
                 <div>
                   <h3 class="text-lg font-black text-slate-800 tracking-tight">Sequencing</h3>
@@ -121,32 +121,42 @@
               </div>
 
               <div class="space-y-6">
-                <div class="space-y-3">
-                  <p
-                    class="text-[10px] font-black text-slate-400 uppercase tracking-widest border-l-2 border-brand-400 pl-2">
-                    Sales Invoices</p>
-                  <div class="grid grid-cols-2 gap-3">
-                    <input type="text" name="invoice_prefix"
-                      value="{{ old('invoice_prefix', $company->detail?->invoice_prefix) }}"
-                      class="py-2 bg-slate-50 border-slate-200 text-xs font-bold uppercase" placeholder="Prefix">
-                    <input type="text" name="invoice_postfix"
-                      value="{{ old('invoice_postfix', $company->detail?->invoice_postfix) }}"
-                      class="py-2 bg-slate-50 border-slate-200 text-xs font-bold uppercase" placeholder="Suffix">
+                @php
+                  $docTypes = [
+                      'invoice' => 'Invoice',
+                      'quote' => 'Quote',
+                      'order' => 'Sales Order',
+                      'credit_note' => 'Credit Note',
+                      'payment' => 'Payment',
+                      'customer' => 'Customer',
+                  ];
+                @endphp
+
+                @foreach ($docTypes as $key => $label)
+                  <div class="group">
+                    <label
+                      class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">{{ $label }}
+                      Configuration</label>
+                    <div class="grid grid-cols-2 gap-3">
+                      <div class="space-y-1">
+                        <div class="input-icon-group">
+                          <i class="fas fa-indent text-xs text-slate-300"></i>
+                          <input type="text" name="sequences[{{ $key }}][prefix]"
+                            value="{{ old("sequences.$key.prefix", $sequences[strtoupper($key)]->prefix ?? '') }}"
+                            class="w-full py-2 font-semibold text-xs" placeholder="Prefix">
+                        </div>
+                      </div>
+                      <div class="space-y-1">
+                        <div class="input-icon-group">
+                          <i class="fas fa-outdent text-xs text-slate-300"></i>
+                          <input type="text" name="sequences[{{ $key }}][postfix]"
+                            value="{{ old("sequences.$key.postfix", $sequences[strtoupper($key)]->postfix ?? '') }}"
+                            class="w-full py-2 font-semibold text-xs" placeholder="Postfix">
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                </div>
-                <div class="space-y-3">
-                  <p
-                    class="text-[10px] font-black text-slate-400 uppercase tracking-widest border-l-2 border-indigo-400 pl-2">
-                    Quotations</p>
-                  <div class="grid grid-cols-2 gap-3">
-                    <input type="text" name="quote_prefix"
-                      value="{{ old('quote_prefix', $company->detail?->quote_prefix) }}"
-                      class="py-2 bg-slate-50 border-slate-200 text-xs font-bold uppercase" placeholder="Prefix">
-                    <input type="text" name="quote_postfix"
-                      value="{{ old('quote_postfix', $company->detail?->quote_postfix) }}"
-                      class="py-2 bg-slate-50 border-slate-200 text-xs font-bold uppercase" placeholder="Suffix">
-                  </div>
-                </div>
+                @endforeach
               </div>
             </div>
 
@@ -192,7 +202,7 @@
                   <label class="text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-1">Tax Registration
                     (TRN)</label>
                   <div class="input-icon-group">
-                    <i class="fas fa-percent"></i>
+                    <i class="fas fa-percent text-xs"></i>
                     <input type="text" name="tax_number"
                       value="{{ old('tax_number', $company->detail?->tax_number) }}"
                       class="w-full py-2.5 font-semibold placeholder:font-normal" placeholder="e.g. 100-XXX-XXX">
@@ -214,31 +224,56 @@
                 <p class="text-xs text-slate-400 font-bold uppercase tracking-widest">Office Hub Details</p>
               </div>
             </div>
-            <textarea name="address" rows="3" class="w-full py-2.5 font-semibold bg-slate-50 border-slate-200 mt-4"
-              placeholder="Full physical headquarters address">{{ old('address', $company->detail?->address) }}</textarea>
+            <div class="space-y-6">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+                <div class="space-y-1.5">
+                  <label class="text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-1">Business
+                    Phone</label>
+                  <div class="input-icon-group">
+                    <i class="fas fa-phone text-xs"></i>
+                    <input type="text" name="phone" value="{{ old('phone', $company->detail?->phone) }}"
+                      class="w-full py-2.5 font-semibold" placeholder="e.g. +1 234 567 890">
+                  </div>
+                </div>
+                <div class="space-y-1.5">
+                  <label class="text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-1">Business
+                    Email</label>
+                  <div class="input-icon-group">
+                    <i class="fas fa-envelope text-xs"></i>
+                    <input type="email" name="email" value="{{ old('email', $company->detail?->email) }}"
+                      class="w-full py-2.5 font-semibold" placeholder="e.g. contact@company.com">
+                  </div>
+                </div>
+              </div>
+              <div class="space-y-1.5">
+                <label class="text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-1">Headquarters
+                  Address</label>
+                <textarea name="address" rows="3" class="w-full py-2.5 font-semibold bg-slate-50 border-slate-200"
+                  placeholder="Full physical headquarters address">{{ old('address', $company->detail?->address) }}</textarea>
+              </div>
+            </div>
           </div>
-
-          {{-- Section 4: Payment Terms --}}
+          {{-- Section 5: Pricing Channels --}}
           <div class="card p-8 bg-white border-slate-100 shadow-soft relative overflow-hidden group">
-            <div class="absolute top-0 left-0 w-1 h-full bg-amber-400"></div>
+            <div class="absolute top-0 left-0 w-1 h-full bg-purple-400"></div>
             <div class="flex items-center gap-4 mb-8">
-              <div class="h-10 w-10 rounded-xl bg-amber-50 text-amber-500 flex items-center justify-center shadow-sm">
-                <i class="fas fa-calendar-alt"></i>
+              <div class="h-10 w-10 rounded-xl bg-purple-50 text-purple-500 flex items-center justify-center shadow-sm">
+                <i class="fas fa-tags"></i>
               </div>
               <div>
-                <h3 class="text-lg font-black text-slate-800 tracking-tight">Payment Terms</h3>
-                <p class="text-xs text-slate-400 font-bold uppercase tracking-widest">Credit & Settlements</p>
+                <h3 class="text-lg font-black text-slate-800 tracking-tight">Pricing Channels</h3>
+                <p class="text-xs text-slate-400 font-bold uppercase tracking-widest">Sales Channel Access</p>
               </div>
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              @foreach ($paymentTerms as $term)
+              @foreach ($priceChannels as $channel)
                 <label
-                  class="flex items-center gap-3 p-4 rounded-xl border border-slate-100 hover:bg-slate-50 transition-colors cursor-pointer group/term ring-4 ring-transparent hover:ring-slate-50">
+                  class="flex items-center gap-3 p-4 rounded-xl border border-slate-100 hover:bg-slate-50 transition-colors cursor-pointer group/channel ring-4 ring-transparent hover:ring-slate-50">
                   <div class="relative flex items-center">
-                    <input type="checkbox" name="payment_terms[]" value="{{ $term->id }}"
-                      class="peer h-5 w-5 cursor-pointer appearance-none rounded-md border border-slate-300 transition-all checked:bg-brand-500 checked:border-brand-500"
-                      {{ (is_array(old('payment_terms')) && in_array($term->id, old('payment_terms'))) || $company->paymentTerms->contains($term->id) ? 'checked' : '' }}>
+                    <input type="checkbox" name="price_channels[]" value="{{ $channel->id }}"
+                      class="peer h-5 w-5 cursor-pointer appearance-none rounded-md border border-slate-300 transition-all checked:bg-purple-500 checked:border-purple-500"
+                      {{ (is_array(old('price_channels')) && in_array($channel->id, old('price_channels'))) || $company->priceChannels->contains($channel->id) ? 'checked' : '' }}>
                     <span
                       class="absolute text-white opacity-0 peer-checked:opacity-100 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none">
                       <i class="fas fa-check text-[10px]"></i>
@@ -246,9 +281,9 @@
                   </div>
                   <div class="flex flex-col">
                     <span
-                      class="text-xs font-black text-slate-700 group-hover/term:text-brand-600 uppercase tracking-tight">{{ $term->name }}</span>
+                      class="text-xs font-black text-slate-700 group-hover/channel:text-purple-600 uppercase tracking-tight">{{ $channel->name }}</span>
                     <span
-                      class="text-[9px] text-slate-400 font-bold uppercase tracking-widest">{{ $term->code }}</span>
+                      class="text-[9px] text-slate-400 font-bold uppercase tracking-widest">{{ $channel->code }}</span>
                   </div>
                 </label>
               @endforeach

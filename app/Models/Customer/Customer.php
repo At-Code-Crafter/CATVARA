@@ -23,6 +23,7 @@ class Customer extends Model
         'legal_name',
         'tax_number',
         'notes',
+        'customer_code',
         'is_active',
         'payment_term_id',
         'percentage_discount',
@@ -58,7 +59,7 @@ class Customer extends Model
     {
         return collect(preg_split('/\s+/', trim((string) $this->display_name)))
             ->filter()
-            ->map(fn($p) => mb_substr($p, 0, 1))
+            ->map(fn ($p) => mb_substr($p, 0, 1))
             ->take(2)
             ->implode('');
     }
@@ -66,5 +67,14 @@ class Customer extends Model
     public function orders()
     {
         return $this->hasMany(\App\Models\Sales\Order::class);
+    }
+
+    public function generateCustomerCode()
+    {
+        return \App\Models\Company\DocumentSequence::getNextCode(
+            $this->company_id,
+            'CUSTOMER',
+            'C'
+        );
     }
 }

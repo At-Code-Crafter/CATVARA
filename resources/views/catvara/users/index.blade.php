@@ -32,6 +32,15 @@
       <div class="p-6 filter-card-content">
         <div class="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 gap-6">
           <div class="space-y-1.5">
+            <label class="text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-1">Company</label>
+            <select id="filterCompany" class="w-full">
+              <option value="">All Companies</option>
+              @foreach ($companies as $company)
+                <option value="{{ $company->id }}">{{ $company->name }} ({{ $company->code }})</option>
+              @endforeach
+            </select>
+          </div>
+          <div class="space-y-1.5">
             <label class="text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-1">User Type</label>
             <select id="filterType" class="w-full">
               <option value="">All Types</option>
@@ -92,6 +101,7 @@
           data: function(d) {
             d.is_active = $('#filterActive').val();
             d.user_type = $('#filterType').val();
+            d.company_id = $('#filterCompany').val();
           }
         },
         columns: [{
@@ -167,7 +177,7 @@
 
       $('#btnApply').on('click', () => table.ajax.reload());
       $('#btnClear').on('click', () => {
-        $('#filterActive, #filterType').val('').trigger('change');
+        $('#filterActive, #filterType, #filterCompany').val('').trigger('change');
         table.ajax.reload();
       });
     });

@@ -3,12 +3,12 @@
 namespace App\Http\Controllers\Admin\Settings;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\Settings\UserAssignCompanyRequest;
 use App\Http\Requests\Admin\Settings\UserStoreRequest;
 use App\Http\Requests\Admin\Settings\UserUpdateRequest;
-use App\Http\Requests\Admin\Settings\UserAssignCompanyRequest;
-use App\Models\User;
-use App\Models\Company\Company;
 use App\Models\Auth\Role;
+use App\Models\Company\Company;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -37,20 +37,28 @@ class UserController extends Controller
                 $query->where('user_type', $request->user_type);
             }
 
+            // Filter: Company
+            if ($request->filled('company_id')) {
+                $query->whereHas('companies', function ($q) use ($request) {
+                    $q->where('companies.id', $request->company_id);
+                });
+            }
+
             return DataTables::of($query)
                 ->addIndexColumn()
 
                 ->addColumn('photo', function ($row) {
                     $src = $row->profile_photo
-                        ? asset('storage/' . $row->profile_photo)
+                        ? asset('storage/'.$row->profile_photo)
                         : asset('theme/adminlte/dist/img/user2-160x160.jpg');
 
-                    return '<img src="' . e($src) . '" class="img-circle elevation-2 border" style="width:40px;height:40px;object-fit:cover;">';
+                    return '<img src="'.e($src).'" class="img-circle elevation-2 border" style="width:40px;height:40px;object-fit:cover;">';
                 })
 
                 ->editColumn('user_type', function ($row) {
                     $badge = ($row->user_type === 'SUPER_ADMIN') ? 'badge-dark' : 'badge-secondary';
-                    return '<span class="badge ' . $badge . ' text-uppercase px-2 py-1" style="letter-spacing:.4px;">' . e($row->user_type) . '</span>';
+
+                    return '<span class="badge '.$badge.' text-uppercase px-2 py-1" style="letter-spacing:.4px;">'.e($row->user_type).'</span>';
                 })
 
                 ->editColumn('is_active', function ($row) {
@@ -60,10 +68,11 @@ class UserController extends Controller
                 })
 
                 ->editColumn('last_login_at', function ($row) {
-                    if (!$row->last_login_at) {
+                    if (! $row->last_login_at) {
                         return '<span class="text-muted">—</span>';
                     }
-                    return '<span class="small text-muted font-weight-bold">' . e(\Carbon\Carbon::parse($row->last_login_at)->format('d M, Y h:i A')) . '</span>';
+
+                    return '<span class="small text-muted font-weight-bold">'.e(\Carbon\Carbon::parse($row->last_login_at)->format('d M, Y h:i A')).'</span>';
                 })
 
                 ->addColumn('action', function ($row) {
@@ -72,10 +81,10 @@ class UserController extends Controller
 
                     return '
                     <div class="flex items-center justify-end gap-2">
-                        <a href="' . $viewUrl . '" class="text-slate-400 hover:text-brand-600 transition-colors p-1" title="View Profile">
+                        <a href="'.$viewUrl.'" class="text-slate-400 hover:text-brand-600 transition-colors p-1" title="View Profile">
                             <i class="fas fa-eye"></i>
                         </a>
-                        <a href="' . $editUrl . '" class="text-slate-400 hover:text-brand-600 transition-colors p-1" title="Edit">
+                        <a href="'.$editUrl.'" class="text-slate-400 hover:text-brand-600 transition-colors p-1" title="Edit">
                             <i class="fas fa-edit"></i>
                         </a>
                     </div>';
@@ -84,7 +93,10 @@ class UserController extends Controller
                 ->rawColumns(['photo', 'user_type', 'is_active', 'last_login_at', 'action'])
                 ->make(true);
         }
-        return view('catvara.users.index');
+
+        $companies = Company::orderBy('name')->get(['id', 'name', 'code']);
+
+        return view('catvara.users.index', compact('companies'));
     }
 
     public function create()
@@ -123,7 +135,7 @@ class UserController extends Controller
 
             if ($request->ajax()) {
                 return response()->json([
-                    'message'  => __('crud.created', ['name' => 'User']),
+                    'message' => __('crud.created', ['name' => 'User']),
                     'redirect' => route('users.index'),
                 ]);
             }
@@ -132,7 +144,7 @@ class UserController extends Controller
         } catch (\Throwable $e) {
             DB::rollBack();
 
-            if (!empty($photoPath)) {
+            if (! empty($photoPath)) {
                 Storage::disk('public')->delete($photoPath);
             }
 
@@ -173,6 +185,7 @@ class UserController extends Controller
         $this->authorize('edit', 'users');
 
         $user = User::findOrFail($id);
+
         return view('catvara.users.edit', compact('user'));
     }
 
@@ -191,7 +204,7 @@ class UserController extends Controller
             if ($request->hasFile('profile_photo')) {
                 $newPath = $request->file('profile_photo')->store('users', 'public');
 
-                if (!empty($user->profile_photo)) {
+                if (! empty($user->profile_photo)) {
                     Storage::disk('public')->delete($user->profile_photo);
                 }
 
@@ -206,7 +219,7 @@ class UserController extends Controller
                 'profile_photo' => $photoPath,
             ];
 
-            if (!empty($data['password'])) {
+            if (! empty($data['password'])) {
                 $payload['password'] = Hash::make($data['password']);
             }
 
@@ -216,7 +229,7 @@ class UserController extends Controller
 
             if ($request->ajax()) {
                 return response()->json([
-                    'message'  => __('crud.updated', ['name' => 'User']),
+                    'message' => __('crud.updated', ['name' => 'User']),
                     'redirect' => route('users.index'),
                 ]);
             }
@@ -267,7 +280,7 @@ class UserController extends Controller
                     'is_owner' => (bool) ($data['is_owner'] ?? false),
                     'is_active' => (bool) ($data['is_active'] ?? false),
                     'updated_at' => now(),
-                ]
+                ],
             ]);
 
             // Sync the roles (Company User Role)
@@ -276,7 +289,7 @@ class UserController extends Controller
                 ->where('user_id', $user->id)
                 ->delete();
 
-            if (!empty($data['role_ids'])) {
+            if (! empty($data['role_ids'])) {
                 foreach ($data['role_ids'] as $roleId) {
                     DB::table('company_user_role')->insert([
                         'company_id' => $data['company_id'],
@@ -293,16 +306,19 @@ class UserController extends Controller
             $user->forgetCompanyPermissionsCache((int) $data['company_id']);
 
             $msg = "Access permissions for {$user->name} updated successfully.";
+
             return $request->ajax()
                 ? response()->json(['message' => $msg, 'redirect' => route('users.show', $user->id)])
                 : redirect()->route('users.show', $user->id)->with('success', $msg);
         } catch (\Throwable $e) {
             DB::rollBack();
+
             return $request->ajax()
-                ? response()->json(['message' => 'Failed to update access: ' . $e->getMessage()], 500)
+                ? response()->json(['message' => 'Failed to update access: '.$e->getMessage()], 500)
                 : back()->withErrors(['error' => $e->getMessage()]);
         }
     }
+
     public function removeCompany(Request $request, User $user)
     {
         $request->validate([
@@ -325,10 +341,9 @@ class UserController extends Controller
 
             $user->forgetCompanyPermissionsCache((int) $request->company_id);
 
-
             if ($request->ajax()) {
                 return response()->json([
-                    'message'  => __('crud.updated', ['name' => 'User Company Access']),
+                    'message' => __('crud.updated', ['name' => 'User Company Access']),
                     'redirect' => route('users.show', $user->id),
                 ]);
             }

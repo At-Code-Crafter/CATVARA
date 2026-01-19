@@ -2,6 +2,7 @@
 
 namespace App\Models\Company;
 
+use App\Models\Accounting\PaymentTerm;
 use App\Models\Auth\Role;
 use App\Models\Common\Address;
 use App\Models\User;
@@ -57,15 +58,22 @@ class Company extends Model
 
     public function paymentTerms()
     {
-        return $this->belongsToMany(
-            \App\Models\Accounting\PaymentTerm::class,
-            'company_payment_terms'
-        )->withPivot('is_default')->withTimestamps();
+        return $this->hasMany(PaymentTerm::class);
     }
 
     // Company Has one Address
     public function address()
     {
         return $this->morphOne(Address::class, 'addressable');
+    }
+
+    public function priceChannels()
+    {
+        return $this->belongsToMany(
+            \App\Models\Pricing\PriceChannel::class,
+            'company_price_channels'
+        )->using(\App\Models\Pricing\CompanyPriceChannel::class)
+         ->withPivot('is_active')
+         ->withTimestamps();
     }
 }

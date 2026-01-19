@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('customers', function (Blueprint $table) {
             $table->id();
             $table->uuid('uuid')->unique();
+            $table->string('customer_code')->unique();
 
             $table->unsignedBigInteger('company_id');
             $table->unsignedBigInteger('payment_term_id')->nullable();
@@ -36,11 +37,11 @@ return new class extends Migration
             $table->softDeletes();
 
             $table->index(['company_id', 'type'], 'cust_company_type_idx');
+            $table->unique(['company_id', 'customer_code'], 'cust_company_customer_code_unique');
             $table->unique(['company_id', 'email'], 'cust_company_email_unique');
             $table->unique(['company_id', 'phone'], 'cust_company_phone_unique');
         });
 
-    
         /**
          * FOREIGN KEYS (SHORT NAMES)
          */
@@ -54,13 +55,11 @@ return new class extends Migration
                 ->nullOnDelete();
         });
 
-       
-
         /**
          * POS ORDERS → CUSTOMER (OPTIONAL)
          */
         Schema::table('pos_orders', function (Blueprint $table) {
-            if (!Schema::hasColumn('pos_orders', 'customer_id')) {
+            if (! Schema::hasColumn('pos_orders', 'customer_id')) {
                 $table->unsignedBigInteger('customer_id')->nullable()->after('user_id');
             }
 
@@ -79,7 +78,6 @@ return new class extends Migration
                 $table->dropColumn('customer_id');
             }
         });
-
 
         Schema::table('customers', function (Blueprint $table) {
             $table->dropForeign('cust_company_fk');

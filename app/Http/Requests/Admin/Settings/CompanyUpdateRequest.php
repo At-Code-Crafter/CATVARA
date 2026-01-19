@@ -38,13 +38,15 @@ class CompanyUpdateRequest extends FormRequest
             'company_status_id' => ['required', 'integer', 'exists:company_statuses,id'],
             'logo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
 
-            // company_details (nullable)
-            'invoice_prefix' => ['nullable', 'string', 'max:20'],
-            'invoice_postfix' => ['nullable', 'string', 'max:20'],
-            'quote_prefix' => ['nullable', 'string', 'max:20'],
-            'quote_postfix' => ['nullable', 'string', 'max:20'],
+            'phone' => ['nullable', 'string', 'max:20'],
+            'email' => ['nullable', 'email', 'max:255'],
             'address' => ['nullable', 'string', 'max:2000'],
             'tax_number' => ['nullable', 'string', 'max:100'],
+
+            // sequences
+            'sequences' => ['nullable', 'array'],
+            'sequences.*.prefix' => ['nullable', 'string', 'max:20'],
+            'sequences.*.postfix' => ['nullable', 'string', 'max:20'],
 
             // Base Currency (only editable if not set - handled in controller but valid here)
             'base_currency_id' => ['nullable', 'exists:currencies,id'],

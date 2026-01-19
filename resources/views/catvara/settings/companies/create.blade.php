@@ -44,7 +44,7 @@
                 <label class="text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-1">Company Display Name
                   <span class="text-rose-500">*</span></label>
                 <div class="input-icon-group">
-                  <i class="fas fa-signature"></i>
+                  <i class="fas fa-signature text-xs"></i>
                   <input type="text" name="name" value="{{ old('name') }}" required
                     class="w-full py-2.5 font-semibold placeholder:font-normal" placeholder="e.g. Acme Corporation">
                 </div>
@@ -58,7 +58,7 @@
                 <label class="text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-1">Legal Registered Name
                   <span class="text-rose-500">*</span></label>
                 <div class="input-icon-group">
-                  <i class="fas fa-landmark"></i>
+                  <i class="fas fa-landmark text-xs"></i>
                   <input type="text" name="legal_name" value="{{ old('legal_name') }}" required
                     class="w-full py-2.5 font-semibold placeholder:font-normal" placeholder="e.g. Acme Corp LLC">
                 </div>
@@ -102,7 +102,7 @@
                 <label class="text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-1">Official
                   Website</label>
                 <div class="input-icon-group">
-                  <i class="fas fa-globe"></i>
+                  <i class="fas fa-globe text-xs"></i>
                   <input type="url" name="website_url" value="{{ old('website_url') }}"
                     class="w-full py-2.5 font-semibold placeholder:font-normal" placeholder="https://www.acme.com">
                 </div>
@@ -126,45 +126,43 @@
               </div>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
-              {{-- Invoice Group --}}
-              <div class="space-y-4 pt-2">
-                <p class="text-[10px] font-black text-brand-400 uppercase tracking-widest flex items-center gap-2">
-                  <span class="w-1.5 h-1.5 rounded-full bg-brand-400"></span> Sales Invoices
-                </p>
-                <div class="grid grid-cols-2 gap-4">
-                  <div class="space-y-1.5">
-                    <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Prefix</label>
-                    <input type="text" name="invoice_prefix" value="{{ old('invoice_prefix', 'INV') }}"
-                      class="w-full py-2 bg-slate-50 border-slate-200 text-xs font-bold uppercase placeholder:font-normal"
-                      placeholder="INV">
-                  </div>
-                  <div class="space-y-1.5">
-                    <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Suffix</label>
-                    <input type="text" name="invoice_postfix" value="{{ old('invoice_postfix') }}"
-                      class="w-full py-2 bg-slate-50 border-slate-200 text-xs font-bold uppercase" placeholder="2025">
-                  </div>
-                </div>
-              </div>
+            <div class="space-y-6">
+              @php
+                $docTypes = [
+                    'invoice' => 'Invoice',
+                    'quote' => 'Quote',
+                    'order' => 'Sales Order',
+                    'credit_note' => 'Credit Note',
+                    'payment' => 'Payment',
+                    'customer' => 'Customer',
+                ];
+              @endphp
 
-              {{-- Quotes Group --}}
-              <div class="space-y-4 pt-2">
-                <p class="text-[10px] font-black text-indigo-400 uppercase tracking-widest flex items-center gap-2">
-                  <span class="w-1.5 h-1.5 rounded-full bg-indigo-400"></span> Quotations
-                </p>
-                <div class="grid grid-cols-2 gap-4">
-                  <div class="space-y-1.5">
-                    <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Prefix</label>
-                    <input type="text" name="quote_prefix" value="{{ old('quote_prefix', 'QT') }}"
-                      class="w-full py-2 bg-slate-50 border-slate-200 text-xs font-bold uppercase" placeholder="QT">
-                  </div>
-                  <div class="space-y-1.5">
-                    <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Suffix</label>
-                    <input type="text" name="quote_postfix" value="{{ old('quote_postfix') }}"
-                      class="w-full py-2 bg-slate-50 border-slate-200 text-xs font-bold uppercase" placeholder="2025">
+              @foreach ($docTypes as $key => $label)
+                <div class="group">
+                  <label
+                    class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">{{ $label }}
+                    Configuration</label>
+                  <div class="grid grid-cols-2 gap-3">
+                    <div class="space-y-1">
+                      <div class="input-icon-group">
+                        <i class="fas fa-indent text-xs text-slate-300"></i>
+                        <input type="text" name="sequences[{{ $key }}][prefix]"
+                          value="{{ old("sequences.$key.prefix", strtoupper($key) == 'INVOICE' ? 'INV' : (strtoupper($key) == 'QUOTE' ? 'QT' : '')) }}"
+                          class="w-full py-2 font-semibold text-xs" placeholder="Prefix">
+                      </div>
+                    </div>
+                    <div class="space-y-1">
+                      <div class="input-icon-group">
+                        <i class="fas fa-outdent text-xs text-slate-300"></i>
+                        <input type="text" name="sequences[{{ $key }}][postfix]"
+                          value="{{ old("sequences.$key.postfix") }}" class="w-full py-2 font-semibold text-xs"
+                          placeholder="Postfix">
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
+              @endforeach
             </div>
           </div>
 
@@ -191,10 +189,29 @@
 
               <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
                 <div class="space-y-1.5">
+                  <label class="text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-1">Business
+                    Phone</label>
+                  <div class="input-icon-group">
+                    <i class="fas fa-phone text-xs"></i>
+                    <input type="text" name="phone" value="{{ old('phone') }}"
+                      class="w-full py-2.5 font-semibold placeholder:font-normal" placeholder="e.g. +1 234 567 890">
+                  </div>
+                </div>
+                <div class="space-y-1.5">
+                  <label class="text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-1">Business
+                    Email</label>
+                  <div class="input-icon-group">
+                    <i class="fas fa-envelope text-xs"></i>
+                    <input type="email" name="email" value="{{ old('email') }}"
+                      class="w-full py-2.5 font-semibold placeholder:font-normal"
+                      placeholder="e.g. contact@company.com">
+                  </div>
+                </div>
+                <div class="space-y-1.5">
                   <label class="text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-1">Tax Registration No
                     (TRN)</label>
                   <div class="input-icon-group">
-                    <i class="fas fa-percent"></i>
+                    <i class="fas fa-percent text-xs"></i>
                     <input type="text" name="tax_number" value="{{ old('tax_number') }}"
                       class="w-full py-2.5 font-semibold placeholder:font-normal" placeholder="e.g. 100-XXX-XXX">
                   </div>
