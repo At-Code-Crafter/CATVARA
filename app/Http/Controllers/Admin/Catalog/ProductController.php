@@ -127,8 +127,8 @@ class ProductController extends Controller
 
         $request->validate([
             'name' => 'required|string|max:255',
-            'category_id' => 'required|exists:categories,id',
-            'brand_id' => 'nullable|exists:brands,id',
+            'category_id' => 'required|string', // Can be ID or "new:Name"
+            'brand_id' => 'nullable|string', // Can be ID or "new:Name"
             'variants' => 'nullable|array',
             'prices' => 'nullable|array',
             'primary_image' => 'nullable|image|max:2048',
@@ -140,6 +140,14 @@ class ProductController extends Controller
             DB::beginTransaction();
 
             $product = Product::where('company_id', $company->id)->findOrFail($id);
+
+            // Handle Category - create if new
+            $categoryId = $this->resolveOrCreateCategory($request->category_id, $company->id);
+            $request->merge(['category_id' => $categoryId]);
+
+            // Handle Brand - create if new
+            $brandId = $this->resolveOrCreateBrand($request->brand_id, $company->id);
+            $request->merge(['brand_id' => $brandId]);
 
             // 1. Update Core & Variants & Prices via Service
             $this->productService->updateProduct($product, $request->all());
@@ -198,8 +206,8 @@ class ProductController extends Controller
 
         $request->validate([
             'name' => 'required|string|max:255',
-            'category_id' => 'required',
-            'brand_id' => 'nullable|exists:brands,id',
+            'category_id' => 'required|string', // Can be ID or "new:Name"
+            'brand_id' => 'nullable|string', // Can be ID or "new:Name"
             'description' => 'nullable|string',
             'variants' => 'required|array',
             'image' => 'nullable|image|max:5120', // 5MB
@@ -208,11 +216,17 @@ class ProductController extends Controller
         try {
             DB::beginTransaction();
 
+            // Handle Category - create if new
+            $categoryId = $this->resolveOrCreateCategory($request->category_id, $request->company->id);
+
+            // Handle Brand - create if new
+            $brandId = $this->resolveOrCreateBrand($request->brand_id, $request->company->id);
+
             $product = new Product;
             $product->uuid = (string) Str::uuid();
             $product->company_id = $request->company->id;
-            $product->category_id = $request->category_id;
-            $product->brand_id = $request->brand_id;
+            $product->category_id = $categoryId;
+            $product->brand_id = $brandId;
             $product->name = $request->name;
             $product->slug = Str::slug($request->name) . '-' . time();
             $product->description = $request->description;
@@ -399,5 +413,92 @@ class ProductController extends Controller
             'Content-Type' => 'text/csv; charset=UTF-8',
             'Content-Disposition' => 'attachment; filename="' . $filename . '"',
         ]);
+    }
+
+    /**
+     * Resolve or create a category from the input value.
+     * If value starts with "new:", create a new category with that name.
+     * Otherwise, return the existing ID.
+     */
+    protected function resolveOrCreateCategory($value, $companyId)
+    {
+        if (empty($value)) {
+            return null;
+        }
+
+        // Check if it's a new category (starts with "new:")
+        if (str_starts_with($value, 'new:')) {
+            $name = trim(substr($value, 4));
+
+            if (empty($name)) {
+                return null;
+            }
+
+            // Check if category with same name already exists
+            $existing = Category::where('company_id', $companyId)
+                ->where('name', $name)
+                ->first();
+
+            if ($existing) {
+                return $existing->id;
+            }
+
+            // Create new category
+            $category = Category::create([
+                'company_id' => $companyId,
+                'name' => $name,
+                'slug' => Str::slug($name) . '-' . time(),
+                'is_active' => true,
+            ]);
+
+            return $category->id;
+        }
+
+        // It's an existing ID
+        return is_numeric($value) ? (int) $value : null;
+    }
+
+    /**
+     * Resolve or create a brand from the input value.
+     * If value starts with "new:", create a new brand with that name.
+     * Otherwise, return the existing ID.
+     */
+    protected function resolveOrCreateBrand($value, $companyId)
+    {
+        if (empty($value)) {
+            return null;
+        }
+
+        // Check if it's a new brand (starts with "new:")
+        if (str_starts_with($value, 'new:')) {
+            $name = trim(substr($value, 4));
+
+            if (empty($name)) {
+                return null;
+            }
+
+            // Check if brand with same name already exists
+            $existing = \App\Models\Catalog\Brand::where('company_id', $companyId)
+                ->where('name', $name)
+                ->first();
+
+            if ($existing) {
+                return $existing->id;
+            }
+
+            // Create new brand
+            $brand = \App\Models\Catalog\Brand::create([
+                'uuid' => (string) Str::uuid(),
+                'company_id' => $companyId,
+                'name' => $name,
+                'slug' => Str::slug($name) . '-' . time(),
+                'is_active' => true,
+            ]);
+
+            return $brand->id;
+        }
+
+        // It's an existing ID
+        return is_numeric($value) ? (int) $value : null;
     }
 }

@@ -53,24 +53,26 @@
               </div>
               <div>
                 <label class="block text-sm font-semibold text-slate-700 mb-2">Category</label>
-                <select name="category_id" class="select2 w-full">
+                <select name="category_id" id="category_id" class="no-select2 w-full">
                   @foreach ($categories as $cat)
                     <option value="{{ $cat->id }}" {{ old('category_id', $product->category_id) == $cat->id ? 'selected' : '' }}>
                       {{ $cat->name }}
                     </option>
                   @endforeach
                 </select>
+                <p class="text-xs text-slate-400 mt-1">Type a new name to create category on save</p>
               </div>
               <div>
                 <label class="block text-sm font-semibold text-slate-700 mb-2">Brand</label>
-                <select name="brand_id" class="select2 w-full">
-                  <option value="">Select Brand (Optional)</option>
+                <select name="brand_id" id="brand_id" class="no-select2 w-full">
+                  <option value="">Select or type to create (Optional)</option>
                   @foreach ($brands as $brand)
                     <option value="{{ $brand->id }}" {{ old('brand_id', $product->brand_id) == $brand->id ? 'selected' : '' }}>
                       {{ $brand->name }}
                     </option>
                   @endforeach
                 </select>
+                <p class="text-xs text-slate-400 mt-1">Type a new name to create brand on save</p>
               </div>
               <div>
                 <label class="block text-sm font-semibold text-slate-700 mb-2">Slug</label>
@@ -260,6 +262,40 @@
 @push('scripts')
   <script>
     $(document).ready(function () {
+      // Initialize Select2 with tags for Category (allows creating new)
+      $('#category_id').select2({
+        width: '100%',
+        tags: true,
+        placeholder: 'Select or type to create',
+        allowClear: true,
+        createTag: function(params) {
+          var term = $.trim(params.term);
+          if (term === '') return null;
+          return {
+            id: 'new:' + term,
+            text: term,
+            newTag: true
+          };
+        }
+      });
+
+      // Initialize Select2 with tags for Brand (allows creating new)
+      $('#brand_id').select2({
+        width: '100%',
+        tags: true,
+        placeholder: 'Select or type to create (Optional)',
+        allowClear: true,
+        createTag: function(params) {
+          var term = $.trim(params.term);
+          if (term === '') return null;
+          return {
+            id: 'new:' + term,
+            text: term,
+            newTag: true
+          };
+        }
+      });
+
       // FilePond Initialization
       FilePond.registerPlugin(FilePondPluginImagePreview);
 

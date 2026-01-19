@@ -48,22 +48,24 @@
             <div>
               <label for="category_id" class="block text-sm font-semibold text-slate-700 mb-2">Category
                 <span class="text-red-500">*</span></label>
-              <select name="category_id" id="category_id" class="select2 w-full" required>
-                <option value="">Select Category</option>
+              <select name="category_id" id="category_id" class="no-select2 w-full" required>
+                <option value="">Select or type to create</option>
                 @foreach ($categories as $cat)
                   <option value="{{ $cat->id }}">{{ $cat->name }}</option>
                 @endforeach
               </select>
+              <p class="text-xs text-slate-400 mt-1">Type a new name to create category on save</p>
             </div>
 
             <div>
               <label for="brand_id" class="block text-sm font-semibold text-slate-700 mb-2">Brand</label>
-              <select name="brand_id" id="brand_id" class="select2 w-full">
-                <option value="">Select Brand (Optional)</option>
+              <select name="brand_id" id="brand_id" class="no-select2 w-full">
+                <option value="">Select or type to create (Optional)</option>
                 @foreach ($brands as $brand)
                   <option value="{{ $brand->id }}">{{ $brand->name }}</option>
                 @endforeach
               </select>
+              <p class="text-xs text-slate-400 mt-1">Type a new name to create brand on save</p>
             </div>
 
             <div>
@@ -215,10 +217,51 @@
 @push('scripts')
   <script>
     $(document).ready(function () {
+      // Initialize Select2 with tags for Category (allows creating new)
+      $('#category_id').select2({
+        width: '100%',
+        tags: true,
+        placeholder: 'Select or type to create',
+        allowClear: true,
+        createTag: function(params) {
+          var term = $.trim(params.term);
+          if (term === '') return null;
+          return {
+            id: 'new:' + term,
+            text: term,
+            newTag: true
+          };
+        }
+      });
+
+      // Initialize Select2 with tags for Brand (allows creating new)
+      $('#brand_id').select2({
+        width: '100%',
+        tags: true,
+        placeholder: 'Select or type to create (Optional)',
+        allowClear: true,
+        createTag: function(params) {
+          var term = $.trim(params.term);
+          if (term === '') return null;
+          return {
+            id: 'new:' + term,
+            text: term,
+            newTag: true
+          };
+        }
+      });
+
       // Category Based Attribute Loading
       $('#category_id').on('change', function () {
         const catId = $(this).val();
         if (!catId) return;
+
+        // If it's a new category (starts with "new:"), skip loading attributes
+        if (catId.toString().startsWith('new:')) {
+          const container = $('#attrContainer');
+          container.html('<p class="text-sm text-amber-600 italic"><i class="fas fa-info-circle mr-1"></i>New category will be created on save. Attributes can be assigned later.</p>');
+          return;
+        }
 
         const url = "{{ company_route('catalog.categories.attributes', ['category' => ':id']) }}".replace(':id',
           catId);
