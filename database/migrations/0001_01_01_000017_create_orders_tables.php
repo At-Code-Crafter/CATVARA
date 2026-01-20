@@ -42,6 +42,7 @@ return new class extends Migration
             $table->unsignedBigInteger('company_id');
             $table->unsignedBigInteger('customer_id')->nullable();
             $table->unsignedBigInteger('status_id');
+            $table->unsignedBigInteger('payment_status_id')->nullable();
 
             // Origin tracking
             $table->string('source')->nullable(); // QUOTE, POS, WEB, MANUAL
@@ -69,7 +70,6 @@ return new class extends Migration
             $table->unsignedBigInteger('created_by')->nullable();
 
             $table->text('notes')->nullable();
-            
 
             $table->timestamps();
             $table->softDeletes();

@@ -8,6 +8,23 @@ return new class extends Migration
 {
     public function up(): void
     {
+
+        Schema::create('brands', function (Blueprint $table) {
+            $table->id();
+            $table->uuid('uuid')->unique();
+            $table->unsignedBigInteger('company_id');
+            $table->unsignedBigInteger('parent_id')->nullable();
+            $table->string('name');
+            $table->string('slug');
+            $table->text('description')->nullable();
+            $table->string('logo')->nullable();
+            $table->boolean('is_active')->default(true);
+            $table->timestamps();
+
+            $table->foreign('company_id')->references('id')->on('companies')->onDelete('cascade');
+            $table->foreign('parent_id')->references('id')->on('brands')->onDelete('set null');
+        });
+
         /**
          * CATEGORIES
          */
@@ -43,6 +60,11 @@ return new class extends Migration
             $table->foreignId('company_id')
                 ->constrained()
                 ->cascadeOnDelete();
+
+            $table->foreignId('brand_id')
+                ->nullable()
+                ->constrained('brands')
+                ->nullOnDelete();
 
             $table->foreignId('category_id')
                 ->constrained()
@@ -175,5 +197,6 @@ return new class extends Migration
         Schema::dropIfExists('attributes');
         Schema::dropIfExists('products');
         Schema::dropIfExists('categories');
+        Schema::dropIfExists('brands');
     }
 };

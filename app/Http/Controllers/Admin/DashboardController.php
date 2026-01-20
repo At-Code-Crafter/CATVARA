@@ -72,18 +72,6 @@ class DashboardController extends Controller
         $draftOrders = (clone $ordersBase)->where('status_id', $draftStatus?->id)->count();
         $confirmedOrders = (clone $ordersBase)->where('status_id', $confirmedStatus?->id)->count();
 
-        // E. Sales (Invoices) (Date Filtered by Issue Date)
-        $invoicesBase = \App\Models\Accounting\Invoice::where('company_id', $companyId)
-            ->whereBetween('issued_at', [$dateFrom, $dateTo]);
-
-        $paidStatus = \App\Models\Accounting\InvoiceStatus::where('code', 'PAID')->first();
-        // Assuming non-paid are anything else (Open, Overdue, Draft, etc.)
-
-        $totalSalesAmount = (clone $invoicesBase)->sum('grand_total'); // Total generated
-        $paidSalesAmount = (clone $invoicesBase)->where('status_id', $paidStatus?->id)->sum('grand_total');
-        $unpaidSalesAmount = (clone $invoicesBase)->where('status_id', '!=', $paidStatus?->id)->sum('grand_total');
-
-        // 3. CHARTS DATA
 
         // A. Line Chart: Sales vs Expenses (Monthly or Daily based on range)
         // Expenses = Outgoing Payments
@@ -92,15 +80,6 @@ class DashboardController extends Controller
         $dateFormat = $groupBy === 'month' ? '%Y-%m' : '%Y-%m-%d';
         $labelFormat = $groupBy === 'month' ? 'M Y' : 'd M';
 
-        // Sales (from Invoices - Confirmed/Issued)
-        $salesTrend = (clone $invoicesBase)
-            ->select(
-                db_raw("DATE_FORMAT(issued_at, '$dateFormat') as date"),
-                db_raw('SUM(grand_total) as total')
-            )
-            ->groupBy('date')
-            ->orderBy('date')
-            ->pluck('total', 'date');
 
         // Expenses (Outgoing Payments)
         $expensesTrend = \App\Models\Accounting\Payment::where('company_id', $companyId)
@@ -113,18 +92,6 @@ class DashboardController extends Controller
             ->groupBy('date')
             ->orderBy('date')
             ->pluck('total', 'date');
-
-        // Merge dates for X-axis
-        $allDates = $salesTrend->keys()->merge($expensesTrend->keys())->unique()->sort();
-        $lineChartLabels = [];
-        $lineChartSales = [];
-        $lineChartExpenses = [];
-
-        foreach ($allDates as $d) {
-            $lineChartLabels[] = Carbon::parse($d)->format($labelFormat);
-            $lineChartSales[] = $salesTrend[$d] ?? 0;
-            $lineChartExpenses[] = $expensesTrend[$d] ?? 0;
-        }
 
         // B. Pie Chart: Total Sales vs Total Expenses (In selected range)
         $totalExpensesAmount = \App\Models\Accounting\Payment::where('company_id', $companyId)
@@ -197,26 +164,10 @@ class DashboardController extends Controller
             'draft_orders' => $draftOrders,
             'confirmed_orders' => $confirmedOrders,
 
-            'total_sales' => $totalSalesAmount,
-            'paid_sales' => $paidSalesAmount,
-            'unpaid_sales' => $unpaidSalesAmount,
-        ];
-
-        $charts = [
-            'financials' => [
-                'labels' => $lineChartLabels,
-                'sales' => $lineChartSales,
-                'expenses' => $lineChartExpenses,
-            ],
-            'pie' => [
-                'labels' => ['Sales', 'Expenses'],
-                'data' => [$totalSalesAmount, $totalExpensesAmount],
-            ],
         ];
 
         return view('catvara.dashboard', compact(
             'stats',
-            'charts',
             'topProducts',
             'lowStockProducts',
             'recentSales',

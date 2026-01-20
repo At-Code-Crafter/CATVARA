@@ -11,9 +11,48 @@ return new class extends Migration
      */
     public function up(): void
     {
+        /**
+         * CURRENCIES (GLOBAL)
+         */
+        Schema::create('currencies', function (Blueprint $table) {
+            $table->id();
+
+            $table->string('code', 3)->unique(); // USD, GBP
+            $table->string('name');
+            $table->string('symbol', 5)->nullable();
+            $table->unsignedTinyInteger('decimal_places')->default(2);
+            $table->boolean('is_active')->default(true);
+
+            $table->timestamps();
+        });
+
+        /**
+         * EXCHANGE RATES (HISTORICAL, APPEND-ONLY)
+         */
+        Schema::create('exchange_rates', function (Blueprint $table) {
+            $table->id();
+            $table->unsignedBigInteger('company_id')->nullable();
+            $table->foreign('company_id')->references('id')->on('companies')->onDelete('cascade');
+            $table->foreignId('base_currency_id');
+            $table->foreignId('target_currency_id');
+
+            $table->decimal('rate', 18, 8);
+            $table->date('effective_date');
+            $table->string('source')->nullable(); // ECB, API, MANUAL
+
+            $table->timestamps();
+
+            $table->unique(
+                ['company_id', 'base_currency_id', 'target_currency_id', 'effective_date'],
+                'ex_rate_unique'
+            );
+        });
+
         // Countries Table
         Schema::create('countries', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('company_id')->nullable();
+            $table->foreign('company_id')->references('id')->on('companies')->onDelete('cascade');
             $table->uuid('uuid')->unique();
             $table->string('name', 100);
             $table->string('iso_code_2', 2)->unique()->comment('ISO 3166-1 alpha-2');
@@ -35,6 +74,8 @@ return new class extends Migration
         // States/Provinces Table
         Schema::create('states', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('company_id')->nullable();
+            $table->foreign('company_id')->references('id')->on('companies')->onDelete('cascade');
             $table->uuid('uuid')->unique();
             $table->foreignId('country_id')->constrained('countries')->cascadeOnDelete();
             $table->string('name', 100);
@@ -48,6 +89,20 @@ return new class extends Migration
             $table->index(['country_id', 'is_active']);
             $table->index(['is_active', 'name']);
         });
+
+        /**
+         * ADD FKs WITH SHORT NAMES (PREFIX SAFE)
+         */
+        Schema::table('exchange_rates', function (Blueprint $table) {
+            $table->foreign('base_currency_id', 'ex_base_cur_fk')
+                ->references('id')->on('currencies')
+                ->cascadeOnDelete();
+
+            $table->foreign('target_currency_id', 'ex_target_cur_fk')
+                ->references('id')->on('currencies')
+                ->cascadeOnDelete();
+        });
+
     }
 
     /**
@@ -55,6 +110,8 @@ return new class extends Migration
      */
     public function down(): void
     {
+        Schema::dropIfExists('exchange_rates');
+        Schema::dropIfExists('currencies');
         Schema::dropIfExists('states');
         Schema::dropIfExists('countries');
     }

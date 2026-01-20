@@ -30,6 +30,8 @@ return new class extends Migration
             $table->string('legal_name')->nullable();
             $table->string('tax_number')->nullable();
 
+            $table->decimal('percentage_discount', 5, 2)->default(0);
+
             $table->text('notes')->nullable();
             $table->boolean('is_active')->default(true);
 
@@ -55,29 +57,11 @@ return new class extends Migration
                 ->nullOnDelete();
         });
 
-        /**
-         * POS ORDERS → CUSTOMER (OPTIONAL)
-         */
-        Schema::table('pos_orders', function (Blueprint $table) {
-            if (! Schema::hasColumn('pos_orders', 'customer_id')) {
-                $table->unsignedBigInteger('customer_id')->nullable()->after('user_id');
-            }
 
-            $table->foreign('customer_id', 'pos_customer_fk')
-                ->references('id')->on('customers')
-                ->nullOnDelete();
-        });
     }
 
     public function down(): void
     {
-        Schema::table('pos_orders', function (Blueprint $table) {
-            $table->dropForeign('pos_customer_fk');
-
-            if (Schema::hasColumn('pos_orders', 'customer_id')) {
-                $table->dropColumn('customer_id');
-            }
-        });
 
         Schema::table('customers', function (Blueprint $table) {
             $table->dropForeign('cust_company_fk');

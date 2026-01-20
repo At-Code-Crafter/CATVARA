@@ -38,7 +38,7 @@ return new class extends Migration
 
             $table->foreign('module_id')
                 ->references('id')
-                ->on(config('database.connections.mysql.prefix') . 'modules');
+                ->on('modules');
         });
 
         Schema::create('roles', function (Blueprint $table) {
@@ -58,7 +58,7 @@ return new class extends Migration
 
             $table->foreign('company_id')
                 ->references('id')
-                ->on(config('database.connections.mysql.prefix') . 'companies')
+                ->on('companies')
                 ->cascadeOnDelete();
         });
 
@@ -75,12 +75,12 @@ return new class extends Migration
 
             $table->foreign('role_id')
                 ->references('id')
-                ->on(config('database.connections.mysql.prefix') . 'roles')
+                ->on('roles')
                 ->cascadeOnDelete();
 
             $table->foreign('permission_id')
                 ->references('id')
-                ->on(config('database.connections.mysql.prefix') . 'permissions')
+                ->on('permissions')
                 ->cascadeOnDelete();
         });
 
@@ -100,12 +100,12 @@ return new class extends Migration
 
             $table->foreign('company_id')
                 ->references('id')
-                ->on(config('database.connections.mysql.prefix') . 'companies')
+                ->on('companies')
                 ->cascadeOnDelete();
 
             $table->foreign('user_id')
                 ->references('id')
-                ->on(config('database.connections.mysql.prefix') . 'users')
+                ->on('users')
                 ->cascadeOnDelete();
         });
 
@@ -123,17 +123,17 @@ return new class extends Migration
 
             $table->foreign('company_id')
                 ->references('id')
-                ->on(config('database.connections.mysql.prefix') . 'companies')
+                ->on('companies')
                 ->cascadeOnDelete();
 
             $table->foreign('user_id')
                 ->references('id')
-                ->on(config('database.connections.mysql.prefix') . 'users')
+                ->on('users')
                 ->cascadeOnDelete();
 
             $table->foreign('role_id')
                 ->references('id')
-                ->on(config('database.connections.mysql.prefix') . 'roles')
+                ->on('roles')
                 ->cascadeOnDelete();
         });
     }

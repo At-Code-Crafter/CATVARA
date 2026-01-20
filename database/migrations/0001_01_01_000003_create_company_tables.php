@@ -43,7 +43,7 @@ return new class extends Migration
 
             $table->foreign('company_status_id')
                 ->references('id')
-                ->on(config('database.connections.mysql.prefix').'company_statuses');
+                ->on('company_statuses');
         });
 
         Schema::create('company_details', function (Blueprint $table) {
@@ -64,7 +64,7 @@ return new class extends Migration
 
             $table->foreign('company_id')
                 ->references('id')
-                ->on(config('database.connections.mysql.prefix').'companies')
+                ->on('companies')
                 ->cascadeOnDelete();
         });
 
