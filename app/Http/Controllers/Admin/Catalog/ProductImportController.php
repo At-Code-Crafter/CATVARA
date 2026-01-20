@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Admin\Catalog;
 
 use App\Http\Controllers\Controller;
 use App\Imports\Catalog\ProductImport;
+use App\Models\Catalog\Attribute;
+use App\Models\Catalog\AttributeValue;
 use App\Models\Catalog\Brand;
 use App\Models\Catalog\Category;
 use App\Models\Catalog\Product;
@@ -43,7 +45,7 @@ class ProductImportController extends Controller
         ]);
 
         $path = $request->file('file')->store('temp_imports');
-        $absolutePath = storage_path('app/private/'.$path);
+        $absolutePath = storage_path('app/private/' . $path);
 
         // Get sheets
         $sheets = Excel::toArray(new ProductImport($request->company->id), $absolutePath);
@@ -51,7 +53,7 @@ class ProductImportController extends Controller
 
         // Get headers for the first sheet (default)
         $headers = [];
-        if (! empty($sheets[0])) {
+        if (!empty($sheets[0])) {
             $headers = array_keys($sheets[0][0] ?? []);
         }
 
@@ -80,7 +82,7 @@ class ProductImportController extends Controller
             'sheet_index' => 'required|integer',
         ]);
 
-        $absolutePath = storage_path('app/private/'.$request->temp_path);
+        $absolutePath = storage_path('app/private/' . $request->temp_path);
         $sheetIndex = $request->sheet_index;
 
         $data = Excel::toArray(new ProductImport($request->company->id), $absolutePath)[$sheetIndex] ?? [];
@@ -95,6 +97,8 @@ class ProductImportController extends Controller
         $previewData = [];
         $validationErrors = [];
         $skusInFile = [];
+        $newCount = 0;
+        $updateCount = 0;
 
         foreach ($data as $i => $row) {
             $mappedRow = [];
@@ -116,22 +120,28 @@ class ProductImportController extends Controller
             if (empty($sku)) {
                 $errors['variant_sku'] = 'SKU is required';
             } else {
-                // Check internal duplicates
+                // Check internal duplicates within the file
                 if (in_array($sku, $skusInFile)) {
                     $errors['variant_sku'] = 'Duplicate SKU in file';
                 } else {
                     $skusInFile[] = $sku;
-                    // Check DB duplicates
-                    if (ProductVariant::where('company_id', $request->company->id)->where('sku', $sku)->exists()) {
-                        $errors['variant_sku'] = 'SKU already exists in database';
-                    }
                 }
             }
 
-            // Numeric checks
-            foreach ($mappedRow as $field => $val) {
-                if ((str_starts_with($field, 'price_') || str_starts_with($field, 'stock_') || $field === 'cost') && ! empty($val) && ! is_numeric($val)) {
-                    $errors[$field] = 'Must be numeric';
+            // 3. Determine Row Type (New vs Update)
+            $rowType = 'new';
+            $variantId = $mappedRow['variant_id'] ?? null;
+            $companyId = $request->company->id;
+
+            if (!empty($variantId)) {
+                $exists = ProductVariant::where('company_id', '=', $companyId, 'and')->where('id', '=', $variantId, 'and')->exists();
+                if ($exists) {
+                    $rowType = 'update';
+                }
+            } elseif (!empty($sku)) {
+                $exists = ProductVariant::where('company_id', '=', $companyId, 'and')->where('sku', '=', $sku, 'and')->exists();
+                if ($exists) {
+                    $rowType = 'update';
                 }
             }
 
@@ -140,10 +150,17 @@ class ProductImportController extends Controller
                 'raw_data' => $row, // Include all columns
                 'mapped_data' => $mappedRow,
                 'errors' => $errors,
+                'row_type' => $rowType,
             ];
 
-            if (! empty($errors)) {
+            if (!empty($errors)) {
                 $validationErrors[$i] = $errors;
+            } else {
+                if ($rowType === 'update') {
+                    $updateCount++;
+                } else {
+                    $newCount++;
+                }
             }
         }
 
@@ -154,6 +171,8 @@ class ProductImportController extends Controller
             'all_headers' => $allHeaders,
             'total_rows' => count($data),
             'error_count' => count($validationErrors),
+            'new_count' => $newCount,
+            'update_count' => $updateCount,
         ]);
     }
 
@@ -182,7 +201,7 @@ class ProductImportController extends Controller
 
             // Check core maps
             foreach ($coreMaps as $field => $patterns) {
-                if (in_array($cleanHeader, $patterns) && ! isset($mapping[$field])) {
+                if (in_array($cleanHeader, $patterns) && !isset($mapping[$field])) {
                     $mapping[$field] = $header;
 
                     continue 2;
@@ -194,7 +213,7 @@ class ProductImportController extends Controller
                 $channelName = strtolower($channel->name);
                 $channelCode = strtolower($channel->code);
                 if (str_contains($cleanHeader, 'price') && (str_contains($cleanHeader, $channelName) || str_contains($cleanHeader, $channelCode))) {
-                    $mapping['price_'.$channel->id] = $header;
+                    $mapping['price_' . $channel->id] = $header;
 
                     continue 2;
                 }
@@ -203,14 +222,14 @@ class ProductImportController extends Controller
             // Check Locations
             foreach ($locations as $loc) {
                 $locName = strtolower($loc->locatable->name ?? '');
-                if (str_contains($cleanHeader, 'stock') && ! empty($locName) && str_contains($cleanHeader, $locName)) {
-                    $mapping['stock_'.$loc->id] = $header;
+                if (str_contains($cleanHeader, 'stock') && !empty($locName) && str_contains($cleanHeader, $locName)) {
+                    $mapping['stock_' . $loc->id] = $header;
 
                     continue 2;
                 }
                 // Also match by just location name if it's specific enough
-                if (! empty($locName) && $cleanHeader === $locName) {
-                    $mapping['stock_'.$loc->id] = $header;
+                if (!empty($locName) && $cleanHeader === $locName) {
+                    $mapping['stock_' . $loc->id] = $header;
 
                     continue 2;
                 }
@@ -228,23 +247,21 @@ class ProductImportController extends Controller
         ]);
 
         $companyId = $request->company->id;
-        $absolutePath = storage_path('app/private/'.$request->temp_path);
+        $absolutePath = storage_path('app/private/' . $request->temp_path);
         $data = Excel::toArray(new ProductImport($companyId), $absolutePath)[$request->sheet_index];
 
         $headers = array_keys($data[0] ?? []);
         $mapping = $this->autoResolveMapping($headers);
 
         $imported = 0;
+        $newImported = 0;
+        $updatedImported = 0;
         $failed = 0;
         $errors = [];
 
         DB::beginTransaction();
         try {
             foreach ($data as $index => $row) {
-                if ($index === 0) {
-                    continue;
-                } // Skip headers
-
                 $mapped = [];
                 foreach ($mapping as $dbField => $excelCol) {
                     $mapped[$dbField] = $row[$excelCol] ?? null;
@@ -258,50 +275,61 @@ class ProductImportController extends Controller
 
                 // Check for existing variant
                 $variant = null;
-                if (! empty($mapped['variant_id'])) {
-                    $variant = ProductVariant::where('company_id', $companyId)->find($mapped['variant_id']);
+                $isNew = false;
+                if (!empty($mapped['variant_id'])) {
+                    $variant = ProductVariant::where('company_id', '=', $companyId, 'and')->find($mapped['variant_id']);
                 }
-                if (! $variant && ! empty($mapped['variant_sku'])) {
-                    $variant = ProductVariant::where('company_id', $companyId)
-                        ->where('sku', $mapped['variant_sku'])
-                        ->first();
+                if (!$variant && !empty($mapped['variant_sku'])) {
+                    $variant = ProductVariant::where('company_id', '=', $companyId, 'and')
+                        ->where('sku', '=', $mapped['variant_sku'], 'and')
+                        ->first(['*']);
                 }
 
                 // Resolve Product
                 $product = null;
-                if (! empty($mapped['product_id'])) {
-                    $product = Product::where('company_id', $companyId)->find($mapped['product_id']);
+                if (!empty($mapped['product_id'])) {
+                    $product = Product::where('company_id', '=', $companyId, 'and')->find($mapped['product_id']);
                 }
-                if (! $product && $variant) {
+                if (!$product && $variant) {
                     $product = $variant->product;
                 }
-                if (! $product && ! empty($mapped['product_name'])) {
-                    $product = Product::where('company_id', $companyId)
-                        ->where('name', $mapped['product_name'])
-                        ->first();
+                if (!$product && !empty($mapped['product_name'])) {
+                    $product = Product::where('company_id', '=', $companyId, 'and')
+                        ->where('name', '=', $mapped['product_name'], 'and')
+                        ->first(['*']);
                 }
 
                 // Resolve Category
                 $categoryId = $mapped['category_id'] ?? null;
-                if (! $categoryId && ! empty($mapped['category_name'])) {
+                if ($categoryId) {
+                    $category = Category::where('company_id', '=', $companyId, 'and')->find($categoryId);
+                    if ($category) {
+                        $categoryId = $category->id;
+                    } else {
+                        $categoryId = null; // ID provided but not found, fall back to name logic
+                    }
+                }
+
+                if (!$categoryId && !empty($mapped['category_name'])) {
                     $category = Category::firstOrCreate(
                         ['company_id' => $companyId, 'name' => $mapped['category_name']],
-                        ['slug' => Str::slug($mapped['category_name']).'-'.time(), 'is_active' => true]
+                        ['slug' => Str::slug($mapped['category_name']) . '-' . time(), 'is_active' => true]
                     );
                     $categoryId = $category->id;
                 }
 
                 // Resolve Brand
                 $brandId = $mapped['brand_id'] ?? null;
-                if (! $brandId && ! empty($mapped['brand_name'])) {
+                if (!$brandId && !empty($mapped['brand_name'])) {
                     $brand = Brand::firstOrCreate(
                         ['company_id' => $companyId, 'name' => $mapped['brand_name']],
-                        ['slug' => Str::slug($mapped['brand_name']).'-'.time(), 'is_active' => true]
+                        ['slug' => Str::slug($mapped['brand_name']) . '-' . time(), 'is_active' => true]
                     );
                     $brandId = $brand->id;
                 }
 
-                if (! $product) {
+                if (!$product) {
+                    $isNew = true;
                     if (empty($mapped['product_name'])) {
                         $failed++;
                         $errors[$index] = 'Product name missing for new product';
@@ -314,7 +342,7 @@ class ProductImportController extends Controller
                         'category_id' => $categoryId,
                         'brand_id' => $brandId,
                         'name' => $mapped['product_name'],
-                        'slug' => Str::slug($mapped['product_name']).'-'.time(),
+                        'slug' => Str::slug($mapped['product_name']) . '-' . time(),
                         'description' => $mapped['description'] ?? null,
                         'is_active' => true,
                     ]);
@@ -328,7 +356,8 @@ class ProductImportController extends Controller
                     ]);
                 }
 
-                if (! $variant) {
+                if (!$variant) {
+                    $isNew = true;
                     if (empty($mapped['variant_sku'])) {
                         $failed++;
                         $errors[$index] = 'SKU missing for new variant';
@@ -341,7 +370,6 @@ class ProductImportController extends Controller
                         'product_id' => $product->id,
                         'sku' => $mapped['variant_sku'],
                         'cost_price' => $mapped['cost'] ?? 0,
-                        'variant_attributes' => $mapped['variant_attributes'] ?? null,
                         'is_active' => true,
                     ]);
                 } else {
@@ -349,27 +377,79 @@ class ProductImportController extends Controller
                     $variant->update([
                         'sku' => $mapped['variant_sku'] ?? $variant->sku,
                         'cost_price' => $mapped['cost'] ?? $variant->cost_price,
-                        'variant_attributes' => $mapped['variant_attributes'] ?? $variant->variant_attributes,
                     ]);
                 }
 
+                // Handle Variant Attributes (e.g., "Flavor: Berry Fizzy; Color: Red")
+                $attributeValueIds = [];
+                $attrString = $mapped['variant_attributes'] ?? null;
+                if ($attrString) {
+                    $pairs = explode(';', $attrString);
+                    foreach ($pairs as $pair) {
+                        $parts = explode(':', $pair);
+                        if (count($parts) === 2) {
+                            $attrName = trim($parts[0]);
+                            $valString = trim($parts[1]);
+
+                            if (!empty($attrName) && !empty($valString)) {
+                                // 1. Resolve Attribute
+                                $attribute = Attribute::firstOrCreate(
+                                    ['company_id' => $companyId, 'name' => $attrName],
+                                    ['code' => Str::slug($attrName), 'is_active' => true]
+                                );
+
+                                // 2. Resolve Attribute Value
+                                $attrValue = AttributeValue::firstOrCreate(
+                                    ['attribute_id' => $attribute->id, 'value' => $valString],
+                                    ['is_active' => true]
+                                );
+
+                                $attributeValueIds[] = $attrValue->id;
+
+                                // 3. Ensure Category-Attribute link
+                                if ($product->category_id) {
+                                    $exists = DB::table('category_attributes')
+                                        ->where('category_id', $product->category_id)
+                                        ->where('attribute_id', $attribute->id)
+                                        ->exists();
+                                    if (!$exists) {
+                                        DB::table('category_attributes')->insert([
+                                            'category_id' => $product->category_id,
+                                            'attribute_id' => $attribute->id,
+                                        ]);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Sync Attribute Values to Variant
+                if (!empty($attributeValueIds)) {
+                    $variant->attributeValues()->sync($attributeValueIds);
+                }
+
                 // Handle Prices
-                $currency = Currency::where('code', 'GBP')->first() ?? Currency::first();
+                $currency = Currency::where('code', '=', 'GBP', 'and')->first(['*']) ?? Currency::first(['*']);
                 foreach ($mapping as $dbField => $excelCol) {
                     if (str_starts_with($dbField, 'price_')) {
                         $channelId = str_replace('price_', '', $dbField);
                         $priceValue = $row[$excelCol] ?? null;
 
                         if (is_numeric($priceValue)) {
-                            VariantPrice::create([
-                                'company_id' => $companyId,
-                                'product_variant_id' => $variant->id,
-                                'price_channel_id' => $channelId,
-                                'currency_id' => $currency->id,
-                                'price' => $priceValue,
-                                'valid_from' => now(),
-                                'is_active' => true,
-                            ]);
+                            VariantPrice::updateOrCreate(
+                                [
+                                    'company_id' => $companyId,
+                                    'product_variant_id' => $variant->id,
+                                    'price_channel_id' => $channelId,
+                                    'currency_id' => $currency->id,
+                                ],
+                                [
+                                    'price' => $priceValue,
+                                    'valid_from' => now(),
+                                    'is_active' => true,
+                                ]
+                            );
                         }
                     }
 
@@ -378,17 +458,26 @@ class ProductImportController extends Controller
                         $qty = $row[$excelCol] ?? 0;
 
                         if (is_numeric($qty)) {
-                            InventoryBalance::create([
-                                'company_id' => $companyId,
-                                'product_variant_id' => $variant->id,
-                                'inventory_location_id' => $locationId,
-                                'quantity' => $qty,
-                            ]);
+                            InventoryBalance::updateOrCreate(
+                                [
+                                    'company_id' => $companyId,
+                                    'product_variant_id' => $variant->id,
+                                    'inventory_location_id' => $locationId,
+                                ],
+                                [
+                                    'quantity' => $qty,
+                                ]
+                            );
                         }
                     }
                 }
 
                 $imported++;
+                if ($isNew) {
+                    $newImported++;
+                } else {
+                    $updatedImported++;
+                }
             }
 
             DB::commit();
@@ -397,6 +486,8 @@ class ProductImportController extends Controller
             return response()->json([
                 'success' => true,
                 'imported' => $imported,
+                'new' => $newImported,
+                'updated' => $updatedImported,
                 'failed' => $failed,
                 'errors' => $errors,
             ]);
