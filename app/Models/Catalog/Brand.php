@@ -3,9 +3,17 @@
 namespace App\Models\Catalog;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 
 class Brand extends Model
 {
+    protected static function booted()
+    {
+        static::creating(function ($model) {
+            $model->uuid ??= (string) Str::uuid();
+        });
+    }
+
     protected $fillable = [
         'uuid',
         'company_id',

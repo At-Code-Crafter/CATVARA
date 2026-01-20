@@ -132,10 +132,6 @@ class VapeShopSetupSeeder extends Seeder
             [
                 'address' => '111-113 Great Bridge St, West Bromwich B70 0DA, United Kingdom',
                 'tax_number' => 'GB348681169',
-                'invoice_prefix' => 'UK',
-                'quote_prefix' => 'QT',
-                'invoice_postfix' => date('Y'),
-                'quote_postfix' => date('Y'),
             ]
         );
 

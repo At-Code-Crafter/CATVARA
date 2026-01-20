@@ -4,9 +4,17 @@ namespace App\Models\Catalog;
 
 use App\Models\Common\Attachment;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 
 class ProductVariant extends Model
 {
+    protected static function booted()
+    {
+        static::creating(function ($model) {
+            $model->uuid ??= (string) Str::uuid();
+        });
+    }
+
     protected $fillable = [
         'uuid',
         'company_id',

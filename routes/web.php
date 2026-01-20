@@ -132,6 +132,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
                 // Products
                 Route::get('products/export', [\App\Http\Controllers\Admin\Catalog\ProductController::class, 'export'])->name('products.export');
+                Route::get('products/import', [\App\Http\Controllers\Admin\Catalog\ProductImportController::class, 'index'])->name('products.import');
+                Route::post('products/import/upload', [\App\Http\Controllers\Admin\Catalog\ProductImportController::class, 'upload'])->name('products.import.upload');
+                Route::post('products/import/preview', [\App\Http\Controllers\Admin\Catalog\ProductImportController::class, 'preview'])->name('products.import.preview');
+                Route::post('products/import/process', [\App\Http\Controllers\Admin\Catalog\ProductImportController::class, 'process'])->name('products.import.process');
                 Route::resource('products', \App\Http\Controllers\Admin\Catalog\ProductController::class);
             });
 

@@ -10,12 +10,13 @@
     "license": "MIT",
     "require": {
         "php": "^8.2",
-        "laravel/framework": "^12.0",
         "kris/laravel-form-builder": "^1.54",
+        "laravel/framework": "^12.0",
+        "laravel/tinker": "^2.10.1",
+        "maatwebsite/excel": "^3.1",
         "opcodesio/log-viewer": "^3.19",
-        "yajra/laravel-datatables-oracle": "*",
         "prettus/l5-repository": "^2.10",
-        "laravel/tinker": "^2.10.1"
+        "yajra/laravel-datatables-oracle": "*"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",

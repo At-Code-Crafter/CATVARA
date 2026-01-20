@@ -19,8 +19,8 @@ return new class extends Migration
             $table->string('address_line_1');
             $table->string('address_line_2')->nullable();
             $table->string('city')->nullable();
-            $table->string('state_id');
-            $table->string('country_id');
+            $table->foreignId('state_id')->nullable();
+            $table->foreignId('country_id')->nullable();
             $table->string('zip_code');
             $table->string('name')->nullable();
             $table->string('phone')->nullable();
