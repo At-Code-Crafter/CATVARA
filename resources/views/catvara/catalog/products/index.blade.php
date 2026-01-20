@@ -9,6 +9,9 @@
       <p class="text-slate-400 mt-1 font-medium">Manage your complete product catalog and variants.</p>
     </div>
     <div class="mt-4 sm:mt-0 flex gap-3">
+      <a href="{{ company_route('catalog.products.import') }}" class="btn btn-white">
+        <i class="fas fa-file-import mr-2"></i> Import
+      </a>
       <a href="{{ company_route('catalog.products.export') }}" class="btn btn-white">
         <i class="fas fa-file-export mr-2"></i> Export
       </a>

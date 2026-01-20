@@ -132,6 +132,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
                 // Products
                 Route::get('products/export', [\App\Http\Controllers\Admin\Catalog\ProductController::class, 'export'])->name('products.export');
+                Route::get('products/import', [\App\Http\Controllers\Admin\Catalog\ProductController::class, 'showImportForm'])->name('products.import');
+                Route::post('products/import', [\App\Http\Controllers\Admin\Catalog\ProductController::class, 'import'])->name('products.import.store');
+                Route::post('products/import/preview', [\App\Http\Controllers\Admin\Catalog\ProductController::class, 'importPreview'])->name('products.import.preview');
                 Route::resource('products', \App\Http\Controllers\Admin\Catalog\ProductController::class);
             });
 
@@ -169,7 +172,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
                 Route::resource('payment-terms', PaymentTermController::class);
                 Route::resource('payment-methods', \App\Http\Controllers\Admin\Settings\PaymentMethodController::class);
                 Route::resource('users', \App\Http\Controllers\Admin\Company\CompanyUserController::class);
-                
+
                 Route::get('company-profile', [\App\Http\Controllers\Admin\Company\CompanyProfileController::class, 'edit'])->name('company-profile.edit');
                 Route::put('company-profile', [\App\Http\Controllers\Admin\Company\CompanyProfileController::class, 'update'])->name('company-profile.update');
             });
