@@ -97,7 +97,7 @@ class CustomerController extends Controller
                 })
 
                 ->addColumn('action', function ($row) use ($company) {
-                    $compact['showUrl'] = route('customers.show', [$company->uuid, $row->id]);
+                    // $compact['showUrl'] = route('customers.show', [$company->uuid, $row->id]);
                     $compact['editUrl'] = route('customers.edit', [$company->uuid, $row->id]);
                     $compact['deleteUrl'] = null;
                     $compact['editSidebar'] = false;
