@@ -225,10 +225,10 @@ class CustomerImportController extends Controller
             // Address fields
             'address_line_1' => ['address_line_1', 'address', 'street', 'address_1'],
             'address_line_2' => ['address_line_2', 'address_2', 'street_2'],
-            'city' => ['city', 'town'],
+            'city' => ['city', 'town', 'city/town', 'citytown'],
             'state_name' => ['state_name', 'state', 'province', 'region'],
             'country_name' => ['country_name', 'country'],
-            'zip_code' => ['zip_code', 'postal_code', 'postcode', 'zip'],
+            'zip_code' => ['zip_code', 'postal_code', 'postcode', 'zip', 'postal code', 'postalcode'],
         ];
 
         foreach ($headers as $header) {
@@ -410,23 +410,30 @@ class CustomerImportController extends Controller
                 }
 
                 // Handle Address
-                $hasAddressData = !empty($mapped['address_line_1']) || !empty($mapped['city']) || !empty($mapped['zip_code']);
+                $hasAddressData = !empty($mapped['address_line_1']) || !empty($mapped['city']) || !empty($mapped['zip_code']) || !empty($mapped['country_name']);
 
                 if ($hasAddressData) {
                     // Resolve Country
                     $countryId = null;
                     if (!empty($mapped['country_name'])) {
-                        $country = Country::where('name', 'LIKE', '%' . $mapped['country_name'] . '%')
-                            ->orWhere('iso_code_2', '=', strtoupper($mapped['country_name']))
-                            ->orWhere('iso_code_3', '=', strtoupper($mapped['country_name']))
+                        $countryName = trim($mapped['country_name']);
+                        $country = Country::where('name', 'LIKE', '%' . $countryName . '%')
+                            ->orWhere('iso_code_2', '=', strtoupper($countryName))
+                            ->orWhere('iso_code_3', '=', strtoupper($countryName))
                             ->first();
+
+                        // Try exact match if LIKE didn't work
+                        if (!$country) {
+                            $country = Country::whereRaw('LOWER(name) = ?', [strtolower($countryName)])->first();
+                        }
                         $countryId = $country?->id;
                     }
 
-                    // Resolve State
+                    // Resolve State (optional - don't require it)
                     $stateId = null;
                     if (!empty($mapped['state_name'])) {
-                        $stateQuery = State::where('name', 'LIKE', '%' . $mapped['state_name'] . '%');
+                        $stateName = trim($mapped['state_name']);
+                        $stateQuery = State::where('name', 'LIKE', '%' . $stateName . '%');
                         if ($countryId) {
                             $stateQuery->where('country_id', $countryId);
                         }
@@ -441,12 +448,12 @@ class CustomerImportController extends Controller
                             'addressable_type' => Customer::class,
                         ],
                         [
-                            'address_line_1' => $mapped['address_line_1'] ?? '',
-                            'address_line_2' => $mapped['address_line_2'] ?? null,
-                            'city' => $mapped['city'] ?? null,
+                            'address_line_1' => trim($mapped['address_line_1'] ?? ''),
+                            'address_line_2' => !empty($mapped['address_line_2']) ? trim($mapped['address_line_2']) : null,
+                            'city' => !empty($mapped['city']) ? trim($mapped['city']) : null,
                             'state_id' => $stateId,
                             'country_id' => $countryId,
-                            'zip_code' => $mapped['zip_code'] ?? '',
+                            'zip_code' => trim($mapped['zip_code'] ?? ''),
                         ]
                     );
                 }
