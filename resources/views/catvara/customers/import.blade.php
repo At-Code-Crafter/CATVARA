@@ -428,9 +428,9 @@
         document.getElementById('invalid-count').textContent = data.error_count;
 
         const btn = document.getElementById('import-btn');
-        const validCount = data.total_rows - data.error_count;
-        // Enable button if there are valid entries to import (even if some are invalid)
-        if (validCount === 0) {
+        const errorCount = data.error_count;
+        // Disable button if there are ANY validation errors
+        if (errorCount > 0) {
           btn.disabled = true;
           btn.classList.add('opacity-50', 'cursor-not-allowed');
         } else {
