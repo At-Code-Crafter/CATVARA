@@ -313,7 +313,9 @@ class ProductController extends Controller
         $companyId = $request->company->id;
 
         // 1. Get Dynamic Columns: Price Channels
-        $priceChannels = PriceChannel::all();
+        $priceChannels = PriceChannel::where('is_active', 1)->whereHas('companies', function ($query) use ($companyId) {
+            $query->where('company_id', $companyId);
+        })->get();
 
         // 2. Get Dynamic Columns: Inventory Locations (Stores & Warehouses)
         $locations = InventoryLocation::where('company_id', $companyId)
@@ -324,6 +326,8 @@ class ProductController extends Controller
         $headers = [
             'Category ID',
             'Category Name',
+            'Brand ID',
+            'Brand Name',
             'Product ID',
             'Product Name',
             'Status',
@@ -346,10 +350,11 @@ class ProductController extends Controller
 
         $headers[] = 'Total Stock';
 
-        // Get all products with variants, category, prices, and inventory
+        // Get all products with variants, category, brand, prices, and inventory
         $products = Product::where('company_id', $companyId)
             ->with([
                 'category',
+                'brand',
                 'variants.prices',
                 'variants.inventory',
                 'variants.attributeValues.attribute',
@@ -364,11 +369,13 @@ class ProductController extends Controller
                 $row = [
                     $product->category_id,
                     $product->category->name ?? '',
+                    $product->brand_id,
+                    $product->brand->name ?? '',
                     $product->id,
                     $product->name,
                     $product->is_active ? 'Active' : 'Inactive',
                     $variant->id,
-                    '="' . $variant->sku . '"',
+                    $variant->sku,
                     $variant->attributeValues->groupBy(fn($av) => $av->attribute->name ?? 'Unknown')
                         ->map(fn($vals, $name) => $name . ': ' . $vals->pluck('value')->join(', '))
                         ->join('; '),
@@ -501,4 +508,16 @@ class ProductController extends Controller
         // It's an existing ID
         return is_numeric($value) ? (int) $value : null;
     }
+
+    /**
+     * Show the import form
+     */
+    public function showImportForm(Request $request)
+    {
+        $this->authorize('create', 'products');
+
+        return view('catvara.catalog.products.import');
+    }
+
+
 }

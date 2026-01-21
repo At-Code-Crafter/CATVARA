@@ -131,15 +131,15 @@
             class="px-2 py-0.5 bg-teal-100 text-teal-600 rounded text-[9px] font-black uppercase tracking-wider">Revenue</span>
         </div>
         <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Sales</p>
-        <p class="text-2xl font-black text-slate-800">${{ number_format($stats['total_sales'], 2) }}</p>
+        <p class="text-2xl font-black text-slate-800">0</p>
         <div class="mt-4 pt-3 border-t border-slate-100 space-y-1">
           <div class="flex justify-between text-[10px]">
             <span class="text-slate-500 font-bold">Paid</span>
-            <span class="font-black text-emerald-600">${{ number_format($stats['paid_sales'], 2) }}</span>
+            <span class="font-black text-emerald-600">0</span>
           </div>
           <div class="flex justify-between text-[10px]">
             <span class="text-slate-500 font-bold">Unpaid</span>
-            <span class="font-black text-rose-500">${{ number_format($stats['unpaid_sales'], 2) }}</span>
+            <span class="font-black text-rose-500">0</span>
           </div>
         </div>
       </div>
@@ -190,7 +190,7 @@
               <span class="h-3 w-3 rounded-md bg-emerald-400"></span>
               <span class="text-xs font-bold text-slate-600">Total Sales</span>
             </div>
-            <span class="text-sm font-black text-slate-800">${{ number_format($stats['total_sales'], 2) }}</span>
+            <span class="text-sm font-black text-slate-800"> 0</span>
           </div>
           <div class="flex justify-between items-center p-3 bg-slate-50 rounded-xl">
             <div class="flex items-center gap-3">
@@ -198,7 +198,7 @@
               <span class="text-xs font-bold text-slate-600">Total Expenses</span>
             </div>
             <span
-              class="text-sm font-black text-slate-800">${{ number_format($charts['pie']['data'][1] ?? 0, 2) }}</span>
+              class="text-sm font-black text-slate-800">0</span>
           </div>
         </div>
       </div>
@@ -319,9 +319,6 @@
 
       // --- Financial Chart (Sales vs Expenses) ---
       const ctxFin = document.getElementById('financialChart').getContext('2d');
-      const salesData = @json($charts['financials']['sales']);
-      const expensesData = @json($charts['financials']['expenses']);
-      const labels = @json($charts['financials']['labels']);
 
       // Gradient for Sales
       const salesGradient = ctxFin.createLinearGradient(0, 0, 0, 350);
@@ -331,10 +328,10 @@
       new Chart(ctxFin, {
         type: 'line',
         data: {
-          labels: labels,
+          labels: [],
           datasets: [{
               label: 'Sales',
-              data: salesData,
+              data: [],
               borderColor: '#10b981',
               backgroundColor: salesGradient,
               fill: true,
@@ -348,7 +345,7 @@
             },
             {
               label: 'Expenses',
-              data: expensesData,
+              data: [],
               borderColor: '#f43f5e',
               backgroundColor: 'transparent',
               fill: false,
@@ -411,14 +408,13 @@
 
       // --- Distribution Chart (Pie/Doughnut) ---
       const ctxDist = document.getElementById('distributionChart').getContext('2d');
-      const pieData = @json($charts['pie']['data']);
 
       new Chart(ctxDist, {
         type: 'doughnut',
         data: {
           labels: ['Sales', 'Expenses'],
           datasets: [{
-            data: pieData,
+            data: [],
             backgroundColor: ['#34d399', '#f43f5e'],
             hoverOffset: 10,
             borderWidth: 0,

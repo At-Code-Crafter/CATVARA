@@ -3,7 +3,7 @@
 @section('title', 'Import Products')
 
 @section('content')
-  <div class="max-w-5xl mx-auto" id="import-app">
+  <div class="mx-auto" id="import-app">
     <!-- Header -->
     <div class="mb-8 flex items-center justify-between">
       <div>
@@ -95,7 +95,15 @@
               <span id="valid-count" class="block text-lg font-bold text-emerald-500">0</span>
               <span class="text-[10px] font-bold text-slate-400 uppercase">Valid</span>
             </div>
-            <div class="text-center">
+            <div class="text-center px-4 border-l border-slate-100">
+              <span id="new-count" class="block text-lg font-bold text-brand-400">0</span>
+              <span class="text-[10px] font-bold text-slate-400 uppercase">New</span>
+            </div>
+            <div class="text-center px-4 border-l border-slate-100">
+              <span id="update-count" class="block text-lg font-bold text-blue-500">0</span>
+              <span class="text-[10px] font-bold text-slate-400 uppercase">Updates</span>
+            </div>
+            <div class="text-center px-4 border-l border-slate-100">
               <span id="invalid-count" class="block text-lg font-bold text-rose-500">0</span>
               <span class="text-[10px] font-bold text-slate-400 uppercase">Errors</span>
             </div>
@@ -137,14 +145,22 @@
         <p id="completion-text" class="text-slate-500 max-w-sm mb-10">We've successfully imported your products into the
           catalog.</p>
 
-        <div class="grid grid-cols-2 gap-4 w-full max-w-md mb-10">
+        <div class="grid grid-cols-4 gap-4 w-full max-w-2xl mb-10">
           <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-            <span id="imported-total" class="block text-2xl font-black text-brand-400">0</span>
-            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Imported</span>
+            <span id="imported-total" class="block text-2xl font-black text-slate-800">0</span>
+            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Total Total</span>
+          </div>
+          <div class="bg-emerald-50 p-4 rounded-2xl border border-emerald-100">
+            <span id="new-total" class="block text-2xl font-black text-emerald-500">0</span>
+            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">New Items</span>
+          </div>
+          <div class="bg-blue-50 p-4 rounded-2xl border border-blue-100">
+            <span id="updated-total" class="block text-2xl font-black text-blue-500">0</span>
+            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Updated</span>
           </div>
           <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-            <span id="failed-total" class="block text-2xl font-black text-slate-800">0</span>
-            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Failed/Skipped</span>
+            <span id="failed-total" class="block text-2xl font-black text-rose-500">0</span>
+            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Failed</span>
           </div>
         </div>
 
@@ -248,7 +264,7 @@
       }
 
       // File Upload
-      document.getElementById('file-input').addEventListener('change', function(e) {
+      document.getElementById('file-input').addEventListener('change', function (e) {
         if (!e.target.files.length) return;
 
         const formData = new FormData();
@@ -265,9 +281,9 @@
         });
 
         fetch('{{ company_route('catalog.products.import.upload') }}', {
-            method: 'POST',
-            body: formData
-          })
+          method: 'POST',
+          body: formData
+        })
           .then(res => res.json())
           .then(data => {
             Swal.close();
@@ -295,12 +311,12 @@
         // Render Sheets
         const sheetList = document.getElementById('sheet-selector');
         sheetList.innerHTML = fileData.sheets.map((name, idx) => `
-            <div onclick="selectSheet(${idx})" class="p-4 rounded-2xl border-2 transition-all cursor-pointer flex flex-col items-center justify-center text-center group ${idx === fileData.selectedSheet ? 'border-brand-400 bg-brand-50/50 ring-4 ring-brand-400/10' : 'border-slate-100 hover:border-slate-300 hover:bg-slate-50'} relative">
-                <i class="fas fa-file-excel text-3xl mb-3 ${idx === fileData.selectedSheet ? 'text-emerald-500' : 'text-slate-300 group-hover:text-emerald-400'} transition-colors"></i>
-                <span class="text-sm font-bold text-slate-700">${name}</span>
-                ${idx === fileData.selectedSheet ? '<div class="absolute top-3 right-3"><i class="fas fa-check-circle text-brand-400 text-lg"></i></div>' : ''}
-            </div>
-        `).join('');
+                            <div onclick="selectSheet(${idx})" class="p-4 rounded-2xl border-2 transition-all cursor-pointer flex flex-col items-center justify-center text-center group ${idx === fileData.selectedSheet ? 'border-brand-400 bg-brand-50/50 ring-4 ring-brand-400/10' : 'border-slate-100 hover:border-slate-300 hover:bg-slate-50'} relative">
+                                <i class="fas fa-file-excel text-3xl mb-3 ${idx === fileData.selectedSheet ? 'text-emerald-500' : 'text-slate-300 group-hover:text-emerald-400'} transition-colors"></i>
+                                <span class="text-sm font-bold text-slate-700">${name}</span>
+                                ${idx === fileData.selectedSheet ? '<div class="absolute top-3 right-3"><i class="fas fa-check-circle text-brand-400 text-lg"></i></div>' : ''}
+                            </div>
+                        `).join('');
       }
 
       function selectSheet(idx) {
@@ -324,16 +340,16 @@
         });
 
         fetch('{{ company_route('catalog.products.import.preview') }}', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'X-CSRF-TOKEN': '{{ csrf_token() }}'
-            },
-            body: JSON.stringify({
-              temp_path: fileData.temp_path,
-              sheet_index: fileData.selectedSheet
-            })
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+          },
+          body: JSON.stringify({
+            temp_path: fileData.temp_path,
+            sheet_index: fileData.selectedSheet
           })
+        })
           .then(res => res.json())
           .then(data => {
             Swal.close();
@@ -364,49 +380,54 @@
 
         // Headers: Row index + Status + All Spreadsheet Headers
         thead.innerHTML = `
-            <th class="px-6 py-3 text-[11px] font-bold text-slate-400 uppercase text-center w-20 bg-slate-50 sticky left-0 z-20">Row</th>
-            <th class="px-6 py-3 text-[11px] font-bold text-slate-400 uppercase text-center w-24 bg-slate-50 sticky left-20 z-20 border-r border-slate-200">Status</th>
-            ${data.all_headers.map(h => {
-                const isMapped = invMapping[h];
-                return `
-                            <th class="px-6 py-3 text-[11px] font-bold uppercase whitespace-nowrap ${isMapped ? 'text-brand-600 bg-brand-50/50' : 'text-slate-500 bg-slate-100/30'}">
-                                ${h}
-                                ${isMapped ? `<div class="text-[9px] text-brand-400 font-normal mt-0.5 lowercase">&rarr; ${labels[isMapped] || isMapped}</div>` : ''}
-                            </th>
+                            <th class="px-6 py-3 text-[11px] font-bold text-slate-400 uppercase text-center w-20 bg-slate-50 sticky left-0 z-20">Row</th>
+                            <th class="px-6 py-3 text-[11px] font-bold text-slate-400 uppercase text-center w-24 bg-slate-50 sticky left-20 z-20 border-r border-slate-200">Status</th>
+                            ${data.all_headers.map(h => {
+          const isMapped = invMapping[h];
+          return `
+                                            <th class="px-6 py-3 text-[11px] font-bold uppercase whitespace-nowrap ${isMapped ? 'text-brand-600 bg-brand-50/50' : 'text-slate-500 bg-slate-100/30'}">
+                                                ${h}
+                                                ${isMapped ? `<div class="text-[9px] text-brand-400 font-normal mt-0.5 lowercase">&rarr; ${labels[isMapped] || isMapped}</div>` : ''}
+                                            </th>
+                                        `;
+        }).join('')}
                         `;
-            }).join('')}
-        `;
 
         // Rows
         tbody.innerHTML = data.preview.map((row) => {
           const hasErrors = Object.keys(row.errors).length > 0;
           return `
-                <tr class="${hasErrors ? 'bg-rose-50/20' : 'hover:bg-slate-50'} transition-colors divide-x divide-slate-100">
-                    <td class="px-6 py-3 text-center text-xs font-bold text-slate-400 bg-white sticky left-0 z-10 border-r border-slate-100">${row.row_index + 1}</td>
-                    <td class="px-6 py-3 text-center bg-white sticky left-20 z-10 border-r border-slate-200">
-                        ${hasErrors ? 
-                            `<span class="badge badge-danger cursor-help" title="${Object.values(row.errors).join(', ')}">Error</span>` : 
-                            '<span class="badge badge-success">Valid</span>'}
-                    </td>
-                    ${data.all_headers.map(h => {
-                        const dbField = invMapping[h];
-                        const val = row.raw_data[h] || '';
-                        const error = dbField ? row.errors[dbField] : null;
-                        
-                        return `
-                                    <td class="px-6 py-3 text-sm ${dbField ? 'bg-brand-50/10' : ''}">
-                                        <div class="${error ? 'text-rose-600 font-bold' : 'text-slate-600'}">
-                                            ${val || '<span class="text-slate-300 italic">-</span>'}
-                                        </div>
-                                        ${error ? `<div class="text-[10px] text-rose-500 font-bold italic mt-0.5">${error}</div>` : ''}
-                                    </td>
-                                `;
-                    }).join('')}
-                </tr>
-            `;
+                                <tr class="${hasErrors ? 'bg-rose-50/20' : 'hover:bg-slate-50'} transition-colors divide-x divide-slate-100">
+                                    <td class="px-6 py-3 text-center text-xs font-bold text-slate-400 bg-white sticky left-0 z-10 border-r border-slate-100">${row.row_index + 1}</td>
+                            <td class="px-6 py-3 text-center bg-white sticky left-20 z-10 border-r border-slate-200">
+                                ${hasErrors ?
+              `<span class="badge badge-danger cursor-help" title="${Object.values(row.errors).join(', ')}">Error</span>` :
+              (row.row_type === 'update' ?
+                '<span class="badge badge-primary flex items-center gap-1 justify-center"><i class="fas fa-sync-alt text-[8px]"></i> Update</span>' :
+                '<span class="badge badge-success flex items-center gap-1 justify-center"><i class="fas fa-plus text-[8px]"></i> New</span>')
+            }
+                            </td>
+                                    ${data.all_headers.map(h => {
+              const dbField = invMapping[h];
+              const val = row.raw_data[h] || '';
+              const error = dbField ? row.errors[dbField] : null;
+
+              return `
+                                                    <td class="px-6 py-3 text-sm ${dbField ? 'bg-brand-50/10' : ''}">
+                                                        <div class="${error ? 'text-rose-600 font-bold' : 'text-slate-600'}">
+                                                            ${val || '<span class="text-slate-300 italic">-</span>'}
+                                                        </div>
+                                                        ${error ? `<div class="text-[10px] text-rose-500 font-bold italic mt-0.5">${error}</div>` : ''}
+                                                    </td>
+                                                `;
+            }).join('')}
+                                </tr>
+                            `;
         }).join('');
 
         document.getElementById('valid-count').textContent = data.total_rows - data.error_count;
+        document.getElementById('new-count').textContent = data.new_count;
+        document.getElementById('update-count').textContent = data.update_count;
         document.getElementById('invalid-count').textContent = data.error_count;
 
         const btn = document.getElementById('import-btn');
@@ -438,21 +459,23 @@
         });
 
         fetch('{{ company_route('catalog.products.import.process') }}', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'X-CSRF-TOKEN': '{{ csrf_token() }}'
-            },
-            body: JSON.stringify({
-              temp_path: fileData.temp_path,
-              sheet_index: fileData.selectedSheet
-            })
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+          },
+          body: JSON.stringify({
+            temp_path: fileData.temp_path,
+            sheet_index: fileData.selectedSheet
           })
+        })
           .then(res => res.json())
           .then(data => {
             Swal.close();
             if (data.success) {
               document.getElementById('imported-total').textContent = data.imported;
+              document.getElementById('new-total').textContent = data.new;
+              document.getElementById('updated-total').textContent = data.updated;
               document.getElementById('failed-total').textContent = data.failed;
               changeStep(4);
             } else {
