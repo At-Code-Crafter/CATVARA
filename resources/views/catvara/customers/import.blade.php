@@ -87,7 +87,7 @@
         <div class="px-6 py-4 border-b border-slate-100 bg-slate-50/30 flex items-center justify-between">
           <div>
             <h3 class="font-bold text-slate-800">Data Validation Preview</h3>
-            <p class="text-xs text-slate-500 mt-0.5" id="preview-subtitle">Showing first 10 rows. Errors must be resolved
+            <p class="text-xs text-slate-500 mt-0.5" id="preview-subtitle">Showing all rows. Errors must be resolved
               before import.</p>
           </div>
           <div class="flex gap-4">
@@ -393,7 +393,7 @@
                         `;
 
         // Rows
-        tbody.innerHTML = data.preview.slice(0, 20).map(row => {
+        tbody.innerHTML = data.preview.map(row => {
           const hasErrors = Object.keys(row.errors).length > 0;
           const statusBadge = hasErrors ?
             `<span class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-bold bg-rose-50 text-rose-500"><i class="fas fa-times-circle"></i> Invalid</span>` :
