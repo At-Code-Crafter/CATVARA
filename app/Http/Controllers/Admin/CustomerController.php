@@ -402,13 +402,19 @@ class CustomerController extends Controller
         $csvData[] = $headers;
 
         foreach ($customers as $customer) {
+            // Format phone as Excel text formula to prevent scientific notation
+            $phone = $customer->phone ?? '';
+            if (!empty($phone)) {
+                $phone = '="' . $phone . '"';
+            }
+
             $csvData[] = [
                 $customer->id,
                 $customer->customer_code,
                 $customer->display_name,
                 $customer->legal_name ?? '',
                 $customer->email ?? '',
-                $customer->phone ?? '',
+                $phone,
                 $customer->tax_number ?? '',
                 $customer->address->address_line_1 ?? '',
                 $customer->address->address_line_2 ?? '',
