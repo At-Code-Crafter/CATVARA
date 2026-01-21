@@ -402,19 +402,13 @@ class CustomerController extends Controller
         $csvData[] = $headers;
 
         foreach ($customers as $customer) {
-            // Format phone as Excel text formula to prevent scientific notation
-            $phone = $customer->phone ?? '';
-            if (!empty($phone)) {
-                $phone = '="' . $phone . '"';
-            }
-
             $csvData[] = [
                 $customer->id,
                 $customer->customer_code,
                 $customer->display_name,
                 $customer->legal_name ?? '',
                 $customer->email ?? '',
-                $phone,
+                $customer->phone ?? '',
                 $customer->tax_number ?? '',
                 $customer->address->address_line_1 ?? '',
                 $customer->address->address_line_2 ?? '',
@@ -434,7 +428,15 @@ class CustomerController extends Controller
             // Add BOM for Excel UTF-8 compatibility
             fprintf($file, chr(0xEF) . chr(0xBB) . chr(0xBF));
             foreach ($csvData as $row) {
-                fputcsv($file, $row);
+                // Manually format to prevent Excel auto-conversion
+                $formattedRow = array_map(function ($cell) {
+                    // If it looks like a phone number (starts with + or is all digits), wrap with tab prefix
+                    if (is_string($cell) && preg_match('/^[\+]?[0-9\s\-]+$/', $cell) && strlen($cell) > 8) {
+                        return "\t" . $cell;
+                    }
+                    return $cell;
+                }, $row);
+                fputcsv($file, $formattedRow);
             }
             fclose($file);
         };
