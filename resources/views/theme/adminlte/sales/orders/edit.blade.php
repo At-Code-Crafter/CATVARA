@@ -706,6 +706,7 @@
                       <i class="fas fa-eye mr-2"></i> Preview PDF
                     </a>
 
+                    {{-- Invoice functionality disabled - table removed
                     @if($order->invoice)
                       <a class="dropdown-item" href="#"
                         onclick="window.open('{{ company_route('invoices.print', ['invoice' => $order->invoice->uuid]) }}', '_blank')">
@@ -716,6 +717,7 @@
                         <i class="fas fa-file-invoice mr-2"></i> Generate Invoice
                       </a>
                     @endif
+                    --}}
                   </div>
                 </div>
               </div>

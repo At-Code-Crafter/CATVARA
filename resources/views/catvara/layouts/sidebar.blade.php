@@ -68,7 +68,7 @@
       </p>
 
       <!-- Sales -->
-      @php $isSalesActive = $isActive(['sales-orders.*', 'invoices.*', 'credit-notes.*']); @endphp
+      @php $isSalesActive = $isActive(['quotes.*', 'sales-orders.*', 'invoices.*', 'credit-notes.*']); @endphp
       <div class="nav-group">
         <button
           class="w-full flex items-center justify-between px-4 py-3 text-sm font-semibold rounded-xl transition-all group
@@ -85,6 +85,10 @@
             class="fas fa-chevron-right text-[10px] text-slate-300 transition-transform arrow {{ $isSalesActive ? 'rotate-90' : '' }}"></i>
         </button>
         <div class="space-y-1 mt-1 {{ $isSalesActive ? '' : 'hidden' }}">
+          <a href="{{ company_route('quotes.index') }}"
+            class="flex items-center py-2 pl-12 pr-4 text-xs font-medium {{ $isActive('quotes.index') ? 'text-brand-400' : 'text-slate-500 hover:text-brand-400' }}">
+            <span class="sidebar-text">Quotations</span>
+          </a>
           <a href="{{ company_route('sales-orders.index') }}"
             class="flex items-center py-2 pl-12 pr-4 text-xs font-medium {{ $isActive('sales-orders.index') ? 'text-brand-400' : 'text-slate-500 hover:text-brand-400' }}">
             <span class="sidebar-text">Orders</span>

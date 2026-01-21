@@ -112,13 +112,24 @@
           @can('view', 'orders')
             @if ($hasSales)
               <li
-                class="nav-item has-treeview {{ $isActive(['sales-orders.*', 'invoices.*', 'credit-notes.*']) ? 'menu-open' : '' }}">
+                class="nav-item has-treeview {{ $isActive(['quotes.*', 'sales-orders.*', 'invoices.*', 'credit-notes.*']) ? 'menu-open' : '' }}">
                 <a href="#"
-                  class="nav-link {{ $isActive(['sales-orders.*', 'invoices.*', 'credit-notes.*']) ? 'active' : '' }}">
+                  class="nav-link {{ $isActive(['quotes.*', 'sales-orders.*', 'invoices.*', 'credit-notes.*']) ? 'active' : '' }}">
                   <i class="nav-icon fas fa-shopping-cart"></i>
                   <p>Sales <i class="right fas fa-angle-left"></i></p>
                 </a>
                 <ul class="nav nav-treeview">
+
+                  {{-- Quotes Navigation --}}
+                  @if (Route::has('quotes.index'))
+                    <li class="nav-item">
+                      <a href="{{ company_route('quotes.index') }}"
+                        class="nav-link {{ $isActive('quotes.*') ? 'active' : '' }}">
+                        <i class="far fa-circle nav-icon"></i>
+                        <p>Quotations</p>
+                      </a>
+                    </li>
+                  @endif
 
                   @if (Route::has('sales-orders.index'))
                     <li class="nav-item">
@@ -141,20 +152,6 @@
                       @endif
                     @endcan
                   @endif
-
-                  {{-- Quotes Navigation (DISABLED)
-                  @can('view', 'quotes')
-                    @if (Route::has('quotes.index'))
-                      <li class="nav-item">
-                        <a href="{{ company_route('quotes.index') }}"
-                          class="nav-link {{ $isActive('quotes.*') ? 'active' : '' }}">
-                          <i class="far fa-circle nav-icon"></i>
-                          <p>Quotes</p>
-                        </a>
-                      </li>
-                    @endif
-                  @endcan
-                  --}}
 
                   @can('view', 'invoices')
                     @if (Route::has('invoices.index'))
