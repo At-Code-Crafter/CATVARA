@@ -15,7 +15,11 @@
       <div class="flex items-center gap-3">
         <a href="{{ route('customers.export', $company->uuid) }}"
           class="btn btn-white shadow-sm hover:shadow-md transition-all">
-          <i class="fas fa-file-export mr-2 text-brand-500"></i> Export Customers
+          <i class="fas fa-file-export mr-2 text-brand-500"></i> Export
+        </a>
+        <a href="{{ company_route('customers.import') }}"
+          class="btn btn-white shadow-sm hover:shadow-md transition-all">
+          <i class="fas fa-file-import mr-2 text-brand-500"></i> Import
         </a>
         <a href="{{ route('customers.create', $company->uuid) }}" class="btn btn-primary shadow-lg shadow-brand-500/30">
           <i class="fas fa-plus-circle mr-2"></i> Register Customer
