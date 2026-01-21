@@ -173,7 +173,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
                 Route::resource('payment-terms', PaymentTermController::class);
                 Route::resource('payment-methods', \App\Http\Controllers\Admin\Settings\PaymentMethodController::class);
                 Route::resource('users', \App\Http\Controllers\Admin\Company\CompanyUserController::class);
-                
+
                 Route::get('company-profile', [\App\Http\Controllers\Admin\Company\CompanyProfileController::class, 'edit'])->name('company-profile.edit');
                 Route::put('company-profile', [\App\Http\Controllers\Admin\Company\CompanyProfileController::class, 'update'])->name('company-profile.update');
             });
@@ -182,6 +182,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
              * Customers Management
              */
             Route::get('customers/export', [\App\Http\Controllers\Admin\CustomerController::class, 'export'])->name('customers.export');
+            Route::get('customers/import', [\App\Http\Controllers\Admin\CustomerImportController::class, 'index'])->name('customers.import');
+            Route::post('customers/import/upload', [\App\Http\Controllers\Admin\CustomerImportController::class, 'upload'])->name('customers.import.upload');
+            Route::post('customers/import/preview', [\App\Http\Controllers\Admin\CustomerImportController::class, 'preview'])->name('customers.import.preview');
+            Route::post('customers/import/process', [\App\Http\Controllers\Admin\CustomerImportController::class, 'process'])->name('customers.import.process');
             Route::resource('customers', \App\Http\Controllers\Admin\CustomerController::class);
             Route::get('customers/load/stats', [\App\Http\Controllers\Admin\CustomerController::class, 'stats'])->name('customers.stats');
             Route::get('customers-search', [\App\Http\Controllers\Admin\CustomerController::class, 'search'])->name('customers.search');
