@@ -18,7 +18,7 @@
       </div>
       <div class="flex items-center gap-3">
         @if (($order->status->code ?? '') !== 'CONFIRMED')
-          <a href="{{ company_route('sales-orders.edit', $order->uuid) }}" class="btn btn-white">
+          <a href="{{ company_route('sales-orders.edit', ['sales_order' => $order->uuid]) }}" class="btn btn-white">
             <i class="fas fa-edit mr-2"></i> Edit
           </a>
         @endif

@@ -97,7 +97,7 @@ class CustomerController extends Controller
                 })
 
                 ->addColumn('action', function ($row) use ($company) {
-                    $compact['showUrl'] = route('customers.show', [$company->uuid, $row->id]);
+                    // $compact['showUrl'] = route('customers.show', [$company->uuid, $row->id]);
                     $compact['editUrl'] = route('customers.edit', [$company->uuid, $row->id]);
                     $compact['deleteUrl'] = null;
                     $compact['editSidebar'] = false;
@@ -428,7 +428,15 @@ class CustomerController extends Controller
             // Add BOM for Excel UTF-8 compatibility
             fprintf($file, chr(0xEF) . chr(0xBB) . chr(0xBF));
             foreach ($csvData as $row) {
-                fputcsv($file, $row);
+                // Manually format to prevent Excel auto-conversion
+                $formattedRow = array_map(function ($cell) {
+                    // If it looks like a phone number (starts with + or is all digits), wrap with tab prefix
+                    if (is_string($cell) && preg_match('/^[\+]?[0-9\s\-]+$/', $cell) && strlen($cell) > 8) {
+                        return "\t" . $cell;
+                    }
+                    return $cell;
+                }, $row);
+                fputcsv($file, $formattedRow);
             }
             fclose($file);
         };
