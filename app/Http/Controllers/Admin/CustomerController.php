@@ -209,17 +209,18 @@ class CustomerController extends Controller
                 'is_active' => (bool) ($data['is_active'] ?? true),
                 'payment_term_id' => $data['payment_term_id'] ?? null,
                 'percentage_discount' => $data['percentage_discount'] ?? 0,
+                'timezone' => $data['timezone'] ?? null,
             ]);
 
             Address::create([
                 'company_id' => $company->id,
                 'addressable_id' => $customer->id,
                 'addressable_type' => Customer::class,
-                'address_line_1' => $data['address_line_1'] ?? null,
+                'address_line_1' => $data['address_line_1'] ?? '',
                 'address_line_2' => $data['address_line_2'] ?? null,
                 'city' => $data['city'] ?? null,
                 'state_id' => $data['state_id'] ?? null,
-                'zip_code' => $data['zip_code'] ?? null,
+                'zip_code' => $data['zip_code'] ?? '',
                 'country_id' => $data['country_id'] ?? null,
             ]);
 
@@ -315,6 +316,7 @@ class CustomerController extends Controller
                 'is_active' => $data['is_active'] ?? true,
                 'payment_term_id' => $data['payment_term_id'] ?? null,
                 'percentage_discount' => $data['percentage_discount'] ?? 0,
+                'timezone' => $data['timezone'] ?? null,
             ]);
 
             Address::updateOrCreate([
@@ -322,12 +324,12 @@ class CustomerController extends Controller
                 'addressable_id' => $customer->id,
                 'addressable_type' => Customer::class,
             ], [
-                'address_line_1' => $data['address_line_1'],
+                'address_line_1' => $data['address_line_1'] ?? '',
                 'address_line_2' => $data['address_line_2'] ?? null,
                 'city' => $data['city'] ?? null,
-                'state_id' => $data['state_id'],
-                'country_id' => $data['country_id'],
-                'zip_code' => $data['zip_code'],
+                'state_id' => $data['state_id'] ?? null,
+                'country_id' => $data['country_id'] ?? null,
+                'zip_code' => $data['zip_code'] ?? '',
             ]);
 
             DB::commit();

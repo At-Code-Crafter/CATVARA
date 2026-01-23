@@ -27,6 +27,7 @@ class Customer extends Model
         'is_active',
         'payment_term_id',
         'percentage_discount',
+        'timezone',
     ];
 
     protected $casts = [
