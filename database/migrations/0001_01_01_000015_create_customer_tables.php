@@ -41,7 +41,6 @@ return new class extends Migration
             $table->index(['company_id', 'type'], 'cust_company_type_idx');
             $table->unique(['company_id', 'customer_code'], 'cust_company_customer_code_unique');
             $table->unique(['company_id', 'email'], 'cust_company_email_unique');
-            $table->unique(['company_id', 'phone'], 'cust_company_phone_unique');
         });
 
         /**
