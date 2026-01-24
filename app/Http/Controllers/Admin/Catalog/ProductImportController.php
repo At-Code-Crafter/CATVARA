@@ -94,7 +94,7 @@ class ProductImportController extends Controller
         }
 
         $allHeaders = array_keys($data[0] ?? []);
-        $mapping = $this->autoResolveMapping($allHeaders);
+        $mapping = $this->autoResolveMapping($allHeaders, $request->company->id);
 
         $previewData = [];
         $validationErrors = [];
@@ -192,11 +192,13 @@ class ProductImportController extends Controller
         ]);
     }
 
-    private function autoResolveMapping($headers)
+    private function autoResolveMapping($headers, $companyId)
     {
         $mapping = [];
-        $priceChannels = PriceChannel::all();
-        $locations = InventoryLocation::with('locatable')->get();
+        $priceChannels = PriceChannel::where('is_active', 1)->whereHas('companies', function ($query) use ($companyId) {
+            $query->where('company_id', $companyId);
+        })->get();
+        $locations = InventoryLocation::where('company_id', $companyId)->with('locatable')->get();
 
         $coreMaps = [
             'brand_id' => ['brand_id'],
@@ -204,7 +206,7 @@ class ProductImportController extends Controller
             'product_id' => ['product_id'],
             'product_name' => ['product_name'],
             'variant_sku' => ['variant_sku'],
-            'cost' => ['cost'],
+            'cost' => ['cost', 'cost_price'],
             'category_id' => ['category_id'],
             'category_name' => ['category_name'],
             'description' => ['description'],
@@ -213,11 +215,11 @@ class ProductImportController extends Controller
         ];
 
         foreach ($headers as $header) {
-            $cleanHeader = strtolower(trim($header));
+            $cleanHeader = str_replace('_', ' ', strtolower(trim($header)));
 
             // Check core maps
             foreach ($coreMaps as $field => $patterns) {
-                if (in_array($cleanHeader, $patterns) && ! isset($mapping[$field])) {
+                if (in_array(str_replace(' ', '_', $cleanHeader), $patterns) && ! isset($mapping[$field])) {
                     $mapping[$field] = $header;
 
                     continue 2;
@@ -267,7 +269,7 @@ class ProductImportController extends Controller
         $data = Excel::toArray(new ProductImport($companyId), $absolutePath)[$request->sheet_index];
 
         $headers = array_keys($data[0] ?? []);
-        $mapping = $this->autoResolveMapping($headers);
+        $mapping = $this->autoResolveMapping($headers, $companyId);
 
         $imported = 0;
         $newImported = 0;

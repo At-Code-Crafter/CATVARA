@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin\Catalog;
 
+use App\Exports\Catalog\ProductExport;
 use App\Http\Controllers\Controller;
 use App\Models\Catalog\Attribute;
 use App\Models\Catalog\Category;
@@ -10,14 +11,13 @@ use App\Models\Catalog\ProductVariant;
 use App\Models\Inventory\InventoryLocation;
 use App\Models\Pricing\Currency;
 use App\Models\Pricing\PriceChannel;
-use App\Models\Pricing\VariantPrice;
 // use App\Models\Inventory\InventoryBalance; // Removed for separation
+use App\Models\Pricing\VariantPrice;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
-use Yajra\DataTables\Facades\DataTables;
-use App\Exports\Catalog\ProductExport;
 use Maatwebsite\Excel\Facades\Excel;
+use Yajra\DataTables\Facades\DataTables;
 
 class ProductController extends Controller
 {
@@ -25,62 +25,88 @@ class ProductController extends Controller
     {
         $this->authorize('view', 'products');
 
-        if ($request->ajax()) {
-            $query = Product::where('company_id', $request->company->id)
-                ->with(['category', 'variants', 'attachments']); // Eager load attachments for thumbnail
+            if ($request->ajax()) {
+                $query = Product::where('company_id', $request->company->id)
+                    ->with(['category', 'brand', 'variants.prices', 'variants.inventory', 'attachments']); // Eager load everything needed
 
-            if ($request->filled('category_id')) {
-                $query->where('category_id', $request->category_id);
-            }
-
-            if ($request->filled('status')) {
-                $query->where('is_active', $request->status);
-            }
-
-            if ($request->filled('stock_level')) {
-                $status = $request->stock_level;
-                if ($status === 'in_stock') {
-                    $query->whereHas('variants.inventory', function ($q) {
-                        $q->where('quantity', '>', 0);
-                    });
-                } elseif ($status === 'low_stock') {
-                    $query->whereHas('variants.inventory', function ($q) {
-                        $q->where('quantity', '>', 0)->where('quantity', '<=', 5);
-                    });
-                } elseif ($status === 'out_of_stock') {
-                    // Products that do NOT have any inventory > 0
-                    $query->whereDoesntHave('variants.inventory', function ($q) {
-                        $q->where('quantity', '>', 0);
-                    });
+                if ($request->filled('category_id')) {
+                    $query->where('category_id', $request->category_id);
                 }
-            }
 
-            if ($request->filled('date_from') && $request->filled('date_to')) {
-                $query->whereBetween('products.created_at', [
-                    $request->date_from.' 00:00:00',
-                    $request->date_to.' 23:59:59',
-                ]);
-            }
+                if ($request->filled('status')) {
+                    $query->where('is_active', $request->status);
+                }
 
-            return DataTables::of($query)
-                ->addIndexColumn()
-                ->addColumn('image_url', function ($row) {
-                    return $row->image ? asset('storage/'.$row->image) : null;
-                })
-                ->addColumn('category_name', function ($row) {
-                    return $row->category ? $row->category->name : null;
-                })
-                ->addColumn('variants_count', function ($row) {
-                    return $row->variants->count();
-                })
-                ->addColumn('edit_url', function ($row) {
-                    return company_route('catalog.products.edit', ['product' => $row->id]);
-                })
-                ->addColumn('action', function ($row) {
-                    return ''; // Actions are rendered client-side using edit_url
-                })
-                ->make(true);
-        }
+                if ($request->filled('brand_id')) {
+                    $query->where('brand_id', $request->brand_id);
+                }
+
+                if ($request->filled('stock_level')) {
+                    $status = $request->stock_level;
+                    if ($status === 'in_stock') {
+                        $query->whereHas('variants.inventory', function ($q) {
+                            $q->where('quantity', '>', 0);
+                        });
+                    } elseif ($status === 'low_stock') {
+                        $query->whereHas('variants.inventory', function ($q) {
+                            $q->where('quantity', '>', 0)->where('quantity', '<=', 5);
+                        });
+                    } elseif ($status === 'out_of_stock') {
+                        // Products that do NOT have any inventory > 0
+                        $query->whereDoesntHave('variants.inventory', function ($q) {
+                            $q->where('quantity', '>', 0);
+                        });
+                    }
+                }
+
+                if ($request->filled('date_from') && $request->filled('date_to')) {
+                    $query->whereBetween('products.created_at', [
+                        $request->date_from.' 00:00:00',
+                        $request->date_to.' 23:59:59',
+                    ]);
+                }
+
+                return DataTables::of($query)
+                    ->addIndexColumn()
+                    ->addColumn('image_url', function ($row) {
+                        return $row->image ? asset('storage/'.$row->image) : null;
+                    })
+                    ->addColumn('category_name', function ($row) {
+                        return $row->category ? $row->category->name : null;
+                    })
+                    ->addColumn('brand_name', function ($row) {
+                        return $row->brand ? $row->brand->name : null;
+                    })
+                    ->addColumn('total_stock', function ($row) {
+                        return (float) $row->variants->flatMap->inventory->sum('quantity');
+                    })
+                    ->addColumn('price_range', function ($row) {
+                        $prices = $row->variants->flatMap->prices->pluck('price')->filter()->unique()->sort();
+                        if ($prices->isEmpty()) {
+                            return '—';
+                        }
+                        $min = $prices->first();
+                        $max = $prices->last();
+
+                        if ($min == $max) {
+                            return number_format($min, 2);
+                        }
+                        return number_format($min, 2) . ' - ' . number_format($max, 2);
+                    })
+                    ->addColumn('status', function ($row) {
+                        return $row->is_active;
+                    })
+                    ->addColumn('variants_count', function ($row) {
+                        return $row->variants->count();
+                    })
+                    ->addColumn('edit_url', function ($row) {
+                        return company_route('catalog.products.edit', ['product' => $row->id]);
+                    })
+                    ->addColumn('action', function ($row) {
+                        return ''; // Actions are rendered client-side using edit_url
+                    })
+                    ->make(true);
+            }
 
         $categories = Category::where('company_id', $request->company->id)->get();
         $brands = \App\Models\Catalog\Brand::where('company_id', $request->company->id)->get();
