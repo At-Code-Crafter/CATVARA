@@ -88,9 +88,9 @@ class CustomerImportController extends Controller
         $previewData = [];
         $validationErrors = [];
         $emailsInFile = [];
-        $phonesInFile = [];
         $newCount = 0;
         $updateCount = 0;
+        $companyId = $request->company->id;
 
         foreach ($data as $i => $row) {
             $mappedRow = [];
@@ -104,8 +104,8 @@ class CustomerImportController extends Controller
 
             // 2. Perform Validation
             $displayName = $mappedRow['display_name'] ?? null;
-            $email = $mappedRow['email'] ?? null;
-            $phone = $mappedRow['phone'] ?? null;
+            $email = !empty($mappedRow['email']) ? trim($mappedRow['email']) : null;
+            $customerCode = !empty($mappedRow['customer_code']) ? trim($mappedRow['customer_code']) : null;
 
             if (empty($displayName)) {
                 $errors['display_name'] = 'Display Name is required';
@@ -120,34 +120,56 @@ class CustomerImportController extends Controller
                 }
             }
 
-            // Check phone uniqueness within file
-            if (!empty($phone)) {
-                if (in_array($phone, $phonesInFile)) {
-                    $errors['phone'] = 'Duplicate phone in file';
-                } else {
-                    $phonesInFile[] = $phone;
-                }
+            // 3. Determine Row Type and Validate based on new rules
+            $rowType = 'new';
+            $existingCustomer = null;
+
+            // Find existing customer by customer_code
+            if (!empty($customerCode)) {
+                $existingCustomer = Customer::where('company_id', $companyId)
+                    ->where('customer_code', $customerCode)
+                    ->first();
             }
 
-            // 3. Determine Row Type (New vs Update)
-            $rowType = 'new';
-            $customerId = $mappedRow['customer_id'] ?? null;
-            $companyId = $request->company->id;
+            if (empty($customerCode) && empty($email)) {
+                // Case 1: customer_code == null && email == null → New Entry
+                $rowType = 'new';
+            } elseif (empty($customerCode) && !empty($email)) {
+                // Case 2 & 3: customer_code == null && email != null
+                $emailExists = Customer::where('company_id', $companyId)
+                    ->where('email', $email)
+                    ->exists();
 
-            if (!empty($customerId)) {
-                $exists = Customer::where('company_id', '=', $companyId)->where('id', '=', $customerId)->exists();
-                if ($exists) {
-                    $rowType = 'update';
+                if ($emailExists) {
+                    // Case 3: email exists → error
+                    $errors['email'] = 'Email already exists for another customer';
+                } else {
+                    // Case 2: email doesn't exist → valid, create new
+                    $rowType = 'new';
                 }
-            } elseif (!empty($email)) {
-                $exists = Customer::where('company_id', '=', $companyId)->where('email', '=', $email)->exists();
-                if ($exists) {
+            } elseif (!empty($customerCode) && empty($email)) {
+                // Case 4: customer_code != null && email == null → update existing, don't touch email
+                if ($existingCustomer) {
                     $rowType = 'update';
+                } else {
+                    $errors['customer_code'] = 'Customer code not found';
                 }
-            } elseif (!empty($phone)) {
-                $exists = Customer::where('company_id', '=', $companyId)->where('phone', '=', $phone)->exists();
-                if ($exists) {
-                    $rowType = 'update';
+            } elseif (!empty($customerCode) && !empty($email)) {
+                // Case 5: customer_code != null && email != null
+                if (!$existingCustomer) {
+                    $errors['customer_code'] = 'Customer code not found';
+                } else {
+                    // Check if email belongs to another customer
+                    $emailBelongsToAnother = Customer::where('company_id', $companyId)
+                        ->where('email', $email)
+                        ->where('id', '!=', $existingCustomer->id)
+                        ->exists();
+
+                    if ($emailBelongsToAnother) {
+                        $errors['email'] = 'Email is linked with another customer';
+                    } else {
+                        $rowType = 'update';
+                    }
                 }
             }
 
@@ -203,10 +225,10 @@ class CustomerImportController extends Controller
             // Address fields
             'address_line_1' => ['address_line_1', 'address', 'street', 'address_1'],
             'address_line_2' => ['address_line_2', 'address_2', 'street_2'],
-            'city' => ['city', 'town'],
+            'city' => ['city', 'town', 'city/town', 'citytown'],
             'state_name' => ['state_name', 'state', 'province', 'region'],
             'country_name' => ['country_name', 'country'],
-            'zip_code' => ['zip_code', 'postal_code', 'postcode', 'zip'],
+            'zip_code' => ['zip_code', 'postal_code', 'postcode', 'zip', 'postal code', 'postalcode'],
         ];
 
         foreach ($headers as $header) {
@@ -256,22 +278,70 @@ class CustomerImportController extends Controller
                     continue;
                 }
 
-                // Check for existing customer
+                $email = !empty($mapped['email']) ? trim($mapped['email']) : null;
+                $customerCode = !empty($mapped['customer_code']) ? trim($mapped['customer_code']) : null;
+
+                // Determine action based on customer_code and email
                 $customer = null;
                 $isNew = false;
+                $shouldSkipEmail = false;
 
-                if (!empty($mapped['customer_id'])) {
-                    $customer = Customer::where('company_id', '=', $companyId)->find($mapped['customer_id']);
-                }
-                if (!$customer && !empty($mapped['email'])) {
-                    $customer = Customer::where('company_id', '=', $companyId)
-                        ->where('email', '=', $mapped['email'])
+                // Find existing customer by customer_code
+                if (!empty($customerCode)) {
+                    $customer = Customer::where('company_id', $companyId)
+                        ->where('customer_code', $customerCode)
                         ->first();
                 }
-                if (!$customer && !empty($mapped['phone'])) {
-                    $customer = Customer::where('company_id', '=', $companyId)
-                        ->where('phone', '=', $mapped['phone'])
-                        ->first();
+
+                // Validate and determine action based on rules
+                if (empty($customerCode) && empty($email)) {
+                    // Case 1: customer_code == null && email == null → New Entry
+                    $isNew = true;
+                } elseif (empty($customerCode) && !empty($email)) {
+                    // Case 2 & 3: customer_code == null && email != null
+                    $emailExists = Customer::where('company_id', $companyId)
+                        ->where('email', $email)
+                        ->exists();
+
+                    if ($emailExists) {
+                        // Case 3: email exists → skip (error already shown in preview)
+                        $failed++;
+                        continue;
+                    } else {
+                        // Case 2: email doesn't exist → create new
+                        $isNew = true;
+                    }
+                } elseif (!empty($customerCode) && empty($email)) {
+                    // Case 4: customer_code != null && email == null → update existing, don't touch email
+                    if ($customer) {
+                        $isNew = false;
+                        $shouldSkipEmail = true;
+                    } else {
+                        // Customer code not found → skip
+                        $failed++;
+                        continue;
+                    }
+                } elseif (!empty($customerCode) && !empty($email)) {
+                    // Case 5: customer_code != null && email != null
+                    if (!$customer) {
+                        // Customer code not found → skip
+                        $failed++;
+                        continue;
+                    } else {
+                        // Check if email belongs to another customer
+                        $emailBelongsToAnother = Customer::where('company_id', $companyId)
+                            ->where('email', $email)
+                            ->where('id', '!=', $customer->id)
+                            ->exists();
+
+                        if ($emailBelongsToAnother) {
+                            // Email linked to another → skip
+                            $failed++;
+                            continue;
+                        } else {
+                            $isNew = false;
+                        }
+                    }
                 }
 
                 // Resolve Payment Term
@@ -301,16 +371,14 @@ class CustomerImportController extends Controller
                     $discount = is_numeric($discountValue) ? (float) $discountValue : 0;
                 }
 
-                if (!$customer) {
-                    $isNew = true;
-
+                if ($isNew) {
                     // Create Customer
                     $customer = Customer::create([
                         'uuid' => (string) Str::uuid(),
                         'company_id' => $companyId,
                         'type' => $type,
                         'display_name' => $mapped['display_name'],
-                        'email' => $mapped['email'] ?? null,
+                        'email' => $email,
                         'phone' => $mapped['phone'] ?? null,
                         'legal_name' => $mapped['legal_name'] ?? null,
                         'tax_number' => $mapped['tax_number'] ?? null,
@@ -320,11 +388,10 @@ class CustomerImportController extends Controller
                         'percentage_discount' => $discount,
                     ]);
                 } else {
-                    // Update Customer
-                    $customer->update([
+                    // Update Customer - conditionally update email
+                    $updateData = [
                         'type' => $type,
                         'display_name' => $mapped['display_name'] ?? $customer->display_name,
-                        'email' => $mapped['email'] ?? $customer->email,
                         'phone' => $mapped['phone'] ?? $customer->phone,
                         'legal_name' => $mapped['legal_name'] ?? $customer->legal_name,
                         'tax_number' => $mapped['tax_number'] ?? $customer->tax_number,
@@ -332,27 +399,41 @@ class CustomerImportController extends Controller
                         'is_active' => $isActive,
                         'payment_term_id' => $paymentTermId ?? $customer->payment_term_id,
                         'percentage_discount' => $discount,
-                    ]);
+                    ];
+
+                    // Only update email if not skipping (Case 4: don't touch email)
+                    if (!$shouldSkipEmail && !empty($email)) {
+                        $updateData['email'] = $email;
+                    }
+
+                    $customer->update($updateData);
                 }
 
                 // Handle Address
-                $hasAddressData = !empty($mapped['address_line_1']) || !empty($mapped['city']) || !empty($mapped['zip_code']);
+                $hasAddressData = !empty($mapped['address_line_1']) || !empty($mapped['city']) || !empty($mapped['zip_code']) || !empty($mapped['country_name']);
 
                 if ($hasAddressData) {
                     // Resolve Country
                     $countryId = null;
                     if (!empty($mapped['country_name'])) {
-                        $country = Country::where('name', 'LIKE', '%' . $mapped['country_name'] . '%')
-                            ->orWhere('iso_code_2', '=', strtoupper($mapped['country_name']))
-                            ->orWhere('iso_code_3', '=', strtoupper($mapped['country_name']))
+                        $countryName = trim($mapped['country_name']);
+                        $country = Country::where('name', 'LIKE', '%' . $countryName . '%')
+                            ->orWhere('iso_code_2', '=', strtoupper($countryName))
+                            ->orWhere('iso_code_3', '=', strtoupper($countryName))
                             ->first();
+
+                        // Try exact match if LIKE didn't work
+                        if (!$country) {
+                            $country = Country::whereRaw('LOWER(name) = ?', [strtolower($countryName)])->first();
+                        }
                         $countryId = $country?->id;
                     }
 
-                    // Resolve State
+                    // Resolve State (optional - don't require it)
                     $stateId = null;
                     if (!empty($mapped['state_name'])) {
-                        $stateQuery = State::where('name', 'LIKE', '%' . $mapped['state_name'] . '%');
+                        $stateName = trim($mapped['state_name']);
+                        $stateQuery = State::where('name', 'LIKE', '%' . $stateName . '%');
                         if ($countryId) {
                             $stateQuery->where('country_id', $countryId);
                         }
@@ -367,12 +448,12 @@ class CustomerImportController extends Controller
                             'addressable_type' => Customer::class,
                         ],
                         [
-                            'address_line_1' => $mapped['address_line_1'] ?? '',
-                            'address_line_2' => $mapped['address_line_2'] ?? null,
-                            'city' => $mapped['city'] ?? null,
+                            'address_line_1' => trim($mapped['address_line_1'] ?? ''),
+                            'address_line_2' => !empty($mapped['address_line_2']) ? trim($mapped['address_line_2']) : null,
+                            'city' => !empty($mapped['city']) ? trim($mapped['city']) : null,
                             'state_id' => $stateId,
                             'country_id' => $countryId,
-                            'zip_code' => $mapped['zip_code'] ?? '',
+                            'zip_code' => trim($mapped['zip_code'] ?? ''),
                         ]
                     );
                 }
