@@ -16,6 +16,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Yajra\DataTables\Facades\DataTables;
+use App\Exports\Catalog\ProductExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class ProductController extends Controller
 {
@@ -55,15 +57,15 @@ class ProductController extends Controller
 
             if ($request->filled('date_from') && $request->filled('date_to')) {
                 $query->whereBetween('products.created_at', [
-                    $request->date_from . ' 00:00:00',
-                    $request->date_to . ' 23:59:59'
+                    $request->date_from.' 00:00:00',
+                    $request->date_to.' 23:59:59',
                 ]);
             }
 
             return DataTables::of($query)
                 ->addIndexColumn()
                 ->addColumn('image_url', function ($row) {
-                    return $row->image ? asset('storage/' . $row->image) : null;
+                    return $row->image ? asset('storage/'.$row->image) : null;
                 })
                 ->addColumn('category_name', function ($row) {
                     return $row->category ? $row->category->name : null;
@@ -196,7 +198,7 @@ class ProductController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
 
-            return redirect()->back()->with('error', 'Error updating product: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Error updating product: '.$e->getMessage());
         }
     }
 
@@ -228,7 +230,7 @@ class ProductController extends Controller
             $product->category_id = $categoryId;
             $product->brand_id = $brandId;
             $product->name = $request->name;
-            $product->slug = Str::slug($request->name) . '-' . time();
+            $product->slug = Str::slug($request->name).'-'.time();
             $product->description = $request->description;
 
             // Save first to get ID
@@ -242,7 +244,7 @@ class ProductController extends Controller
                 $file = $request->file('image');
 
                 $ext = strtolower($file->getClientOriginalExtension() ?: 'jpg');
-                $safeName = Str::slug($product->name) . '-' . $product->id . '-' . Str::random(6) . '.' . $ext;
+                $safeName = Str::slug($product->name).'-'.$product->id.'-'.Str::random(6).'.'.$ext;
 
                 $path = $file->storeAs('products', $safeName, 'public'); // returns products/xxx.jpg
 
@@ -259,7 +261,7 @@ class ProductController extends Controller
                 $variant->uuid = (string) Str::uuid();
                 $variant->company_id = $request->company->id;
                 $variant->product_id = $product->id;
-                $variant->sku = $v['sku'] ?? ($product->slug . '-' . Str::random(4));
+                $variant->sku = $v['sku'] ?? ($product->slug.'-'.Str::random(4));
                 $variant->barcode = $v['barcode'] ?? null;
                 $variant->cost_price = $v['cost'] ?? null;
                 $variant->save();
@@ -304,122 +306,15 @@ class ProductController extends Controller
     }
 
     /**
-     * Export products with variants to CSV
+     * Export products with variants to Excel
      */
     public function export(Request $request)
     {
         $this->authorize('view', 'products');
 
-        $companyId = $request->company->id;
+        $filename = 'products_export_'.date('Y-m-d_His').'.xlsx';
 
-        // 1. Get Dynamic Columns: Price Channels
-        $priceChannels = PriceChannel::where('is_active', 1)->whereHas('companies', function ($query) use ($companyId) {
-            $query->where('company_id', $companyId);
-        })->get();
-
-        // 2. Get Dynamic Columns: Inventory Locations (Stores & Warehouses)
-        $locations = InventoryLocation::where('company_id', $companyId)
-            ->with('locatable')
-            ->get();
-
-        // Prepare Headers
-        $headers = [
-            'Category ID',
-            'Category Name',
-            'Brand ID',
-            'Brand Name',
-            'Product ID',
-            'Product Name',
-            'Status',
-            'Variant ID',
-            'Variant SKU',
-            'Variant Attributes',
-            'Cost',
-        ];
-
-        // Add Price Channel headers
-        foreach ($priceChannels as $channel) {
-            $headers[] = 'Price - ' . ($channel->name ?: $channel->code);
-        }
-
-        // Add Stock Location headers
-        foreach ($locations as $location) {
-            $locationName = $location->locatable->name ?? 'Unknown (' . $location->type . ')';
-            $headers[] = 'Stock - ' . $locationName;
-        }
-
-        $headers[] = 'Total Stock';
-
-        // Get all products with variants, category, brand, prices, and inventory
-        $products = Product::where('company_id', $companyId)
-            ->with([
-                'category',
-                'brand',
-                'variants.prices',
-                'variants.inventory',
-                'variants.attributeValues.attribute',
-            ])
-            ->get();
-
-        $csvData = [];
-        $csvData[] = $headers;
-
-        foreach ($products as $product) {
-            foreach ($product->variants as $variant) {
-                $row = [
-                    $product->category_id,
-                    $product->category->name ?? '',
-                    $product->brand_id,
-                    $product->brand->name ?? '',
-                    $product->id,
-                    $product->name,
-                    $product->is_active ? 'Active' : 'Inactive',
-                    $variant->id,
-                    $variant->sku,
-                    $variant->attributeValues->groupBy(fn($av) => $av->attribute->name ?? 'Unknown')
-                        ->map(fn($vals, $name) => $name . ': ' . $vals->pluck('value')->join(', '))
-                        ->join('; '),
-                    $variant->cost_price ?? 0,
-                ];
-
-                // Map Prices
-                foreach ($priceChannels as $channel) {
-                    $priceObj = $variant->prices->firstWhere('price_channel_id', $channel->id);
-                    $row[] = $priceObj ? $priceObj->price : '';
-                }
-
-                // Map Stock
-                $totalStock = 0;
-                foreach ($locations as $location) {
-                    $balance = $variant->inventory->firstWhere('inventory_location_id', $location->id);
-                    $qty = $balance ? (float) $balance->quantity : 0;
-                    $row[] = $qty;
-                    $totalStock += $qty;
-                }
-
-                $row[] = $totalStock;
-
-                $csvData[] = $row;
-            }
-        }
-
-        // Generate CSV
-        $filename = 'products_export_' . date('Y-m-d_His') . '.csv';
-
-        $callback = function () use ($csvData) {
-            $file = fopen('php://output', 'w');
-            // Add BOM for Excel UTF-8 compatibility
-            fprintf($file, chr(0xEF) . chr(0xBB) . chr(0xBF));
-            foreach ($csvData as $row) {
-                fputcsv($file, $row);
-            }
-            fclose($file);
-        };
-
-        return response()->stream($callback, 200, [
-            'Content-Type' => 'text/csv; charset=UTF-8',
-            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
-        ]);
+        return Excel::download(new ProductExport($request->company->id), $filename);
     }
 
     /**
@@ -454,7 +349,7 @@ class ProductController extends Controller
             $category = Category::create([
                 'company_id' => $companyId,
                 'name' => $name,
-                'slug' => Str::slug($name) . '-' . time(),
+                'slug' => Str::slug($name).'-'.time(),
                 'is_active' => true,
             ]);
 
@@ -498,7 +393,7 @@ class ProductController extends Controller
                 'uuid' => (string) Str::uuid(),
                 'company_id' => $companyId,
                 'name' => $name,
-                'slug' => Str::slug($name) . '-' . time(),
+                'slug' => Str::slug($name).'-'.time(),
                 'is_active' => true,
             ]);
 
@@ -518,6 +413,4 @@ class ProductController extends Controller
 
         return view('catvara.catalog.products.import');
     }
-
-
 }

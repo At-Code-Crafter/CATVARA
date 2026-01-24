@@ -1,5 +1,6 @@
 <!doctype html>
 <html lang="en">
+
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
@@ -16,7 +17,10 @@
             sans: ['Inter', 'ui-sans-serif', 'system-ui', 'Segoe UI', 'Roboto', 'Helvetica', 'Arial'],
           },
           colors: {
-            ink: { 950: '#0B1220', 900: '#0F172A' }
+            ink: {
+              950: '#0B1220',
+              900: '#0F172A'
+            }
           }
         }
       }
@@ -53,7 +57,8 @@
             </h1>
 
             <p class="mt-5 text-base leading-relaxed text-slate-600 md:text-lg">
-              Forgot your password? No problem. Enter your email address and we’ll send a reset link so you can choose a new one.
+              Forgot your password? No problem. Enter your email address and we’ll send a reset link so you can choose a
+              new one.
             </p>
 
             <div class="mt-8 flex flex-wrap items-center gap-3 text-xs text-slate-500">
@@ -76,62 +81,62 @@
                 <div class="mb-6">
                   <h2 class="text-lg font-semibold text-slate-900">Forgot Password</h2>
                   <p class="mt-1 text-sm text-slate-600">We will email you a password reset link.</p>
-                </div>
+                  @if (session('status'))
+                    <div class="mb-6 rounded-xl bg-emerald-50 p-4 text-sm text-emerald-700 border border-emerald-100">
+                      {{ session('status') }}
+                    </div>
+                  @endif
 
-                <!-- Session Status (static placeholder for standalone HTML) -->
-                <!--
-                <div class="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
-                  Reset link sent successfully.
-                </div>
-                -->
+                  @if ($errors->any())
+                    <div class="mb-6 rounded-xl bg-red-50 p-4 text-sm text-red-700 border border-red-100">
+                      <ul class="list-inside list-disc">
+                        @foreach ($errors->all() as $error)
+                          <li>{{ $error }}</li>
+                        @endforeach
+                      </ul>
+                    </div>
+                  @endif
 
-                <form method="POST" action="/forgot-password" class="space-y-5">
+                  <form method="POST" action="/forgot-password" class="space-y-5">
                     @csrf
-                  <!-- Email -->
-                  <div>
-                    <label for="email" class="block text-sm font-medium text-slate-900">Email</label>
-                    <div class="mt-2">
-                      <input
-                        id="email"
-                        name="email"
-                        type="email"
-                        required
-                        autofocus
-                        placeholder="you@company.com"
-                        class="block w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm outline-none
-                               placeholder:text-slate-400 focus:border-slate-400 focus:ring-4 focus:ring-slate-100"
-                      />
+                    <!-- Email -->
+                    <div>
+                      <label for="email" class="block text-sm font-medium text-slate-900">Email</label>
+                      <div class="mt-2">
+                        <input id="email" name="email" type="email" required autofocus
+                          value="{{ old('email') }}" placeholder="you@company.com"
+                          class="block w-full rounded-xl border {{ $errors->has('email') ? 'border-red-500' : 'border-slate-200' }} bg-white px-4 py-3 text-sm text-slate-900 shadow-sm outline-none
+                                placeholder:text-slate-400 focus:border-slate-400 focus:ring-4 focus:ring-slate-100" />
+                      </div>
+                      @error('email')
+                        <p class="mt-2 text-xs text-red-600">{{ $message }}</p>
+                      @enderror
                     </div>
 
-                    <!-- Example error placeholder (remove in production) -->
-                    <!-- <p class="mt-2 text-xs text-red-600">Please enter a valid email.</p> -->
-                  </div>
+                    <!-- Submit -->
+                    <button type="submit"
+                      class="inline-flex w-full items-center justify-center rounded-xl bg-ink-950 px-4 py-3 text-sm font-semibold text-white shadow-sm
+                           transition hover:bg-ink-900 focus:outline-none focus:ring-4 focus:ring-slate-200">
+                      Email Password Reset Link
+                    </button>
 
-                  <!-- Submit -->
-                  <button
-                    type="submit"
-                    class="inline-flex w-full items-center justify-center rounded-xl bg-ink-950 px-4 py-3 text-sm font-semibold text-white shadow-sm
-                           transition hover:bg-ink-900 focus:outline-none focus:ring-4 focus:ring-slate-200"
-                  >
-                    Email Password Reset Link
-                  </button>
-
-                  <div class="pt-2 text-center text-xs text-slate-500">
-                    <a href="/login" class="font-medium text-slate-600 hover:text-slate-900">Back to Login</a>
-                    <span class="mx-2 text-slate-300">•</span>
-                    © <span id="year"></span> CATVARA
-                  </div>
-                </form>
+                    <div class="pt-2 text-center text-xs text-slate-500">
+                      <a href="/login" class="font-medium text-slate-600 hover:text-slate-900">Back to Login</a>
+                      <span class="mx-2 text-slate-300">•</span>
+                      © <span id="year"></span> CATVARA
+                    </div>
+                  </form>
+                </div>
               </div>
             </div>
-          </div>
-        </div> <!-- /grid -->
+          </div> <!-- /grid -->
+        </div>
       </div>
     </div>
-  </div>
 
-  <script>
-    document.getElementById('year').textContent = new Date().getFullYear();
-  </script>
+    <script>
+      document.getElementById('year').textContent = new Date().getFullYear();
+    </script>
 </body>
+
 </html>
