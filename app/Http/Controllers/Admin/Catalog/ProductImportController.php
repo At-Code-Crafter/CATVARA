@@ -164,9 +164,23 @@ class ProductImportController extends Controller
             }
         }
 
+        // Build detailed error list for all rows with errors
+        $errorDetails = [];
+        foreach ($validationErrors as $rowIndex => $errors) {
+            foreach ($errors as $field => $message) {
+                $errorDetails[] = [
+                    'row' => $rowIndex + 1, // 1-based for display
+                    'field' => $field,
+                    'column' => $mapping[$field] ?? $field,
+                    'message' => $message,
+                ];
+            }
+        }
+
         return response()->json([
             'success' => true,
-            'preview' => $previewData,
+            'preview' => array_slice($previewData, 0, 10), // Only first 10 for preview table
+            'all_errors' => $errorDetails, // All errors for the error summary
             'mapping' => $mapping,
             'all_headers' => $allHeaders,
             'total_rows' => count($data),
