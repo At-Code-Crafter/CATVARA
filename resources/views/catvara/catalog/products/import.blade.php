@@ -83,6 +83,38 @@
 
     <!-- Step 3: Validate -->
     <div id="step-3" class="step-content hidden animate-fade-in">
+      <!-- Error Summary Panel (shown when there are errors) -->
+      <div id="error-summary-panel" class="card p-6 mb-6 bg-rose-50/50 border-rose-200 hidden">
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-rose-100 rounded-xl flex items-center justify-center text-rose-500">
+              <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <div>
+              <h4 class="font-bold text-rose-700">Validation Errors Found</h4>
+              <p class="text-xs text-rose-500">Please fix these errors in your spreadsheet and re-upload</p>
+            </div>
+          </div>
+          <button onclick="toggleErrorPanel()" class="btn btn-sm bg-white text-rose-600 border-rose-200 hover:bg-rose-100">
+            <i class="fas fa-chevron-up" id="error-toggle-icon"></i>
+          </button>
+        </div>
+        <div id="error-list-container" class="max-h-[300px] overflow-auto">
+          <table class="w-full text-sm">
+            <thead class="bg-rose-100/50 sticky top-0">
+              <tr>
+                <th class="px-4 py-2 text-left text-[11px] font-bold text-rose-600 uppercase w-20">Row #</th>
+                <th class="px-4 py-2 text-left text-[11px] font-bold text-rose-600 uppercase">Column</th>
+                <th class="px-4 py-2 text-left text-[11px] font-bold text-rose-600 uppercase">Error Message</th>
+              </tr>
+            </thead>
+            <tbody id="error-list-body" class="divide-y divide-rose-100">
+              <!-- Dynamic Error Rows -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
       <div class="card overflow-hidden mb-8">
         <div class="px-6 py-4 border-b border-slate-100 bg-slate-50/30 flex items-center justify-between">
           <div>
@@ -196,6 +228,23 @@
   @push('scripts')
     <script>
       let currentStep = 1;
+      let errorPanelCollapsed = false;
+
+      function toggleErrorPanel() {
+        const container = document.getElementById('error-list-container');
+        const icon = document.getElementById('error-toggle-icon');
+        errorPanelCollapsed = !errorPanelCollapsed;
+
+        if (errorPanelCollapsed) {
+          container.classList.add('hidden');
+          icon.classList.remove('fa-chevron-up');
+          icon.classList.add('fa-chevron-down');
+        } else {
+          container.classList.remove('hidden');
+          icon.classList.remove('fa-chevron-down');
+          icon.classList.add('fa-chevron-up');
+        }
+      }
       let fileData = {
         temp_path: '',
         sheets: [],
@@ -377,6 +426,26 @@
         };
         fileData.price_channels.forEach(ch => labels[`price_${ch.id}`] = `Price (${ch.code})`);
         fileData.locations.forEach(loc => labels[`stock_${loc.id}`] = `Stock (${loc.name.split(' ')[0]})`);
+
+        // Build Error Summary from all_errors (includes ALL rows, not just preview)
+        const errorPanel = document.getElementById('error-summary-panel');
+        const errorListBody = document.getElementById('error-list-body');
+
+        if (data.all_errors && data.all_errors.length > 0) {
+          errorPanel.classList.remove('hidden');
+          errorListBody.innerHTML = data.all_errors.map(err => `
+            <tr class="hover:bg-rose-50/50">
+              <td class="px-4 py-2 font-bold text-rose-700">${err.row}</td>
+              <td class="px-4 py-2">
+                <span class="font-semibold text-slate-700">${err.column}</span>
+                <span class="text-xs text-slate-400 ml-1">(${labels[err.field] || err.field})</span>
+              </td>
+              <td class="px-4 py-2 text-rose-600">${err.message}</td>
+            </tr>
+          `).join('');
+        } else {
+          errorPanel.classList.add('hidden');
+        }
 
         // Headers: Row index + Status + All Spreadsheet Headers
         thead.innerHTML = `

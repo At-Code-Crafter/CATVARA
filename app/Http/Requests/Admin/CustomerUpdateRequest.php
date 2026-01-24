@@ -54,6 +54,7 @@ class CustomerUpdateRequest extends FormRequest
             'is_active' => ['nullable', 'boolean'],
             'payment_term_id' => ['nullable', 'exists:payment_terms,id'],
             'percentage_discount' => ['nullable', 'numeric', 'min:0', 'max:100'],
+            'timezone' => ['nullable', 'string', 'max:100', Rule::in(timezone_identifiers_list())],
         ];
     }
 

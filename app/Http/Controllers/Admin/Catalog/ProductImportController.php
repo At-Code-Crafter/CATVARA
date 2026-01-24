@@ -12,6 +12,8 @@ use App\Models\Catalog\Product;
 use App\Models\Catalog\ProductVariant;
 use App\Models\Inventory\InventoryBalance;
 use App\Models\Inventory\InventoryLocation;
+use App\Models\Inventory\InventoryMovement;
+use App\Models\Inventory\InventoryReason;
 use App\Models\Pricing\Currency;
 use App\Models\Pricing\PriceChannel;
 use App\Models\Pricing\VariantPrice;
@@ -45,7 +47,7 @@ class ProductImportController extends Controller
         ]);
 
         $path = $request->file('file')->store('temp_imports');
-        $absolutePath = storage_path('app/private/' . $path);
+        $absolutePath = storage_path('app/private/'.$path);
 
         // Get sheets
         $sheets = Excel::toArray(new ProductImport($request->company->id), $absolutePath);
@@ -53,7 +55,7 @@ class ProductImportController extends Controller
 
         // Get headers for the first sheet (default)
         $headers = [];
-        if (!empty($sheets[0])) {
+        if (! empty($sheets[0])) {
             $headers = array_keys($sheets[0][0] ?? []);
         }
 
@@ -82,7 +84,7 @@ class ProductImportController extends Controller
             'sheet_index' => 'required|integer',
         ]);
 
-        $absolutePath = storage_path('app/private/' . $request->temp_path);
+        $absolutePath = storage_path('app/private/'.$request->temp_path);
         $sheetIndex = $request->sheet_index;
 
         $data = Excel::toArray(new ProductImport($request->company->id), $absolutePath)[$sheetIndex] ?? [];
@@ -92,7 +94,7 @@ class ProductImportController extends Controller
         }
 
         $allHeaders = array_keys($data[0] ?? []);
-        $mapping = $this->autoResolveMapping($allHeaders);
+        $mapping = $this->autoResolveMapping($allHeaders, $request->company->id);
 
         $previewData = [];
         $validationErrors = [];
@@ -133,12 +135,12 @@ class ProductImportController extends Controller
             $variantId = $mappedRow['variant_id'] ?? null;
             $companyId = $request->company->id;
 
-            if (!empty($variantId)) {
+            if (! empty($variantId)) {
                 $exists = ProductVariant::where('company_id', '=', $companyId, 'and')->where('id', '=', $variantId, 'and')->exists();
                 if ($exists) {
                     $rowType = 'update';
                 }
-            } elseif (!empty($sku)) {
+            } elseif (! empty($sku)) {
                 $exists = ProductVariant::where('company_id', '=', $companyId, 'and')->where('sku', '=', $sku, 'and')->exists();
                 if ($exists) {
                     $rowType = 'update';
@@ -153,7 +155,7 @@ class ProductImportController extends Controller
                 'row_type' => $rowType,
             ];
 
-            if (!empty($errors)) {
+            if (! empty($errors)) {
                 $validationErrors[$i] = $errors;
             } else {
                 if ($rowType === 'update') {
@@ -164,9 +166,23 @@ class ProductImportController extends Controller
             }
         }
 
+        // Build detailed error list for all rows with errors
+        $errorDetails = [];
+        foreach ($validationErrors as $rowIndex => $errors) {
+            foreach ($errors as $field => $message) {
+                $errorDetails[] = [
+                    'row' => $rowIndex + 1, // 1-based for display
+                    'field' => $field,
+                    'column' => $mapping[$field] ?? $field,
+                    'message' => $message,
+                ];
+            }
+        }
+
         return response()->json([
             'success' => true,
-            'preview' => $previewData,
+            'preview' => array_slice($previewData, 0, 10), // Only first 10 for preview table
+            'all_errors' => $errorDetails, // All errors for the error summary
             'mapping' => $mapping,
             'all_headers' => $allHeaders,
             'total_rows' => count($data),
@@ -176,11 +192,13 @@ class ProductImportController extends Controller
         ]);
     }
 
-    private function autoResolveMapping($headers)
+    private function autoResolveMapping($headers, $companyId)
     {
         $mapping = [];
-        $priceChannels = PriceChannel::all();
-        $locations = InventoryLocation::with('locatable')->get();
+        $priceChannels = PriceChannel::where('is_active', 1)->whereHas('companies', function ($query) use ($companyId) {
+            $query->where('company_id', $companyId);
+        })->get();
+        $locations = InventoryLocation::where('company_id', $companyId)->with('locatable')->get();
 
         $coreMaps = [
             'brand_id' => ['brand_id'],
@@ -188,7 +206,7 @@ class ProductImportController extends Controller
             'product_id' => ['product_id'],
             'product_name' => ['product_name'],
             'variant_sku' => ['variant_sku'],
-            'cost' => ['cost'],
+            'cost' => ['cost', 'cost_price'],
             'category_id' => ['category_id'],
             'category_name' => ['category_name'],
             'description' => ['description'],
@@ -197,11 +215,11 @@ class ProductImportController extends Controller
         ];
 
         foreach ($headers as $header) {
-            $cleanHeader = strtolower(trim($header));
+            $cleanHeader = str_replace('_', ' ', strtolower(trim($header)));
 
             // Check core maps
             foreach ($coreMaps as $field => $patterns) {
-                if (in_array($cleanHeader, $patterns) && !isset($mapping[$field])) {
+                if (in_array(str_replace(' ', '_', $cleanHeader), $patterns) && ! isset($mapping[$field])) {
                     $mapping[$field] = $header;
 
                     continue 2;
@@ -213,7 +231,7 @@ class ProductImportController extends Controller
                 $channelName = strtolower($channel->name);
                 $channelCode = strtolower($channel->code);
                 if (str_contains($cleanHeader, 'price') && (str_contains($cleanHeader, $channelName) || str_contains($cleanHeader, $channelCode))) {
-                    $mapping['price_' . $channel->id] = $header;
+                    $mapping['price_'.$channel->id] = $header;
 
                     continue 2;
                 }
@@ -222,14 +240,14 @@ class ProductImportController extends Controller
             // Check Locations
             foreach ($locations as $loc) {
                 $locName = strtolower($loc->locatable->name ?? '');
-                if (str_contains($cleanHeader, 'stock') && !empty($locName) && str_contains($cleanHeader, $locName)) {
-                    $mapping['stock_' . $loc->id] = $header;
+                if (str_contains($cleanHeader, 'stock') && ! empty($locName) && str_contains($cleanHeader, $locName)) {
+                    $mapping['stock_'.$loc->id] = $header;
 
                     continue 2;
                 }
                 // Also match by just location name if it's specific enough
-                if (!empty($locName) && $cleanHeader === $locName) {
-                    $mapping['stock_' . $loc->id] = $header;
+                if (! empty($locName) && $cleanHeader === $locName) {
+                    $mapping['stock_'.$loc->id] = $header;
 
                     continue 2;
                 }
@@ -247,11 +265,11 @@ class ProductImportController extends Controller
         ]);
 
         $companyId = $request->company->id;
-        $absolutePath = storage_path('app/private/' . $request->temp_path);
+        $absolutePath = storage_path('app/private/'.$request->temp_path);
         $data = Excel::toArray(new ProductImport($companyId), $absolutePath)[$request->sheet_index];
 
         $headers = array_keys($data[0] ?? []);
-        $mapping = $this->autoResolveMapping($headers);
+        $mapping = $this->autoResolveMapping($headers, $companyId);
 
         $imported = 0;
         $newImported = 0;
@@ -276,10 +294,10 @@ class ProductImportController extends Controller
                 // Check for existing variant
                 $variant = null;
                 $isNew = false;
-                if (!empty($mapped['variant_id'])) {
+                if (! empty($mapped['variant_id'])) {
                     $variant = ProductVariant::where('company_id', '=', $companyId, 'and')->find($mapped['variant_id']);
                 }
-                if (!$variant && !empty($mapped['variant_sku'])) {
+                if (! $variant && ! empty($mapped['variant_sku'])) {
                     $variant = ProductVariant::where('company_id', '=', $companyId, 'and')
                         ->where('sku', '=', $mapped['variant_sku'], 'and')
                         ->first(['*']);
@@ -287,13 +305,13 @@ class ProductImportController extends Controller
 
                 // Resolve Product
                 $product = null;
-                if (!empty($mapped['product_id'])) {
+                if (! empty($mapped['product_id'])) {
                     $product = Product::where('company_id', '=', $companyId, 'and')->find($mapped['product_id']);
                 }
-                if (!$product && $variant) {
+                if (! $product && $variant) {
                     $product = $variant->product;
                 }
-                if (!$product && !empty($mapped['product_name'])) {
+                if (! $product && ! empty($mapped['product_name'])) {
                     $product = Product::where('company_id', '=', $companyId, 'and')
                         ->where('name', '=', $mapped['product_name'], 'and')
                         ->first(['*']);
@@ -310,25 +328,34 @@ class ProductImportController extends Controller
                     }
                 }
 
-                if (!$categoryId && !empty($mapped['category_name'])) {
+                if (! $categoryId && ! empty($mapped['category_name'])) {
                     $category = Category::firstOrCreate(
                         ['company_id' => $companyId, 'name' => $mapped['category_name']],
-                        ['slug' => Str::slug($mapped['category_name']) . '-' . time(), 'is_active' => true]
+                        ['slug' => Str::slug($mapped['category_name']).'-'.time(), 'is_active' => true]
                     );
                     $categoryId = $category->id;
                 }
 
                 // Resolve Brand
                 $brandId = $mapped['brand_id'] ?? null;
-                if (!$brandId && !empty($mapped['brand_name'])) {
+                if ($brandId) {
+                    $brand = Brand::where('company_id', '=', $companyId, 'and')->find($brandId);
+                    if ($brand) {
+                        $brandId = $brand->id;
+                    } else {
+                        $brandId = null;
+                    }
+                }
+
+                if (! $brandId && ! empty($mapped['brand_name'])) {
                     $brand = Brand::firstOrCreate(
                         ['company_id' => $companyId, 'name' => $mapped['brand_name']],
-                        ['slug' => Str::slug($mapped['brand_name']) . '-' . time(), 'is_active' => true]
+                        ['slug' => Str::slug($mapped['brand_name']).'-'.time(), 'is_active' => true]
                     );
                     $brandId = $brand->id;
                 }
 
-                if (!$product) {
+                if (! $product) {
                     $isNew = true;
                     if (empty($mapped['product_name'])) {
                         $failed++;
@@ -342,7 +369,7 @@ class ProductImportController extends Controller
                         'category_id' => $categoryId,
                         'brand_id' => $brandId,
                         'name' => $mapped['product_name'],
-                        'slug' => Str::slug($mapped['product_name']) . '-' . time(),
+                        'slug' => Str::slug($mapped['product_name']).'-'.time(),
                         'description' => $mapped['description'] ?? null,
                         'is_active' => true,
                     ]);
@@ -356,7 +383,7 @@ class ProductImportController extends Controller
                     ]);
                 }
 
-                if (!$variant) {
+                if (! $variant) {
                     $isNew = true;
                     if (empty($mapped['variant_sku'])) {
                         $failed++;
@@ -391,7 +418,7 @@ class ProductImportController extends Controller
                             $attrName = trim($parts[0]);
                             $valString = trim($parts[1]);
 
-                            if (!empty($attrName) && !empty($valString)) {
+                            if (! empty($attrName) && ! empty($valString)) {
                                 // 1. Resolve Attribute
                                 $attribute = Attribute::firstOrCreate(
                                     ['company_id' => $companyId, 'name' => $attrName],
@@ -412,7 +439,7 @@ class ProductImportController extends Controller
                                         ->where('category_id', $product->category_id)
                                         ->where('attribute_id', $attribute->id)
                                         ->exists();
-                                    if (!$exists) {
+                                    if (! $exists) {
                                         DB::table('category_attributes')->insert([
                                             'category_id' => $product->category_id,
                                             'attribute_id' => $attribute->id,
@@ -425,7 +452,7 @@ class ProductImportController extends Controller
                 }
 
                 // Sync Attribute Values to Variant
-                if (!empty($attributeValueIds)) {
+                if (! empty($attributeValueIds)) {
                     $variant->attributeValues()->sync($attributeValueIds);
                 }
 
@@ -455,19 +482,53 @@ class ProductImportController extends Controller
 
                     if (str_starts_with($dbField, 'stock_')) {
                         $locationId = str_replace('stock_', '', $dbField);
-                        $qty = $row[$excelCol] ?? 0;
+                        $targetQty = (float) ($row[$excelCol] ?? 0);
 
-                        if (is_numeric($qty)) {
-                            InventoryBalance::updateOrCreate(
-                                [
-                                    'company_id' => $companyId,
-                                    'product_variant_id' => $variant->id,
-                                    'inventory_location_id' => $locationId,
-                                ],
-                                [
-                                    'quantity' => $qty,
-                                ]
-                            );
+                        // 1. Resolve or Create Balance
+                        $balance = InventoryBalance::where('company_id', $companyId)
+                            ->where('product_variant_id', $variant->id)
+                            ->where('inventory_location_id', $locationId)
+                            ->first();
+
+                        if (! $balance) {
+                            $balance = InventoryBalance::create([
+                                'uuid' => (string) Str::uuid(),
+                                'company_id' => $companyId,
+                                'inventory_location_id' => $locationId,
+                                'product_variant_id' => $variant->id,
+                                'quantity' => 0,
+                            ]);
+                        }
+
+                        // 2. Calculate Delta
+                        $currentQty = (float) $balance->quantity;
+                        $delta = $targetQty - $currentQty;
+
+                        if ($delta != 0) {
+                            // 3. Post Movement
+                            $reasonCode = $delta > 0 ? 'ADJUSTMENT_IN' : 'ADJUSTMENT_OUT';
+                            $reason = InventoryReason::where('company_id', $companyId)
+                                ->where('code', $reasonCode)
+                                ->first();
+
+                            InventoryMovement::create([
+                                'uuid' => (string) Str::uuid(),
+                                'company_id' => $companyId,
+                                'inventory_location_id' => $locationId,
+                                'product_variant_id' => $variant->id,
+                                'inventory_reason_id' => $reason->id ?? null,
+                                'quantity' => $delta,
+                                'reference_type' => 'import',
+                                'reference_id' => null,
+                                'occurred_at' => now(),
+                                'posted_at' => now(),
+                            ]);
+
+                            // 4. Update Balance
+                            $balance->update([
+                                'quantity' => $targetQty,
+                                'last_movement_at' => now(),
+                            ]);
                         }
                     }
                 }

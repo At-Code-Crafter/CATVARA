@@ -182,6 +182,31 @@
                       class="w-full py-2.5 font-semibold placeholder:font-normal" placeholder="e.g. SW1E 5JL">
                   </div>
                 </div>
+
+                <div class="space-y-1.5 md:col-span-2">
+                  <label class="text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-1">Timezone</label>
+                  <select name="timezone" id="timezone" class="w-full pt-1">
+                    <option value="">Select timezone...</option>
+                    @php
+                      $timezones = DateTimeZone::listIdentifiers(DateTimeZone::ALL);
+                      $groupedTimezones = [];
+                      foreach ($timezones as $tz) {
+                        $parts = explode('/', $tz, 2);
+                        $region = $parts[0];
+                        $groupedTimezones[$region][] = $tz;
+                      }
+                    @endphp
+                    @foreach ($groupedTimezones as $region => $tzList)
+                      <optgroup label="{{ $region }}">
+                        @foreach ($tzList as $tz)
+                          <option value="{{ $tz }}" {{ old('timezone') == $tz ? 'selected' : '' }}>
+                            {{ str_replace('_', ' ', $tz) }}
+                          </option>
+                        @endforeach
+                      </optgroup>
+                    @endforeach
+                  </select>
+                </div>
               </div>
             </div>
           </div>

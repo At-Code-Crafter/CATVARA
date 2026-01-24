@@ -45,6 +45,16 @@
           </select>
         </div>
         <div class="space-y-1.5">
+          <label for="filter_brand"
+            class="text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-1">Brand</label>
+          <select id="filter_brand" class="w-full">
+            <option value="">All Brands</option>
+            @foreach ($brands as $brand)
+              <option value="{{ $brand->id }}">{{ $brand->name }}</option>
+            @endforeach
+          </select>
+        </div>
+        <div class="space-y-1.5">
           <label for="filter_status"
             class="text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-1">Status</label>
           <select id="filter_status" class="w-full">
@@ -86,7 +96,10 @@
           <tr>
             <th class="px-8!">Product</th>
             <th>Category</th>
-            <th>Variants</th>
+            <th>Brand</th>
+            <th>Stock</th>
+            <th>Price</th>
+            <th>Status</th>
             <th class="text-right px-8!">Actions</th>
           </tr>
         </thead>
@@ -122,6 +135,7 @@
           url: "{{ company_route('catalog.products.index') }}",
           data: function(d) {
             d.category_id = $('#filter_category').val();
+            d.brand_id = $('#filter_brand').val();
             d.status = $('#filter_status').val();
             d.stock_level = $('#filter_stock').val();
 
@@ -160,15 +174,48 @@
               `<span class="text-xs text-slate-300 italic">Uncategorized</span>`
           },
           {
-            data: 'variants_count',
-            name: 'variants_count',
-            searchable: false,
+            data: 'brand_name',
+            name: 'brand_name',
             className: 'py-4',
-            render: (data) =>
-              `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-brand-50 text-brand-600 border border-brand-100">${data} Variants</span>`
+            render: (data) => data ?
+              `<span class="text-sm font-medium text-slate-600">${data}</span>` :
+              `<span class="text-xs text-slate-300 italic">—</span>`
           },
           {
-            data: 'action', // This can stay server-side or move to client-side. Let's keep server-side for now as it uses route helpers, or we can pass ID and build it here.
+            data: 'total_stock',
+            name: 'total_stock',
+            className: 'py-4',
+            render: (data, type, row) => {
+              const color = data > 0 ? (data <= 5 ? 'text-amber-600 bg-amber-50 border-amber-100' :
+                  'text-emerald-600 bg-emerald-50 border-emerald-100') :
+                'text-slate-400 bg-slate-50 border-slate-200';
+              return `
+                    <div class="flex flex-col gap-1">
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold ${color} border">${data} Units</span>
+                        <span class="text-[9px] font-bold text-slate-400 uppercase tracking-tighter ml-1">${row.variants_count} Variants</span>
+                    </div>
+                `;
+            }
+          },
+          {
+            data: 'price_range',
+            name: 'price_range',
+            className: 'py-4 font-bold text-slate-700 text-sm',
+            render: (data) => data !== '—' ? `<span class="text-brand-600">$</span>${data}` : data
+          },
+          {
+            data: 'status',
+            name: 'status',
+            className: 'py-4',
+            render: (data) => {
+              return data ?
+                `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 text-[10px] font-bold uppercase border border-emerald-100"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Active</span>` :
+                `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 text-slate-600 text-[10px] font-bold uppercase border border-slate-200"><span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span> Inactive</span>`;
+            }
+          },
+          {
+            data: 'action',
+            // This can stay server-side or move to client-side. Let's keep server-side for now as it uses route helpers, or we can pass ID and build it here.
             // Better to standardise: I'll use the ID from row to build it client side to avoid HTML in controller.
             name: 'action',
             orderable: false,
@@ -201,7 +248,7 @@
       });
 
       $('#btn_reset_filters').on('click', function() {
-        $('#filter_category, #filter_status, #filter_stock').val('');
+        $('#filter_category, #filter_brand, #filter_status, #filter_stock').val('');
         dateRangePicker.clear();
         table.ajax.reload();
       });

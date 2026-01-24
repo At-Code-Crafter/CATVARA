@@ -6,6 +6,13 @@ use Illuminate\Database\Eloquent\Model;
 
 class InventoryMovement extends Model
 {
+    protected static function booted()
+    {
+        static::creating(function ($model) {
+            $model->uuid ??= (string) \Illuminate\Support\Str::uuid();
+        });
+    }
+
     protected $fillable = [
         'uuid',
         'company_id',

@@ -55,7 +55,8 @@
                 <label class="block text-sm font-semibold text-slate-700 mb-2">Category</label>
                 <select name="category_id" id="category_id" class="no-select2 w-full">
                   @foreach ($categories as $cat)
-                    <option value="{{ $cat->id }}" {{ old('category_id', $product->category_id) == $cat->id ? 'selected' : '' }}>
+                    <option value="{{ $cat->id }}"
+                      {{ old('category_id', $product->category_id) == $cat->id ? 'selected' : '' }}>
                       {{ $cat->name }}
                     </option>
                   @endforeach
@@ -67,7 +68,8 @@
                 <select name="brand_id" id="brand_id" class="no-select2 w-full">
                   <option value="">Select or type to create (Optional)</option>
                   @foreach ($brands as $brand)
-                    <option value="{{ $brand->id }}" {{ old('brand_id', $product->brand_id) == $brand->id ? 'selected' : '' }}>
+                    <option value="{{ $brand->id }}"
+                      {{ old('brand_id', $product->brand_id) == $brand->id ? 'selected' : '' }}>
                       {{ $brand->name }}
                     </option>
                   @endforeach
@@ -152,11 +154,17 @@
                       </div>
                     </td>
                     <td class="px-6 py-5 text-center">
-                      <a href="{{ company_route('inventory.index', ['sku' => $variant->sku]) }}"
-                        class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-slate-50 text-slate-400 hover:bg-brand-50 hover:text-brand-600 transition-all border border-slate-200"
-                        title="Manage Stock">
-                        <i class="fas fa-boxes text-xs"></i>
-                      </a>
+                      <div class="flex flex-col items-center gap-1.5">
+                        <span
+                          class="text-sm font-bold {{ $variant->inventory->sum('quantity') > 0 ? 'text-slate-700' : 'text-slate-300' }}">
+                          {{ (float) $variant->inventory->sum('quantity') }}
+                        </span>
+                        <a href="{{ company_route('inventory.variant.details', ['product_variant' => $variant->id]) }}"
+                          class="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-slate-50 text-slate-400 hover:bg-brand-50 hover:text-brand-600 transition-all border border-slate-200"
+                          title="View Inventory Details">
+                          <i class="fas fa-boxes text-[10px]"></i>
+                        </a>
+                      </div>
                     </td>
                     <td class="px-6 py-5 text-right">
                       <input type="number" step="0.01" name="variants[{{ $variant->id }}][cost_price]"
@@ -169,7 +177,8 @@
                         $val = $price ? $price->price : '';
                       @endphp
                       <td class="px-6 py-5 text-right">
-                        <input type="number" step="0.01" name="prices[{{ $variant->id }}][{{ $ch->id }}]" value="{{ $val }}"
+                        <input type="number" step="0.01" name="prices[{{ $variant->id }}][{{ $ch->id }}]"
+                          value="{{ $val }}"
                           class="w-32 rounded-lg border-brand-100 bg-brand-50/20 focus:border-brand-500 focus:ring-brand-500 text-sm py-1.5 text-right font-bold text-brand-600">
                       </td>
                     @endforeach
@@ -205,7 +214,8 @@
             </div>
             <label class="relative inline-flex items-center cursor-pointer shadow-sm">
               <input type="hidden" name="is_active" value="0">
-              <input type="checkbox" name="is_active" value="1" class="sr-only peer" {{ $product->is_active ? 'checked' : '' }}>
+              <input type="checkbox" name="is_active" value="1" class="sr-only peer"
+                {{ $product->is_active ? 'checked' : '' }}>
               <div
                 class="w-11 h-6 bg-slate-200 peer-focus:outline-none ring-4 ring-transparent peer-focus:ring-brand-100 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-600">
               </div>
@@ -261,7 +271,7 @@
 
 @push('scripts')
   <script>
-    $(document).ready(function () {
+    $(document).ready(function() {
       // Initialize Select2 with tags for Category (allows creating new)
       $('#category_id').select2({
         width: '100%',
@@ -305,7 +315,7 @@
         labelIdle: 'Drag & Drop your image or <span class="filepond--label-action">Browse</span>',
         credits: false,
         @if (!empty($product->image))
-              files: [{
+          files: [{
             source: '{{ asset('storage/' . $product->image) }}',
             options: {
               type: 'local'
@@ -313,11 +323,11 @@
           }],
         @endif
         server: {
-        load: (source, load, error, progress, abort, headers) => {
-          fetch(source).then(res => res.blob()).then(load);
+          load: (source, load, error, progress, abort, headers) => {
+            fetch(source).then(res => res.blob()).then(load);
+          }
         }
-      }
-        });
       });
+    });
   </script>
 @endpush

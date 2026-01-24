@@ -135,7 +135,9 @@ return new class extends Migration
              * Currency & amounts
              */
             $table->unsignedBigInteger('currency_id');
+            $table->unsignedBigInteger('document_currency_id')->nullable();
             $table->decimal('amount', 18, 6);              // Applied in payment currency
+            $table->decimal('converted_amount', 18, 6)->nullable();
             $table->decimal('exchange_rate', 18, 8)->default(1.00000000);
             $table->decimal('base_amount', 18, 6);         // In base currency
 
