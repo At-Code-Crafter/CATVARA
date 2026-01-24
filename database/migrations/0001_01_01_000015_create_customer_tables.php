@@ -31,6 +31,7 @@ return new class extends Migration
             $table->string('tax_number')->nullable();
 
             $table->decimal('percentage_discount', 5, 2)->default(0);
+            $table->string('timezone', 100)->nullable();
 
             $table->text('notes')->nullable();
             $table->boolean('is_active')->default(true);
