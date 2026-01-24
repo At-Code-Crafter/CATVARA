@@ -333,7 +333,14 @@ class ProductImportController extends Controller
                 }
 
                 // Resolve Brand
-                $brandId = $mapped['brand_id'] ?? null;
+                $brandId = null;
+                if (!empty($mapped['brand_id'])) {
+                    // Verify brand_id exists
+                    $brand = Brand::where('company_id', '=', $companyId, 'and')->find($mapped['brand_id']);
+                    if ($brand) {
+                        $brandId = $brand->id;
+                    }
+                }
                 if (!$brandId && !empty($mapped['brand_name'])) {
                     $brand = Brand::firstOrCreate(
                         ['company_id' => $companyId, 'name' => $mapped['brand_name']],
