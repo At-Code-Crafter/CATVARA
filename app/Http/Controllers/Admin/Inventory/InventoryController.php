@@ -85,7 +85,7 @@ class InventoryController extends Controller
                 // will return a simple link, and the JS in view will handle styling if needed or this HTML will be used.
                 // Let's use a generic generic class or the new one if we know it.
                 // But wait, the view will be new.
-                
+
                 return '<a href="'.$url.'" class="text-brand-600 hover:text-brand-800 font-medium text-sm">Manage</a>';
             })
             ->rawColumns(['quantity', 'actions'])
@@ -110,7 +110,7 @@ class InventoryController extends Controller
         // If not seeded, we might need fallback or seed them.
         $reasons = InventoryReason::where('is_active', true)->get();
 
-        return view('theme.adminlte.inventory.adjust', compact('locations', 'variants', 'reasons'));
+        return view('catvara.inventory.adjust', compact('locations', 'variants', 'reasons'));
     }
 
     /**
