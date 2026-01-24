@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Exports\Customer\CustomerExport;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\CustomerStoreRequest;
 use App\Http\Requests\Admin\CustomerUpdateRequest;
@@ -12,7 +13,7 @@ use App\Models\Company\Company;
 use App\Models\Customer\Customer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
+use Maatwebsite\Excel\Facades\Excel;
 use Yajra\DataTables\Facades\DataTables;
 
 class CustomerController extends Controller
@@ -55,8 +56,8 @@ class CustomerController extends Controller
 
             if ($request->filled('date_from') && $request->filled('date_to')) {
                 $query->whereBetween('customers.created_at', [
-                    $request->date_from . ' 00:00:00',
-                    $request->date_to . ' 23:59:59'
+                    $request->date_from.' 00:00:00',
+                    $request->date_to.' 23:59:59',
                 ]);
             }
 
@@ -65,13 +66,13 @@ class CustomerController extends Controller
 
                 ->editColumn('email', function ($row) {
                     return $row->email
-                        ? '<a href="mailto:' . e($row->email) . '">' . e($row->email) . '</a>'
+                        ? '<a href="mailto:'.e($row->email).'">'.e($row->email).'</a>'
                         : '<span class="text-muted">—</span>';
                 })
 
                 ->editColumn('phone', function ($row) {
                     return $row->phone
-                        ? '<a href="tel:' . e($row->phone) . '">' . e($row->phone) . '</a>'
+                        ? '<a href="tel:'.e($row->phone).'">'.e($row->phone).'</a>'
                         : '<span class="text-muted">—</span>';
                 })
 
@@ -85,8 +86,9 @@ class CustomerController extends Controller
 
                 ->editColumn('percentage_discount', function ($row) {
                     if ($row->percentage_discount > 0) {
-                        return '<span class="text-success font-weight-bold">' . (float) $row->percentage_discount . '%</span>';
+                        return '<span class="text-success font-weight-bold">'.(float) $row->percentage_discount.'%</span>';
                     }
+
                     return '<span class="text-muted">-</span>';
                 })
 
@@ -128,8 +130,8 @@ class CustomerController extends Controller
 
         if ($request->filled('date_from') && $request->filled('date_to')) {
             $baseQuery->whereBetween('created_at', [
-                $request->date_from . ' 00:00:00',
-                $request->date_to . ' 23:59:59'
+                $request->date_from.' 00:00:00',
+                $request->date_to.' 23:59:59',
             ]);
         }
 
@@ -266,12 +268,12 @@ class CustomerController extends Controller
         // Stats Calculation
         $stats = [
             'orders_count' => $customer->orders()->count(),
-            'orders_draft' => $customer->orders()->whereHas('status', fn($q) => $q->where('code', 'DRAFT'))->count(),
-            'orders_completed' => $customer->orders()->whereHas('status', fn($q) => $q->where('code', 'FULFILLED'))->count(),
-            'invoices_paid' => \App\Models\Accounting\Invoice::where('customer_id', $customer->id)->whereHas('status', fn($q) => $q->where('code', 'PAID'))->count(),
-            'invoices_unpaid' => \App\Models\Accounting\Invoice::where('customer_id', $customer->id)->whereHas('status', fn($q) => $q->whereIn('code', ['ISSUED', 'PARTIALLY_PAID', 'OVERDUE']))->count(),
-            'total_spent' => $customer->orders()->whereHas('status', fn($q) => $q->where('code', 'FULFILLED'))->sum('grand_total'),
-            'total_overdue' => \App\Models\Accounting\Invoice::where('customer_id', $customer->id)->whereHas('status', fn($q) => $q->where('code', 'OVERDUE'))->sum('grand_total'), // Or use balance due if available, assuming grand_total for now
+            'orders_draft' => $customer->orders()->whereHas('status', fn ($q) => $q->where('code', 'DRAFT'))->count(),
+            'orders_completed' => $customer->orders()->whereHas('status', fn ($q) => $q->where('code', 'FULFILLED'))->count(),
+            'invoices_paid' => \App\Models\Accounting\Invoice::where('customer_id', $customer->id)->whereHas('status', fn ($q) => $q->where('code', 'PAID'))->count(),
+            'invoices_unpaid' => \App\Models\Accounting\Invoice::where('customer_id', $customer->id)->whereHas('status', fn ($q) => $q->whereIn('code', ['ISSUED', 'PARTIALLY_PAID', 'OVERDUE']))->count(),
+            'total_spent' => $customer->orders()->whereHas('status', fn ($q) => $q->where('code', 'FULFILLED'))->sum('grand_total'),
+            'total_overdue' => \App\Models\Accounting\Invoice::where('customer_id', $customer->id)->whereHas('status', fn ($q) => $q->where('code', 'OVERDUE'))->sum('grand_total'), // Or use balance due if available, assuming grand_total for now
         ];
 
         return view('catvara.customers.show', compact('company', 'customer', 'stats'));
@@ -358,7 +360,6 @@ class CustomerController extends Controller
         }
     }
 
-
     public function loadCustomers(Request $request, Company $company)
     {
         // Simple list for the Sales Order selection UI
@@ -372,80 +373,14 @@ class CustomerController extends Controller
     }
 
     /**
-     * Export customers to CSV.
+     * Export customers to Excel.
      */
     public function export(Request $request, Company $company)
     {
         $this->authorize('view', 'customers');
 
-        $headers = [
-            'Customer ID',
-            'Customer Code',
-            'Name',
-            'Legal Name',
-            'Email',
-            'Phone',
-            'Tax Number',
-            'Address Line 1',
-            'Address Line 2',
-            'City/Town',
-            'State',
-            'Country',
-            'Postal Code',
-            'Discount Percentage',
-            'Payment Terms',
-        ];
+        $filename = 'customers_export_'.date('Y-m-d_His').'.xlsx';
 
-        $customers = Customer::where('company_id', $company->id)
-            ->with(['address.state', 'address.country', 'paymentTerm'])
-            ->get();
-
-        $csvData = [];
-        $csvData[] = $headers;
-
-        foreach ($customers as $customer) {
-            $csvData[] = [
-                $customer->id,
-                $customer->customer_code,
-                $customer->display_name,
-                $customer->legal_name ?? '',
-                $customer->email ?? '',
-                $customer->phone ?? '',
-                $customer->tax_number ?? '',
-                $customer->address->address_line_1 ?? '',
-                $customer->address->address_line_2 ?? '',
-                $customer->address->city ?? '',
-                $customer->address->state->name ?? '',
-                $customer->address->country->name ?? '',
-                $customer->address->zip_code ?? '',
-                (float) $customer->percentage_discount . '%',
-                $customer->paymentTerm->name ?? 'N/A',
-            ];
-        }
-
-        $filename = 'customers_export_' . date('Y-m-d_His') . '.csv';
-
-        $callback = function () use ($csvData) {
-            $file = fopen('php://output', 'w');
-            // Add BOM for Excel UTF-8 compatibility
-            fprintf($file, chr(0xEF) . chr(0xBB) . chr(0xBF));
-            foreach ($csvData as $row) {
-                // Manually format to prevent Excel auto-conversion
-                $formattedRow = array_map(function ($cell) {
-                    // If it looks like a phone number (starts with + or is all digits), wrap with tab prefix
-                    if (is_string($cell) && preg_match('/^[\+]?[0-9\s\-]+$/', $cell) && strlen($cell) > 8) {
-                        return "\t" . $cell;
-                    }
-                    return $cell;
-                }, $row);
-                fputcsv($file, $formattedRow);
-            }
-            fclose($file);
-        };
-
-        return response()->stream($callback, 200, [
-            'Content-Type' => 'text/csv; charset=UTF-8',
-            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
-        ]);
+        return Excel::download(new CustomerExport($company->id), $filename);
     }
 }

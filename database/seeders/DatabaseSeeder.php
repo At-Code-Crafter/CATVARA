@@ -20,7 +20,7 @@ class DatabaseSeeder extends Seeder
         $this->call(OrderSeeder::class);
         $this->call(PaymentSeeder::class);
 
-        //keep in last
-        // $this->call(VapeShopSeeder::class);
+        // 2. Interactive Application Setup (Company & Users)
+        $this->command->call('app:setup-application');
     }
 }
