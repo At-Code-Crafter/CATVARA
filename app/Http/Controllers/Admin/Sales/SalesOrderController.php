@@ -54,7 +54,7 @@ class SalesOrderController extends Controller
 
         return DataTables::of($query)
             ->editColumn('order_number', function ($order) {
-                return '<span class="font-weight-bold">'.e($order->order_number).'</span>';
+                return '<span class="font-weight-bold">' . e($order->order_number) . '</span>';
             })
             ->editColumn('created_at', function ($order) {
                 return $order->created_at->format('M d, Y');
@@ -71,15 +71,15 @@ class SalesOrderController extends Controller
                     $color = 'warning';
                 }
 
-                return '<span class="badge badge-'.$color.'">'.e($order->status->name ?? '—').'</span>';
+                return '<span class="badge badge-' . $color . '">' . e($order->status->name ?? '—') . '</span>';
             })
             ->editColumn('grand_total', function ($order) {
-                return '<span class="font-weight-bold text-dark">'.number_format((float) $order->grand_total, 2).'</span>';
+                return '<span class="font-weight-bold text-dark">' . number_format((float) $order->grand_total, 2) . '</span>';
             })
             ->addColumn('actions', function ($order) {
                 $edit = company_route('sales-orders.edit', ['sales_order' => $order->uuid]);
                 $showUrl = company_route('sales-orders.show', ['sales_order' => $order->id]); // if you have show
-
+    
                 $compact['showUrl'] = $showUrl;
                 $compact['editUrl'] = $edit;
                 $compact['deleteUrl'] = null;
@@ -118,7 +118,7 @@ class SalesOrderController extends Controller
             : $sellToCustomer;
 
         $status = OrderStatus::where('code', 'DRAFT')->first();
-        if (! $status) {
+        if (!$status) {
             $status = OrderStatus::firstOrCreate(
                 ['code' => 'DRAFT'],
                 ['name' => 'Draft', 'is_active' => true]
@@ -128,47 +128,46 @@ class SalesOrderController extends Controller
         // Currency default (adjust as per settings)
         $defaultCurrencyId = 1;
 
-        $order = Order::create([
-            'uuid' => Str::uuid(),
-            'company_id' => $company->id,
-            'customer_id' => $sellToCustomer->id,
-            'status_id' => $status->id,
-            'order_number' => $this->generateOrderNumber($company),
-            'created_by' => auth()->id(),
-            'currency_id' => $defaultCurrencyId,
-        ]);
+        return DB::transaction(function () use ($company, $sellToCustomer, $billToCustomer, $status, $defaultCurrencyId) {
+            $order = Order::create([
+                'uuid' => Str::uuid(),
+                'company_id' => $company->id,
+                'customer_id' => $sellToCustomer->id,
+                'status_id' => $status->id,
+                'order_number' => $this->generateOrderNumber($company),
+                'created_by' => auth()->id(),
+                'currency_id' => $defaultCurrencyId,
+            ]);
 
-        // Addresses (keep as you already had)
-        $order->addresses()->create([
-            'type' => 'BILLING',
-            'company_id' => $company->id,
-            'address_line_1' => $billToCustomer->address->address_line_1 ?? '',
-            'address_line_2' => $billToCustomer->address->address_line_2 ?? '',
-            'city' => $billToCustomer->address->city ?? '',
-            'state_id' => $billToCustomer->address->state_id ?? '',
-            'zip_code' => $billToCustomer->address->zip_code ?? '',
-            'country_id' => $billToCustomer->address->country_id ?? '',
-            'phone' => $billToCustomer->phone,
-            'email' => $billToCustomer->email,
-        ]);
+            // Addresses (ensure state_id and country_id are null if empty)
+            $order->addresses()->create([
+                'type' => 'BILLING',
+                'company_id' => $company->id,
+                'address_line_1' => $billToCustomer->address->address_line_1 ?? '',
+                'address_line_2' => $billToCustomer->address->address_line_2 ?? null,
+                'city' => $billToCustomer->address->city ?? null,
+                'state_id' => !empty($billToCustomer->address->state_id) ? $billToCustomer->address->state_id : null,
+                'zip_code' => $billToCustomer->address->zip_code ?? '',
+                'country_id' => !empty($billToCustomer->address->country_id) ? $billToCustomer->address->country_id : null,
+                'phone' => $billToCustomer->phone,
+                'email' => $billToCustomer->email,
+            ]);
 
-        $order->addresses()->create([
-            'type' => 'SHIPPING',
-            'company_id' => $company->id,
-            'address_line_1' => $sellToCustomer->address->address_line_1 ?? '',
-            'address_line_2' => $sellToCustomer->address->address_line_2 ?? '',
-            'city' => $sellToCustomer->address->city ?? '',
-            'state_id' => $sellToCustomer->address->state_id ?? '',
-            'zip_code' => $sellToCustomer->address->zip_code ?? '',
-            'country_id' => $sellToCustomer->address->country_id ?? '',
-            'phone' => $sellToCustomer->phone,
-            'email' => $sellToCustomer->email,
-        ]);
+            $order->addresses()->create([
+                'type' => 'SHIPPING',
+                'company_id' => $company->id,
+                'address_line_1' => $sellToCustomer->address->address_line_1 ?? '',
+                'address_line_2' => $sellToCustomer->address->address_line_2 ?? null,
+                'city' => $sellToCustomer->address->city ?? null,
+                'state_id' => !empty($sellToCustomer->address->state_id) ? $sellToCustomer->address->state_id : null,
+                'zip_code' => $sellToCustomer->address->zip_code ?? '',
+                'country_id' => !empty($sellToCustomer->address->country_id) ? $sellToCustomer->address->country_id : null,
+                'phone' => $sellToCustomer->phone,
+                'email' => $sellToCustomer->email,
+            ]);
 
-        return response()->json([
-            'success' => true,
-            'redirect_url' => company_route('sales-orders.edit', ['sales_order' => $order->uuid]),
-        ]);
+            return redirect()->to(company_route('sales-orders.edit', ['sales_order' => $order->uuid]));
+        });
     }
 
     public function edit(Company $company, $id)
@@ -299,7 +298,7 @@ class SalesOrderController extends Controller
             );
 
             // Update addresses if sell_to/bill_to provided
-            if (! empty($data['sell_to'])) {
+            if (!empty($data['sell_to'])) {
                 $sellToCustomer = Customer::where('company_id', $company->id)->where('uuid', $data['sell_to'])->first();
                 if ($sellToCustomer) {
                     $order->update(['customer_id' => $sellToCustomer->id]);
@@ -310,11 +309,11 @@ class SalesOrderController extends Controller
                         [
                             'company_id' => $company->id,
                             'address_line_1' => $sellToCustomer->address->address_line_1 ?? '',
-                            'address_line_2' => $sellToCustomer->address->address_line_2 ?? '',
-                            'city' => $sellToCustomer->address->city ?? '',
-                            'state_id' => $sellToCustomer->address->state_id ?? '',
+                            'address_line_2' => $sellToCustomer->address->address_line_2 ?? null,
+                            'city' => $sellToCustomer->address->city ?? null,
+                            'state_id' => !empty($sellToCustomer->address->state_id) ? $sellToCustomer->address->state_id : null,
                             'zip_code' => $sellToCustomer->address->zip_code ?? '',
-                            'country_id' => $sellToCustomer->address->country_id ?? '',
+                            'country_id' => !empty($sellToCustomer->address->country_id) ? $sellToCustomer->address->country_id : null,
                             'phone' => $sellToCustomer->phone,
                             'email' => $sellToCustomer->email,
                         ]
@@ -322,7 +321,7 @@ class SalesOrderController extends Controller
                 }
             }
 
-            if (! empty($data['bill_to'])) {
+            if (!empty($data['bill_to'])) {
                 $billToCustomer = Customer::where('company_id', $company->id)->where('uuid', $data['bill_to'])->first();
                 if ($billToCustomer) {
                     // Update Billing Address
@@ -331,11 +330,11 @@ class SalesOrderController extends Controller
                         [
                             'company_id' => $company->id,
                             'address_line_1' => $billToCustomer->address->address_line_1 ?? '',
-                            'address_line_2' => $billToCustomer->address->address_line_2 ?? '',
-                            'city' => $billToCustomer->address->city ?? '',
-                            'state_id' => $billToCustomer->address->state_id ?? '',
+                            'address_line_2' => $billToCustomer->address->address_line_2 ?? null,
+                            'city' => $billToCustomer->address->city ?? null,
+                            'state_id' => !empty($billToCustomer->address->state_id) ? $billToCustomer->address->state_id : null,
                             'zip_code' => $billToCustomer->address->zip_code ?? '',
-                            'country_id' => $billToCustomer->address->country_id ?? '',
+                            'country_id' => !empty($billToCustomer->address->country_id) ? $billToCustomer->address->country_id : null,
                             'phone' => $billToCustomer->phone,
                             'email' => $billToCustomer->email,
                         ]
@@ -428,7 +427,7 @@ class SalesOrderController extends Controller
 
         $currency = Currency::query()->where('code', $code)->first();
 
-        if (! $currency) {
+        if (!$currency) {
             throw new \Exception("Currency not found for code: {$code}");
         }
 
@@ -437,7 +436,7 @@ class SalesOrderController extends Controller
 
     private function resolvePaymentTermSnapshot(?int $paymentTermId): array
     {
-        if (! $paymentTermId) {
+        if (!$paymentTermId) {
             return [
                 'payment_term_id' => null,
                 'payment_term_name' => null,
@@ -446,7 +445,7 @@ class SalesOrderController extends Controller
         }
 
         $term = PaymentTerm::find($paymentTermId);
-        if (! $term) {
+        if (!$term) {
             return [
                 'payment_term_id' => null,
                 'payment_term_name' => null,
@@ -574,18 +573,18 @@ class SalesOrderController extends Controller
 
     private function generateOrderNumber($company)
     {
-        $prefix = 'SO-'.Carbon::now()->format('Ymd').'-';
+        $prefix = 'SO-' . Carbon::now()->format('Ymd') . '-';
         $lastOrder = Order::where('company_id', $company->id)
-            ->where('order_number', 'like', $prefix.'%')
+            ->where('order_number', 'like', $prefix . '%')
             ->orderBy('id', 'desc')
             ->first();
 
         if ($lastOrder) {
             $lastNum = intval(substr($lastOrder->order_number, strlen($prefix)));
 
-            return $prefix.str_pad($lastNum + 1, 4, '0', STR_PAD_LEFT);
+            return $prefix . str_pad($lastNum + 1, 4, '0', STR_PAD_LEFT);
         }
 
-        return $prefix.'0001';
+        return $prefix . '0001';
     }
 }
