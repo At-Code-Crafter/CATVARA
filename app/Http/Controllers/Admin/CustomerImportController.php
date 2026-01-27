@@ -111,6 +111,12 @@ class CustomerImportController extends Controller
                 $errors['display_name'] = 'Display Name is required';
             }
 
+            // Validate Type
+            $type = strtoupper($mappedRow['type'] ?? '');
+            if (!empty($type) && !in_array($type, ['INDIVIDUAL', 'COMPANY', 'B2B', 'B2C'])) {
+                $errors['type'] = 'Invalid Type. Use INDIVIDUAL, COMPANY, B2B, or B2C';
+            }
+
             // Check email uniqueness within file
             if (!empty($email)) {
                 if (in_array(strtolower($email), $emailsInFile)) {
@@ -353,6 +359,13 @@ class CustomerImportController extends Controller
 
                 // Resolve Type
                 $type = strtoupper($mapped['type'] ?? 'INDIVIDUAL');
+                // Map B2B/B2C to COMPANY/INDIVIDUAL
+                if ($type === 'B2B') {
+                    $type = 'COMPANY';
+                } elseif ($type === 'B2C') {
+                    $type = 'INDIVIDUAL';
+                }
+
                 if (!in_array($type, ['INDIVIDUAL', 'COMPANY'])) {
                     $type = 'INDIVIDUAL';
                 }

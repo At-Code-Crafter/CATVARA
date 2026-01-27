@@ -208,7 +208,7 @@
       const coreFields = {
         'customer_id': 'Customer ID',
         'customer_code': 'Customer Code',
-        'type': 'Type (INDIVIDUAL/COMPANY)',
+        'type': 'Type (B2B/B2C or COMPANY/INDIVIDUAL)',
         'display_name': 'Display Name',
         'email': 'Email',
         'phone': 'Phone',
