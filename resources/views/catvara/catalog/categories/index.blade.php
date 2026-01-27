@@ -63,7 +63,8 @@
         <thead>
           <tr>
             <th class="px-8!">Name</th>
-            <th>Slug</th>
+            {{-- <th>Slug</th> --}}
+            <th>Products</th>
             <th>Parent</th>
             <th>Children</th>
             <th>Status</th>
@@ -99,9 +100,15 @@
             name: 'name',
             orderable: false
           },
+          // Slug column commented out
+          // {
+          //   data: 'slug_html',
+          //   name: 'slug'
+          // },
           {
-            data: 'slug_html',
-            name: 'slug'
+            data: 'products_count_html',
+            name: 'products_count',
+            searchable: false
           },
           {
             data: 'parent_html',
