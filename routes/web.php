@@ -96,6 +96,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // Admin Payment Terms (all companies)
         Route::get('payment-terms', [AdminPaymentTermController::class, 'index'])->name('admin.payment-terms.index');
 
+        // Admin Exchange Rates (all companies)
+        Route::get('exchange-rates', [\App\Http\Controllers\Admin\AdminExchangeRateController::class, 'index'])->name('admin.exchange-rates.index');
+
         // User company-role assignment endpoints (used in show.blade.php)
         Route::get('users/roles/by-company', [UserController::class, 'rolesByCompany'])
             ->name('users.roles.byCompany');

@@ -236,7 +236,7 @@
     <p class="px-3 pt-6 mb-2 text-[11px] font-bold text-slate-400 uppercase tracking-widest nav-group-header">
       Administration</p>
 
-    @php $isConfigurationActive = $isActive(['tenants.*', 'users.*','price-channels.*', 'modules.*', 'permissions.*', 'settings.roles.*', 'admin.payment-methods.*', 'admin.payment-terms.*', 'countries.*', 'states.*', 'currencies.*']); @endphp
+    @php $isConfigurationActive = $isActive(['tenants.*', 'users.*','price-channels.*', 'modules.*', 'permissions.*', 'settings.roles.*', 'admin.payment-methods.*', 'admin.payment-terms.*', 'countries.*', 'states.*', 'currencies.*', 'admin.exchange-rates.*']); @endphp
     <div class="nav-group">
       <button
         class="w-full flex items-center justify-between px-4 py-3 text-sm font-semibold rounded-xl transition-all group
@@ -297,6 +297,11 @@
         <a href="{{ route('currencies.index') }}"
           class="flex items-center py-2 pl-12 pr-4 text-xs font-medium {{ $isActive('currencies.*') ? 'text-brand-400' : 'text-slate-500 hover:text-brand-400' }}">
           <span class="sidebar-text">Currencies</span>
+        </a>
+
+        <a href="{{ route('admin.exchange-rates.index') }}"
+          class="flex items-center py-2 pl-12 pr-4 text-xs font-medium {{ $isActive('admin.exchange-rates.*') ? 'text-brand-400' : 'text-slate-500 hover:text-brand-400' }}">
+          <span class="sidebar-text">Exchange Rates</span>
         </a>
 
         <a href="{{ route('modules.index') }}"
