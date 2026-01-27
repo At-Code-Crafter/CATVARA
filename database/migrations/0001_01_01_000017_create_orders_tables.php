@@ -95,7 +95,7 @@ return new class extends Migration
             $table->integer('fulfilled_quantity')->default(0);
             $table->decimal('discount_amount', 18, 6)->default(0);
             $table->decimal('discount_percent', 5, 2)->default(0);
-            
+
             $table->decimal('tax_rate', 5, 2)->default(0);
             $table->decimal('tax_amount', 18, 6)->default(0);
 

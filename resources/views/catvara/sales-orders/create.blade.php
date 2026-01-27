@@ -119,12 +119,12 @@
           </div>
 
           <div class="p-4 space-y-4">
-            <!-- Selected Customer -->
+            <!-- Billing Customer (Primary) -->
             <div>
-              <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Sell To
-                Customer</label>
+              <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Bill To Customer
+                (Primary)</label>
 
-              <div id="sellToSummary"
+              <div id="billToSummary"
                 class="relative overflow-hidden rounded-lg border-2 border-dashed border-slate-200 bg-slate-50/50 p-3 transition-all duration-300">
                 <div class="flex flex-col items-center justify-center text-center py-3 text-slate-400">
                   <i class="fas fa-user-plus text-xl mb-1.5 opacity-50"></i>
@@ -133,14 +133,14 @@
               </div>
             </div>
 
-            <!-- Billing Toggle -->
+            <!-- Shipping Toggle (Optional) -->
             <div class="pt-4 border-t border-slate-100">
               <div class="flex items-center justify-between mb-2">
-                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Bill To Customer</label>
+                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Ship To Customer</label>
                 <div class="flex items-center gap-2">
-                  <span class="text-[10px] font-bold text-slate-500" id="billingLabel">Same as Sell To</span>
+                  <span class="text-[10px] font-bold text-slate-500" id="shippingLabel">Same as Bill To</span>
                   <label class="relative inline-flex items-center cursor-pointer">
-                    <input type="checkbox" id="sameAsSellTo" class="sr-only peer" checked>
+                    <input type="checkbox" id="sameAsBillTo" class="sr-only peer" checked>
                     <div
                       class="w-7 h-3.5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-2.5 after:w-2.5 after:transition-all after:duration-300 peer-checked:bg-slate-800">
                     </div>
@@ -148,13 +148,13 @@
                 </div>
               </div>
 
-              <div id="billToSection" class="hidden mt-2">
-                <button id="selectBillToBtn"
+              <div id="shipToSection" class="hidden mt-2">
+                <button id="selectShipToBtn"
                   class="btn btn-white w-full text-[11px] py-2 h-auto border-dashed hover:border-brand-400 hover:text-brand-600 transition-all duration-300">
-                  <i class="fas fa-sync-alt mr-1.5"></i> Select Bill-To Customer
+                  <i class="fas fa-truck mr-1.5"></i> Select Different Ship-To
                 </button>
 
-                <div id="billToSummary"
+                <div id="shipToSummary"
                   class="hidden mt-2 p-2.5 bg-indigo-50/50 rounded-lg border border-indigo-100 animate-entry">
                   {{-- JS Populated --}}
                 </div>
@@ -188,8 +188,8 @@
   {{-- Hidden Form for Submission --}}
   <form id="createOrderForm" action="{{ company_route('sales-orders.store') }}" method="POST" class="hidden">
     @csrf
-    <input type="hidden" name="sell_to" id="input_customer_id">
     <input type="hidden" name="bill_to" id="input_billing_customer_id">
+    <input type="hidden" name="ship_to" id="input_shipping_customer_id">
   </form>
 @endsection
 
@@ -197,9 +197,9 @@
   <script>
     const customersDataUrl = "{{ company_route('load-customers') }}";
     let allCustomers = [];
-    let selectedSellTo = null;
     let selectedBillTo = null;
-    let isBillingSame = true;
+    let selectedShipTo = null;
+    let isShippingSame = true;
 
     $(document).ready(function() {
       // Force initial load check
@@ -215,25 +215,25 @@
         renderCustomers($('#customerSearch').val(), this.value);
       });
 
-      // Billing Toggle
-      $('#sameAsSellTo').on('change', function() {
-        isBillingSame = this.checked;
-        if (isBillingSame) {
-          $('#billingLabel').text('Same as Sell To');
-          $('#billToSection').addClass('hidden');
-          selectedBillTo = null;
+      // Shipping Toggle
+      $('#sameAsBillTo').on('change', function() {
+        isShippingSame = this.checked;
+        if (isShippingSame) {
+          $('#shippingLabel').text('Same as Bill To');
+          $('#shipToSection').addClass('hidden');
+          selectedShipTo = null;
         } else {
-          $('#billingLabel').text('Custom Customer');
-          $('#billToSection').removeClass('hidden');
+          $('#shippingLabel').text('Custom Ship To');
+          $('#shipToSection').removeClass('hidden');
         }
         updateSummary();
       });
 
-      // Mode switching for Bill To
-      let selectionMode = 'sell_to';
+      // Selection mode
+      let selectionMode = 'bill_to';
 
-      $('#selectBillToBtn').on('click', function() {
-        selectionMode = 'bill_to';
+      $('#selectShipToBtn').on('click', function() {
+        selectionMode = 'ship_to';
         // Visual cue
         $('#sellToList').addClass('ring-4 ring-indigo-100 rounded-xl p-2 bg-indigo-50/20 transition-all');
         $('html, body').animate({
@@ -250,7 +250,7 @@
         });
         toast.fire({
           icon: 'info',
-          title: 'Select the Bill-To Customer from the list'
+          title: 'Select the Ship-To Customer from the list'
         });
       });
 
@@ -260,11 +260,11 @@
 
         if (!customer) return;
 
-        if (selectionMode === 'sell_to') {
-          selectedSellTo = customer;
-        } else {
+        if (selectionMode === 'bill_to') {
           selectedBillTo = customer;
-          selectionMode = 'sell_to'; // Revert back
+        } else {
+          selectedShipTo = customer;
+          selectionMode = 'bill_to'; // Revert back
           $('#sellToList').removeClass('ring-4 ring-indigo-100 rounded-xl p-2 bg-indigo-50/20 transition-all');
         }
 
@@ -273,10 +273,11 @@
       });
 
       $('#continueBtn').on('click', function() {
-        if (!selectedSellTo) return;
+        if (!selectedBillTo) return;
 
-        $('#input_customer_id').val(selectedSellTo.uuid); // Controller uses UUID
-        $('#input_billing_customer_id').val(isBillingSame ? null : (selectedBillTo ? selectedBillTo.uuid : null));
+        $('#input_billing_customer_id').val(selectedBillTo.uuid);
+        $('#input_shipping_customer_id').val(isShippingSame ? null : (selectedShipTo ? selectedShipTo.uuid :
+          null));
 
         $(this).prop('disabled', true).html('<i class="fas fa-circle-notch fa-spin"></i> Creating Draft...');
         $('#createOrderForm').submit();
@@ -336,15 +337,15 @@
       }
 
       filtered.forEach((c, index) => {
-        const isSellTo = selectedSellTo && selectedSellTo.id === c.id;
         const isBillTo = selectedBillTo && selectedBillTo.id === c.id;
-        const isSelected = isSellTo || isBillTo;
+        const isShipTo = selectedShipTo && selectedShipTo.id === c.id;
+        const isSelected = isBillTo || isShipTo;
 
         // Use 'name' from API
         const displayName = c.name || c.legal_name || 'Unknown Entity';
 
         const activeClass = isSelected ?
-          (isSellTo ? 'border-brand-500 ring-2 ring-brand-500/10 bg-brand-50/30 shadow-md transform scale-[1.01]' :
+          (isBillTo ? 'border-brand-500 ring-2 ring-brand-500/10 bg-brand-50/30 shadow-md transform scale-[1.01]' :
             'border-indigo-500 ring-2 ring-indigo-500/10 bg-indigo-50/20 shadow-md') :
           'border-slate-200 hover:border-brand-300 hover:shadow-md bg-white hover:-translate-y-1';
 
@@ -357,10 +358,10 @@
 
         // Checkmark logic
         let checkmark = '';
-        if (isSellTo) checkmark =
-          '<div class="absolute top-3 right-3 text-brand-500 animate-entry"><i class="fas fa-check-circle text-lg"></i></div>';
         if (isBillTo) checkmark =
-          '<div class="absolute top-3 right-3 text-indigo-500 animate-entry"><i class="fas fa-file-invoice-dollar text-lg"></i></div>';
+          '<div class="absolute top-3 right-3 text-brand-500 animate-entry" title="Billing"><i class="fas fa-check-circle text-lg"></i></div>';
+        if (isShipTo) checkmark =
+          '<div class="absolute top-3 right-3 text-indigo-500 animate-entry" title="Shipping"><i class="fas fa-truck text-lg"></i></div>';
 
         // Add stagger effect via style
         const delay = index * 0.05;
@@ -393,67 +394,69 @@
     }
 
     function updateSummary() {
-      // Update Sell To
-      if (selectedSellTo) {
-        const displayName = selectedSellTo.name || selectedSellTo.legal_name || 'Unknown Entity';
-        const address = selectedSellTo.address || 'No Address';
+      // Update Bill To
+      if (selectedBillTo) {
+        const displayName = selectedBillTo.name || selectedBillTo.legal_name || 'Unknown Entity';
+        const address = selectedBillTo.address || 'No Address';
 
-        $('#sellToSummary').html(`
+        $('#billToSummary').html(`
                 <div class="flex items-start gap-3 animate-entry">
                     <div class="w-10 h-10 rounded-lg bg-brand-100 text-brand-600 flex items-center justify-center font-black text-[10px] shadow-sm shrink-0">
                         ${displayName.substring(0, 2).toUpperCase()}
                     </div>
                     <div class="min-w-0 flex-1">
                         <div class="font-bold text-slate-800 text-xs truncate mb-0.5">${displayName}</div>
-                        <div class="text-[10px] text-slate-500 truncate w-full mb-1">${selectedSellTo.email || 'No Email'}</div>
+                        <div class="text-[10px] text-slate-500 truncate w-full mb-1">${selectedBillTo.email || 'No Email'}</div>
                         <div class="text-[10px] text-slate-400 leading-tight bg-slate-50 p-1.5 rounded border border-slate-100">
                            <i class="fas fa-map-marker-alt mr-1 text-slate-300"></i> ${address}
                         </div>
                     </div>
                 </div>
             `);
-        $('#sellToSummary').removeClass('border-dashed bg-slate-50/50').addClass(
+        $('#billToSummary').removeClass('border-dashed bg-slate-50/50').addClass(
           'bg-white shadow-sm border-brand-100 border-solid');
       } else {
-        $('#sellToSummary').html(`
+        $('#billToSummary').html(`
                 <div class="flex flex-col items-center justify-center text-center py-4 text-slate-400">
                    <div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center mb-2">
-                      <i class="fas fa-user-plus text-lg opacity-50"></i>
+                       <i class="fas fa-file-invoice-dollar text-lg opacity-50"></i>
                    </div>
-                   <span class="text-[11px] font-bold">Select from list</span>
+                   <span class="text-[11px] font-bold">Select Billing</span>
                  </div>
              `);
-        $('#sellToSummary').addClass('border-dashed bg-slate-50/50').removeClass(
+        $('#billToSummary').addClass('border-dashed bg-slate-50/50').removeClass(
           'bg-white shadow-sm border-brand-100 border-solid');
       }
 
-      // Update Bill To
-      const billTo = isBillingSame ? null : selectedBillTo;
+      // Update Ship To
+      const shipTo = isShippingSame ? null : selectedShipTo;
 
-      if (billTo) {
-        const displayName = billTo.name || billTo.legal_name || 'Unknown Entity';
+      if (shipTo) {
+        const displayName = shipTo.name || shipTo.legal_name || 'Unknown Entity';
 
-        $('#billToSummary').html(`
+        $('#shipToSummary').html(`
                 <div class="flex items-center gap-3 animate-entry">
                     <div class="w-8 h-8 rounded bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold text-[10px]">
                         ${displayName.substring(0, 2).toUpperCase()}
                     </div>
                     <div class="min-w-0">
                         <div class="font-bold text-slate-800 text-xs truncate">${displayName}</div>
-                        <div class="text-[10px] text-slate-500 truncate">${billTo.email || ''}</div>
+                        <div class="text-[10px] text-slate-500 truncate">${shipTo.email || ''}</div>
                     </div>
                 </div>
             `).removeClass('hidden');
       } else {
-        if ($('#billToSection').is(':visible') && !isBillingSame && !selectedBillTo) {
-          $('#billToSummary').html(
-              `<div class="text-center text-[10px] text-indigo-400 font-bold italic py-2">Select a payer above</div>`)
+        if ($('#shipToSection').is(':visible') && !isShippingSame && !selectedShipTo) {
+          $('#shipToSummary').html(
+              `<div class="text-center text-[10px] text-indigo-400 font-bold italic py-2">Select a receiver above</div>`)
             .removeClass('hidden');
+        } else {
+          $('#shipToSummary').addClass('hidden');
         }
       }
 
       // Enable/Disable Continue
-      $('#continueBtn').prop('disabled', !selectedSellTo);
+      $('#continueBtn').prop('disabled', !selectedBillTo);
     }
   </script>
 @endpush

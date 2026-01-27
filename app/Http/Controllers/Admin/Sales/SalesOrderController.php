@@ -103,19 +103,19 @@ class SalesOrderController extends Controller
         $this->authorize('create', 'orders');
 
         $request->validate([
-            'sell_to' => 'required|exists:customers,uuid',
-            'bill_to' => 'nullable|exists:customers,uuid',
+            'bill_to' => 'required|exists:customers,uuid',
+            'ship_to' => 'nullable|exists:customers,uuid',
         ]);
 
         $company = $request->company;
 
-        $sellToCustomer = Customer::where('company_id', $company->id)
-            ->where('uuid', $request->sell_to)
+        $billToCustomer = Customer::where('company_id', $company->id)
+            ->where('uuid', $request->bill_to)
             ->firstOrFail();
 
-        $billToCustomer = $request->filled('bill_to')
-            ? Customer::where('company_id', $company->id)->where('uuid', $request->bill_to)->firstOrFail()
-            : $sellToCustomer;
+        $shipToCustomer = $request->filled('ship_to')
+            ? Customer::where('company_id', $company->id)->where('uuid', $request->ship_to)->firstOrFail()
+            : $billToCustomer;
 
         $status = OrderStatus::where('code', 'DRAFT')->first();
         if (!$status) {
@@ -128,11 +128,17 @@ class SalesOrderController extends Controller
         // Currency default (adjust as per settings)
         $defaultCurrencyId = 1;
 
-        return DB::transaction(function () use ($company, $sellToCustomer, $billToCustomer, $status, $defaultCurrencyId) {
+        return DB::transaction(function () use ($company, $billToCustomer, $shipToCustomer, $status, $defaultCurrencyId) {
             $order = Order::create([
                 'uuid' => Str::uuid(),
                 'company_id' => $company->id,
-                'customer_id' => $sellToCustomer->id,
+                'customer_id' => $billToCustomer->id,
+                'customer_name' => $billToCustomer->display_name ?? $billToCustomer->legal_name,
+                'customer_email' => $billToCustomer->email,
+                'customer_tax_number' => $billToCustomer->tax_number,
+                'shipping_customer_id' => $shipToCustomer->id,
+                'shipping_customer_name' => $shipToCustomer->display_name ?? $shipToCustomer->legal_name,
+                'shipping_customer_email' => $shipToCustomer->email,
                 'status_id' => $status->id,
                 'order_number' => $this->generateOrderNumber($company),
                 'created_by' => auth()->id(),
@@ -156,14 +162,14 @@ class SalesOrderController extends Controller
             $order->addresses()->create([
                 'type' => 'SHIPPING',
                 'company_id' => $company->id,
-                'address_line_1' => $sellToCustomer->address->address_line_1 ?? '',
-                'address_line_2' => $sellToCustomer->address->address_line_2 ?? null,
-                'city' => $sellToCustomer->address->city ?? null,
-                'state_id' => !empty($sellToCustomer->address->state_id) ? $sellToCustomer->address->state_id : null,
-                'zip_code' => $sellToCustomer->address->zip_code ?? '',
-                'country_id' => !empty($sellToCustomer->address->country_id) ? $sellToCustomer->address->country_id : null,
-                'phone' => $sellToCustomer->phone,
-                'email' => $sellToCustomer->email,
+                'address_line_1' => $shipToCustomer->address->address_line_1 ?? '',
+                'address_line_2' => $shipToCustomer->address->address_line_2 ?? null,
+                'city' => $shipToCustomer->address->city ?? null,
+                'state_id' => !empty($shipToCustomer->address->state_id) ? $shipToCustomer->address->state_id : null,
+                'zip_code' => $shipToCustomer->address->zip_code ?? '',
+                'country_id' => !empty($shipToCustomer->address->country_id) ? $shipToCustomer->address->country_id : null,
+                'phone' => $shipToCustomer->phone,
+                'email' => $shipToCustomer->email,
             ]);
 
             return redirect()->to(company_route('sales-orders.edit', ['sales_order' => $order->uuid]));
@@ -179,11 +185,8 @@ class SalesOrderController extends Controller
             ->with(['items.productVariant.product'])
             ->firstOrFail();
 
-        $sellToCustomer = $order->customer;
-
-        $billToCustomer = $order->billingAddress
-            ? Customer::where('email', $order->billingAddress->email)->first()
-            : $sellToCustomer;
+        $billToCustomer = $order->customer;
+        $shipToCustomer = $order->shippingCustomer ?? $billToCustomer;
 
         // IMPORTANT: Your migration has discount_amount but NOT discount_percent.
         // So we cannot reliably hydrate discountPercent from DB unless you add that column.
@@ -201,7 +204,7 @@ class SalesOrderController extends Controller
             })->values(),
 
             // Default to customer payment term if order doesn't have one
-            'payment_term_id' => $order->payment_term_id ?? $sellToCustomer->payment_term_id,
+            'payment_term_id' => $order->payment_term_id ?? $billToCustomer->payment_term_id,
             'shipping' => (float) $order->shipping_total,
 
             // You do NOT have additional_total column in orders migration.
@@ -213,15 +216,14 @@ class SalesOrderController extends Controller
 
             'notes' => $order->notes,
 
-            // your JS expects currency code, but we store currency_id; JS select has AED/USD/GBP values.
-            // We'll set it to AED by default; feel free to map id->code if you want.
-            'currency' => $order->currency->code,
+            // Default: Order currency -> Company Base Currency -> 'AED' fallback
+            'currency' => $order->currency->code ?? ($company->baseCurrency->code ?? 'AED'),
             'status' => $order->status->code ?? 'DRAFT',
         ];
 
-        $customerDiscount = $sellToCustomer->percentage_discount ?? 0;
+        $customerDiscount = $billToCustomer->percentage_discount ?? 0;
 
-        return view('catvara.sales-orders.edit', compact('sellToCustomer', 'billToCustomer', 'order', 'initialState', 'customerDiscount'));
+        return view('catvara.sales-orders.edit', compact('billToCustomer', 'shipToCustomer', 'order', 'initialState', 'customerDiscount'));
     }
 
     /**
@@ -247,7 +249,7 @@ class SalesOrderController extends Controller
             // Return redirect URL for show page
             return response()->json([
                 'success' => true,
-                'redirect_url' => company_route('sales-orders.show', ['sales_order' => $order->id]),
+                'redirect_url' => company_route('sales-orders.show', ['sales_order' => $order->uuid]),
             ]);
         }
 
@@ -262,11 +264,14 @@ class SalesOrderController extends Controller
 
             // JS sends currency code: AED/USD/GBP
             'currency' => ['required', 'string'],
-            'sell_to' => ['nullable', 'exists:customers,uuid'],
             'bill_to' => ['nullable', 'exists:customers,uuid'],
+            'ship_to' => ['nullable', 'exists:customers,uuid'],
 
             'items' => ['nullable', 'array'],
-            'items.*.variant_id' => ['required_with:items'],
+            'items.*.type' => ['nullable', 'string', 'in:variant,custom'],
+            'items.*.variant_id' => ['nullable', 'integer'],
+            'items.*.custom_name' => ['nullable', 'string'],
+            'items.*.custom_sku' => ['nullable', 'string'],
             'items.*.qty' => ['required_with:items', 'numeric', 'min:1'],
             'items.*.unit_price' => ['required_with:items', 'numeric', 'min:0'],
             'items.*.discount_percent' => ['nullable', 'numeric', 'min:0', 'max:100'],
@@ -297,33 +302,12 @@ class SalesOrderController extends Controller
                 $vatRate
             );
 
-            // Update addresses if sell_to/bill_to provided
-            if (!empty($data['sell_to'])) {
-                $sellToCustomer = Customer::where('company_id', $company->id)->where('uuid', $data['sell_to'])->first();
-                if ($sellToCustomer) {
-                    $order->update(['customer_id' => $sellToCustomer->id]);
-
-                    // Update Shipping Address
-                    $order->shippingAddress()->updateOrCreate(
-                        ['type' => 'SHIPPING'],
-                        [
-                            'company_id' => $company->id,
-                            'address_line_1' => $sellToCustomer->address->address_line_1 ?? '',
-                            'address_line_2' => $sellToCustomer->address->address_line_2 ?? null,
-                            'city' => $sellToCustomer->address->city ?? null,
-                            'state_id' => !empty($sellToCustomer->address->state_id) ? $sellToCustomer->address->state_id : null,
-                            'zip_code' => $sellToCustomer->address->zip_code ?? '',
-                            'country_id' => !empty($sellToCustomer->address->country_id) ? $sellToCustomer->address->country_id : null,
-                            'phone' => $sellToCustomer->phone,
-                            'email' => $sellToCustomer->email,
-                        ]
-                    );
-                }
-            }
-
+            // Update addresses if bill_to/ship_to provided
             if (!empty($data['bill_to'])) {
                 $billToCustomer = Customer::where('company_id', $company->id)->where('uuid', $data['bill_to'])->first();
                 if ($billToCustomer) {
+                    $order->update(['customer_id' => $billToCustomer->id]);
+
                     // Update Billing Address
                     $order->billingAddress()->updateOrCreate(
                         ['type' => 'BILLING'],
@@ -337,6 +321,29 @@ class SalesOrderController extends Controller
                             'country_id' => !empty($billToCustomer->address->country_id) ? $billToCustomer->address->country_id : null,
                             'phone' => $billToCustomer->phone,
                             'email' => $billToCustomer->email,
+                        ]
+                    );
+                }
+            }
+
+            if (!empty($data['ship_to'])) {
+                $shipToCustomer = Customer::where('company_id', $company->id)->where('uuid', $data['ship_to'])->first();
+                if ($shipToCustomer) {
+                    $order->update(['shipping_customer_id' => $shipToCustomer->id]);
+
+                    // Update Shipping Address
+                    $order->shippingAddress()->updateOrCreate(
+                        ['type' => 'SHIPPING'],
+                        [
+                            'company_id' => $company->id,
+                            'address_line_1' => $shipToCustomer->address->address_line_1 ?? '',
+                            'address_line_2' => $shipToCustomer->address->address_line_2 ?? null,
+                            'city' => $shipToCustomer->address->city ?? null,
+                            'state_id' => !empty($shipToCustomer->address->state_id) ? $shipToCustomer->address->state_id : null,
+                            'zip_code' => $shipToCustomer->address->zip_code ?? '',
+                            'country_id' => !empty($shipToCustomer->address->country_id) ? $shipToCustomer->address->country_id : null,
+                            'phone' => $shipToCustomer->phone,
+                            'email' => $shipToCustomer->email,
                         ]
                     );
                 }
@@ -480,7 +487,8 @@ class SalesOrderController extends Controller
         $rows = [];
 
         foreach ($items as $item) {
-            $variantUuid = $item['variant_id'];
+            $isCustom = ($item['type'] ?? 'variant') === 'custom';
+            
             $qty = max(1, (int) ($item['qty'] ?? 1));
             $unit = (float) ($item['unit_price'] ?? 0);
 
@@ -491,7 +499,20 @@ class SalesOrderController extends Controller
                 ? min(100, max(0, (float) $item['tax_rate']))
                 : min(100, max(0, $globalVatRate));
 
-            $variant = ProductVariant::with('product')->whereUuid($variantUuid)->firstOrFail();
+            // For custom items, we don't fetch variant
+            if ($isCustom) {
+                $productName = $item['custom_name'] ?? 'Custom Item';
+                $variantDescription = $item['custom_sku'] ? "SKU: {$item['custom_sku']}" : null;
+                $variantId = null; // Custom items have null variant_id
+            } else {
+                $variantUuid = $item['variant_id'];
+                $variant = ProductVariant::with('product')->whereUuid($variantUuid)->firstOrFail();
+                $productName = (string) ($variant->product->name ?? '');
+                $variantDescription = method_exists($variant, 'getVariantDescription')
+                    ? $variant->getVariantDescription()
+                    : null;
+                $variantId = $variant->id;
+            }
 
             $gross = $unit * $qty;
             $discountAmount = $gross * ($discPct / 100);
@@ -507,14 +528,12 @@ class SalesOrderController extends Controller
             $itemsGrand += $lineTotal;
 
             $rows[] = [
-                'product_variant_id' => $variant->id,
+                'product_variant_id' => $variantId,
                 'quantity' => $qty,
                 'unit_price' => $unit,
 
-                'product_name' => (string) ($variant->product->name ?? ''),
-                'variant_description' => method_exists($variant, 'getVariantDescription')
-                    ? $variant->getVariantDescription()
-                    : null,
+                'product_name' => $productName,
+                'variant_description' => $variantDescription,
 
                 // Your migration includes discount_amount but NOT discount_percent
                 'discount_amount' => $discountAmount,
