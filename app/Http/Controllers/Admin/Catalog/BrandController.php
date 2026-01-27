@@ -24,7 +24,7 @@ class BrandController extends Controller
 
         $query = Brand::where('company_id', $company->id)
             ->with('parent')
-            ->select('brands.*');
+            ->withCount('products');
 
         return DataTables::of($query)
             ->addIndexColumn()
@@ -33,6 +33,13 @@ class BrandController extends Controller
                     return '<img src="' . asset('storage/' . $row->logo) . '" class="w-10 h-10 rounded-md object-cover border border-slate-200" />';
                 }
                 return '<div class="w-10 h-10 rounded-md bg-slate-100 flex items-center justify-center border border-slate-200 text-slate-400"><i class="fas fa-image"></i></div>';
+            })
+            ->addColumn('products_count_html', function ($row) {
+                $count = (int) ($row->products_count ?? 0);
+                if ($count > 0) {
+                    return '<span class="text-xs font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full ring-1 ring-inset ring-emerald-500/10">' . $count . ' products</span>';
+                }
+                return '<span class="text-slate-300 text-xs">0 products</span>';
             })
             ->addColumn('parent_name', function ($row) {
                 return $row->parent ? $row->parent->name : '<span class="text-slate-300 text-xs">—</span>';
@@ -57,7 +64,7 @@ class BrandController extends Controller
                    </div>
                    ';
             })
-            ->rawColumns(['logo_html', 'parent_name', 'status_badge', 'action'])
+            ->rawColumns(['logo_html', 'products_count_html', 'parent_name', 'status_badge', 'action'])
             ->make(true);
     }
 

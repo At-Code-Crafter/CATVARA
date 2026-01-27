@@ -71,6 +71,20 @@ class CategoryController extends Controller
                 'slug_html',
                 fn($row) => '<span class="text-xs font-mono text-slate-500 bg-slate-100 px-2 py-0.5 rounded">' . e($row->slug) . '</span>'
             )
+            // Slug column commented out per user request
+            // ->addColumn(
+            //     'slug_html',
+            //     fn($row) => '<span class="text-xs font-mono text-slate-500 bg-slate-100 px-2 py-0.5 rounded">' . e($row->slug) . '</span>'
+            // )
+
+            ->addColumn('products_count_html', function ($row) {
+                $count = (int) ($row->products_count ?? 0);
+                if ($count > 0) {
+                    return '<span class="text-xs font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full ring-1 ring-inset ring-emerald-500/10">' . $count . ' products</span>';
+                }
+
+                return '<span class="text-slate-300 text-xs">0 products</span>';
+            })
 
             ->addColumn('parent_html', function ($row) {
                 if (!empty($row->parent_name)) {
@@ -120,6 +134,7 @@ class CategoryController extends Controller
                 'slug_html',
                 'parent_html',
                 'children_html',
+                'products_count_html',
                 'status_badge',
                 'action',
             ])
@@ -162,6 +177,7 @@ class CategoryController extends Controller
         $p = $prefix . 'p';
         $gp = $prefix . 'gp';
         $cc = $prefix . 'cc';
+        $pc = $prefix . 'pc';
 
         // children count (direct children per category)
         $childrenCount = DB::table($table . ' as c2')
@@ -169,11 +185,20 @@ class CategoryController extends Controller
             ->where('c2.company_id', $company->id)
             ->groupBy('c2.parent_id');
 
+        // products count per category
+        $productsCount = DB::table('products as pr')
+            ->select('pr.category_id', DB::raw('COUNT(*) as products_count'))
+            ->where('pr.company_id', $company->id)
+            ->groupBy('pr.category_id');
+
         $q = DB::table($table . ' as c')
             ->leftJoin($table . ' as p', 'p.id', '=', 'c.parent_id')
             ->leftJoin($table . ' as gp', 'gp.id', '=', 'p.parent_id')
             ->leftJoinSub($childrenCount, 'cc', function ($join) {
                 $join->on('cc.parent_id', '=', 'c.id');
+            })
+            ->leftJoinSub($productsCount, 'pc', function ($join) {
+                $join->on('pc.category_id', '=', 'c.id');
             })
             ->where('c.company_id', $company->id)
             ->select([
@@ -191,6 +216,7 @@ class CategoryController extends Controller
                 DB::raw("{$gp}.id as grandparent_id"),
                 DB::raw("{$gp}.name as grandparent_name"),
                 DB::raw("COALESCE({$cc}.children_count, 0) as children_count"),
+                DB::raw("COALESCE({$pc}.products_count, 0) as products_count"),
             ]);
 
         // Filters

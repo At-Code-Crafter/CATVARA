@@ -201,7 +201,7 @@
             data: 'price_range',
             name: 'price_range',
             className: 'py-4 font-bold text-slate-700 text-sm',
-            render: (data) => data !== '—' ? `<span class="text-brand-600">$</span>${data}` : data
+            render: (data) => data !== '—' ? `<span class="text-brand-600">{{ request()->company->baseCurrency->symbol ?? '$' }}</span>${data}` : data
           },
           {
             data: 'status',

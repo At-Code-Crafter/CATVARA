@@ -56,6 +56,7 @@
             <th class="px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Name</th>
             <th class="px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Code</th>
             <th class="px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Values</th>
+            <th class="px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Products</th>
             <th class="px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Status</th>
             <th class="px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Created</th>
             <th class="px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider text-right">
@@ -97,6 +98,11 @@
             data: 'values_badges',
             name: 'values_badges',
             orderable: false,
+            searchable: false
+          },
+          {
+            data: 'products_count_html',
+            name: 'products_count',
             searchable: false
           },
           {

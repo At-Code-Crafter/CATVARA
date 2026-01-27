@@ -21,6 +21,8 @@ class AttributeController extends Controller
         $prefix = DB::getTablePrefix();
         $attrTable = $prefix . 'attributes';
         $avTable = $prefix . 'attribute_values';
+        $pvavTable = $prefix . 'product_variant_attribute_values';
+        $pvTable = $prefix . 'product_variants';
 
         $query = DB::table('attributes')
             ->where('attributes.company_id', $companyId)
@@ -36,6 +38,14 @@ class AttributeController extends Controller
               FROM ' . $avTable . ' av
               WHERE av.attribute_id = ' . $attrTable . '.id
             ) as values_list'
+            )
+            ->selectRaw(
+                '(SELECT COUNT(DISTINCT pv.product_id)
+              FROM ' . $avTable . ' av2
+              INNER JOIN ' . $pvavTable . ' pvav ON pvav.attribute_value_id = av2.id
+              INNER JOIN ' . $pvTable . ' pv ON pv.id = pvav.product_variant_id
+              WHERE av2.attribute_id = ' . $attrTable . '.id
+            ) as products_count'
             );
 
         if ($request->filled('is_active')) {
@@ -74,6 +84,14 @@ class AttributeController extends Controller
                     return $html;
                 })
 
+                ->addColumn('products_count_html', function ($row) {
+                    $count = (int) ($row->products_count ?? 0);
+                    if ($count > 0) {
+                        return '<span class="text-xs font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full ring-1 ring-inset ring-emerald-500/10">' . $count . ' products</span>';
+                    }
+                    return '<span class="text-slate-300 text-xs">0 products</span>';
+                })
+
                 ->addColumn('status_badge', fn($row) => ((int) $row->is_active === 1)
                     ? '<span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-600/20">Active</span>'
                     : '<span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-slate-50 text-slate-600 ring-1 ring-inset ring-slate-500/20">Inactive</span>')
@@ -90,7 +108,7 @@ class AttributeController extends Controller
                     ';
                 })
 
-                ->rawColumns(['code', 'values_badges', 'status_badge', 'action'])
+                ->rawColumns(['code', 'values_badges', 'products_count_html', 'status_badge', 'action'])
                 ->make(true);
         }
 
