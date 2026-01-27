@@ -21,6 +21,12 @@ class Order extends Model
         'uuid',
         'company_id',
         'customer_id',
+        'customer_name',
+        'customer_email',
+        'customer_tax_number',
+        'shipping_customer_id',
+        'shipping_customer_name',
+        'shipping_customer_email',
         'status_id',
         'source',
         'source_id',
@@ -175,6 +181,11 @@ class Order extends Model
     public function shippingAddress()
     {
         return $this->morphOne(Address::class, 'addressable')->where('type', 'SHIPPING');
+    }
+
+    public function shippingCustomer()
+    {
+        return $this->belongsTo(Customer::class, 'shipping_customer_id');
     }
 
     public function invoice()
