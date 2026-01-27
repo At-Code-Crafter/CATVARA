@@ -17,4 +17,9 @@ class InventoryLocation extends Model
     {
         return $this->morphTo();
     }
+
+    public function balances()
+    {
+        return $this->hasMany(InventoryBalance::class);
+    }
 }
