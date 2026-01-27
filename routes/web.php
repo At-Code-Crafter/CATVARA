@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Admin\AdminPaymentMethodController;
+use App\Http\Controllers\Admin\AdminPaymentTermController;
 use App\Http\Controllers\Admin\CMS\TinyMCEController;
 use App\Http\Controllers\Admin\CompanyContextController;
 use App\Http\Controllers\Admin\DashboardController;
@@ -87,6 +89,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         Route::resource('modules', ModuleController::class)->except(['destroy']);
         Route::resource('permissions', PermissionController::class)->except(['destroy']);
+
+        // Admin Payment Methods (all companies)
+        Route::get('payment-methods', [AdminPaymentMethodController::class, 'index'])->name('admin.payment-methods.index');
+
+        // Admin Payment Terms (all companies)
+        Route::get('payment-terms', [AdminPaymentTermController::class, 'index'])->name('admin.payment-terms.index');
 
         // User company-role assignment endpoints (used in show.blade.php)
         Route::get('users/roles/by-company', [UserController::class, 'rolesByCompany'])

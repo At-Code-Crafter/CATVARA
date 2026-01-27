@@ -236,7 +236,7 @@
     <p class="px-3 pt-6 mb-2 text-[11px] font-bold text-slate-400 uppercase tracking-widest nav-group-header">
       Administration</p>
 
-    @php $isConfigurationActive = $isActive(['tenants.*', 'users.*','price-channels.*', 'modules.*', 'permissions.*']); @endphp
+    @php $isConfigurationActive = $isActive(['tenants.*', 'users.*','price-channels.*', 'modules.*', 'permissions.*', 'settings.roles.*', 'admin.payment-methods.*', 'admin.payment-terms.*']); @endphp
     <div class="nav-group">
       <button
         class="w-full flex items-center justify-between px-4 py-3 text-sm font-semibold rounded-xl transition-all group
@@ -262,9 +262,26 @@
           <span class="sidebar-text">Users</span>
         </a>
 
+        @if($companyReady)
+        <a href="{{ company_route('settings.roles.index') }}"
+          class="flex items-center py-2 pl-12 pr-4 text-xs font-medium {{ $isActive('settings.roles.*') ? 'text-brand-400' : 'text-slate-500 hover:text-brand-400' }}">
+          <span class="sidebar-text">Roles</span>
+        </a>
+        @endif
+
         <a href="{{ route('price-channels.index') }}"
           class="flex items-center py-2 pl-12 pr-4 text-xs font-medium {{ $isActive('price-channels.*') ? 'text-brand-400' : 'text-slate-500 hover:text-brand-400' }}">
           <span class="sidebar-text">Price Channels</span>
+        </a>
+
+        <a href="{{ route('admin.payment-methods.index') }}"
+          class="flex items-center py-2 pl-12 pr-4 text-xs font-medium {{ $isActive('admin.payment-methods.*') ? 'text-brand-400' : 'text-slate-500 hover:text-brand-400' }}">
+          <span class="sidebar-text">Payment Methods</span>
+        </a>
+
+        <a href="{{ route('admin.payment-terms.index') }}"
+          class="flex items-center py-2 pl-12 pr-4 text-xs font-medium {{ $isActive('admin.payment-terms.*') ? 'text-brand-400' : 'text-slate-500 hover:text-brand-400' }}">
+          <span class="sidebar-text">Payment Terms</span>
         </a>
 
         <a href="{{ route('modules.index') }}"
