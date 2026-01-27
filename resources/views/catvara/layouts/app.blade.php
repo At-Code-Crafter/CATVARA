@@ -641,9 +641,9 @@
 
           <div class="h-6 w-px bg-slate-200 mx-2"></div>
 
-          <!-- User Dropdown (Same as before) -->
+          <!-- User Dropdown -->
           <div class="relative group">
-            <button class="flex items-center gap-3 focus:outline-none">
+            <button class="flex items-center gap-3 focus:outline-none py-2">
               <span
                 class="hidden md:block text-sm font-medium text-slate-600 group-hover:text-slate-900 transition-colors">
                 {{ auth()->user()->name }}
@@ -655,28 +655,32 @@
             </button>
 
             <div
-              class="absolute right-0 w-56 mt-2 bg-white rounded-lg shadow-xl border border-slate-100 py-1 z-50 hidden group-hover:block hover:block transform transition-all duration-200 origin-top-right">
-              <div class="px-4 py-3 border-b border-slate-50 bg-slate-50/50">
-                <p class="text-xs text-slate-400 uppercase font-semibold">Signed in as</p>
-                <p class="text-sm font-medium text-slate-900 truncate">{{ auth()->user()->email }}</p>
-              </div>
+              class="absolute right-0 w-56 pt-2 z-50 hidden group-hover:block">
+              <div class="bg-white rounded-xl shadow-xl border border-slate-100 py-1 transform transition-all duration-200 origin-top-right">
+                <div class="px-4 py-3 border-b border-slate-100 bg-slate-50/50 rounded-t-xl">
+                  <p class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Signed in as</p>
+                  <p class="text-sm font-semibold text-slate-800 truncate">{{ auth()->user()->email }}</p>
+                </div>
 
-              <div class="py-1">
-                <a href="#"
-                  class="block px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 hover:text-brand-600">Your
-                  Profile</a>
-                <a href="#"
-                  class="block px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 hover:text-brand-600">Company
-                  Settings</a>
-              </div>
+                <div class="py-1">
+                  <a href="{{ route('profile.edit') }}"
+                    class="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-600 hover:bg-slate-50 hover:text-brand-600 transition-colors">
+                    <i class="fas fa-user w-4 text-slate-400"></i> Your Profile
+                  </a>
+                  <a href="{{ route('profile.edit') }}#password"
+                    class="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-600 hover:bg-slate-50 hover:text-brand-600 transition-colors">
+                    <i class="fas fa-key w-4 text-slate-400"></i> Change Password
+                  </a>
+                </div>
 
-              <div class="py-1 border-t border-slate-50">
-                <form method="POST" action="{{ route('logout') }}">
-                  @csrf
-                  <button type="submit" class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50">
-                    Sign out
-                  </button>
-                </form>
+                <div class="py-1 border-t border-slate-100">
+                  <form method="POST" action="{{ route('logout') }}">
+                    @csrf
+                    <button type="submit" class="flex items-center gap-3 w-full text-left px-4 py-2.5 text-sm text-rose-600 hover:bg-rose-50 transition-colors">
+                      <i class="fas fa-sign-out-alt w-4"></i> Sign out
+                    </button>
+                  </form>
+                </div>
               </div>
             </div>
           </div>
