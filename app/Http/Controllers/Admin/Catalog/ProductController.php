@@ -105,6 +105,17 @@ class ProductController extends Controller
                     ->addColumn('action', function ($row) {
                         return ''; // Actions are rendered client-side using edit_url
                     })
+                    ->orderColumn('category_name', function ($query, $order) {
+                        $query->leftJoin('categories', 'products.category_id', '=', 'categories.id')
+                              ->orderBy('categories.name', $order);
+                    })
+                    ->orderColumn('brand_name', function ($query, $order) {
+                        $query->leftJoin('brands', 'products.brand_id', '=', 'brands.id')
+                              ->orderBy('brands.name', $order);
+                    })
+                    ->orderColumn('status', function ($query, $order) {
+                        $query->orderBy('is_active', $order);
+                    })
                     ->make(true);
             }
 
