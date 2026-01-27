@@ -1,6 +1,6 @@
 @extends('catvara.layouts.app')
 
-@section('title', 'Sales Order - Step 1')
+@section('title', isset($editOrder) && $editOrder ? 'Edit Order Customer - ' . $editOrder->order_number : 'Sales Order - Step 1')
 
 @section('content')
   <style>
@@ -28,16 +28,29 @@
     <div class="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
       <div>
         <div class="flex items-center gap-2 mb-1">
-          <a href="{{ company_route('sales-orders.index') }}"
-            class="h-7 w-7 rounded-md bg-white border border-slate-200 flex items-center justify-center text-slate-400 hover:text-brand-600 hover:border-brand-200 hover:shadow-sm transition-all duration-300">
-            <i class="fas fa-arrow-left text-xs"></i>
-          </a>
-          <span
-            class="px-2 py-0.5 rounded-[4px] bg-brand-50 text-brand-700 border border-brand-100 text-[10px] font-black uppercase tracking-widest">
-            Step 01 / 03
-          </span>
+          @if(isset($editOrder) && $editOrder)
+            <a href="{{ company_route('sales-orders.edit', ['sales_order' => $editOrder->uuid]) }}"
+              class="h-7 w-7 rounded-md bg-white border border-slate-200 flex items-center justify-center text-slate-400 hover:text-brand-600 hover:border-brand-200 hover:shadow-sm transition-all duration-300">
+              <i class="fas fa-arrow-left text-xs"></i>
+            </a>
+            <span
+              class="px-2 py-0.5 rounded-[4px] bg-amber-50 text-amber-700 border border-amber-100 text-[10px] font-black uppercase tracking-widest">
+              Edit Customer
+            </span>
+          @else
+            <a href="{{ company_route('sales-orders.index') }}"
+              class="h-7 w-7 rounded-md bg-white border border-slate-200 flex items-center justify-center text-slate-400 hover:text-brand-600 hover:border-brand-200 hover:shadow-sm transition-all duration-300">
+              <i class="fas fa-arrow-left text-xs"></i>
+            </a>
+            <span
+              class="px-2 py-0.5 rounded-[4px] bg-brand-50 text-brand-700 border border-brand-100 text-[10px] font-black uppercase tracking-widest">
+              Step 01 / 03
+            </span>
+          @endif
         </div>
-        <h1 class="text-2xl font-bold text-slate-800 tracking-tight">Initiate Order</h1>
+        <h1 class="text-2xl font-bold text-slate-800 tracking-tight">
+          {{ isset($editOrder) && $editOrder ? 'Change Customer for Order #' . $editOrder->order_number : 'Initiate Order' }}
+        </h1>
       </div>
 
       {{-- Progress --}}
@@ -169,13 +182,22 @@
             <i class="fas fa-rocket text-5xl transform rotate-12"></i>
           </div>
           <div class="p-5 relative z-10">
-            <h3 class="text-base font-black tracking-tight mb-1">Initiate Draft</h3>
-            <p class="text-[11px] text-slate-400 font-medium mb-4">Create a new order draft and proceed to items.</p>
+            @if(isset($editOrder) && $editOrder)
+              <h3 class="text-base font-black tracking-tight mb-1">Update Customer</h3>
+              <p class="text-[11px] text-slate-400 font-medium mb-4">Change the customer for order #{{ $editOrder->order_number }}.</p>
+            @else
+              <h3 class="text-base font-black tracking-tight mb-1">Initiate Draft</h3>
+              <p class="text-[11px] text-slate-400 font-medium mb-4">Create a new order draft and proceed to items.</p>
+            @endif
 
             <button id="continueBtn" disabled
               class="w-full btn bg-brand-500 hover:bg-brand-400 text-white border-0 py-3 h-auto shadow-lg shadow-brand-900/50 disabled:opacity-20 disabled:grayscale disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98]">
               <span class="font-bold flex items-center justify-center gap-2 text-sm">
-                Create & Proceed <i class="fas fa-arrow-right"></i>
+                @if(isset($editOrder) && $editOrder)
+                  Update & Continue <i class="fas fa-check"></i>
+                @else
+                  Create & Proceed <i class="fas fa-arrow-right"></i>
+                @endif
               </span>
             </button>
           </div>
@@ -186,11 +208,20 @@
   </div>
 
   {{-- Hidden Form for Submission --}}
-  <form id="createOrderForm" action="{{ company_route('sales-orders.store') }}" method="POST" class="hidden">
-    @csrf
-    <input type="hidden" name="bill_to" id="input_billing_customer_id">
-    <input type="hidden" name="ship_to" id="input_shipping_customer_id">
-  </form>
+  @if(isset($editOrder) && $editOrder)
+    <form id="createOrderForm" action="{{ company_route('sales-orders.update-customers', ['sales_order' => $editOrder->uuid]) }}" method="POST" class="hidden">
+      @csrf
+      @method('PUT')
+      <input type="hidden" name="bill_to" id="input_billing_customer_id">
+      <input type="hidden" name="ship_to" id="input_shipping_customer_id">
+    </form>
+  @else
+    <form id="createOrderForm" action="{{ company_route('sales-orders.store') }}" method="POST" class="hidden">
+      @csrf
+      <input type="hidden" name="bill_to" id="input_billing_customer_id">
+      <input type="hidden" name="ship_to" id="input_shipping_customer_id">
+    </form>
+  @endif
 @endsection
 
 @push('scripts')
@@ -279,7 +310,9 @@
         $('#input_shipping_customer_id').val(isShippingSame ? null : (selectedShipTo ? selectedShipTo.uuid :
           null));
 
-        $(this).prop('disabled', true).html('<i class="fas fa-circle-notch fa-spin"></i> Creating Draft...');
+        const isEditMode = {{ isset($editOrder) && $editOrder ? 'true' : 'false' }};
+        const loadingText = isEditMode ? '<i class="fas fa-circle-notch fa-spin"></i> Updating...' : '<i class="fas fa-circle-notch fa-spin"></i> Creating Draft...';
+        $(this).prop('disabled', true).html(loadingText);
         $('#createOrderForm').submit();
       });
     });
@@ -370,7 +403,7 @@
         const address = c.address || 'No Address';
 
         const card = `
-                <div class="customer-card relative cursor-pointer rounded-xl p-4 border transition-all duration-300 group flex items-start gap-3 ${activeClass} animate-entry" 
+                <div class="customer-card relative cursor-pointer rounded-xl p-4 border transition-all duration-300 group flex items-start gap-3 ${activeClass} animate-entry"
                      style="${style}"
                      data-id="${c.id}">
                     <div class="w-10 h-10 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center font-black text-sm shadow-sm border border-slate-200 group-hover:bg-white group-hover:text-brand-600 group-hover:border-brand-200 transition-colors">

@@ -217,6 +217,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             // Custom routes BEFORE resource to avoid conflicts
             Route::get('sales-orders/{sales_order}/print', [\App\Http\Controllers\Admin\Sales\SalesOrderController::class, 'printOrder'])->name('sales-orders.print');
             Route::post('sales-orders/{sales_order}/generate-invoice', [\App\Http\Controllers\Admin\Accounting\InvoiceController::class, 'storeFromOrder'])->name('sales-orders.generate-invoice');
+            Route::put('sales-orders/{sales_order}/update-customers', [\App\Http\Controllers\Admin\Sales\SalesOrderController::class, 'updateCustomers'])->name('sales-orders.update-customers');
             Route::get('invoices/{invoice}/print', [\App\Http\Controllers\Admin\Accounting\InvoiceController::class, 'print'])->name('invoices.print');
             Route::get('sales-orders-data', [\App\Http\Controllers\Admin\Sales\SalesOrderController::class, 'data'])->name('sales-orders.data');
 

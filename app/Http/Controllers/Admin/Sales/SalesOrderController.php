@@ -79,7 +79,7 @@ class SalesOrderController extends Controller
             ->addColumn('actions', function ($order) {
                 $edit = company_route('sales-orders.edit', ['sales_order' => $order->uuid]);
                 $showUrl = company_route('sales-orders.show', ['sales_order' => $order->id]); // if you have show
-    
+
                 $compact['showUrl'] = $showUrl;
                 $compact['editUrl'] = $edit;
                 $compact['deleteUrl'] = null;
@@ -91,11 +91,20 @@ class SalesOrderController extends Controller
             ->make(true);
     }
 
-    public function create()
+    public function create(Request $request)
     {
         $this->authorize('create', 'orders');
 
-        return view('catvara.sales-orders.create');
+        $editOrder = null;
+        if ($request->filled('edit_order')) {
+            $editOrder = Order::where('company_id', $request->company->id)
+                ->where('uuid', $request->edit_order)
+                ->first();
+        }
+
+        return view('catvara.sales-orders.create', [
+            'editOrder' => $editOrder,
+        ]);
     }
 
     public function store(Request $request)
@@ -171,6 +180,79 @@ class SalesOrderController extends Controller
                 'phone' => $shipToCustomer->phone,
                 'email' => $shipToCustomer->email,
             ]);
+
+            return redirect()->to(company_route('sales-orders.edit', ['sales_order' => $order->uuid]));
+        });
+    }
+
+    /**
+     * Update customers (bill_to / ship_to) for an existing order.
+     * This is called when user edits customer details from the order edit page.
+     */
+    public function updateCustomers(Request $request, Company $company, $id)
+    {
+        $this->authorize('edit', 'orders');
+
+        $request->validate([
+            'bill_to' => 'required|exists:customers,uuid',
+            'ship_to' => 'nullable|exists:customers,uuid',
+        ]);
+
+        $order = Order::where('company_id', $company->id)
+            ->where('uuid', $id)
+            ->firstOrFail();
+
+        $billToCustomer = Customer::where('company_id', $company->id)
+            ->where('uuid', $request->bill_to)
+            ->firstOrFail();
+
+        $shipToCustomer = $request->filled('ship_to')
+            ? Customer::where('company_id', $company->id)->where('uuid', $request->ship_to)->firstOrFail()
+            : $billToCustomer;
+
+        return DB::transaction(function () use ($order, $company, $billToCustomer, $shipToCustomer) {
+            // Update order customer info
+            $order->update([
+                'customer_id' => $billToCustomer->id,
+                'customer_name' => $billToCustomer->display_name ?? $billToCustomer->legal_name,
+                'customer_email' => $billToCustomer->email,
+                'customer_tax_number' => $billToCustomer->tax_number,
+                'shipping_customer_id' => $shipToCustomer->id,
+                'shipping_customer_name' => $shipToCustomer->display_name ?? $shipToCustomer->legal_name,
+                'shipping_customer_email' => $shipToCustomer->email,
+            ]);
+
+            // Update billing address
+            $order->addresses()->updateOrCreate(
+                ['type' => 'BILLING'],
+                [
+                    'company_id' => $company->id,
+                    'address_line_1' => $billToCustomer->address->address_line_1 ?? '',
+                    'address_line_2' => $billToCustomer->address->address_line_2 ?? null,
+                    'city' => $billToCustomer->address->city ?? null,
+                    'state_id' => !empty($billToCustomer->address->state_id) ? $billToCustomer->address->state_id : null,
+                    'zip_code' => $billToCustomer->address->zip_code ?? '',
+                    'country_id' => !empty($billToCustomer->address->country_id) ? $billToCustomer->address->country_id : null,
+                    'phone' => $billToCustomer->phone,
+                    'email' => $billToCustomer->email,
+                ]
+            );
+
+            // Update shipping address
+            $order->addresses()->updateOrCreate(
+                ['type' => 'SHIPPING'],
+                [
+                    'company_id' => $company->id,
+                    'address_line_1' => $shipToCustomer->address->address_line_1 ?? '',
+                    'address_line_2' => $shipToCustomer->address->address_line_2 ?? null,
+                    'city' => $shipToCustomer->address->city ?? null,
+                    'state_id' => !empty($shipToCustomer->address->state_id) ? $shipToCustomer->address->state_id : null,
+                    'zip_code' => $shipToCustomer->address->zip_code ?? '',
+                    'country_id' => !empty($shipToCustomer->address->country_id) ? $shipToCustomer->address->country_id : null,
+                    'phone' => $shipToCustomer->phone,
+                    'email' => $shipToCustomer->email,
+                ]
+            );
 
             return redirect()->to(company_route('sales-orders.edit', ['sales_order' => $order->uuid]));
         });
@@ -488,7 +570,7 @@ class SalesOrderController extends Controller
 
         foreach ($items as $item) {
             $isCustom = ($item['type'] ?? 'variant') === 'custom';
-            
+
             $qty = max(1, (int) ($item['qty'] ?? 1));
             $unit = (float) ($item['unit_price'] ?? 0);
 
