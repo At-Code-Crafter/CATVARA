@@ -319,6 +319,12 @@
           <span class="sidebar-text">Activity Logs</span>
         </a>
 
+        <a href="{{ route('log-viewer.index') }}" target="_blank"
+          class="flex items-center py-2 pl-12 pr-4 text-xs font-medium text-slate-500 hover:text-brand-400">
+          <span class="sidebar-text">Error Logs</span>
+          <i class="fas fa-external-link-alt text-[8px] ml-1.5 opacity-50"></i>
+        </a>
+
       </div>
     </div>
 
