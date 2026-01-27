@@ -22,6 +22,7 @@
                     <tr>
                         <th class="px-8!">Logo</th>
                         <th>Name</th>
+                        <th>Products</th>
                         <th>Parent Brand</th>
                         <th>Status</th>
                         <th class="text-right px-8!">Actions</th>
@@ -56,6 +57,11 @@
                     {
                         data: 'name',
                         name: 'name'
+                    },
+                    {
+                        data: 'products_count_html',
+                        name: 'products_count',
+                        searchable: false
                     },
                     {
                         data: 'parent_name',
