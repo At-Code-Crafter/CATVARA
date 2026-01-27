@@ -99,6 +99,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // Admin Exchange Rates (all companies)
         Route::get('exchange-rates', [\App\Http\Controllers\Admin\AdminExchangeRateController::class, 'index'])->name('admin.exchange-rates.index');
 
+        // Admin Activity Logs (all companies)
+        Route::get('activity-logs', [\App\Http\Controllers\Admin\AdminActivityLogController::class, 'index'])->name('admin.activity-logs.index');
+
         // User company-role assignment endpoints (used in show.blade.php)
         Route::get('users/roles/by-company', [UserController::class, 'rolesByCompany'])
             ->name('users.roles.byCompany');
