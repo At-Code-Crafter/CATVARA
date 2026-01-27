@@ -236,7 +236,7 @@
     <p class="px-3 pt-6 mb-2 text-[11px] font-bold text-slate-400 uppercase tracking-widest nav-group-header">
       Administration</p>
 
-    @php $isConfigurationActive = $isActive(['tenants.*', 'users.*','price-channels.*']); @endphp
+    @php $isConfigurationActive = $isActive(['tenants.*', 'users.*','price-channels.*', 'modules.*', 'permissions.*']); @endphp
     <div class="nav-group">
       <button
         class="w-full flex items-center justify-between px-4 py-3 text-sm font-semibold rounded-xl transition-all group
@@ -265,6 +265,16 @@
         <a href="{{ route('price-channels.index') }}"
           class="flex items-center py-2 pl-12 pr-4 text-xs font-medium {{ $isActive('price-channels.*') ? 'text-brand-400' : 'text-slate-500 hover:text-brand-400' }}">
           <span class="sidebar-text">Price Channels</span>
+        </a>
+
+        <a href="{{ route('modules.index') }}"
+          class="flex items-center py-2 pl-12 pr-4 text-xs font-medium {{ $isActive('modules.*') ? 'text-brand-400' : 'text-slate-500 hover:text-brand-400' }}">
+          <span class="sidebar-text">Modules</span>
+        </a>
+
+        <a href="{{ route('permissions.index') }}"
+          class="flex items-center py-2 pl-12 pr-4 text-xs font-medium {{ $isActive('permissions.*') ? 'text-brand-400' : 'text-slate-500 hover:text-brand-400' }}">
+          <span class="sidebar-text">Permissions</span>
         </a>
 
       </div>
