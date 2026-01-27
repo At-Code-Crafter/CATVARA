@@ -42,7 +42,7 @@
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {{-- Left Column: Main Details --}}
         <div class="lg:col-span-2 space-y-8">
-          
+
           {{-- Basic Information Card --}}
           <div class="card p-8 bg-white border-slate-100 shadow-soft relative overflow-hidden">
             <div class="absolute top-0 left-0 w-1 h-full bg-amber-400"></div>
@@ -136,7 +136,7 @@
 
         {{-- Right Column: Status & Info --}}
         <div class="space-y-8">
-          
+
           {{-- Status Card --}}
           <div class="card p-6 bg-white border-slate-100 shadow-soft">
             <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest mb-6 border-b border-slate-50 pb-4">
@@ -163,8 +163,8 @@
               <i class="fas fa-info-circle"></i> Warehouse Management
             </h4>
             <p class="text-xs text-amber-700 leading-relaxed font-medium">
-              Warehouses are central storage hubs for receiving shipments and 
-              distributing stock to retail stores. Inventory is tracked separately 
+              Warehouses are central storage hubs for receiving shipments and
+              distributing stock to retail stores. Inventory is tracked separately
               for each warehouse location.
             </p>
           </div>
