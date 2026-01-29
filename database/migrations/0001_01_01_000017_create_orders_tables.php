@@ -38,17 +38,19 @@ return new class extends Migration
         Schema::create('orders', function (Blueprint $table) {
             $table->id();
             $table->uuid('uuid')->unique();
-
             $table->unsignedBigInteger('company_id');
-            $table->unsignedBigInteger('customer_id')->nullable();
+            $table->string('order_number');
+
+            $table->unsignedBigInteger('customer_id');
+            $table->unsignedBigInteger('shipping_customer_id');
+
             $table->unsignedBigInteger('status_id');
-            $table->unsignedBigInteger('payment_status_id')->nullable();
+            $table->unsignedBigInteger('payment_status_id');
 
             // Origin tracking
-            $table->string('source')->nullable(); // QUOTE, POS, WEB, MANUAL
+            $table->string('source')->default('MANUAL'); // QUOTE, POS, WEB, MANUAL
             $table->unsignedBigInteger('source_id')->nullable();
 
-            $table->string('order_number')->unique();
 
             $table->unsignedBigInteger('currency_id');
 
@@ -60,10 +62,11 @@ return new class extends Migration
 
             // Totals snapshot
             $table->decimal('subtotal', 18, 6)->default(0);
-            $table->decimal('tax_total', 18, 6)->default(0);
             $table->decimal('discount_total', 18, 6)->default(0);
             $table->decimal('shipping_total', 18, 6)->default(0);
             $table->decimal('shipping_tax_total', 18, 6)->default(0);
+
+            $table->decimal('tax_total', 18, 6)->default(0);
             $table->decimal('grand_total', 18, 6)->default(0);
 
             $table->timestamp('confirmed_at')->nullable();
@@ -75,6 +78,7 @@ return new class extends Migration
             $table->softDeletes();
 
             $table->index(['company_id', 'status_id'], 'order_company_status_idx');
+            $table->uniqe(['company_id', 'order_number'], 'order_company_order_number_idx');
         });
 
         /**
@@ -114,6 +118,9 @@ return new class extends Migration
                 ->references('id')->on('companies')->cascadeOnDelete();
 
             $table->foreign('customer_id', 'order_customer_fk')
+                ->references('id')->on('customers')->nullOnDelete();
+
+            $table->foreign('shipping_customer_id', 'order_shipping_customer_fk')
                 ->references('id')->on('customers')->nullOnDelete();
 
             $table->foreign('status_id', 'order_status_fk')

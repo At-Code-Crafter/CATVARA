@@ -16,15 +16,16 @@ return new class extends Migration
             $table->unsignedBigInteger('company_id');
             $table->morphs('addressable');
             $table->string('type')->default('billing');
+            $table->string('name')->nullable();
+            $table->string('phone')->nullable();
+            $table->string('email')->nullable();
+            $table->string('tax_number')->nullable();
             $table->string('address_line_1');
             $table->string('address_line_2')->nullable();
             $table->string('city')->nullable();
             $table->foreignId('state_id')->nullable();
             $table->foreignId('country_id')->nullable();
             $table->string('zip_code');
-            $table->string('name')->nullable();
-            $table->string('phone')->nullable();
-            $table->string('email')->nullable();
             $table->timestamps();
             $table->softDeletes();
 
