@@ -21,53 +21,85 @@ return new class extends Migration
         });
 
         /**
-         * ORDER PAYMENT STATUSES
-         */
-        Schema::create('order_payment_statuses', function (Blueprint $table) {
-            $table->id();
-            $table->string('code')->unique(); // INITIATED, SUCCESS, FAILED, REFUNDED
-            $table->string('name');
-            $table->boolean('is_final')->default(false);
-            $table->boolean('is_active')->default(true);
-            $table->timestamps();
-        });
-
-        /**
          * ORDERS (HEADER)
          */
         Schema::create('orders', function (Blueprint $table) {
             $table->id();
             $table->uuid('uuid')->unique();
+
             $table->unsignedBigInteger('company_id');
             $table->string('order_number');
 
-            $table->unsignedBigInteger('customer_id');
-            $table->unsignedBigInteger('shipping_customer_id');
+            /**
+             * Customer relations (IDs)
+             */
+            $table->unsignedBigInteger('customer_id')->nullable();
+            $table->unsignedBigInteger('shipping_customer_id')->nullable();
 
+            /**
+             * Customer snapshot (CRITICAL: never changes after document created)
+             */
+
+            // Use addresses table
+            // $table->string('customer_name')->nullable();
+            // $table->string('customer_email')->nullable();
+            // $table->string('customer_tax_number')->nullable();
+
+            // $table->string('shipping_customer_name')->nullable();
+            // $table->string('shipping_customer_email')->nullable();
+
+            /**
+             * Statuses
+             */
             $table->unsignedBigInteger('status_id');
             $table->unsignedBigInteger('payment_status_id');
 
-            // Origin tracking
-            $table->string('source')->default('MANUAL'); // QUOTE, POS, WEB, MANUAL
-            $table->unsignedBigInteger('source_id')->nullable();
+            /**
+             * Origin tracking
+             * - source: QUOTE, POS, WEB, MANUAL
+             * - source_reference: POS receipt no, website order number, etc.
+             */
+            $table->string('source')->default('MANUAL');
+            $table->string('source_reference', 100)->nullable();
 
-
+            /**
+             * Currency snapshot
+             * currency_id = transaction currency (document currency)
+             * base_currency_id + fx_rate = snapshot for reporting
+             *
+             * Convention:
+             * base_amount = doc_amount * fx_rate
+             */
             $table->unsignedBigInteger('currency_id');
+            $table->unsignedBigInteger('base_currency_id')->nullable();
+            $table->decimal('fx_rate', 18, 10)->default(1);
 
-            // Payment term snapshot (CRITICAL)
+            /**
+             * Payment term snapshot (CRITICAL)
+             */
             $table->unsignedBigInteger('payment_term_id')->nullable();
             $table->string('payment_term_name')->nullable();
             $table->integer('payment_due_days')->nullable();
             $table->date('due_date')->nullable();
 
-            // Totals snapshot
+            /**
+             * Totals snapshot
+             */
             $table->decimal('subtotal', 18, 6)->default(0);
             $table->decimal('discount_total', 18, 6)->default(0);
+
             $table->decimal('shipping_total', 18, 6)->default(0);
             $table->decimal('shipping_tax_total', 18, 6)->default(0);
 
             $table->decimal('tax_total', 18, 6)->default(0);
+            $table->decimal('rounding_total', 18, 6)->default(0);
             $table->decimal('grand_total', 18, 6)->default(0);
+
+            /**
+             * Payment snapshot (optional caching, can be recalculated from payments later)
+             */
+            $table->decimal('paid_total', 18, 6)->default(0);
+            $table->decimal('refunded_total', 18, 6)->default(0);
 
             $table->timestamp('confirmed_at')->nullable();
             $table->unsignedBigInteger('created_by')->nullable();
@@ -78,7 +110,12 @@ return new class extends Migration
             $table->softDeletes();
 
             $table->index(['company_id', 'status_id'], 'order_company_status_idx');
-            $table->uniqe(['company_id', 'order_number'], 'order_company_order_number_idx');
+            $table->unique(['company_id', 'order_number'], 'order_company_order_number_unique');
+            $table->index(['company_id', 'customer_id'], 'order_company_customer_idx');
+
+            $table->index(['company_id', 'payment_status_id'], 'order_company_payment_status_idx');
+            $table->index(['company_id', 'due_date'], 'order_company_due_date_idx');
+            $table->index(['company_id', 'confirmed_at'], 'order_company_confirmed_at_idx');
         });
 
         /**
@@ -88,26 +125,50 @@ return new class extends Migration
             $table->id();
 
             $table->unsignedBigInteger('order_id');
-            $table->unsignedBigInteger('product_variant_id');
+
+            /**
+             * Nullable to support custom/manual items
+             */
+            $table->unsignedBigInteger('product_variant_id')->nullable();
+
+            // Manual/custom item support
+            $table->boolean('is_custom')->default(false);
+            $table->string('custom_sku')->nullable();
 
             // Snapshot
             $table->string('product_name');
             $table->string('variant_description')->nullable();
 
+            /**
+             * Price breakdown snapshot
+             */
             $table->decimal('unit_price', 18, 6);
             $table->integer('quantity');
             $table->integer('fulfilled_quantity')->default(0);
+
+            $table->decimal('line_subtotal', 18, 6)->default(0);
             $table->decimal('discount_amount', 18, 6)->default(0);
             $table->decimal('discount_percent', 5, 2)->default(0);
+            $table->decimal('line_discount_total', 18, 6)->default(0);
 
-            $table->decimal('tax_rate', 5, 2)->default(0);
+            /**
+             * Tax snapshot
+             * Keep only tax_rate & tax_amount for now.
+             * Later (when tax_groups exist), we can add tax_group_id references.
+             */
+            $table->decimal('tax_rate', 7, 4)->default(0);
             $table->decimal('tax_amount', 18, 6)->default(0);
 
-            $table->decimal('line_total', 18, 6);
+            /**
+             * Final line total snapshot
+             */
+            $table->decimal('line_total', 18, 6)->default(0);
 
             $table->timestamps();
 
-            $table->unique(['order_id', 'product_variant_id'], 'order_item_unique');
+            $table->index(['order_id'], 'oi_order_idx');
+            $table->index(['product_variant_id'], 'oi_variant_idx');
+            $table->index(['is_custom'], 'oi_is_custom_idx');
         });
 
         /**
@@ -126,8 +187,14 @@ return new class extends Migration
             $table->foreign('status_id', 'order_status_fk')
                 ->references('id')->on('order_statuses')->restrictOnDelete();
 
+            $table->foreign('payment_status_id', 'order_payment_status_fk')
+                ->references('id')->on('payment_statuses')->restrictOnDelete();
+
             $table->foreign('currency_id', 'order_currency_fk')
                 ->references('id')->on('currencies')->restrictOnDelete();
+
+            $table->foreign('base_currency_id', 'order_base_currency_fk')
+                ->references('id')->on('currencies')->nullOnDelete();
 
             $table->foreign('payment_term_id', 'order_payment_term_fk')
                 ->references('id')->on('payment_terms')->nullOnDelete();
@@ -141,12 +208,29 @@ return new class extends Migration
                 ->references('id')->on('orders')->cascadeOnDelete();
 
             $table->foreign('product_variant_id', 'oi_variant_fk')
-                ->references('id')->on('product_variants')->restrictOnDelete();
+                ->references('id')->on('product_variants')->nullOnDelete();
         });
     }
 
     public function down(): void
     {
+        Schema::table('order_items', function (Blueprint $table) {
+            $table->dropForeign('oi_order_fk');
+            $table->dropForeign('oi_variant_fk');
+        });
+
+        Schema::table('orders', function (Blueprint $table) {
+            $table->dropForeign('order_company_fk');
+            $table->dropForeign('order_customer_fk');
+            $table->dropForeign('order_shipping_customer_fk');
+            $table->dropForeign('order_status_fk');
+            $table->dropForeign('order_payment_status_fk');
+            $table->dropForeign('order_currency_fk');
+            $table->dropForeign('order_base_currency_fk');
+            $table->dropForeign('order_payment_term_fk');
+            $table->dropForeign('order_user_fk');
+        });
+
         Schema::dropIfExists('order_items');
         Schema::dropIfExists('orders');
         Schema::dropIfExists('order_statuses');

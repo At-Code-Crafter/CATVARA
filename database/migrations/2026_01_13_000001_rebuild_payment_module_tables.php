@@ -14,43 +14,7 @@ return new class extends Migration
          */
         Schema::dropIfExists('payment_allocations');
         Schema::dropIfExists('payments');
-        Schema::dropIfExists('payment_methods');
 
-        /**
-         * PAYMENT STATUSES
-         */
-        Schema::create('payment_statuses', function (Blueprint $table) {
-            $table->id();
-            $table->string('code')->unique(); // PENDING, CONFIRMED, FAILED, CANCELLED, REFUNDED
-            $table->string('name');
-            $table->boolean('is_final')->default(false);
-            $table->boolean('is_active')->default(true);
-            $table->timestamps();
-        });
-
-        /**
-         * PAYMENT METHODS
-         * Master list per company
-         */
-        Schema::create('payment_methods', function (Blueprint $table) {
-            $table->id();
-            $table->uuid('uuid')->unique();
-
-            $table->unsignedBigInteger('company_id');
-
-            $table->string('code');        // CASH, CARD, BANK_TRANSFER, CHEQUE, STRIPE, PAYPAL
-            $table->string('name');        // Cash, Card, Bank Transfer
-            $table->string('type');        // CASH, CARD, GATEWAY, BANK, WALLET, CREDIT
-
-            $table->boolean('is_active')->default(true);
-            $table->boolean('allow_refund')->default(true);
-            $table->boolean('requires_reference')->default(false);
-
-            $table->timestamps();
-            $table->softDeletes();
-
-            $table->unique(['company_id', 'code'], 'pm_company_code_unique');
-        });
 
         /**
          * PAYMENTS (FINANCIAL EVENT)
@@ -161,11 +125,7 @@ return new class extends Migration
         /**
          * FOREIGN KEYS
          */
-        Schema::table('payment_methods', function (Blueprint $table) {
-            $table->foreign('company_id', 'pm_company_fk')
-                ->references('id')->on('companies')
-                ->cascadeOnDelete();
-        });
+
 
         Schema::table('payments', function (Blueprint $table) {
             $table->foreign('company_id', 'pay_company_fk')
@@ -240,13 +200,8 @@ return new class extends Migration
             $table->dropForeign('pay_confirmer_fk');
         });
 
-        Schema::table('payment_methods', function (Blueprint $table) {
-            $table->dropForeign('pm_company_fk');
-        });
 
         Schema::dropIfExists('payment_applications');
         Schema::dropIfExists('payments');
-        Schema::dropIfExists('payment_methods');
-        Schema::dropIfExists('payment_statuses');
     }
 };

@@ -14,7 +14,6 @@ class DatabaseSeeder extends Seeder
         $this->call(VapeShopSetupSeeder::class);
         $this->call(InventorySeeder::class);
         $this->call(AuthenticationSeeder::class);
-        $this->call(PaymentTermSeeder::class);
         $this->call(CurrencySeeder::class);
         $this->call(CountriesStatesSeeder::class);
         $this->call(OrderSeeder::class);

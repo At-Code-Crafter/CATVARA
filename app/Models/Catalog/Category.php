@@ -4,6 +4,7 @@ namespace App\Models\Catalog;
 
 use App\Models\Catalog\Product;
 use App\Models\Catalog\Attribute;
+use App\Models\Tax\TaxGroup;
 use Illuminate\Database\Eloquent\Model;
 
 class Category extends Model
@@ -11,6 +12,7 @@ class Category extends Model
     protected $fillable = [
         'company_id',
         'parent_id',
+        'tax_group_id',
         'name',
         'slug',
         'is_active',
@@ -35,9 +37,11 @@ class Category extends Model
 
     public function attributes()
     {
-        return $this->belongsToMany(
-            Attribute::class,
-            'category_attributes'
-        );
+        return $this->belongsToMany(Attribute::class, 'category_attributes');
+    }
+
+    public function taxGroup()
+    {
+        return $this->belongsTo(TaxGroup::class, 'tax_group_id');
     }
 }

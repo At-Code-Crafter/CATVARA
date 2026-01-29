@@ -12,7 +12,6 @@ use App\Http\Controllers\Admin\Settings\PaymentTermController;
 use App\Http\Controllers\Admin\Settings\PermissionController;
 use App\Http\Controllers\Admin\Settings\PriceChannelController;
 use App\Http\Controllers\Admin\Settings\RoleController;
-use App\Http\Controllers\Admin\Settings\RolePermissionController;
 use App\Http\Controllers\Admin\Settings\StateController;
 use App\Http\Controllers\Admin\Settings\TenantController;
 use App\Http\Controllers\Admin\Settings\UserController;
@@ -215,13 +214,20 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::resource('quotes', \App\Http\Controllers\Admin\Sales\QuoteController::class);
 
             // Custom routes BEFORE resource to avoid conflicts
-            Route::get('sales-orders/{sales_order}/print', [\App\Http\Controllers\Admin\Sales\SalesOrderController::class, 'printOrder'])->name('sales-orders.print');
-            Route::post('sales-orders/{sales_order}/generate-invoice', [\App\Http\Controllers\Admin\Accounting\InvoiceController::class, 'storeFromOrder'])->name('sales-orders.generate-invoice');
-            Route::put('sales-orders/{sales_order}/update-customers', [\App\Http\Controllers\Admin\Sales\SalesOrderController::class, 'updateCustomers'])->name('sales-orders.update-customers');
+
+ 
+            Route::prefix('sales-orders')->as('sales-orders.')->controller(\App\Http\Controllers\Admin\Sales\SalesOrderController::class)->group(function () {
+                Route::get('{sales_order}/print', 'printOrder')->name('print');
+                Route::post('{sales_order}/generate-invoice', 'storeFromOrder')->name('generate-invoice');
+                Route::put('{sales_order}/update-customers', 'updateCustomers')->name('update-customers');
+                Route::get('{sales_order}/finalize', 'finalize')->name('finalize');
+                Route::post('{sales_order}/finalize', 'finalizeStore')->name('finalize.store');
+            });
+            Route::resource('sales-orders', \App\Http\Controllers\Admin\Sales\SalesOrderController::class);
+
             Route::get('invoices/{invoice}/print', [\App\Http\Controllers\Admin\Accounting\InvoiceController::class, 'print'])->name('invoices.print');
             Route::get('sales-orders-data', [\App\Http\Controllers\Admin\Sales\SalesOrderController::class, 'data'])->name('sales-orders.data');
 
-            Route::resource('sales-orders', \App\Http\Controllers\Admin\Sales\SalesOrderController::class);
 
             Route::get('load-customers', [\App\Http\Controllers\Admin\Sales\OrderController::class, 'loadCustomers'])->name('load-customers');
             Route::get('load-products', [\App\Http\Controllers\Admin\Sales\OrderController::class, 'loadProducts'])->name('load-products');

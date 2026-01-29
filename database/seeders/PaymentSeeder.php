@@ -2,11 +2,12 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
-use Illuminate\Support\Str;
-use App\Models\Company\Company;
 use App\Models\Accounting\PaymentMethod;
 use App\Models\Accounting\PaymentStatus;
+use App\Models\Accounting\PaymentTerm;
+use App\Models\Company\Company;
+use Illuminate\Database\Seeder;
+use Illuminate\Support\Str;
 
 class PaymentSeeder extends Seeder
 {
@@ -68,8 +69,8 @@ class PaymentSeeder extends Seeder
                         'uuid' => Str::uuid(),
                         'name' => $m['name'],
                         'type' => $m['type'],
-                        'is_active' => !in_array($m['code'], ['STRIPE', 'PAYPAL']), // Gateways disabled by default
-                        'allow_refund' => !in_array($m['code'], ['CHEQUE', 'STORE_CREDIT']),
+                        'is_active' => ! in_array($m['code'], ['STRIPE', 'PAYPAL']), // Gateways disabled by default
+                        'allow_refund' => ! in_array($m['code'], ['CHEQUE', 'STORE_CREDIT']),
                         'requires_reference' => $m['requires_reference'],
                     ]
                 );
@@ -77,5 +78,42 @@ class PaymentSeeder extends Seeder
 
             $this->command->info("✓ Payment methods seeded for: {$company->name}");
         });
+    }
+
+    public function seedPaymentTerms(): void
+    {
+        $terms = [
+            [
+                'code' => 'IMMEDIATE',
+                'name' => 'Immediate',
+                'due_days' => 0,
+                'is_active' => true,
+            ],
+            [
+                'code' => 'NET_15',
+                'name' => 'Net 15 Days',
+                'due_days' => 15,
+                'is_active' => true,
+            ],
+            [
+                'code' => 'NET_30',
+                'name' => 'Net 30 Days',
+                'due_days' => 30,
+                'is_active' => true,
+            ],
+            [
+                'code' => 'NET_60',
+                'name' => 'Net 60 Days',
+                'due_days' => 60,
+                'is_active' => true,
+            ],
+        ];
+
+        foreach ($terms as $term) {
+            PaymentTerm::firstOrCreate(
+                ['code' => $term['code']],
+                $term
+            );
+        }
     }
 }

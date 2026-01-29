@@ -98,31 +98,28 @@
             class="px-2 py-0.5 rounded-[4px] bg-brand-50 text-brand-700 border border-brand-100 text-[10px] font-black uppercase tracking-widest">
             Step 02 / 03
           </span>
-
         </div>
-
       </div>
-
-
 
       {{-- Progress --}}
       <div class="hidden md:flex items-center gap-3 bg-white px-4 py-2.5 rounded-xl shadow-sm border border-slate-100">
-
         <button type="button" onclick="openCustomItemModal()"
           class="h-10 px-3 rounded-xl bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest hover:bg-slate-800 transition flex items-center gap-2 shrink-0">
           <i class="fas fa-plus text-[10px]"></i>
           <span class="hidden sm:inline">Custom Item</span>
           <span class="sm:hidden">Custom</span>
         </button>
-        <div class="flex items-center gap-2">
 
+        <div class="flex items-center gap-2">
           <div
             class="w-6 h-6 rounded bg-brand-600 text-white flex items-center justify-center font-black text-[10px] shadow-lg shadow-brand-500/20 ring-2 ring-brand-100">
             01
           </div>
           <span class="text-xs font-bold text-brand-700 uppercase tracking-wide">Customer</span>
         </div>
+
         <div class="w-8 h-0.5 bg-brand-100"></div>
+
         <div class="flex items-center gap-2">
           <div
             class="w-6 h-6 rounded bg-brand-600 text-white flex items-center justify-center font-black text-[10px] shadow-lg shadow-brand-500/20 ring-2 ring-brand-100">
@@ -130,7 +127,9 @@
           </div>
           <span class="text-xs font-bold text-brand-700 uppercase tracking-wide">Basket</span>
         </div>
+
         <div class="w-8 h-0.5 bg-slate-100"></div>
+
         <div class="flex items-center gap-2 opacity-40 grayscale">
           <div
             class="w-6 h-6 rounded bg-slate-100 text-slate-400 flex items-center justify-center font-black text-[10px]">03
@@ -141,17 +140,16 @@
     </div>
 
     <div class="pos-screen-container">
-      {{-- Make basket wider than products on desktop --}}
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6 h-full items-stretch">
 
-        {{-- LEFT: Product side (narrower) --}}
+        {{-- LEFT: Product side --}}
         <div
           class="lg:col-span-6 flex flex-col min-h-0 bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
 
-          {{-- TOP LEFT controls --}}
+          {{-- Controls --}}
           <div class="shrink-0 z-10 bg-white border-b border-slate-100 p-2 space-y-2">
 
-            {{-- Billing/Selling compact chips: icon + name + address (no labels) --}}
+            {{-- Customer chips --}}
             <div class="flex items-center gap-2 w-full overflow-x-auto no-scrollbar">
               <div
                 class="flex items-center gap-2 px-2 py-1.5 rounded-xl border border-slate-200 bg-slate-50/50 shrink-0 max-w-[75%]">
@@ -185,13 +183,12 @@
               </a>
             </div>
 
-            {{-- Notes + Payment Terms + Due Date (TOP left) --}}
+            {{-- Notes + Payment Terms + Due Date --}}
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
               <div class="sm:col-span-1">
                 <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 block">Notes</label>
                 <textarea id="commentsInput" rows="1"
-                  class="w-full rounded-xl border border-slate-200 text-[11px] font-bold focus:border-brand-400 focus:ring-0 resize-none placeholder:text-slate-400 px-2 py-2 bg-white shadow-inner
-                         h-10 focus:h-20 transition-all duration-200"
+                  class="w-full rounded-xl border border-slate-200 text-[11px] font-bold focus:border-brand-400 focus:ring-0 resize-none placeholder:text-slate-400 px-2 py-2 bg-white shadow-inner h-10 focus:h-20 transition-all duration-200"
                   placeholder="Internal notes..."></textarea>
               </div>
 
@@ -212,7 +209,7 @@
               </div>
             </div>
 
-            {{-- Payment Method (shown when due_days = 0) --}}
+            {{-- Payment Method --}}
             <div id="paymentMethodWrapper" class="hidden">
               <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 block">Payment
                 Method</label>
@@ -222,7 +219,7 @@
               </select>
             </div>
 
-            {{-- Search + Category + Custom Item --}}
+            {{-- Search + Category --}}
             <div class="flex items-center gap-2">
               <div class="relative flex-1">
                 <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[11px]"></i>
@@ -237,8 +234,6 @@
                   <option value="">All Categories</option>
                 </select>
               </div>
-
-
             </div>
 
             {{-- Mobile category filter --}}
@@ -250,8 +245,7 @@
             </div>
           </div>
 
-          {{-- Product Grid (Scrollable)
-               Requirement: show only 4 items per row (desktop). --}}
+          {{-- Product Grid --}}
           <div class="scrollable-content min-h-0 flex-1 p-2 bg-slate-50/50">
             <div id="productGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-2 pb-2">
               {{-- injected --}}
@@ -259,16 +253,15 @@
           </div>
         </div>
 
-        {{-- RIGHT: Basket side (wider) --}}
+        {{-- RIGHT: Basket side --}}
         <div
           class="lg:col-span-6 flex flex-col min-h-0 bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
 
           {{-- Cart Header --}}
           <div class="p-4 border-b border-slate-100 bg-slate-50/20 shrink-0 flex items-center justify-between">
-
             <span
               class="text-[10px] font-black text-slate-400 bg-white px-2 py-0.5 rounded border border-slate-100 shadow-sm"
-              id="itemCountLabel">0 Items</span>
+              id="itemCountLabel">0 Lines • 0 Qty</span>
           </div>
 
           {{-- Global Discount --}}
@@ -294,7 +287,6 @@
                   Selection</span>
               </div>
 
-              {{-- Remove button beside selected item (slide in) --}}
               <button type="button" onclick="posRemoveItem()" id="removeSelectedBtn"
                 class="h-7 px-2 rounded-lg bg-red-500/10 text-red-200 border border-red-500/20 text-[9px] font-black uppercase tracking-widest
                        flex items-center gap-2 transition-all duration-200
@@ -303,7 +295,6 @@
               </button>
             </div>
 
-            {{-- One-line controls: Qty, Price, Discounts (including custom) --}}
             <div id="actionControls" class="p-3 opacity-40 grayscale pointer-events-none transition-all duration-300">
               <div class="flex flex-wrap items-center gap-2">
                 {{-- Qty --}}
@@ -334,14 +325,12 @@
 
                 {{-- Quick discounts --}}
                 <button type="button" onclick="posApplyDisc(5)"
-                  class="h-10 px-3 rounded-xl bg-white border border-slate-200 hover:bg-brand-50 hover:text-brand-700 hover:border-brand-200 transition-all
-                         text-[11px] font-black">
+                  class="h-10 px-3 rounded-xl bg-white border border-slate-200 hover:bg-brand-50 hover:text-brand-700 hover:border-brand-200 transition-all text-[11px] font-black">
                   5%
                 </button>
 
                 <button type="button" onclick="posApplyDisc(10)"
-                  class="h-10 px-3 rounded-xl bg-white border border-slate-200 hover:bg-brand-50 hover:text-brand-700 hover:border-brand-200 transition-all
-                         text-[11px] font-black">
+                  class="h-10 px-3 rounded-xl bg-white border border-slate-200 hover:bg-brand-50 hover:text-brand-700 hover:border-brand-200 transition-all text-[11px] font-black">
                   10%
                 </button>
 
@@ -355,9 +344,8 @@
             </div>
           </div>
 
-          {{-- Totals + Save/Finalize --}}
+          {{-- Totals --}}
           <div class="p-2 border-t border-slate-100 bg-slate-50/40 shrink-0 space-y-2">
-            {{-- Grouped Inputs: Ship, VAT, Cur --}}
             <div class="grid grid-cols-3 gap-3 bg-white p-2 rounded-xl border border-slate-200 shadow-sm mb-3">
               <div>
                 <label class="flex items-center gap-1 text-[9px] font-black text-slate-400 uppercase mb-1">
@@ -568,19 +556,22 @@
     let allProducts = [];
     let paymentTerms = [];
     let paymentMethods = [];
+
     let cart = [];
     let selectedCartIndex = -1;
 
-    // Init Cart (supports custom items)
+    // ---------------------------
+    // CART INIT (UUID-safe)
+    // ---------------------------
     if (initialState && initialState.items) {
       cart = initialState.items.map(item => ({
         type: item.type || 'variant',
-        variant_id: item.variantId || null,
-        custom_name: item.customName || null,
-        custom_sku: item.customSku || null,
+        variant_id: item.variant_id || item.variantId || null, // accept both keys
+        custom_name: item.custom_name || item.customName || null,
+        custom_sku: item.custom_sku || item.customSku || null,
         qty: parseFloat(item.qty),
-        unit_price: parseFloat(item.unitPrice),
-        discount_percent: parseFloat(item.discountPercent || 0),
+        unit_price: parseFloat(item.unit_price ?? item.unitPrice),
+        discount_percent: parseFloat(item.discount_percent ?? item.discountPercent ?? 0),
         temp_init: true
       }));
 
@@ -590,14 +581,14 @@
       $('#commentsInput').val(initialState.notes || '');
       $('#currencySelect').val(initialState.currency || 'AED');
       if (!$('#currencySelect').val()) {
-        // If the value didn't match any option (e.g. company base is GBP but select only has AED/USD), force first option
         const firstOpt = $('#currencySelect option:first').val();
         if (firstOpt) $('#currencySelect').val(firstOpt);
       }
     } else if (currentOrder.items && currentOrder.items.length > 0) {
       cart = currentOrder.items.map(item => ({
         type: 'variant',
-        variant_id: item.product_variant?.id || item.product_variant_id || null,
+        // IMPORTANT: prefer uuid if present
+        variant_id: item.product_variant?.uuid || item.product_variant_uuid || item.product_variant_id || null,
         qty: parseFloat(item.quantity),
         unit_price: parseFloat(item.unit_price),
         discount_percent: parseFloat(item.discount_percent || 0),
@@ -617,6 +608,7 @@
       $('#categoryFilter').on('change', function() {
         renderProducts($('#productSearch').val(), this.value);
       });
+
       $('#categoryFilterMobile').on('change', function() {
         renderProducts($('#productSearch').val(), this.value);
       });
@@ -624,14 +616,15 @@
       $('#shippingInput, #additionalInput, #vatRateInput').on('input', renderCart);
 
       $('#modalAddBtn').on('click', function() {
-        const variantId = $('input[name="selected_variant"]:checked').val();
-        if (!variantId) return;
+        const variantUuid = $('input[name="selected_variant"]:checked').val();
+        if (!variantUuid) return;
 
         let selectedVariant = null;
         let parentProduct = null;
 
         for (let p of allProducts) {
-          const found = p.variants.find(v => v.id == variantId);
+          const found = (p.variants || []).find(v => (v.uuid + '') === (variantUuid + '') || (v.id + '') === (
+            variantUuid + ''));
           if (found) {
             selectedVariant = found;
             parentProduct = p;
@@ -651,12 +644,14 @@
 
       $('#paymentTermSelect').on('change', function() {
         const termId = $(this).val();
-        const term = paymentTerms.find(t => t.id == termId);
+        const term = paymentTerms.find(t => (t.id + '') === (termId + ''));
 
         if (term) {
           const dueDays = parseInt(term.due_days) || 0;
           const dueDate = new Date();
           dueDate.setDate(dueDate.getDate() + dueDays);
+
+          // stable dd/mm/yyyy style by locale
           $('#paymentDueDate').val(dueDate.toLocaleDateString());
 
           if (dueDays === 0) {
@@ -678,6 +673,9 @@
         cart.forEach(item => item.discount_percent = percent);
         renderCart();
       });
+
+      // initial totals
+      renderCart();
     });
 
     function loadPaymentTerms() {
@@ -704,6 +702,10 @@
           const sel = $('#paymentMethodSelect');
           sel.empty().append(new Option('Select...', ''));
           paymentMethods.forEach(m => sel.append(new Option(m.name, m.id)));
+
+          if (initialState && initialState.payment_method_id) {
+            sel.val(initialState.payment_method_id);
+          }
         }
       });
     }
@@ -737,7 +739,25 @@
       categories.forEach(cat => selectMobile.append(new Option(cat, cat)));
     }
 
-    // Compact product cards (fit 4 columns on desktop)
+    // SKU search helper (safe if sku not present)
+    function productMatchesSearch(p, lower, raw) {
+      if ((p.name || '').toLowerCase().includes(lower)) return true;
+      if ((p.brand || '').toLowerCase().includes(lower)) return true;
+      if ((p.sku || '').toLowerCase().includes(lower)) return true;
+
+      // variant sku scan (if API provides)
+      if (p.variants && p.variants.length) {
+        return p.variants.some(v =>
+          ((v.sku || '').toLowerCase().includes(lower)) ||
+          ((v.barcode || '').toLowerCase().includes(lower)) ||
+          ((v.uuid || v.id || '') + '').toLowerCase().includes(lower)
+        );
+      }
+
+      // exact scan fallback: if user typed raw (case-sensitive)
+      return false;
+    }
+
     function renderProducts(search = '', category = '') {
       const container = $('#productGrid');
       container.empty();
@@ -746,10 +766,7 @@
 
       if (search) {
         const lower = search.toLowerCase();
-        filtered = filtered.filter(p =>
-          (p.name && p.name.toLowerCase().includes(lower)) ||
-          (p.brand && p.brand.toLowerCase().includes(lower))
-        );
+        filtered = filtered.filter(p => productMatchesSearch(p, lower, search));
       }
 
       if (category) {
@@ -767,9 +784,8 @@
       }
 
       filtered.forEach((p) => {
-        const price = (p.variants && p.variants.length > 0) ?
-          parseFloat(p.variants[0].price).toFixed(2) :
-          '0.00';
+        const firstVar = (p.variants && p.variants.length > 0) ? p.variants[0] : null;
+        const price = firstVar ? parseFloat(firstVar.price || 0).toFixed(2) : '0.00';
 
         const card = `
           <div class="group bg-white border border-slate-200 rounded-xl px-2 py-2 hover:shadow-sm hover:border-brand-300 transition cursor-pointer"
@@ -800,12 +816,12 @@
     }
 
     function handleProductClick(productId) {
-      const product = allProducts.find(p => p.id == productId);
+      const product = allProducts.find(p => (p.id + '') === (productId + ''));
       if (!product) return;
 
-      if (product.variants.length > 1) {
+      if ((product.variants || []).length > 1) {
         openVariantModal(product);
-      } else if (product.variants.length === 1) {
+      } else if ((product.variants || []).length === 1) {
         addToCart(product, product.variants[0]);
       }
     }
@@ -831,16 +847,19 @@
 
       (product.variants || []).forEach(v => {
         const attrStr = v.attrs ? Object.values(v.attrs).join(' / ') : 'Default';
-        const price = parseFloat(v.price).toFixed(2);
+        const price = parseFloat(v.price || 0).toFixed(2);
+
+        // IMPORTANT: choose uuid when present; fallback to id
+        const variantKey = v.uuid || v.id;
 
         const item = `
           <label class="relative flex cursor-pointer rounded-lg border border-slate-200 bg-white p-3 hover:border-brand-300 hover:bg-brand-50/10 transition-all">
-            <input type="radio" name="selected_variant" value="${v.id}" class="sr-only"
+            <input type="radio" name="selected_variant" value="${variantKey}" class="sr-only"
               onchange="$('#modalAddBtn').prop('disabled', false)">
             <span class="flex flex-1">
               <span class="flex flex-col">
                 <span class="block text-sm font-bold text-slate-900">${attrStr}</span>
-                <span class="mt-1 flex items-center text-xs text-slate-500 font-medium">Stock: ${v.stock}</span>
+                <span class="mt-1 flex items-center text-xs text-slate-500 font-medium">Stock: ${v.stock ?? '-'}</span>
               </span>
             </span>
             <span class="flex flex-col text-right">
@@ -946,42 +965,48 @@
     }
 
     function addToCart(product, variant) {
-      const existing = cart.find(i => i.type !== 'custom' && i.variant_id == variant.id);
+      const variantKey = variant.uuid || variant.id;
+
+      const existing = cart.find(i =>
+        i.type !== 'custom' &&
+        (i.variant_id + '') === (variantKey + '')
+      );
+
       const autoDisc = $('#applyCustomerDiscount').is(':checked') ? customerDiscountPercent : 0;
 
       if (existing) {
-        existing.qty++;
+        existing.qty = (parseFloat(existing.qty) || 0) + 1;
       } else {
         cart.push({
           type: 'variant',
-          variant_id: variant.id,
+          variant_id: variantKey, // UUID-safe
           qty: 1,
           product: product,
           variant: variant,
-          unit_price: parseFloat(variant.price),
+          unit_price: parseFloat(variant.price || 0),
           discount_percent: autoDisc
         });
       }
 
       renderCart();
 
-      const toast = Swal.mixin({
-        toast: true,
-        position: 'bottom-end',
-        showConfirmButton: false,
-        timer: 1500
-      });
-      toast.fire({
-        icon: 'success',
-        title: 'Added to basket'
-      });
+      Swal.mixin({
+          toast: true,
+          position: 'bottom-end',
+          showConfirmButton: false,
+          timer: 1500
+        })
+        .fire({
+          icon: 'success',
+          title: 'Added to basket'
+        });
     }
 
     function hydrateCart() {
       cart.forEach(item => {
         if (item.temp_init && item.type !== 'custom') {
           for (let p of allProducts) {
-            const foundVar = p.variants.find(v => v.id == item.variant_id);
+            const foundVar = (p.variants || []).find(v => ((v.uuid || v.id) + '') === (item.variant_id + ''));
             if (foundVar) {
               item.product = p;
               item.variant = foundVar;
@@ -998,33 +1023,43 @@
       const container = $('#cartItemsContainer');
       container.empty();
 
-      if (cart.length === 0) {
+      // reset totals
+      let subtotal = 0;
+      let countQty = 0;
+
+      if (!cart.length) {
         container.html(`
           <div class="flex flex-col items-center justify-center h-full text-center text-slate-300 py-10">
             <i class="fas fa-basket-shopping text-3xl mb-2 opacity-30"></i>
             <span class="text-xs font-medium">Basket is empty</span>
           </div>
         `);
+
         $('#cartSubtotal').text('0.00');
-        $('#itemCountLabel').text('0 Items');
-        $('#nextStepBtn').prop('disabled', true);
+        $('#cartShippingCost').text('0.00');
+        $('#cartTaxAmount').text('0.00');
+        $('#cartGrandTotal').text('0.00');
+        $('#itemCountLabel').text('0 Lines • 0 Qty');
+
+        $('#nextStepBtn').prop('disabled', true).addClass('opacity-60 cursor-not-allowed');
         resetPosPanel();
         return;
       }
-
-      let subtotal = 0;
-      let countQty = 0;
 
       cart.forEach((item, index) => {
         const isSelected = (index === selectedCartIndex);
         const activeClass = isSelected ? 'cart-item-selected' : '';
 
-        const total = (item.qty || 0) * (item.unit_price || 0);
-        const rowDiscount = total * ((item.discount_percent || 0) / 100);
-        const finalTotal = total - rowDiscount;
+        const qty = parseFloat(item.qty || 0);
+        const unit = parseFloat(item.unit_price || 0);
+        const discP = parseFloat(item.discount_percent || 0);
 
-        subtotal += finalTotal;
-        countQty += (item.qty || 0);
+        const lineGross = qty * unit;
+        const lineDisc = lineGross * (discP / 100);
+        const lineNet = lineGross - lineDisc;
+
+        subtotal += lineNet;
+        countQty += qty;
 
         const isCustom = item.type === 'custom';
         const name = isCustom ? item.custom_name : (item.product?.name || 'Item');
@@ -1050,13 +1085,13 @@
                   <p class="text-[9px] text-slate-400 truncate font-bold">${attrStr}</p>
                 </div>
                 <div class="text-right">
-                  <span class="text-[11px] font-black text-slate-900">${finalTotal.toFixed(2)}</span>
+                  <span class="text-[11px] font-black text-slate-900">${lineNet.toFixed(2)}</span>
                 </div>
               </div>
 
               <div class="flex items-center gap-2 mt-1">
-                <span class="text-[10px] font-bold text-slate-500">${(item.qty || 0)} x ${(item.unit_price || 0).toFixed(2)}</span>
-                ${item.discount_percent > 0 ? `<span class="text-[9px] font-black text-brand-700 bg-brand-50 px-1.5 py-0.5 rounded-lg">(-${item.discount_percent}%)</span>` : ''}
+                <span class="text-[10px] font-bold text-slate-500">${qty} x ${unit.toFixed(2)}</span>
+                ${discP > 0 ? `<span class="text-[9px] font-black text-brand-700 bg-brand-50 px-1.5 py-0.5 rounded-lg">(-${discP}%)</span>` : ''}
                 ${isCustom ? `<span class="text-[9px] font-black text-slate-700 bg-slate-100 px-1.5 py-0.5 rounded-lg">CUSTOM</span>` : ''}
               </div>
             </div>
@@ -1065,6 +1100,7 @@
         container.append(row);
       });
 
+      // POS panel sync
       if (selectedCartIndex !== -1 && cart[selectedCartIndex]) {
         syncPosPanel(cart[selectedCartIndex]);
       } else {
@@ -1078,11 +1114,13 @@
       const grand = subtotal + tax + shipping;
 
       $('#cartSubtotal').text(subtotal.toFixed(2));
-      $('#cartTaxShipping').text((tax + shipping).toFixed(2));
+      $('#cartShippingCost').text(shipping.toFixed(2));
+      $('#cartTaxAmount').text(tax.toFixed(2));
       $('#cartGrandTotal').text(grand.toFixed(2));
 
-      $('#itemCountLabel').text(cart.length + ' Items');
-      $('#nextStepBtn').prop('disabled', false);
+      $('#itemCountLabel').text(cart.length + ' Lines • ' + countQty + ' Qty');
+
+      $('#nextStepBtn').prop('disabled', false).removeClass('opacity-60 cursor-not-allowed');
     }
 
     window.selectCartItem = function(index) {
@@ -1093,32 +1131,24 @@
     function syncPosPanel(item) {
       const label = (item.type === 'custom') ? item.custom_name : (item.product?.name || 'Item');
 
-      $('#selectedItemLabel')
-        .text(label)
-        .removeClass('italic text-slate-400')
-        .addClass('text-brand-200');
+      $('#selectedItemLabel').text(label).removeClass('italic text-slate-400').addClass('text-brand-200');
 
       $('#actionControls').removeClass('opacity-40 grayscale pointer-events-none');
       $('#posQtyDisplay').text(item.qty);
-      $('#posPriceDisplay').text(parseFloat(item.unit_price).toFixed(2));
+      $('#posPriceDisplay').text(parseFloat(item.unit_price || 0).toFixed(2));
 
-      // Slide-in remove button
       $('#removeSelectedBtn')
         .removeClass('opacity-0 translate-x-3 pointer-events-none')
         .addClass('opacity-100 translate-x-0');
     }
 
     function resetPosPanel() {
-      $('#selectedItemLabel')
-        .text('No Selection')
-        .addClass('italic text-slate-400')
-        .removeClass('text-brand-200');
+      $('#selectedItemLabel').text('No Selection').addClass('italic text-slate-400').removeClass('text-brand-200');
 
       $('#actionControls').addClass('opacity-40 grayscale pointer-events-none');
       $('#posQtyDisplay').text('1');
       $('#posPriceDisplay').text('0.00');
 
-      // Slide-out remove button
       $('#removeSelectedBtn')
         .addClass('opacity-0 translate-x-3 pointer-events-none')
         .removeClass('opacity-100 translate-x-0');
@@ -1127,6 +1157,7 @@
     window.posUpdateQty = function(change) {
       if (selectedCartIndex !== -1 && cart[selectedCartIndex]) {
         cart[selectedCartIndex].qty = (parseFloat(cart[selectedCartIndex].qty) || 0) + change;
+
         if (cart[selectedCartIndex].qty <= 0) {
           cart.splice(selectedCartIndex, 1);
           selectedCartIndex = -1;
@@ -1234,7 +1265,7 @@
         data: payload,
         success: function() {
           if (action === 'next_step') {
-            window.location.href = "{{ company_route('sales-orders.show', ['sales_order' => $order->uuid]) }}";
+            window.location.href = "{{ company_route('sales-orders.finalize', ['sales_order' => $order->uuid]) }}";
           } else {
             Swal.fire({
               icon: 'success',
@@ -1252,11 +1283,9 @@
           console.error(xhr);
 
           let msg = 'Failed to save order.';
-          if (xhr.responseJSON && xhr.responseJSON.message) {
-            msg = xhr.responseJSON.message;
-          }
+          if (xhr.responseJSON && xhr.responseJSON.message) msg = xhr.responseJSON.message;
+
           if (xhr.responseJSON && xhr.responseJSON.errors) {
-            // Join first error of each field
             const details = Object.values(xhr.responseJSON.errors).map(e => e[0]).join('\n');
             msg += '\n' + details;
           }

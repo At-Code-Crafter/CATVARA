@@ -6,6 +6,7 @@ use App\Models\Accounting\PaymentTerm;
 use App\Models\Common\Address;
 use App\Models\Common\Country;
 use App\Models\Common\State;
+use App\Models\Tax\TaxGroup;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -22,6 +23,9 @@ class Customer extends Model
         'phone',
         'legal_name',
         'tax_number',
+        'is_tax_exempt',
+        'tax_exempt_reason',
+        'tax_group_id',
         'notes',
         'customer_code',
         'is_active',
@@ -33,9 +37,9 @@ class Customer extends Model
     protected $casts = [
         'is_active' => 'boolean',
         'percentage_discount' => 'decimal:2',
+        'is_tax_exempt' => 'boolean',
     ];
 
-    // Customer Has one Address, but order or invoices may have many
     public function address()
     {
         return $this->morphOne(Address::class, 'addressable');
@@ -44,6 +48,11 @@ class Customer extends Model
     public function paymentTerm()
     {
         return $this->belongsTo(PaymentTerm::class);
+    }
+
+    public function taxGroup()
+    {
+        return $this->belongsTo(TaxGroup::class, 'tax_group_id');
     }
 
     public function country()

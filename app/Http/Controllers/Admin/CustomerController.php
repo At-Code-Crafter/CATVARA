@@ -11,6 +11,7 @@ use App\Models\Common\Country;
 use App\Models\Common\State;
 use App\Models\Company\Company;
 use App\Models\Customer\Customer;
+use App\Models\Tax\TaxGroup;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
@@ -27,6 +28,9 @@ class CustomerController extends Controller
         if ($request->ajax()) {
 
             $query = Customer::query()
+                ->leftJoin('tax_groups as tg', function ($join) {
+                    $join->on('tg.id', '=', 'customers.tax_group_id');
+                })
                 ->select(
                     'customers.id',
                     'customers.uuid',
@@ -37,6 +41,9 @@ class CustomerController extends Controller
                     'customers.legal_name',
                     'customers.is_active',
                     'customers.percentage_discount',
+                    'customers.is_tax_exempt',
+                    'customers.tax_group_id',
+                    'tg.name as tax_group_name',
                     'customers.created_at'
                 )
                 ->where('customers.company_id', $company->id);
@@ -91,6 +98,15 @@ class CustomerController extends Controller
 
                     return '<span class="text-muted">-</span>';
                 })
+                ->addColumn('tax_profile', function ($row) {
+                    if ($row->is_tax_exempt) {
+                        return '<span class="badge badge-warning">Tax Exempt</span>';
+                    }
+
+                    return $row->tax_group_name
+                        ? '<span class="badge badge-info">'.e($row->tax_group_name).'</span>'
+                        : '<span class="text-muted">—</span>';
+                })
 
                 ->editColumn('created_at', function ($row) {
                     return $row->created_at
@@ -112,6 +128,7 @@ class CustomerController extends Controller
                     'phone',
                     'status_badge',
                     'percentage_discount',
+                    'tax_profile',
                     'created_at',
                     'action',
                 ])
@@ -183,8 +200,12 @@ class CustomerController extends Controller
 
         $countries = Country::active()->ordered()->get();
         $paymentTerms = \App\Models\Accounting\PaymentTerm::where('is_active', true)->get();
+        $taxGroups = TaxGroup::where('company_id', $company->id)
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get();
 
-        return view('catvara.customers.create', compact('company', 'countries', 'paymentTerms'));
+        return view('catvara.customers.create', compact('company', 'countries', 'paymentTerms', 'taxGroups'));
     }
 
     /**
@@ -212,6 +233,9 @@ class CustomerController extends Controller
                 'payment_term_id' => $data['payment_term_id'] ?? null,
                 'percentage_discount' => $data['percentage_discount'] ?? 0,
                 'timezone' => $data['timezone'] ?? null,
+                'tax_group_id' => $data['tax_group_id'] ?? null,
+                'is_tax_exempt' => (bool) ($data['is_tax_exempt'] ?? false),
+                'tax_exempt_reason' => $data['tax_exempt_reason'] ?? null,
             ]);
 
             Address::create([
@@ -290,8 +314,12 @@ class CustomerController extends Controller
         $countries = Country::active()->ordered()->get();
         $states = $customer->address?->country_id ? State::where('country_id', $customer->address->country_id)->active()->ordered()->get() : collect();
         $paymentTerms = \App\Models\Accounting\PaymentTerm::where('is_active', true)->get();
+        $taxGroups = TaxGroup::where('company_id', $company->id)
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get();
 
-        return view('catvara.customers.edit', compact('company', 'customer', 'countries', 'states', 'paymentTerms'));
+        return view('catvara.customers.edit', compact('company', 'customer', 'countries', 'states', 'paymentTerms', 'taxGroups'));
     }
 
     /**
@@ -319,6 +347,9 @@ class CustomerController extends Controller
                 'payment_term_id' => $data['payment_term_id'] ?? null,
                 'percentage_discount' => $data['percentage_discount'] ?? 0,
                 'timezone' => $data['timezone'] ?? null,
+                'tax_group_id' => $data['tax_group_id'] ?? null,
+                'is_tax_exempt' => (bool) ($data['is_tax_exempt'] ?? false),
+                'tax_exempt_reason' => $data['tax_exempt_reason'] ?? null,
             ]);
 
             Address::updateOrCreate([
