@@ -3,13 +3,12 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Str;
 use App\Models\Common\Country;
-use App\Models\Company;
+use App\Models\Company\Company;
 use App\Models\Tax\TaxGroup;
 use App\Models\Tax\TaxRate;
 
-class TaxGroupsRatesSeeder extends Seeder
+class TaxGroupSeeder extends Seeder
 {
     public function run(): void
     {

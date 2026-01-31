@@ -183,17 +183,34 @@
                 class="mt-1 w-full h-10 rounded-xl border border-slate-200 bg-white text-center text-[12px] font-black">
             </div>
             <div>
-              <label class="text-[10px] font-black text-slate-500 uppercase">VAT %</label>
-              <input type="number" id="finalVatRate" min="0" max="100" step="0.01"
-                class="mt-1 w-full h-10 rounded-xl border border-slate-200 bg-white text-center text-[12px] font-black">
+              <label class="text-[10px] font-black text-slate-500 uppercase">Tax Def</label>
+              <select id="finalTaxGroup"
+                class="mt-1 w-full h-10 rounded-xl border border-slate-200 bg-white px-2 text-[12px] font-black">
+                <option value="">No Tax</option>
+                @foreach ($taxGroups as $tg)
+                  <option value="{{ $tg->id }}">{{ $tg->name }}</option>
+                @endforeach
+              </select>
             </div>
             <div>
               <label class="text-[10px] font-black text-slate-500 uppercase">Cur</label>
               <select id="finalCurrency"
                 class="mt-1 w-full h-10 rounded-xl border border-slate-200 bg-white px-2 text-[12px] font-black">
-                <option value="AED">AED</option>
-                <option value="USD">USD</option>
+                @foreach ($enabledCurrencies as $cur)
+                  <option value="{{ $cur->code }}">{{ $cur->code }}</option>
+                @endforeach
               </select>
+            </div>
+
+            <div class="col-span-1">
+              <label class="text-[10px] font-black text-slate-500 uppercase">Disc %</label>
+              <input type="number" id="finalGlobalDiscountPercent" min="0" max="100" step="0.01"
+                class="mt-1 w-full h-10 rounded-xl border border-slate-200 bg-white text-center text-[12px] font-black">
+            </div>
+            <div class="col-span-2">
+              <label class="text-[10px] font-black text-slate-500 uppercase">Disc Amt</label>
+              <input type="number" id="finalGlobalDiscountAmount" min="0" step="0.01"
+                class="mt-1 w-full h-10 rounded-xl border border-slate-200 bg-white text-center text-[12px] font-black">
             </div>
           </div>
 
@@ -254,13 +271,19 @@
 
           <div class="mt-4 bg-slate-50/40 border border-slate-200 rounded-xl p-4 space-y-2">
             <div class="flex justify-between text-[12px] font-bold text-slate-600">
-              <span>Subtotal</span> <span id="pvSubtotal" class="text-slate-900">0.00</span>
+              <span>Items Subtotal</span> <span id="pvSubtotal" class="text-slate-900">0.00</span>
+            </div>
+            <div class="flex justify-between text-[11px] font-bold text-slate-500">
+              <span>Line Discounts</span> <span id="pvLineDiscount" class="text-rose-500">-0.00</span>
+            </div>
+            <div class="flex justify-between text-[11px] font-bold text-slate-500">
+              <span>Global Discount</span> <span id="pvGlobalDiscount" class="text-rose-600">-0.00</span>
             </div>
             <div class="flex justify-between text-[12px] font-bold text-slate-600">
               <span>Shipping</span> <span id="pvShipping" class="text-slate-900">0.00</span>
             </div>
             <div class="flex justify-between text-[12px] font-bold text-slate-600">
-              <span>VAT</span> <span id="pvTax" class="text-slate-900">0.00</span>
+              <span>Tax Total</span> <span id="pvTax" class="text-slate-900">0.00</span>
             </div>
             <div class="pt-2 border-t border-slate-200 flex justify-between items-center">
               <span class="text-[12px] font-black uppercase tracking-widest text-brand-600">Grand Total</span>
@@ -307,15 +330,21 @@
         attrs_text: i.attrs_text || null,
       }));
     } else if (currentOrder.items && currentOrder.items.length) {
-      cart = currentOrder.items.map(it => ({
-        type: 'variant',
-        variant_id: it.product_variant?.uuid || it.product_variant_uuid || it.product_variant_id || null,
-        qty: parseFloat(it.quantity || 1),
-        unit_price: parseFloat(it.unit_price || 0),
-        discount_percent: parseFloat(it.discount_percent || 0),
-        display_name: it.product_variant?.product?.name || it.name || 'Item',
-        attrs_text: it.product_variant?.attrs ? Object.values(it.product_variant.attrs).join(' / ') : '',
-      }));
+      cart = currentOrder.items.map(it => {
+        const isCustom = !!it.is_custom;
+        return {
+          type: isCustom ? 'custom' : 'variant',
+          variant_id: it.product_variant?.uuid || it.product_variant_id || null,
+          custom_name: isCustom ? it.product_name : null,
+          custom_sku: isCustom ? it.custom_sku : null,
+          qty: parseFloat(it.quantity || 1),
+          unit_price: parseFloat(it.unit_price || 0),
+          discount_percent: parseFloat(it.discount_percent || 0),
+          display_name: it.product_name || (it.product_variant?.product?.name) || 'Item',
+          attrs_text: it.variant_description || (it.product_variant?.attrs ? Object.values(it.product_variant.attrs)
+            .join(' / ') : ''),
+        };
+      });
     }
 
     $(document).ready(function() {
@@ -323,9 +352,12 @@
       $('#finalNotes').val((initialState && initialState.notes) ? initialState.notes : (currentOrder.notes || ''));
 
       $('#finalShipping').val((initialState && initialState.shipping != null) ? initialState.shipping : (currentOrder
-        .shipping || 0));
-      $('#finalVatRate').val((initialState && initialState.vat_rate != null) ? initialState.vat_rate : (currentOrder
-        .vat_rate || 5));
+        .shipping_total || 0));
+      $('#finalTaxGroup').val(currentOrder.tax_group_id || '');
+      $('#finalGlobalDiscountPercent').val((initialState && initialState.global_discount_percent != null) ?
+        initialState.global_discount_percent : (currentOrder.global_discount_percent || 0));
+      $('#finalGlobalDiscountAmount').val((initialState && initialState.global_discount_amount != null) ? initialState
+        .global_discount_amount : (currentOrder.global_discount_amount || 0));
 
       const cur = (initialState && initialState.currency) ? initialState.currency : (currentOrder.currency?.code ||
         'AED');
@@ -336,10 +368,12 @@
       loadPaymentMethods();
 
       // Re-render preview on final change
-      $('#finalShipping, #finalVatRate, #finalCurrency').on('input change', function() {
-        renderPreview();
-        validateFinalize();
-      });
+      $('#finalShipping, #finalTaxGroup, #finalCurrency, #finalGlobalDiscountPercent, #finalGlobalDiscountAmount').on(
+        'input change',
+        function() {
+          renderPreview();
+          validateFinalize();
+        });
 
       $('#finalNotes').on('input', validateFinalize);
     });
@@ -453,14 +487,33 @@
       });
 
       const shipping = parseFloat($('#finalShipping').val() || 0);
-      const vatRate = parseFloat($('#finalVatRate').val() || 0);
-      const tax = subtotal * (vatRate / 100);
-      const grand = subtotal + tax + shipping;
+      const globalDiscP = parseFloat($('#finalGlobalDiscountPercent').val() || 0);
+      const globalDiscExtra = parseFloat($('#finalGlobalDiscountAmount').val() || 0);
+
+      // Estimate taxable base for global discount
+      const lineDiscTotal = cart.reduce((acc, i) => acc + ((parseFloat(i.qty) * parseFloat(i.unit_price)) * (parseFloat(i
+        .discount_percent) / 100)), 0);
+      const itemsGross = cart.reduce((acc, i) => acc + (parseFloat(i.qty) * parseFloat(i.unit_price)), 0);
+      const taxableBase = Math.max(0, itemsGross - lineDiscTotal);
+
+      const globalDiscFromPct = taxableBase * (globalDiscP / 100);
+      const totalGlobalDisc = globalDiscFromPct + globalDiscExtra;
+
+      // Note: Full tax calculation is complex here without knowing rates per group, 
+      // so we rely on the backend for exact figures on save. 
+      // For preview, we show a simplified estimate if possible or just use existing totals.
+      // But we'll try to estimate based on currentOrder.tax_total or similar if nothing changed.
+      let taxEstimate = (currentOrder.tax_total || 0);
+      // If items changed, this estimate becomes less accurate.
+
+      const grand = Math.max(0, itemsGross - (lineDiscTotal + totalGlobalDisc) + taxEstimate + shipping);
 
       $('#previewLineCount').text(cart.length + ' Lines • ' + qtyTotal + ' Qty');
-      $('#pvSubtotal').text(subtotal.toFixed(2));
+      $('#pvSubtotal').text(itemsGross.toFixed(2));
+      $('#pvLineDiscount').text('-' + lineDiscTotal.toFixed(2));
+      $('#pvGlobalDiscount').text('-' + totalGlobalDisc.toFixed(2));
       $('#pvShipping').text(shipping.toFixed(2));
-      $('#pvTax').text(tax.toFixed(2));
+      $('#pvTax').text(taxEstimate.toFixed(2));
       $('#pvGrand').text(grand.toFixed(2));
     }
 
@@ -482,8 +535,8 @@
       const ship = parseFloat($('#finalShipping').val());
       if (isNaN(ship) || ship < 0) warnings.push('Shipping must be 0 or more.');
 
-      const vat = parseFloat($('#finalVatRate').val());
-      if (isNaN(vat) || vat < 0 || vat > 100) warnings.push('VAT must be between 0 and 100.');
+      const gdp = parseFloat($('#finalGlobalDiscountPercent').val());
+      if (isNaN(gdp) || gdp < 0 || gdp > 100) warnings.push('Global Discount % must be 0-100.');
 
       // UI
       const wrap = $('#finalWarnings');
@@ -507,17 +560,20 @@
         payment_term_id: $('#finalPaymentTerm').val(),
         payment_method_id: $('#finalPaymentMethod').val(),
         shipping: $('#finalShipping').val(),
-        additional: 0, // keep if you use it; you can add input later
-        vat_rate: $('#finalVatRate').val(),
+        additional: 0,
+        tax_group_id: $('#finalTaxGroup').val(),
+        global_discount_percent: $('#finalGlobalDiscountPercent').val(),
+        global_discount_amount: $('#finalGlobalDiscountAmount').val(),
         notes: $('#finalNotes').val(),
         items: cart.map(i => ({
           type: i.type || 'variant',
           variant_id: (i.type === 'custom') ? null : i.variant_id,
-          custom_name: (i.type === 'custom') ? (i.custom_name || null) : null,
-          custom_sku: (i.type === 'custom') ? (i.custom_sku || null) : null,
+          custom_name: i.custom_name || i.display_name || null,
+          custom_sku: i.custom_sku || null,
           qty: i.qty,
           unit_price: i.unit_price,
-          discount_percent: i.discount_percent
+          discount_percent: i.discount_percent,
+          tax_group_id: i.tax_group_id || null
         }))
       };
     }

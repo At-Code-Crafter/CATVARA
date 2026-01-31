@@ -22,7 +22,9 @@ class UpdateSalesOrderRequest extends FormRequest
 
             'shipping' => ['nullable', 'numeric', 'min:0'],
             'additional' => ['nullable', 'numeric', 'min:0'],
-            'vat_rate' => ['nullable', 'numeric', 'min:0', 'max:100'],
+            'tax_group_id' => ['nullable', 'integer'],
+            'global_discount_percent' => ['nullable', 'numeric', 'min:0', 'max:100'],
+            'global_discount_amount' => ['nullable', 'numeric', 'min:0'],
 
             'currency' => ['required', 'string'],
 
@@ -39,7 +41,7 @@ class UpdateSalesOrderRequest extends FormRequest
             'items.*.unit_price' => ['required_with:items', 'numeric', 'min:0'],
 
             'items.*.discount_percent' => ['nullable', 'numeric', 'min:0', 'max:100'],
-            'items.*.tax_rate' => ['nullable', 'numeric', 'min:0', 'max:100'],
+            'items.*.tax_group_id' => ['nullable', 'integer'],
         ];
     }
 }

@@ -55,6 +55,8 @@ class Order extends Model
         'shipping_tax_total',
         'tax_total',
         'rounding_total',
+        'global_discount_percent',
+        'global_discount_amount',
         'grand_total',
 
         // Payment tracking (optional but useful)
@@ -78,6 +80,8 @@ class Order extends Model
         'shipping_tax_total' => 'decimal:6',
         'tax_total' => 'decimal:6',
         'rounding_total' => 'decimal:6',
+        'global_discount_percent' => 'decimal:2',
+        'global_discount_amount' => 'decimal:6',
         'grand_total' => 'decimal:6',
 
         'paid_total' => 'decimal:6',
@@ -239,4 +243,5 @@ class Order extends Model
     {
         return (float) $this->grand_total * (float) $this->fx_rate;
     }
+
 }

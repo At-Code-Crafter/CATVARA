@@ -22,6 +22,7 @@ class Address extends Model
         'phone',
         'email',
         'name',
+        'tax_number',
     ];
 
     public function addressable()
@@ -45,8 +46,29 @@ class Address extends Model
     }
 
     // use if conditions if empty address 2 then not show and same with city
-    public function render()
+    public function render($html = false): string
     {
-        return $this->address_line_1.', '.($this->address_line_2 ? $this->address_line_2.', ' : '').($this->city ? $this->city.', ' : '').($this->state ? $this->state->name.', ' : '').($this->country ? $this->country->name : '');
+        if (! $this) {
+            return '';
+        }
+
+        $lines = [
+            implode(', ', array_filter([
+                $this->address_line_1 ?? ($this->address1 ?? null),
+                $this->address_line_2 ?? ($this->address2 ?? null),
+            ])),
+            implode(', ', array_filter([
+                $this->city ?? null,
+                $this->state->name ?? null,
+            ])),
+            implode(' ', array_filter([
+                $this->country->name ?? null,
+                $this->postal_code ?? ($this->zip ?? null),
+            ])),
+        ];
+
+        $lines = array_filter($lines);
+
+        return implode($html ? '<br>' : ', ', $lines);
     }
 }

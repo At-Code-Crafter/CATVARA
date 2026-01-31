@@ -2,8 +2,6 @@
 
 namespace Database\Seeders;
 
-use App\Models\Company\Company;
-use App\Models\Pricing\Currency;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -18,6 +16,7 @@ class DatabaseSeeder extends Seeder
         $this->call(CountriesStatesSeeder::class);
         $this->call(OrderSeeder::class);
         $this->call(PaymentSeeder::class);
+        $this->call(TaxGroupSeeder::class);
 
         // 2. Interactive Application Setup (Company & Users)
         $this->command->call('app:setup-application');

@@ -103,13 +103,6 @@
 
       {{-- Progress --}}
       <div class="hidden md:flex items-center gap-3 bg-white px-4 py-2.5 rounded-xl shadow-sm border border-slate-100">
-        <button type="button" onclick="openCustomItemModal()"
-          class="h-10 px-3 rounded-xl bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest hover:bg-slate-800 transition flex items-center gap-2 shrink-0">
-          <i class="fas fa-plus text-[10px]"></i>
-          <span class="hidden sm:inline">Custom Item</span>
-          <span class="sm:hidden">Custom</span>
-        </button>
-
         <div class="flex items-center gap-2">
           <div
             class="w-6 h-6 rounded bg-brand-600 text-white flex items-center justify-center font-black text-[10px] shadow-lg shadow-brand-500/20 ring-2 ring-brand-100">
@@ -140,106 +133,38 @@
     </div>
 
     <div class="pos-screen-container">
-      <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6 h-full items-stretch">
+      <div
+        class="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6 lg:h-full items-stretch overflow-y-auto lg:overflow-hidden pb-20 lg:pb-0">
 
         {{-- LEFT: Product side --}}
         <div
-          class="lg:col-span-6 flex flex-col min-h-0 bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+          class="lg:col-span-5 flex flex-col min-h-0 bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
 
-          {{-- Controls --}}
-          <div class="shrink-0 z-10 bg-white border-b border-slate-100 p-2 space-y-2">
+          {{-- Search & Filter Header --}}
+          <div class="shrink-0 z-10 bg-white border-b border-slate-100 p-3 space-y-3">
 
-            {{-- Customer chips --}}
-            <div class="flex items-center gap-2 w-full overflow-x-auto no-scrollbar">
-              <div
-                class="flex items-center gap-2 px-2 py-1.5 rounded-xl border border-slate-200 bg-slate-50/50 shrink-0 max-w-[75%]">
-                <div
-                  class="w-6 h-6 rounded bg-brand-100 text-brand-700 flex items-center justify-center text-[10px] font-black shrink-0">
-                  <i class="fas fa-receipt text-[10px]"></i>
-                </div>
-                <div class="min-w-0">
-                  <div class="text-[10px] font-black text-slate-800 truncate">
-                    {{ $order->customer_name ?? $billToCustomer->display_name }}</div>
-                  <div class="text-[9px] font-bold text-slate-500 truncate">{{ $billAddress ?: '-' }}</div>
-                </div>
-              </div>
-
-              <div
-                class="flex items-center gap-2 px-2 py-1.5 rounded-xl border border-slate-200 bg-slate-50/50 shrink-0 max-w-[75%]">
-                <div
-                  class="w-6 h-6 rounded bg-indigo-100 text-indigo-700 flex items-center justify-center text-[10px] font-black shrink-0">
-                  <i class="fas fa-user-tag text-[10px]"></i>
-                </div>
-                <div class="min-w-0">
-                  <div class="text-[10px] font-black text-slate-800 truncate">
-                    {{ $order->shipping_customer_name ?? $shipToCustomer->display_name }}</div>
-                  <div class="text-[9px] font-bold text-slate-500 truncate">{{ $sellAddress ?: '-' }}</div>
-                </div>
-              </div>
-
-              <a href="{{ company_route('sales-orders.create', ['edit_order' => $order->uuid]) }}"
-                class="ml-1 w-9 h-9 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-400 hover:text-brand-600 hover:border-brand-300 transition-colors shadow-sm shrink-0">
-                <i class="fas fa-edit text-[12px]"></i>
-              </a>
-            </div>
-
-            {{-- Notes + Payment Terms + Due Date --}}
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
-              <div class="sm:col-span-1">
-                <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 block">Notes</label>
-                <textarea id="commentsInput" rows="1"
-                  class="w-full rounded-xl border border-slate-200 text-[11px] font-bold focus:border-brand-400 focus:ring-0 resize-none placeholder:text-slate-400 px-2 py-2 bg-white shadow-inner h-10 focus:h-20 transition-all duration-200"
-                  placeholder="Internal notes..."></textarea>
-              </div>
-
-              <div class="sm:col-span-1">
-                <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 block">Payment
-                  Terms</label>
-                <select id="paymentTermSelect"
-                  class="w-full h-10 rounded-xl border border-slate-200 text-[11px] font-black text-slate-700 focus:ring-0 bg-white">
-                  <option value="">Select...</option>
-                </select>
-              </div>
-
-              <div class="sm:col-span-1">
-                <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 block">Due Date</label>
-                <input id="paymentDueDate" type="text"
-                  class="w-full h-10 rounded-xl border border-slate-200 text-[11px] font-black bg-white text-slate-600 text-center"
-                  readonly placeholder="-" />
-              </div>
-            </div>
-
-            {{-- Payment Method --}}
-            <div id="paymentMethodWrapper" class="hidden">
-              <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 block">Payment
-                Method</label>
-              <select id="paymentMethodSelect"
-                class="w-full h-10 rounded-xl border border-slate-200 text-[11px] font-black text-slate-700 focus:ring-0 bg-white">
-                <option value="">Select...</option>
-              </select>
-            </div>
-
-            {{-- Search + Category --}}
-            <div class="flex items-center gap-2">
-              <div class="relative flex-1">
-                <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[11px]"></i>
+            {{-- Search Bar with Custom Item Button --}}
+            <div class="flex items-center gap-3">
+              <div class="flex-1 relative">
+                <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
                 <input type="text" id="productSearch"
-                  class="w-full pl-9 h-10 rounded-xl border border-slate-200 text-[11px] font-black focus:border-brand-400 focus:ring-0 placeholder:text-slate-400 bg-slate-50/30"
-                  placeholder="Scan SKU or Search...">
+                  class="w-full pl-9 h-11 rounded-xl border border-slate-200 text-sm font-medium focus:border-brand-500 focus:ring-0 bg-slate-50/50 placeholder:text-slate-400 transition-shadow"
+                  placeholder="Search products or scan SKU...">
               </div>
-
-              <div class="w-40 shrink-0 hidden sm:block">
-                <select id="categoryFilter"
-                  class="w-full h-10 rounded-xl border border-slate-200 text-[10px] font-black text-slate-600 focus:border-brand-400 focus:ring-0 bg-slate-50/30">
-                  <option value="">All Categories</option>
-                </select>
-              </div>
+              <button type="button" onclick="openCustomItemModal()"
+                class="h-11 px-4 rounded-xl bg-slate-900 text-white text-xs font-bold uppercase tracking-wide hover:bg-slate-800 transition-colors shadow-lg shadow-slate-200">
+                <i class="fas fa-plus mr-1"></i> Custom Item
+              </button>
             </div>
 
-            {{-- Mobile category filter --}}
-            <div class="sm:hidden">
+            <div class="flex items-center gap-3">
+              <select id="categoryFilter"
+                class="flex-1 h-10 rounded-xl border border-slate-200 text-xs font-medium text-slate-600 bg-white focus:border-brand-500 focus:ring-0 hover:border-slate-300 transition-colors cursor-pointer">
+                <option value="">All Categories</option>
+              </select>
+              {{-- Visible on mobile --}}
               <select id="categoryFilterMobile"
-                class="w-full h-10 rounded-xl border border-slate-200 text-[10px] font-black text-slate-600 focus:border-brand-400 focus:ring-0 bg-slate-50/30">
+                class="sm:hidden flex-1 h-10 rounded-xl border border-slate-200 text-xs font-medium text-slate-600 bg-white">
                 <option value="">All Categories</option>
               </select>
             </div>
@@ -247,159 +172,184 @@
 
           {{-- Product Grid --}}
           <div class="scrollable-content min-h-0 flex-1 p-2 bg-slate-50/50">
-            <div id="productGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-2 pb-2">
+            <div id="productGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-3 gap-2 pb-2">
               {{-- injected --}}
             </div>
           </div>
         </div>
 
-        {{-- RIGHT: Basket side --}}
-        <div
-          class="lg:col-span-6 flex flex-col min-h-0 bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+        {{-- RIGHT: Cart side --}}
+        <div class="lg:col-span-7 flex flex-col min-h-0 relative bg-slate-50 border-l border-slate-200">
 
-          {{-- Cart Header --}}
-          <div class="p-4 border-b border-slate-100 bg-slate-50/20 shrink-0 flex items-center justify-between">
-            <span
-              class="text-[10px] font-black text-slate-400 bg-white px-2 py-0.5 rounded border border-slate-100 shadow-sm"
-              id="itemCountLabel">0 Lines • 0 Qty</span>
-          </div>
-
-          {{-- Global Discount --}}
-          <div class="px-4 py-2.5 bg-brand-50/30 border-b border-slate-100 shrink-0">
-            <label class="flex items-center gap-2 cursor-pointer">
-              <input type="checkbox" id="applyCustomerDiscount"
-                class="form-checkbox w-3.5 h-3.5 text-brand-600 rounded border-slate-300 focus:ring-brand-500">
-              <span class="text-[10px] font-black text-slate-600 uppercase">
-                Apply Standard Discount ({{ $customerDiscount }}%)
-              </span>
-            </label>
-          </div>
-
-          {{-- Basket Items --}}
-          <div class="scrollable-content min-h-0 flex-1 p-2 space-y-1 bg-white" id="cartItemsContainer"></div>
-
-          {{-- Selected Item Editor --}}
-          <div class="shrink-0 border-t border-slate-100 overflow-hidden" id="posActionPanel">
-            <div class="px-3 py-2 bg-slate-800 text-white flex items-center justify-between gap-2">
-              <div class="flex items-center gap-2 min-w-0">
-                <span class="text-[9px] font-black uppercase tracking-widest whitespace-nowrap">Selected</span>
-                <span id="selectedItemLabel" class="text-[9px] font-bold text-slate-400 italic truncate">No
-                  Selection</span>
+          {{-- Customer Cards (Moved Here) --}}
+          <div
+            class="shrink-0 p-3 bg-white border-b border-slate-100 flex items-start gap-3 overflow-x-auto no-scrollbar z-10 shadow-sm">
+            <div
+              class="group relative flex items-start gap-3 px-3 py-2.5 rounded-xl border border-slate-200 bg-white shrink-0 w-[48%] hover:border-brand-300 transition-all cursor-default shadow-sm hover:shadow-md">
+              <div class="w-8 h-8 rounded-lg bg-brand-50 text-brand-600 flex items-center justify-center shrink-0">
+                <i class="fas fa-receipt text-sm"></i>
               </div>
-
-              <button type="button" onclick="posRemoveItem()" id="removeSelectedBtn"
-                class="h-7 px-2 rounded-lg bg-red-500/10 text-red-200 border border-red-500/20 text-[9px] font-black uppercase tracking-widest
-                       flex items-center gap-2 transition-all duration-200
-                       opacity-0 translate-x-3 pointer-events-none">
-                <i class="fas fa-trash text-[9px]"></i> Remove
+              <div class="min-w-0 flex-1" id="billingAddressContainer">
+                @include('catvara.sales-orders.partials._address_card_content', [
+                    'address' => $order->billingAddress,
+                    'name' => $order->billingAddress->name,
+                ])
+              </div>
+              <button type="button" onclick="openCustomerSwitcher('BILLING')"
+                class="absolute top-2 right-2 text-[10px] font-bold text-brand-600 bg-brand-50 px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
+                CHANGE
               </button>
             </div>
 
-            <div id="actionControls" class="p-3 opacity-40 grayscale pointer-events-none transition-all duration-300">
-              <div class="flex flex-wrap items-center gap-2">
-                {{-- Qty --}}
-                <div class="flex items-center gap-1 rounded-xl border border-slate-200 bg-white px-1.5 py-1">
-                  <button type="button" onclick="posUpdateQty(-1)"
-                    class="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center hover:bg-slate-200 active:scale-95 transition-all text-slate-700">
-                    <i class="fas fa-minus text-[10px]"></i>
-                  </button>
+            <div
+              class="group relative flex items-start gap-3 px-3 py-2.5 rounded-xl border border-slate-200 bg-white shrink-0 w-[48%] hover:border-indigo-300 transition-all cursor-default shadow-sm hover:shadow-md">
+              <div class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
+                <i class="fas fa-user-tag text-sm"></i>
+              </div>
+              <div class="min-w-0 flex-1" id="shippingAddressContainer">
+                @include('catvara.sales-orders.partials._address_card_content', [
+                    'address' => $order->shippingAddress,
+                    'name' => $order->shippingAddress->name,
+                ])
+              </div>
+              <button type="button" onclick="openCustomerSwitcher('SHIPPING')"
+                class="absolute top-2 right-2 text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
+                CHANGE
+              </button>
+            </div>
+          </div>
 
-                  <div
-                    class="min-w-[56px] h-8 px-2 rounded-lg bg-slate-50 border border-slate-200 shadow-inner flex items-center justify-center">
-                    <span class="text-[11px] font-black text-slate-800" id="posQtyDisplay">1</span>
+
+          {{-- Cart Items List --}}
+          <div class="flex-1 min-h-0 overflow-y-auto p-3 scrollable-content bg-slate-50" id="cartItemsContainer"></div>
+
+          {{-- Footer Controls (Redesigned) --}}
+          <div class="bg-white border-t border-slate-200 shadow-[0_-4px_15px_-3px_rgba(0,0,0,0.05)] shrink-0 z-20">
+
+
+
+            <div class="p-6 grid grid-cols-12 gap-8">
+              {{-- LEFT: Payment & Logistics --}}
+              <div class="col-span-12 lg:col-span-7 space-y-5">
+                <div class="grid grid-cols-2 gap-4">
+                  <div>
+                    <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Payment
+                      Term</label>
+                    <select id="paymentTermSelect"
+                      class="w-full h-10 rounded-xl border-slate-200 text-xs font-bold text-slate-700 bg-slate-50 focus:bg-white focus:border-brand-500 transition-colors">
+                      <option value="">Select...</option>
+                    </select>
                   </div>
+                  <div>
+                    <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Payment
+                      Method</label>
+                    <select id="paymentMethodSelect" disabled
+                      class="w-full h-10 rounded-xl border-slate-200 text-xs font-bold text-slate-700 bg-slate-50 opacity-60 focus:bg-white focus:border-brand-500 transition-colors">
+                      <option value="">Select...</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                  <div>
+                    <label
+                      class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Currency</label>
+                    <select id="currencySelect"
+                      class="w-full h-10 rounded-xl border-slate-200 text-xs font-medium text-slate-700 bg-slate-50 focus:bg-white focus:border-brand-500 transition-colors">
+                      @foreach ($enabledCurrencies as $cur)
+                        <option value="{{ $cur->code }}" {{ $order->currency->code == $cur->code ? 'selected' : '' }}>
+                          {{ $cur->code }}</option>
+                      @endforeach
+                    </select>
+                  </div>
+                  <div>
+                    <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Tax
+                      Group</label>
+                    <select id="taxGroupSelect"
+                      class="w-full h-10 rounded-xl border-slate-200 text-xs font-medium text-slate-700 bg-slate-50 focus:bg-white focus:border-brand-500 transition-colors">
+                      <option value="" data-rate="0">No Tax</option>
+                      @foreach ($taxGroups as $tg)
+                        <option value="{{ $tg->id }}" data-rate="{{ $tg->rate }}"
+                          {{ $order->tax_group_id == $tg->id ? 'selected' : '' }}>
+                          {{ $tg->name }}</option>
+                      @endforeach
+                    </select>
+                  </div>
+                </div>
+                <div class="grid grid-cols-12 gap-4">
+                  <div class="col-span-4">
+                    <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Due
+                      Date</label>
+                    <input type="text" id="paymentDueDate"
+                      class="w-full h-10 rounded-xl border-slate-200 text-xs font-medium text-slate-700 bg-slate-50 focus:bg-white focus:border-brand-500 text-center"
+                      placeholder="-" readonly>
+                  </div>
+                  <div class="col-span-8">
+                    <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Additional
+                      Notes</label>
+                    <input type="text" id="commentsInput"
+                      class="w-full h-10 rounded-xl border-slate-200 px-4 text-xs font-medium text-slate-700 bg-slate-50 focus:bg-white focus:border-brand-500 transition-colors"
+                      placeholder="Add private notes for this order...">
+                  </div>
+                </div>
+              </div>
 
-                  <button type="button" onclick="posUpdateQty(1)"
-                    class="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center hover:bg-slate-200 active:scale-95 transition-all text-slate-700">
-                    <i class="fas fa-plus text-[10px]"></i>
-                  </button>
+              {{-- RIGHT: Order Breakdown --}}
+              <div
+                class="col-span-12 lg:col-span-5 flex flex-col justify-between h-full bg-slate-50/50 rounded-2xl p-4 border border-slate-100">
+                <div class="space-y-3 text-sm">
+                  <div class="flex justify-between items-center">
+                    <span class="text-slate-500 font-medium">Subtotal</span>
+                    <span class="text-slate-800 font-bold" id="cartSubtotal">0.00</span>
+                  </div>
+                  <div class="flex justify-between items-center text-slate-500">
+                    <span class="font-medium text-xs">Item Tax</span>
+                    <span class="font-mono text-xs" id="cartItemTaxDisplay">0.00</span>
+                  </div>
+                  <div class="flex justify-between items-center text-slate-500">
+                    <span class="font-medium">Shipping Cost</span>
+                    <div class="w-24">
+                      <input type="number" id="shippingInput"
+                        class="w-full h-6 text-right text-xs bg-transparent border-b border-dashed border-slate-300 focus:border-brand-500 focus:ring-0 p-0"
+                        value="0">
+                    </div>
+                  </div>
+                  <div class="flex justify-between items-center text-slate-500">
+                    <span class="font-medium text-xs">Shipping VAT</span>
+                    <span class="font-mono text-xs" id="cartShippingTaxDisplay">0.00</span>
+                  </div>
+                  <div class="flex justify-between items-center text-slate-500">
+                    <span class="font-medium">Global Discount</span>
+                    <div class="flex flex-col items-end gap-1">
+                      <div class="flex items-center gap-1 w-20">
+                        <span class="text-xs text-slate-400 font-bold">%</span>
+                        <input type="number" id="globalDiscountPercentInput"
+                          class="w-full h-6 text-right text-xs font-black bg-white/50 px-1 rounded border-slate-200 focus:border-brand-500 focus:ring-0"
+                          placeholder="0">
+                      </div>
+                      <span class="text-[10px] text-brand-600 font-black" id="globalDiscountAmountDisplay">- 0.00</span>
+                    </div>
+                  </div>
+                  <div class="flex justify-between items-center">
+                    <span class="text-slate-500 font-medium">Total Tax</span>
+                    <span class="text-slate-700 font-bold" id="cartTaxAmount">0.00</span>
+                  </div>
+                  <div class="pt-3 mt-1 border-t border-slate-200 flex justify-between items-center">
+                    <span class="text-base font-black text-slate-800">Grand Total</span>
+                    <span class="text-xl font-black text-brand-600" id="cartGrandTotal">0.00</span>
+                  </div>
                 </div>
 
-                {{-- Price override --}}
-                <button type="button" onclick="posPromptPrice()"
-                  class="h-10 px-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 hover:bg-emerald-100 transition-all
-                         font-black text-[11px] flex items-center gap-2">
-                  <i class="fas fa-tag text-[10px]"></i>
-                  <span id="posPriceDisplay">0.00</span>
-                </button>
-
-                {{-- Quick discounts --}}
-                <button type="button" onclick="posApplyDisc(5)"
-                  class="h-10 px-3 rounded-xl bg-white border border-slate-200 hover:bg-brand-50 hover:text-brand-700 hover:border-brand-200 transition-all text-[11px] font-black">
-                  5%
-                </button>
-
-                <button type="button" onclick="posApplyDisc(10)"
-                  class="h-10 px-3 rounded-xl bg-white border border-slate-200 hover:bg-brand-50 hover:text-brand-700 hover:border-brand-200 transition-all text-[11px] font-black">
-                  10%
-                </button>
-
-                {{-- Custom discount --}}
-                <button type="button" onclick="posPromptDisc()"
-                  class="h-10 px-3 rounded-xl border border-dashed border-slate-300 bg-white hover:bg-slate-50 transition-all
-                         text-[10px] font-black text-slate-600 uppercase tracking-wider">
-                  Custom %
-                </button>
+                <div class="pt-4 grid grid-cols-2 gap-3 mt-2">
+                  <button type="button" onclick="saveOrder('draft')"
+                    class="h-11 rounded-xl border border-slate-200 text-slate-500 font-bold text-xs uppercase hover:bg-white hover:text-slate-700 transition-colors">
+                    Save Draft
+                  </button>
+                  <button type="button" id="nextStepBtn"
+                    class="h-11 rounded-xl bg-brand-600 text-white font-bold text-xs uppercase tracking-widest hover:bg-brand-700 shadow-lg shadow-brand-200/50 transition-all flex items-center justify-center gap-2">
+                    Finalize <i class="fas fa-arrow-right"></i>
+                  </button>
+                </div>
               </div>
-            </div>
-          </div>
-
-          {{-- Totals --}}
-          <div class="p-2 border-t border-slate-100 bg-slate-50/40 shrink-0 space-y-2">
-            <div class="grid grid-cols-3 gap-3 bg-white p-2 rounded-xl border border-slate-200 shadow-sm mb-3">
-              <div>
-                <label class="flex items-center gap-1 text-[9px] font-black text-slate-400 uppercase mb-1">
-                  <i class="fas fa-truck text-[9px]"></i> Shipping
-                </label>
-                <input type="number" id="shippingInput"
-                  class="w-full h-9 rounded-lg border-slate-200 text-[11px] font-bold text-center bg-slate-50 focus:bg-white focus:ring-brand-500"
-                  value="0">
-              </div>
-              <div>
-                <label class="flex items-center gap-1 text-[9px] font-black text-slate-400 uppercase mb-1">
-                  <i class="fas fa-percent text-[9px]"></i> VAT %
-                </label>
-                <input type="number" id="vatRateInput"
-                  class="w-full h-9 rounded-lg border-slate-200 text-[11px] font-bold text-center bg-slate-50 focus:bg-white focus:ring-brand-500"
-                  value="5">
-              </div>
-              <div>
-                <label class="flex items-center gap-1 text-[9px] font-black text-slate-400 uppercase mb-1">
-                  <i class="fas fa-money-bill text-[9px]"></i> Cur
-                </label>
-                <select id="currencySelect"
-                  class="w-full h-9 rounded-lg border-slate-200 text-[10px] font-bold bg-slate-50 focus:bg-white px-1">
-                  <option value="AED">AED</option>
-                  <option value="USD">USD</option>
-                </select>
-              </div>
-            </div>
-
-            <div class="space-y-1.5 px-2 mb-3">
-              <div class="flex justify-between items-center text-[11px] text-slate-500 font-bold">
-                <span>Subtotal</span> <span id="cartSubtotal" class="text-slate-800">0.00</span>
-              </div>
-              <div class="flex justify-between items-center text-[11px] text-slate-500 font-bold">
-                <span>Shipping</span> <span id="cartShippingCost" class="text-slate-800">0.00</span>
-              </div>
-              <div class="flex justify-between items-center text-[11px] text-slate-500 font-bold">
-                <span>Tax (VAT)</span> <span id="cartTaxAmount" class="text-slate-800">0.00</span>
-              </div>
-              <div class="flex justify-between items-center text-slate-900 pt-2 border-t border-slate-200 mt-1">
-                <span class="text-[12px] font-black uppercase tracking-widest text-brand-600">Grand Total</span>
-                <span class="text-2xl font-black text-brand-600" id="cartGrandTotal">0.00</span>
-              </div>
-            </div>
-
-            <div class="grid grid-cols-3 gap-2 pt-1">
-              <button type="button" onclick="saveOrder('draft')"
-                class="col-span-1 h-10 rounded-lg bg-white border border-slate-300 text-slate-600 text-[11px] font-black uppercase hover:bg-slate-50 hover:text-slate-800 transition-colors">
-                Save Draft
-              </button>
-              <button type="button" id="nextStepBtn"
-                class="col-span-2 h-10 rounded-lg bg-brand-600 text-white text-[11px] font-black uppercase tracking-widest hover:bg-brand-700 shadow-lg shadow-brand-500/20 active:scale-[0.98] transition-all flex items-center justify-center gap-2">
-                Finalize Order <i class="fas fa-arrow-right"></i>
-              </button>
             </div>
           </div>
         </div>
@@ -539,6 +489,20 @@
     <input type="hidden" id="orderUuid" value="{{ $order->uuid }}">
     <input type="hidden" id="orderCurrency" value="{{ $order->currency->code ?? 'AED' }}">
     <input type="hidden" id="additionalInput" value="{{ $initialState['additional'] ?? 0 }}">
+
+    <input type="hidden" id="billToUuid" value="{{ $order->customer->uuid }}">
+    <input type="hidden" id="shipToUuid" value="{{ $order->shippingCustomer->uuid ?? $order->customer->uuid }}">
+
+    {{-- Global Sidebar --}}
+    <div id="sideDrawer" class="fixed inset-0 z-[100] hidden" aria-modal="true">
+      <div class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm opacity-0 transition-opacity duration-300"
+        id="drawerBackdrop" onclick="hideSidebar()"></div>
+      <div
+        class="fixed inset-y-0 right-0 z-10 w-full max-w-md bg-white shadow-2xl translate-x-full transition-transform duration-300 ease-in-out"
+        id="drawerPanel">
+        <div id="drawerContent" class="h-full flex flex-col"></div>
+      </div>
+    </div>
   </div>
 @endsection
 
@@ -556,6 +520,7 @@
     let allProducts = [];
     let paymentTerms = [];
     let paymentMethods = [];
+    let allTaxGroups = @json($taxGroups);
 
     let cart = [];
     let selectedCartIndex = -1;
@@ -566,18 +531,20 @@
     if (initialState && initialState.items) {
       cart = initialState.items.map(item => ({
         type: item.type || 'variant',
-        variant_id: item.variant_id || item.variantId || null, // accept both keys
+        variant_id: item.variant_id || item.variantId || null,
         custom_name: item.custom_name || item.customName || null,
         custom_sku: item.custom_sku || item.customSku || null,
         qty: parseFloat(item.qty),
         unit_price: parseFloat(item.unit_price ?? item.unitPrice),
         discount_percent: parseFloat(item.discount_percent ?? item.discountPercent ?? 0),
+        tax_group_id: item.tax_group_id || null,
         temp_init: true
       }));
 
       $('#shippingInput').val(initialState.shipping || 0);
       $('#additionalInput').val(initialState.additional || 0);
-      $('#vatRateInput').val(initialState.vat_rate || 5);
+      $('#taxGroupSelect').val(initialState.tax_group_id || '');
+      $('#globalDiscountPercentInput').val(initialState.global_discount_percent || 0);
       $('#commentsInput').val(initialState.notes || '');
       $('#currencySelect').val(initialState.currency || 'AED');
       if (!$('#currencySelect').val()) {
@@ -613,7 +580,8 @@
         renderProducts($('#productSearch').val(), this.value);
       });
 
-      $('#shippingInput, #additionalInput, #vatRateInput').on('input', renderCart);
+      $('#shippingInput, #additionalInput, #globalDiscountPercentInput').on('input', renderCart);
+      $('#taxGroupSelect').on('change', renderCart);
 
       $('#modalAddBtn').on('click', function() {
         const variantUuid = $('input[name="selected_variant"]:checked').val();
@@ -651,28 +619,24 @@
           const dueDate = new Date();
           dueDate.setDate(dueDate.getDate() + dueDays);
 
-          // stable dd/mm/yyyy style by locale
-          $('#paymentDueDate').val(dueDate.toLocaleDateString());
+          const formatted = dueDate.toISOString().split('T')[0];
+          $('#paymentDueDate').val(formatted);
 
           if (dueDays === 0) {
-            $('#paymentMethodWrapper').removeClass('hidden');
+            $('#paymentMethodSelect').prop('disabled', false).removeClass('opacity-60').addClass('bg-white')
+              .removeClass('bg-slate-50');
           } else {
-            $('#paymentMethodWrapper').addClass('hidden');
-            $('#paymentMethodSelect').val('');
+            $('#paymentMethodSelect').prop('disabled', true).addClass('opacity-60').addClass('bg-slate-50')
+              .removeClass('bg-white').val('');
           }
         } else {
           $('#paymentDueDate').val('-');
-          $('#paymentMethodWrapper').addClass('hidden');
-          $('#paymentMethodSelect').val('');
+          $('#paymentMethodSelect').prop('disabled', true).addClass('opacity-60').addClass('bg-slate-50')
+            .removeClass('bg-white').val('');
         }
       });
 
-      $('#applyCustomerDiscount').on('change', function() {
-        const apply = $(this).is(':checked');
-        const percent = apply ? customerDiscountPercent : 0;
-        cart.forEach(item => item.discount_percent = percent);
-        renderCart();
-      });
+
 
       // initial totals
       renderCart();
@@ -1048,7 +1012,6 @@
 
       cart.forEach((item, index) => {
         const isSelected = (index === selectedCartIndex);
-        const activeClass = isSelected ? 'cart-item-selected' : '';
 
         const qty = parseFloat(item.qty || 0);
         const unit = parseFloat(item.unit_price || 0);
@@ -1071,9 +1034,50 @@
           `<img src="${item.product.image_url}" class="w-full h-full object-cover">` :
           `<div class="w-full h-full flex items-center justify-center text-slate-400"><i class="fas ${isCustom ? 'fa-pen-ruler' : 'fa-box'} text-[10px]"></i></div>`;
 
+        const activeClass = isSelected ? 'ring-2 ring-brand-500 bg-brand-50/50' :
+          'hover:border-brand-200 hover:shadow-sm';
+
+        let actionControlsHtml = '';
+        if (isSelected) {
+          actionControlsHtml = `
+            <div class="mt-2 pt-2 border-t border-slate-200/60 flex flex-wrap gap-2 items-center" onclick="event.stopPropagation()">
+                <div class="flex items-center gap-1 rounded-lg bg-white border border-slate-200 p-1 shadow-sm">
+                  <button type="button" onclick="posUpdateQty(-1)" class="w-7 h-7 flex items-center justify-center rounded bg-slate-100 hover:bg-slate-200 text-slate-600 transition-colors">
+                    <i class="fas fa-minus text-[10px]"></i>
+                  </button>
+                  <span class="w-8 text-center text-xs font-bold text-slate-800">${qty}</span>
+                  <button type="button" onclick="posUpdateQty(1)" class="w-7 h-7 flex items-center justify-center rounded bg-slate-100 hover:bg-slate-200 text-slate-600 transition-colors">
+                    <i class="fas fa-plus text-[10px]"></i>
+                  </button>
+                </div>
+
+                <button type="button" onclick="posPromptPrice()" class="h-8 px-3 rounded-lg bg-white border border-dashed border-slate-300 text-slate-600 text-[10px] font-bold uppercase hover:border-brand-400 hover:text-brand-600 transition-colors flex items-center gap-1.5 shadow-sm">
+                   <i class="fas fa-tag"></i> Price
+                </button>
+
+                <div class="flex items-center rounded-lg bg-white border border-slate-200 p-1 shadow-sm gap-1">
+                    <button type="button" onclick="posApplyDisc(5)" class="px-2 h-7 rounded bg-slate-50 hover:bg-slate-100 text-[10px] font-bold text-slate-600 border border-slate-100 transition-colors">5%</button>
+                    <button type="button" onclick="posPromptDisc()" class="px-2 h-7 rounded bg-slate-50 hover:bg-slate-100 text-[10px] font-bold text-slate-600 border border-slate-100 transition-colors flex items-center gap-1"><i class="fas fa-percent"></i></button>
+                 </div>
+
+                 <select onchange="posUpdateLineTax(this.value)" class="h-8 w-24 rounded-lg border-slate-200 text-[10px] font-medium bg-white shadow-sm focus:border-brand-500 focus:ring-0">
+                    <option value="">Global Tax</option>
+                    @foreach ($taxGroups as $tg)
+                      <option value="{{ $tg->id }}" ${item.tax_group_id == {{ $tg->id }} ? 'selected' : '' }>{{ $tg->name }}</option>
+                    @endforeach
+                 </select>
+
+                <button type="button" onclick="posRemoveItem()" class="ml-auto h-8 w-8 rounded-lg bg-red-50 text-red-500 hover:bg-red-100 hover:scale-105 transition-all flex items-center justify-center shadow-sm">
+                    <i class="fas fa-trash-alt text-xs"></i>
+                </button>
+            </div>
+            `;
+        }
+
         const row = `
           <div onclick="selectCartItem(${index})"
-            class="flex items-center gap-2 p-2 rounded-xl bg-white border border-slate-100 hover:border-brand-200 hover:shadow-sm transition-all group mb-1.5 cursor-pointer ${activeClass}">
+            class="flex flex-col gap-0 p-2 rounded-xl bg-white border border-slate-100 transition-all group mb-1.5 cursor-pointer ${activeClass}">
+            <div class="flex items-center gap-2">
             <div class="w-9 h-9 rounded-lg bg-slate-50 flex-shrink-0 overflow-hidden border border-slate-200">
               ${img}
             </div>
@@ -1095,64 +1099,70 @@
                 ${isCustom ? `<span class="text-[9px] font-black text-slate-700 bg-slate-100 px-1.5 py-0.5 rounded-lg">CUSTOM</span>` : ''}
               </div>
             </div>
+            </div>
+            ${actionControlsHtml}
           </div>
         `;
         container.append(row);
       });
 
-      // POS panel sync
-      if (selectedCartIndex !== -1 && cart[selectedCartIndex]) {
-        syncPosPanel(cart[selectedCartIndex]);
-      } else {
-        resetPosPanel();
-      }
 
+      // Inline controls are now rendered within cart items
+
+      const globalTaxRate = parseFloat($('#taxGroupSelect option:selected').data('rate')) || 0;
       const shipping = parseFloat($('#shippingInput').val()) || 0;
-      const vatRate = parseFloat($('#vatRateInput').val()) || 0;
+      const globalDiscP = parseFloat($('#globalDiscountPercentInput').val()) || 0;
 
-      const tax = subtotal * (vatRate / 100);
-      const grand = subtotal + tax + shipping;
+      let itemTaxTotal = 0;
+      cart.forEach(item => {
+        const qty = parseFloat(item.qty || 0);
+        const unit = parseFloat(item.unit_price || 0);
+        const discP = parseFloat(item.discount_percent || 0);
+        const lineNet = (qty * unit) * (1 - discP / 100);
+
+        let lineTaxRate = globalTaxRate;
+        if (item.tax_group_id) {
+          const foundTg = allTaxGroups.find(tg => tg.id == item.tax_group_id);
+          if (foundTg) lineTaxRate = parseFloat(foundTg.rate);
+        }
+        itemTaxTotal += lineNet * (lineTaxRate / 100);
+      });
+
+      const shippingTax = shipping * (globalTaxRate / 100);
+      const totalTax = itemTaxTotal + shippingTax;
+
+      const subtotalWithItemTax = subtotal + itemTaxTotal;
+      const globalDiscAmount = (subtotal + itemTaxTotal + shipping + shippingTax) * (globalDiscP / 100);
+      const grandTotal = (subtotal + itemTaxTotal + shipping + shippingTax) - globalDiscAmount;
 
       $('#cartSubtotal').text(subtotal.toFixed(2));
-      $('#cartShippingCost').text(shipping.toFixed(2));
-      $('#cartTaxAmount').text(tax.toFixed(2));
-      $('#cartGrandTotal').text(grand.toFixed(2));
+      $('#cartItemTaxDisplay').text(itemTaxTotal.toFixed(2));
+      $('#cartShippingTaxDisplay').text(shippingTax.toFixed(2));
+      $('#globalDiscountAmountDisplay').text('- ' + globalDiscAmount.toFixed(2));
+      $('#cartTaxAmount').text((itemTaxTotal + shippingTax).toFixed(2));
+      $('#cartGrandTotal').text(grandTotal.toFixed(2));
 
       $('#itemCountLabel').text(cart.length + ' Lines • ' + countQty + ' Qty');
-
-      $('#nextStepBtn').prop('disabled', false).removeClass('opacity-60 cursor-not-allowed');
+      $('#nextStepBtn').prop('disabled', cart.length === 0).toggleClass('opacity-60 cursor-not-allowed', cart.length ===
+        0);
     }
+
+    $(document).on('input', '#shippingInput, #globalDiscountPercentInput', renderCart);
+    $(document).on('change', '#taxGroupSelect', renderCart);
+
+    window.posUpdateLineTax = function(tgId) {
+      if (selectedCartIndex !== -1 && cart[selectedCartIndex]) {
+        cart[selectedCartIndex].tax_group_id = tgId || null;
+        renderCart();
+      }
+    };
 
     window.selectCartItem = function(index) {
       selectedCartIndex = index;
       renderCart();
     };
 
-    function syncPosPanel(item) {
-      const label = (item.type === 'custom') ? item.custom_name : (item.product?.name || 'Item');
 
-      $('#selectedItemLabel').text(label).removeClass('italic text-slate-400').addClass('text-brand-200');
-
-      $('#actionControls').removeClass('opacity-40 grayscale pointer-events-none');
-      $('#posQtyDisplay').text(item.qty);
-      $('#posPriceDisplay').text(parseFloat(item.unit_price || 0).toFixed(2));
-
-      $('#removeSelectedBtn')
-        .removeClass('opacity-0 translate-x-3 pointer-events-none')
-        .addClass('opacity-100 translate-x-0');
-    }
-
-    function resetPosPanel() {
-      $('#selectedItemLabel').text('No Selection').addClass('italic text-slate-400').removeClass('text-brand-200');
-
-      $('#actionControls').addClass('opacity-40 grayscale pointer-events-none');
-      $('#posQtyDisplay').text('1');
-      $('#posPriceDisplay').text('0.00');
-
-      $('#removeSelectedBtn')
-        .addClass('opacity-0 translate-x-3 pointer-events-none')
-        .removeClass('opacity-100 translate-x-0');
-    }
 
     window.posUpdateQty = function(change) {
       if (selectedCartIndex !== -1 && cart[selectedCartIndex]) {
@@ -1230,6 +1240,117 @@
       }
     };
 
+    // ---- Customer Switcher Logic
+    let currentSwitchType = 'BILLING';
+
+    window.openCustomerSwitcher = function(type = 'BILLING') {
+      currentSwitchType = type;
+      const sideDrawer = $('#sideDrawer');
+      const drawerContent = $('#drawerContent');
+      const drawerBackdrop = $('#drawerBackdrop');
+      const drawerPanel = $('#drawerPanel');
+
+      // Loading state
+      drawerContent.html(
+        '<div class="flex items-center justify-center h-full"><i class="fas fa-circle-notch fa-spin text-2xl text-brand-500"></i></div>'
+      );
+
+      sideDrawer.removeClass('hidden');
+      setTimeout(() => {
+        drawerBackdrop.removeClass('opacity-0');
+        drawerPanel.removeClass('translate-x-full');
+      }, 10);
+
+      $.ajax({
+        url: "{{ company_route('sales-orders.customer-switcher', ['sales_order' => $order->uuid]) }}",
+        data: {
+          type: type
+        },
+        success: function(html) {
+          drawerContent.html(html);
+        }
+      });
+    };
+
+    window.hideSidebar = function() {
+      const sideDrawer = $('#sideDrawer');
+      const drawerBackdrop = $('#drawerBackdrop');
+      const drawerPanel = $('#drawerPanel');
+
+      drawerBackdrop.addClass('opacity-0');
+      drawerPanel.addClass('translate-x-full');
+      setTimeout(() => sideDrawer.addClass('hidden'), 300);
+    };
+
+    window.setSidebarContent = function(html) {
+      $('#drawerContent').html(html);
+    };
+
+    window.confirmCustomerSwitch = function(customerUuid, customerName) {
+      Swal.fire({
+        title: 'Change Customer?',
+        text: `Switch ${currentSwitchType.toLowerCase()} address to ${customerName}?`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, switch it',
+        confirmButtonColor: '#4f46e5'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          switchOrderCustomer(customerUuid);
+        }
+      });
+    };
+
+    function switchOrderCustomer(newUuid) {
+      const url = "{{ company_route('sales-orders.update-customers', ['sales_order' => $order->uuid]) }}";
+
+      const billToNow = $('#billToUuid').val();
+      const shipToNow = $('#shipToUuid').val();
+
+      const payload = {
+        _method: 'PUT',
+        _token: "{{ csrf_token() }}",
+        bill_to: (currentSwitchType === 'BILLING') ? newUuid : billToNow,
+        ship_to: (currentSwitchType === 'SHIPPING') ? newUuid : shipToNow
+      };
+
+      $.ajax({
+        url: url,
+        method: 'POST',
+        data: payload,
+        success: function(resp) {
+          if (resp.success) {
+            if (currentSwitchType === 'BILLING') {
+              $('#billingAddressContainer').html(resp.billing_html);
+              $('#billToUuid').val(newUuid);
+
+              if (resp.payment_term_id) {
+                $('#paymentTermSelect').val(resp.payment_term_id).trigger('change');
+              }
+            } else {
+              $('#shippingAddressContainer').html(resp.shipping_html);
+              $('#shipToUuid').val(newUuid);
+            }
+
+            hideSidebar();
+
+            Swal.fire({
+              icon: 'success',
+              title: 'Customer Updated',
+              toast: true,
+              position: 'top-end',
+              timer: 2000,
+              showConfirmButton: false
+            });
+          }
+        },
+        error: function(xhr) {
+          console.error(xhr);
+          Swal.fire('Error', 'Failed to update customer.', 'error');
+        }
+      });
+    }
+
     function saveOrder(action) {
       const btn = $('#nextStepBtn');
       const originalHtml = btn.html();
@@ -1242,20 +1363,24 @@
         _method: 'PUT',
         _token: $('meta[name="csrf-token"]').attr('content'),
         currency: $('#currencySelect').val(),
+        tax_group_id: $('#taxGroupSelect').val(),
         payment_term_id: $('#paymentTermSelect').val(),
         payment_method_id: $('#paymentMethodSelect').val(),
+        due_date: $('#paymentDueDate').val(),
         shipping: $('#shippingInput').val(),
-        additional: $('#additionalInput').val(),
-        vat_rate: $('#vatRateInput').val(),
+        global_discount_percent: $('#globalDiscountPercentInput').val() || 0,
+        global_discount_amount: parseFloat($('#globalDiscountAmountDisplay').text().replace('- ', '')) || 0,
+        additional: $('#additionalInput').val() || 0,
         notes: $('#commentsInput').val(),
         items: cart.map(i => ({
           type: i.type || 'variant',
-          variant_id: (i.type === 'custom') ? null : i.variant_id,
+          variant_id: (i.type === 'custom') ? null : (i.variant_id || i.variant?.id),
           custom_name: (i.type === 'custom') ? (i.custom_name || null) : null,
           custom_sku: (i.type === 'custom') ? (i.custom_sku || null) : null,
           qty: i.qty,
           unit_price: i.unit_price,
-          discount_percent: i.discount_percent
+          discount_percent: i.discount_percent,
+          tax_group_id: i.tax_group_id || null
         }))
       };
 

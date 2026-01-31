@@ -112,7 +112,9 @@ class OrderController extends Controller
                         'id' => (string) ($variant->uuid ?? $variant->id),
                         'attrs' => $attrs,
                         'price' => $price,
+                        'cost_price' => (float) ($variant->cost_price ?? 0),
                         'stock' => $stock,
+                        'safety_stock' => (int) ($variant->safety_stock ?? 0),
                     ];
                 })->values()->all();
 

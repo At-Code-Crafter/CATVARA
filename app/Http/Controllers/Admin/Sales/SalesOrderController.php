@@ -15,6 +15,7 @@ use App\Models\Customer\Customer;
 use App\Models\Pricing\Currency;
 use App\Models\Sales\Order;
 use App\Models\Sales\OrderStatus;
+use App\Services\Sales\OrderCalculationService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -23,6 +24,9 @@ use Yajra\DataTables\Facades\DataTables;
 
 class SalesOrderController extends Controller
 {
+    public function __construct(
+        protected OrderCalculationService $calcService
+    ) {}
     public function index()
     {
         $this->authorize('view', 'orders');
@@ -146,13 +150,13 @@ class SalesOrderController extends Controller
                 'company_id' => $company->id,
 
                 'customer_id' => $billToCustomer->id,
-                'shipping_customer_id' => $shipToCustomer->id,         
+                'shipping_customer_id' => $shipToCustomer->id,
 
                 'status_id' => $status->id,
                 'payment_status_id' => $paymentStatus->id,
 
                 'order_number' => $this->generateOrderNumber($company),
-                'created_by' => auth()->id(),
+                'created_by' => \Illuminate\Support\Facades\Auth::id(),
 
                 'currency_id' => $defaultCurrencyId,
                 'base_currency_id' => $company->base_currency_id ?? null,
@@ -163,12 +167,12 @@ class SalesOrderController extends Controller
             $order->addresses()->create([
                 'type' => 'BILLING',
                 'company_id' => $company->id,
-                'address_line_1' => $billToCustomer->address->address_line_1 ?? '',
-                'address_line_2' => $billToCustomer->address->address_line_2 ?? null,
-                'city' => $billToCustomer->address->city ?? null,
-                'state_id' => ! empty($billToCustomer->address->state_id) ? $billToCustomer->address->state_id : null,
-                'zip_code' => $billToCustomer->address->zip_code ?? '',
-                'country_id' => ! empty($billToCustomer->address->country_id) ? $billToCustomer->address->country_id : null,
+                'address_line_1' => $billToCustomer->address?->address_line_1 ?? '',
+                'address_line_2' => $billToCustomer->address?->address_line_2 ?? null,
+                'city' => $billToCustomer->address?->city ?? null,
+                'state_id' => ! empty($billToCustomer->address?->state_id) ? $billToCustomer->address?->state_id : null,
+                'zip_code' => $billToCustomer->address?->zip_code ?? '',
+                'country_id' => ! empty($billToCustomer->address?->country_id) ? $billToCustomer->address?->country_id : null,
                 'phone' => $billToCustomer->phone,
                 'email' => $billToCustomer->email,
                 'name' => $billToCustomer->legal_name ?? $billToCustomer->display_name,
@@ -178,12 +182,12 @@ class SalesOrderController extends Controller
             $order->addresses()->create([
                 'type' => 'SHIPPING',
                 'company_id' => $company->id,
-                'address_line_1' => $shipToCustomer->address->address_line_1 ?? '',
-                'address_line_2' => $shipToCustomer->address->address_line_2 ?? null,
-                'city' => $shipToCustomer->address->city ?? null,
-                'state_id' => ! empty($shipToCustomer->address->state_id) ? $shipToCustomer->address->state_id : null,
-                'zip_code' => $shipToCustomer->address->zip_code ?? '',
-                'country_id' => ! empty($shipToCustomer->address->country_id) ? $shipToCustomer->address->country_id : null,
+                'address_line_1' => $shipToCustomer->address?->address_line_1 ?? '',
+                'address_line_2' => $shipToCustomer->address?->address_line_2 ?? null,
+                'city' => $shipToCustomer->address?->city ?? null,
+                'state_id' => ! empty($shipToCustomer->address?->state_id) ? $shipToCustomer->address?->state_id : null,
+                'zip_code' => $shipToCustomer->address?->zip_code ?? '',
+                'country_id' => ! empty($shipToCustomer->address?->country_id) ? $shipToCustomer->address?->country_id : null,
                 'phone' => $shipToCustomer->phone,
                 'email' => $shipToCustomer->email,
                 'name' => $shipToCustomer->legal_name ?? $shipToCustomer->display_name,
@@ -210,7 +214,7 @@ class SalesOrderController extends Controller
             ? Customer::where('company_id', $company->id)->where('uuid', $request->ship_to)->firstOrFail()
             : $billToCustomer;
 
-        return DB::transaction(function () use ($order, $company, $billToCustomer, $shipToCustomer) {
+        return DB::transaction(function () use ($order, $company, $billToCustomer, $shipToCustomer, $request) {
             $order->update([
                 'customer_id' => $billToCustomer->id,
                 'shipping_customer_id' => $shipToCustomer->id,
@@ -220,12 +224,12 @@ class SalesOrderController extends Controller
                 ['type' => 'BILLING'],
                 [
                     'company_id' => $company->id,
-                    'address_line_1' => $billToCustomer->address->address_line_1 ?? '',
-                    'address_line_2' => $billToCustomer->address->address_line_2 ?? null,
-                    'city' => $billToCustomer->address->city ?? null,
-                    'state_id' => ! empty($billToCustomer->address->state_id) ? $billToCustomer->address->state_id : null,
-                    'zip_code' => $billToCustomer->address->zip_code ?? '',
-                    'country_id' => ! empty($billToCustomer->address->country_id) ? $billToCustomer->address->country_id : null,
+                    'address_line_1' => $billToCustomer->address?->address_line_1 ?? '',
+                    'address_line_2' => $billToCustomer->address?->address_line_2 ?? null,
+                    'city' => $billToCustomer->address?->city ?? null,
+                    'state_id' => ! empty($billToCustomer->address?->state_id) ? $billToCustomer->address?->state_id : null,
+                    'zip_code' => $billToCustomer->address?->zip_code ?? '',
+                    'country_id' => ! empty($billToCustomer->address?->country_id) ? $billToCustomer->address?->country_id : null,
                     'phone' => $billToCustomer->phone,
                     'email' => $billToCustomer->email,
                     'name' => $billToCustomer->legal_name ?? $billToCustomer->display_name,
@@ -237,12 +241,12 @@ class SalesOrderController extends Controller
                 ['type' => 'SHIPPING'],
                 [
                     'company_id' => $company->id,
-                    'address_line_1' => $shipToCustomer->address->address_line_1 ?? '',
-                    'address_line_2' => $shipToCustomer->address->address_line_2 ?? null,
-                    'city' => $shipToCustomer->address->city ?? null,
-                    'state_id' => ! empty($shipToCustomer->address->state_id) ? $shipToCustomer->address->state_id : null,
-                    'zip_code' => $shipToCustomer->address->zip_code ?? '',
-                    'country_id' => ! empty($shipToCustomer->address->country_id) ? $shipToCustomer->address->country_id : null,
+                    'address_line_1' => $shipToCustomer->address?->address_line_1 ?? '',
+                    'address_line_2' => $shipToCustomer->address?->address_line_2 ?? null,
+                    'city' => $shipToCustomer->address?->city ?? null,
+                    'state_id' => ! empty($shipToCustomer->address?->state_id) ? $shipToCustomer->address?->state_id : null,
+                    'zip_code' => $shipToCustomer->address?->zip_code ?? '',
+                    'country_id' => ! empty($shipToCustomer->address?->country_id) ? $shipToCustomer->address?->country_id : null,
                     'phone' => $shipToCustomer->phone,
                     'email' => $shipToCustomer->email,
                     'name' => $shipToCustomer->legal_name ?? $shipToCustomer->display_name,
@@ -250,8 +254,77 @@ class SalesOrderController extends Controller
                 ]
             );
 
+            if ($request->ajax()) {
+                $order->load(['addresses', 'customer', 'shippingCustomer']);
+                $billToCustomerModel = $order->customer;
+                $billToAddress = $order->addresses->where('type', 'BILLING')->first();
+                $shipToAddress = $order->addresses->where('type', 'SHIPPING')->first();
+
+                $customerDiscount = $billToCustomerModel->percentage_discount ?? 0;
+                $defaultPaymentTermId = $billToCustomerModel->payment_term_id ?? null;
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Order customers updated successfully.',
+                    'order' => $order,
+                    'fx_rate' => $order->fx_rate,
+                    'totals' => [
+                        'subtotal' => (float) $order->subtotal,
+                        'discount_total' => (float) $order->discount_total,
+                        'tax_total' => (float) $order->tax_total,
+                        'shipping_total' => (float) $order->shipping_total,
+                        'shipping_tax_total' => (float) $order->shipping_tax_total,
+                        'grand_total' => (float) $order->grand_total,
+                    ],
+                    'customerDiscount' => $customerDiscount,
+                    'payment_term_id' => $defaultPaymentTermId,
+                    'billing_html' => view('catvara.sales-orders.partials._address_card_content', [
+                        'address' => $billToAddress,
+                        'name' => $billToAddress->name,
+                    ])->render(),
+                    'shipping_html' => view('catvara.sales-orders.partials._address_card_content', [
+                        'address' => $shipToAddress,
+                        'name' => $shipToAddress->name,
+                    ])->render(),
+                ]);
+            }
+
             return redirect()->to(company_route('sales-orders.edit', ['sales_order' => $order->uuid]));
         });
+    }
+
+    public function customerSwitcher(Request $request, Company $company, $uuid)
+    {
+        $this->authorize('edit', 'orders');
+
+        $order = Order::where('company_id', $company->id)
+            ->where('uuid', $uuid)
+            ->firstOrFail();
+
+        $type = $request->input('type', 'BILLING'); // BILLING or SHIPPING
+        $search = $request->input('q');
+        $customerType = $request->input('customer_type'); // INDIVIDUAL or COMPANY
+
+        $query = Customer::where('company_id', $company->id)
+            ->where('is_active', true);
+
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('display_name', 'LIKE', "%{$search}%")
+                    ->orWhere('legal_name', 'LIKE', "%{$search}%")
+                    ->orWhere('email', 'LIKE', "%{$search}%")
+                    ->orWhere('phone', 'LIKE', "%{$search}%")
+                    ->orWhere('customer_code', 'LIKE', "%{$search}%");
+            });
+        }
+
+        if ($customerType) {
+            $query->where('type', $customerType);
+        }
+
+        $customers = $query->orderBy('display_name')->limit(50)->get();
+
+        return view('catvara.sales-orders.partials._customer_switcher', compact('customers', 'order', 'type'))->render();
     }
 
     public function edit(Company $company, $uuid)
@@ -279,6 +352,7 @@ class SalesOrderController extends Controller
                     'qty' => (float) $item->quantity,
                     'unitPrice' => (float) $item->unit_price,
                     'discountPercent' => (float) ($item->discount_percent ?? 0),
+                    'tax_group_id' => $item->tax_group_id,
                     'taxRate' => (float) ($item->tax_rate ?? 0),
                     'attrs' => [],
                 ];
@@ -287,7 +361,9 @@ class SalesOrderController extends Controller
             'payment_term_id' => $order->payment_term_id ?? $billToCustomer->payment_term_id,
             'shipping' => (float) $order->shipping_total,
             'additional' => 0,
-            'vat_rate' => 0, // only used as fallback if item/category doesn't provide tax
+            'tax_group_id' => $order->tax_group_id,
+            'global_discount_percent' => (float) $order->global_discount_percent,
+            'global_discount_amount' => (float) $order->global_discount_amount,
             'notes' => $order->notes,
             'currency' => $order->currency->code ?? ($company->baseCurrency->code ?? 'AED'),
             'status' => $order->status->code ?? 'DRAFT',
@@ -295,7 +371,23 @@ class SalesOrderController extends Controller
 
         $customerDiscount = $billToCustomer->percentage_discount ?? 0;
 
-        return view('catvara.sales-orders.edit', compact('billToCustomer', 'shipToCustomer', 'order', 'initialState', 'customerDiscount'));
+        $taxGroups = \App\Models\Tax\TaxGroup::where('company_id', $company->id)
+            ->where('is_active', true)
+            ->get();
+
+        $baseCurrency = $company->baseCurrency;
+        $exchangeRates = $company->exchangeRates()->with('targetCurrency')->get();
+        $enabledCurrencies = collect([$baseCurrency])->merge($exchangeRates->pluck('targetCurrency'))->filter()->unique('id');
+
+        return view('catvara.sales-orders.edit', compact(
+            'billToCustomer', 
+            'shipToCustomer', 
+            'order', 
+            'initialState', 
+            'customerDiscount',
+            'taxGroups',
+            'enabledCurrencies'
+        ));
     }
 
     public function update(UpdateSalesOrderRequest $request, Company $company, $uuid)
@@ -306,42 +398,29 @@ class SalesOrderController extends Controller
             ->where('uuid', $uuid)
             ->firstOrFail();
 
-        // Confirm / generate
-        if ($request->action === 'generate') {
-            $status = OrderStatus::where('code', 'CONFIRMED')->first();
-            if ($status) {
-                $order->update(['status_id' => $status->id, 'confirmed_at' => now()]);
-            }
-
-            return response()->json([
-                'success' => true,
-                'redirect_url' => company_route('sales-orders.show', ['sales_order' => $order->uuid]),
-            ]);
-        }
 
         DB::beginTransaction();
         try {
-            $vatRateFallback = (float) ($request->vat_rate ?? 0);
-
-            $shipping = (float) ($request->shipping ?? 0);
-            $additional = (float) ($request->additional ?? 0);
-            $shippingTotal = max(0, $shipping + $additional);
-
-            $shippingTaxTotal = max(0, $shippingTotal * ($vatRateFallback / 100));
+            $taxGroupId = $request->tax_group_id ? (int) $request->tax_group_id : null;
 
             $currencyId = $this->resolveCurrencyIdFromCode($request->currency);
 
             $termSnapshot = $this->resolvePaymentTermSnapshot($request->payment_term_id);
 
-            $calc = $this->calculateFromItemsPayload(
-                $company->id,
-                $request->items ?? [],
-                $vatRateFallback
-            );
+            $calc = $this->calcService->calculate($company->id, [
+                'items' => $request->items ?? [],
+                'tax_group_id' => $taxGroupId,
+                'global_discount_percent' => $request->global_discount_percent,
+                'global_discount_amount' => $request->global_discount_amount,
+                'shipping' => $request->shipping,
+                'additional' => $request->additional,
+                'customer_id' => $order->customer_id
+            ]);
 
             // Update order header
             $order->update([
                 'currency_id' => $currencyId,
+                'tax_group_id' => $taxGroupId,
 
                 'payment_term_id' => $termSnapshot['payment_term_id'],
                 'payment_term_name' => $termSnapshot['payment_term_name'],
@@ -352,12 +431,14 @@ class SalesOrderController extends Controller
 
                 'subtotal' => $calc['subtotal'],
                 'discount_total' => $calc['discount_total'],
+                'global_discount_percent' => (float) ($request->global_discount_percent ?? 0),
+                'global_discount_amount' => (float) ($request->global_discount_amount ?? 0),
                 'tax_total' => $calc['tax_total'],
 
-                'shipping_total' => $shippingTotal,
-                'shipping_tax_total' => $shippingTaxTotal,
+                'shipping_total' => $calc['shipping_total'],
+                'shipping_tax_total' => $calc['shipping_tax_total'],
 
-                'grand_total' => $calc['items_grand_total'] + $shippingTotal + $shippingTaxTotal,
+                'grand_total' => $calc['grand_total'],
             ]);
 
             // Sync items: delete + recreate (draft-safe)
@@ -366,10 +447,26 @@ class SalesOrderController extends Controller
                 $order->items()->create($row);
             }
 
+            $order->load(['items.productVariant.product', 'customer', 'shippingCustomer', 'currency', 'status', 'addresses']);
+
+            if ($request->action === 'generate') {
+                $status = OrderStatus::where('code', 'CONFIRMED')->first();
+                if ($status) {
+                    $order->update(['status_id' => $status->id, 'confirmed_at' => now()]);
+                }
+                DB::commit();
+                return response()->json([
+                    'success' => true,
+                    'redirect_url' => company_route('sales-orders.show', ['sales_order' => $order->uuid]),
+                ]);
+            }
+            
             DB::commit();
 
             return response()->json([
                 'success' => true,
+                'order' => $order,
+                'fx_rate' => $order->fx_rate,
                 'status' => $order->status->name ?? 'Draft',
                 'is_confirmed' => ($order->status->code ?? '') === 'CONFIRMED',
                 'totals' => [
@@ -469,161 +566,53 @@ class SalesOrderController extends Controller
         ];
     }
 
-    /**
-     * Matches your NEW order_items schema:
-     * - is_custom, custom_sku
-     * - line_subtotal
-     * - discount_percent
-     * - line_discount_total
-     * - tax_rate, tax_amount
-     * - line_total
-     *
-     * Tax resolution order:
-     * 1) item.tax_rate
-     * 2) category tax_rate (if exists)
-     * 3) vat fallback (header vat_rate)
-     */
-    private function calculateFromItemsPayload(int $companyId, array $items, float $vatFallback): array
+
+    public function finalize(Company $company, string $sales_order)
     {
-        $subtotal = 0.0;
-        $discountTotal = 0.0;
-        $taxTotal = 0.0;
-        $itemsGrand = 0.0;
-
-        $rows = [];
-
-        foreach ($items as $item) {
-            $type = $item['type'] ?? 'variant';
-            $isCustom = ($type === 'custom');
-
-            $qty = max(1, (int) ($item['qty'] ?? 1));
-            $unit = (float) ($item['unit_price'] ?? 0);
-
-            $discPct = min(100, max(0, (float) ($item['discount_percent'] ?? 0)));
-
-            $variantId = null;
-            $productName = 'Custom Item';
-            $variantDescription = null;
-            $customSku = null;
-
-            $categoryTaxRate = null;
-
-            if ($isCustom) {
-                $productName = $item['custom_name'] ?? 'Custom Item';
-                $customSku = $item['custom_sku'] ?? null;
-                $variantDescription = $customSku ? "SKU: {$customSku}" : null;
-            } else {
-                $variantUuid = $item['variant_id'] ?? null;
-                if (! $variantUuid) {
-                    throw new \Exception('Variant ID is required for variant item.');
-                }
-
-                $variant = ProductVariant::query()
-                    ->where('company_id', $companyId)
-                    ->where('uuid', $variantUuid)
-                    ->with(['product.category'])
-                    ->firstOrFail();
-
-                $variantId = $variant->id;
-                $productName = (string) ($variant->product->name ?? '');
-                $variantDescription = method_exists($variant, 'getVariantDescription')
-                    ? $variant->getVariantDescription()
-                    : null;
-
-                // Category-level tax (your current direction)
-                $categoryTaxRate = optional($variant->product->category)->tax_rate;
-            }
-
-            // tax rate resolution
-            if (array_key_exists('tax_rate', $item) && $item['tax_rate'] !== null) {
-                $taxRate = min(100, max(0, (float) $item['tax_rate']));
-            } elseif ($categoryTaxRate !== null) {
-                $taxRate = min(100, max(0, (float) $categoryTaxRate));
-            } else {
-                $taxRate = min(100, max(0, (float) $vatFallback));
-            }
-
-            $gross = $unit * $qty;                    // line_subtotal
-            $discountAmount = $gross * ($discPct / 100);
-            $taxable = max(0, $gross - $discountAmount);
-            $taxAmount = $taxable * ($taxRate / 100);
-            $lineTotal = $taxable + $taxAmount;
-
-            $subtotal += $gross;
-            $discountTotal += $discountAmount;
-            $taxTotal += $taxAmount;
-            $itemsGrand += $lineTotal;
-
-            $rows[] = [
-                'product_variant_id' => $variantId,
-                'is_custom' => $isCustom ? 1 : 0,
-                'custom_sku' => $isCustom ? $customSku : null,
-
-                'product_name' => $productName,
-                'variant_description' => $variantDescription,
-
-                'unit_price' => $unit,
-                'quantity' => $qty,
-                'fulfilled_quantity' => 0,
-
-                'line_subtotal' => $gross,
-
-                'discount_percent' => $discPct,
-                'discount_amount' => $discountAmount,
-                'line_discount_total' => $discountAmount,
-
-                'tax_group_id' => null,
-                'tax_rate' => $taxRate,
-                'tax_amount' => $taxAmount,
-
-                'line_total' => $lineTotal,
-            ];
-        }
-
-        return [
-            'subtotal' => round($subtotal, 6),
-            'discount_total' => round($discountTotal, 6),
-            'tax_total' => round($taxTotal, 6),
-            'items_grand_total' => round($itemsGrand, 6),
-            'items_for_db' => $rows,
-        ];
-    }
-
-    public function finalize(string $sales_order)
-    {
-        // You likely already have a "find by uuid" helper or route model binding.
-        // Adjust this to your actual model fetch pattern.
         $order = Order::query()
+            ->where('company_id', $company->id)
             ->where('uuid', $sales_order)
             ->with([
                 'currency',
-                'items.productVariant.product', // adjust relations to your schema
+                'items.productVariant.product',
                 'paymentTerm',
-                'paymentMethod',
+                'customer',
+                'shippingCustomer',
+                'addresses',
             ])
             ->firstOrFail();
 
-        // This initialState should match what Step 02 expects.
-        // If you already store draft JSON on order, load it here.
-        $initialState = $order->draft_state ?? null; // adjust column name if different
+        $initialState = null; // No longer using draft_state column
 
-        // Customers used in Step 02 — reuse same variables if you have them.
-        $billToCustomer = $order->billToCustomer ?? null; // adjust relation
-        $shipToCustomer = $order->shipToCustomer ?? null; // adjust relation
+        $billToCustomer = $order->customer;
+        $shipToCustomer = $order->shippingCustomer;
 
-        // Fallback customer discount (if you compute it already)
-        $customerDiscount = $order->customer_discount_percent ?? 0;
+        // Fallback addresses if specifically needed as objects for the view
+        $billAddress = $order->addresses->where('type', 'BILLING')->first();
+        $shipAddress = $order->addresses->where('type', 'SHIPPING')->first();
+
+        $customerDiscount = $billAddress->percentage_discount ?? 0;
+
+        $taxGroups = \App\Models\Tax\TaxGroup::where('company_id', $company->id)
+            ->where('is_active', true)
+            ->get();
+
+        $baseCurrency = $company->baseCurrency;
+        $exchangeRates = $company->exchangeRates()->with('targetCurrency')->get();
+        $enabledCurrencies = collect([$baseCurrency])->merge($exchangeRates->pluck('targetCurrency'))->filter()->unique('id');
 
         return view('catvara.sales-orders.finalize', compact(
             'order',
             'initialState',
             'billToCustomer',
             'shipToCustomer',
-            'customerDiscount'
+            'customerDiscount',
+            'taxGroups',
+            'enabledCurrencies'
         ));
     }
 
-    public function finalizeStore(Request $request, string $sales_order)
+    public function finalizeStore(Request $request, Company $company, string $sales_order)
     {
         $order = Order::query()
             ->where('uuid', $sales_order)
@@ -634,9 +623,10 @@ class SalesOrderController extends Controller
             'currency' => ['required', 'string', 'max:10'],
             'payment_term_id' => ['nullable'],
             'payment_method_id' => ['nullable'],
+            'due_date' => ['nullable', 'date'],
             'shipping' => ['nullable', 'numeric', 'min:0'],
             'additional' => ['nullable', 'numeric', 'min:0'],
-            'vat_rate' => ['nullable', 'numeric', 'min:0', 'max:100'],
+            'tax_group_id' => ['nullable', 'integer'],
             'notes' => ['nullable', 'string', 'max:5000'],
             'items' => ['required', 'array', 'min:1'],
 
@@ -647,6 +637,7 @@ class SalesOrderController extends Controller
             'items.*.qty' => ['required', 'numeric', 'min:1'],
             'items.*.unit_price' => ['required', 'numeric', 'min:0'],
             'items.*.discount_percent' => ['nullable', 'numeric', 'min:0', 'max:100'],
+            'items.*.tax_group_id' => ['nullable', 'integer'],
         ]);
 
         // Enforce payment method only when due_days = 0 (server-side safety)
@@ -659,41 +650,60 @@ class SalesOrderController extends Controller
             }
         }
 
-        DB::transaction(function () use ($order, $validated) {
-            // Save draft_state and mark as finalized.
-            // Adjust fields to your schema:
-            $order->currency_code = $validated['currency']; // or currency_id
-            $order->payment_term_id = $validated['payment_term_id'] ?? null;
-            $order->payment_method_id = $validated['payment_method_id'] ?? null;
-            $order->shipping = $validated['shipping'] ?? 0;
-            $order->additional = $validated['additional'] ?? 0;
-            $order->vat_rate = $validated['vat_rate'] ?? 0;
-            $order->notes = $validated['notes'] ?? null;
-
-            // Save state JSON if you use it
-            $order->draft_state = [
-                'currency' => $validated['currency'],
-                'payment_term_id' => $validated['payment_term_id'] ?? null,
-                'payment_method_id' => $validated['payment_method_id'] ?? null,
+        DB::transaction(function () use ($order, $validated, $company, $request) {
+            $taxGroupId = $validated['tax_group_id'] ? (int) $validated['tax_group_id'] : null;
+            
+            $totals = $this->calcService->calculate($company->id, [
+                'items' => $validated['items'],
+                'tax_group_id' => $taxGroupId,
+                'global_discount_percent' => $request->global_discount_percent,
+                'global_discount_amount' => $request->global_discount_amount,
                 'shipping' => $validated['shipping'] ?? 0,
                 'additional' => $validated['additional'] ?? 0,
-                'vat_rate' => $validated['vat_rate'] ?? 0,
-                'notes' => $validated['notes'] ?? '',
-                'items' => $validated['items'],
-            ];
+                'customer_id' => $order->customer_id
+            ]);
 
-            // ✅ Finalize
-            $order->status = 'confirmed'; // or 'finalized' based on your system
-            $order->confirmed_at = now(); // optional
+            $currencyId = $this->resolveCurrencyIdFromCode($validated['currency']);
+            $termSnapshot = $this->resolvePaymentTermSnapshot($validated['payment_term_id']);
+
+            // Save finalized data
+            $order->currency_id = $currencyId;
+            $order->tax_group_id = $taxGroupId;
+            $order->payment_term_id = $termSnapshot['payment_term_id'];
+            $order->payment_term_name = $termSnapshot['payment_term_name'];
+            $order->payment_due_days = $termSnapshot['payment_due_days'];
+            $order->due_date = $validated['due_date'] ?? $order->due_date;
+
+            $order->payment_method_id = $validated['payment_method_id'] ?? null;
+            $order->tax_total = $totals['tax_total'];
+            $order->subtotal = $totals['subtotal'];
+            $order->discount_total = $totals['discount_total'];
+            $order->global_discount_percent = (float) ($request->global_discount_percent ?? 0);
+            $order->global_discount_amount = (float) ($request->global_discount_amount ?? 0);
+            $order->notes = $validated['notes'] ?? null;
+
+            $order->shipping_total = $totals['shipping_total'];
+            $order->shipping_tax_total = $totals['shipping_tax_total'];
+            $order->grand_total = $totals['grand_total'];
+
+            // ✅ Finalize status
+            $status = OrderStatus::where('code', 'CONFIRMED')->first();
+            if ($status) {
+                $order->status_id = $status->id;
+            }
+            $order->confirmed_at = now();
             $order->save();
 
-            // If you also store line items in normalized tables,
-            // you should sync them here (delete & recreate, or update existing).
-            // I'm leaving this minimal because your Step 02 update already does it.
+            // Sync items to normalized table
+            $order->items()->delete();
+            foreach ($totals['items_for_db'] as $row) {
+                $order->items()->create($row);
+            }
         });
 
         return response()->json([
             'ok' => true,
+            'message' => 'Order confirmed. Invoice generated and fulfillment team notified.',
             'redirect' => company_route('sales-orders.show', ['sales_order' => $order->uuid]),
         ]);
     }
