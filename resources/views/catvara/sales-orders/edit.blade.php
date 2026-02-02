@@ -57,6 +57,8 @@
     .cart-item-selected .item-name {
       color: #4f46e5 !important;
     }
+
+    /* Removed mobile min-height to allow better natural flow */
   </style>
 
   @php
@@ -132,13 +134,24 @@
       </div>
     </div>
 
-    <div class="pos-screen-container">
-      <div
-        class="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6 lg:h-full items-stretch overflow-y-auto lg:overflow-hidden pb-20 lg:pb-0">
+    <div class="pos-screen-container flex flex-col">
+      {{-- Mobile Tab Switcher --}}
+      <div class="lg:hidden flex border-b border-slate-200 bg-white mb-2 p-1 gap-1 rounded-xl shrink-0">
+        <button type="button" onclick="switchMobileTab('products')" id="tab-products"
+          class="flex-1 py-2 text-[10px] font-black uppercase tracking-wider rounded-lg bg-brand-600 text-white transition-all shadow-sm">
+          Items
+        </button>
+        <button type="button" onclick="switchMobileTab('cart')" id="tab-cart"
+          class="flex-1 py-2 text-[10px] font-black uppercase tracking-wider rounded-lg text-slate-500 hover:bg-slate-100 transition-all">
+          Basket(<span id="mobileCartCount">0</span>)
+        </button>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6 flex-1 min-h-0 items-stretch overflow-hidden">
 
         {{-- LEFT: Product side --}}
-        <div
-          class="lg:col-span-5 flex flex-col min-h-0 bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+        <div id="productSection"
+          class="lg:col-span-5 flex flex-col min-h-0 bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden transition-all duration-300">
 
           {{-- Search & Filter Header --}}
           <div class="shrink-0 z-10 bg-white border-b border-slate-100 p-3 space-y-3">
@@ -157,15 +170,15 @@
               </button>
             </div>
 
-            <div class="flex items-center gap-3">
+            {{-- Category & Brand Filters --}}
+            <div class="flex items-center gap-2">
               <select id="categoryFilter"
-                class="flex-1 h-10 rounded-xl border border-slate-200 text-xs font-medium text-slate-600 bg-white focus:border-brand-500 focus:ring-0 hover:border-slate-300 transition-colors cursor-pointer">
+                class="flex-1 h-10 rounded-xl border border-slate-200 text-[10px] font-bold text-slate-600 bg-white focus:border-brand-500 focus:ring-0 hover:border-slate-300 transition-colors cursor-pointer uppercase tracking-tight">
                 <option value="">All Categories</option>
               </select>
-              {{-- Visible on mobile --}}
-              <select id="categoryFilterMobile"
-                class="sm:hidden flex-1 h-10 rounded-xl border border-slate-200 text-xs font-medium text-slate-600 bg-white">
-                <option value="">All Categories</option>
+              <select id="brandFilter"
+                class="flex-1 h-10 rounded-xl border border-slate-200 text-[10px] font-bold text-slate-600 bg-white focus:border-brand-500 focus:ring-0 hover:border-slate-300 transition-colors cursor-pointer uppercase tracking-tight">
+                <option value="">All Brands</option>
               </select>
             </div>
           </div>
@@ -179,7 +192,8 @@
         </div>
 
         {{-- RIGHT: Cart side --}}
-        <div class="lg:col-span-7 flex flex-col min-h-0 relative bg-slate-50 border-l border-slate-200">
+        <div id="cartSection"
+          class="lg:col-span-7 hidden lg:flex flex-col h-auto lg:h-full relative bg-slate-50 border-l border-slate-200 transition-all duration-300 overflow-y-auto lg:overflow-hidden">
 
           {{-- Customer Cards (Moved Here) --}}
           <div
@@ -220,18 +234,20 @@
           </div>
 
 
-          {{-- Cart Items List --}}
-          <div class="flex-1 min-h-0 overflow-y-auto p-3 scrollable-content bg-slate-50" id="cartItemsContainer"></div>
+          {{-- Cart Items List (Scrolls after ~6 items on mobile, scrolls fully on desktop) --}}
+          <div
+            class="lg:flex-1 lg:min-h-0 lg:overflow-y-auto p-3 bg-slate-50 min-h-[400px] max-h-[450px] lg:min-h-0 lg:max-h-none overflow-y-auto"
+            id="cartItemsContainer"></div>
 
           {{-- Footer Controls (Redesigned) --}}
           <div class="bg-white border-t border-slate-200 shadow-[0_-4px_15px_-3px_rgba(0,0,0,0.05)] shrink-0 z-20">
 
 
 
-            <div class="p-6 grid grid-cols-12 gap-8">
+            <div class="p-4 lg:p-6 grid grid-cols-12 gap-4 lg:gap-8 flex-col lg:flex-row">
               {{-- LEFT: Payment & Logistics --}}
-              <div class="col-span-12 lg:col-span-7 space-y-5">
-                <div class="grid grid-cols-2 gap-4">
+              <div class="col-span-12 lg:col-span-7 space-y-4 lg:space-y-5">
+                <div class="grid grid-cols-1 gap-4">
                   <div>
                     <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Payment
                       Term</label>
@@ -240,16 +256,8 @@
                       <option value="">Select...</option>
                     </select>
                   </div>
-                  <div>
-                    <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Payment
-                      Method</label>
-                    <select id="paymentMethodSelect" disabled
-                      class="w-full h-10 rounded-xl border-slate-200 text-xs font-bold text-slate-700 bg-slate-50 opacity-60 focus:bg-white focus:border-brand-500 transition-colors">
-                      <option value="">Select...</option>
-                    </select>
-                  </div>
                 </div>
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label
                       class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Currency</label>
@@ -276,14 +284,14 @@
                   </div>
                 </div>
                 <div class="grid grid-cols-12 gap-4">
-                  <div class="col-span-4">
+                  <div class="col-span-12 sm:col-span-4">
                     <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Due
                       Date</label>
                     <input type="text" id="paymentDueDate"
                       class="w-full h-10 rounded-xl border-slate-200 text-xs font-medium text-slate-700 bg-slate-50 focus:bg-white focus:border-brand-500 text-center"
                       placeholder="-" readonly>
                   </div>
-                  <div class="col-span-8">
+                  <div class="col-span-12 sm:col-span-8">
                     <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Additional
                       Notes</label>
                     <input type="text" id="commentsInput"
@@ -295,214 +303,238 @@
 
               {{-- RIGHT: Order Breakdown --}}
               <div
-                class="col-span-12 lg:col-span-5 flex flex-col justify-between h-full bg-slate-50/50 rounded-2xl p-4 border border-slate-100">
-                <div class="space-y-3 text-sm">
-                  <div class="flex justify-between items-center">
-                    <span class="text-slate-500 font-medium">Subtotal</span>
-                    <span class="text-slate-800 font-bold" id="cartSubtotal">0.00</span>
+                class="col-span-12 lg:col-span-5 flex flex-col justify-between bg-slate-50/50 rounded-2xl p-4 border border-slate-100">
+                <div class="space-y-4 text-sm">
+                  <div class="flex justify-between items-center border-b border-slate-200/50 pb-2.5">
+                    <span class="text-slate-500 font-bold text-[10px] uppercase tracking-wider">Subtotal</span>
+                    <span class="text-slate-800 font-black text-sm font-mono" id="cartSubtotal">0.00</span>
                   </div>
-                  <div class="flex justify-between items-center text-slate-500">
-                    <span class="font-medium text-xs">Item Tax</span>
-                    <span class="font-mono text-xs" id="cartItemTaxDisplay">0.00</span>
+                  <div class="flex justify-between items-center border-b border-slate-200/50 pb-2.5">
+                    <span class="text-slate-500 font-bold text-[10px] uppercase tracking-wider">Item Tax</span>
+                    <span class="text-slate-700 font-bold text-xs font-mono" id="cartItemTaxDisplay">0.00</span>
                   </div>
-                  <div class="flex justify-between items-center text-slate-500">
-                    <span class="font-medium">Shipping Cost</span>
-                    <div class="w-24">
-                      <input type="number" id="shippingInput"
-                        class="w-full h-6 text-right text-xs bg-transparent border-b border-dashed border-slate-300 focus:border-brand-500 focus:ring-0 p-0"
-                        value="0">
+                  <div class="flex justify-between items-center border-b border-slate-200/50 pb-2.5">
+                    <span class="text-slate-500 font-bold text-[10px] uppercase tracking-wider">Shipping</span>
+                    <div class="flex items-center gap-2">
+                      <div class="w-24">
+                        <input type="number" id="shippingInput"
+                          class="w-full h-8 text-right text-xs font-black bg-white border border-slate-200 rounded-lg focus:border-brand-500 focus:ring-2 focus:ring-brand-500/10 px-2 transition-all"
+                          value="0">
+                      </div>
+                      <span class="text-[10px] text-slate-400 font-mono font-bold"
+                        id="cartShippingTaxDisplay">0.00</span>
                     </div>
                   </div>
-                  <div class="flex justify-between items-center text-slate-500">
-                    <span class="font-medium text-xs">Shipping VAT</span>
-                    <span class="font-mono text-xs" id="cartShippingTaxDisplay">0.00</span>
-                  </div>
-                  <div class="flex justify-between items-center text-slate-500">
-                    <span class="font-medium">Global Discount</span>
-                    <div class="flex flex-col items-end gap-1">
-                      <div class="flex items-center gap-1 w-20">
-                        <span class="text-xs text-slate-400 font-bold">%</span>
+                  <div class="flex justify-between items-center border-b border-slate-200/50 pb-2.5">
+                    <span class="text-slate-500 font-bold text-[10px] uppercase tracking-wider">Discount</span>
+                    <div class="flex items-center gap-3">
+                      <div class="flex items-center gap-1 w-24">
+                        <span class="text-[10px] text-slate-400 font-black">%</span>
                         <input type="number" id="globalDiscountPercentInput"
-                          class="w-full h-6 text-right text-xs font-black bg-white/50 px-1 rounded border-slate-200 focus:border-brand-500 focus:ring-0"
+                          class="w-full h-8 text-right text-xs font-black bg-white border border-slate-200 rounded-lg focus:border-brand-500 focus:ring-2 focus:ring-brand-500/10 px-2 transition-all"
                           placeholder="0">
                       </div>
-                      <span class="text-[10px] text-brand-600 font-black" id="globalDiscountAmountDisplay">- 0.00</span>
+                      <span class="text-xs text-brand-600 font-black font-mono self-center"
+                        id="globalDiscountAmountDisplay">- 0.00</span>
                     </div>
                   </div>
-                  <div class="flex justify-between items-center">
-                    <span class="text-slate-500 font-medium">Total Tax</span>
-                    <span class="text-slate-700 font-bold" id="cartTaxAmount">0.00</span>
+                  <div class="flex justify-between items-center border-b border-slate-200/50 pb-2.5">
+                    <span class="text-slate-500 font-bold text-[10px] uppercase tracking-wider">Total VAT</span>
+                    <span class="text-slate-700 font-black text-xs font-mono" id="cartTaxAmount">0.00</span>
                   </div>
-                  <div class="pt-3 mt-1 border-t border-slate-200 flex justify-between items-center">
-                    <span class="text-base font-black text-slate-800">Grand Total</span>
-                    <span class="text-xl font-black text-brand-600" id="cartGrandTotal">0.00</span>
+
+                  <div
+                    class="pt-3 mt-2 px-3 py-2.5 bg-brand-50/50 rounded-xl border border-brand-100/50 flex justify-between items-center">
+                    <span class="text-xs font-black text-brand-900 uppercase tracking-widest">Grand Total</span>
+                    <div class="text-right">
+                      <span class="block text-2xl font-black text-brand-600 leading-none font-mono"
+                        id="cartGrandTotal">0.00</span>
+                      <span
+                        class="text-[10px] text-brand-400 font-black uppercase tracking-tighter">{{ $order->currency->code ?? 'AED' }}</span>
+                    </div>
                   </div>
                 </div>
 
-                <div class="pt-4 grid grid-cols-2 gap-3 mt-2">
+                {{-- Desktop Buttons --}}
+                <div class="pt-4 hidden lg:grid grid-cols-2 gap-3 mt-2">
                   <button type="button" onclick="saveOrder('draft')"
                     class="h-11 rounded-xl border border-slate-200 text-slate-500 font-bold text-xs uppercase hover:bg-white hover:text-slate-700 transition-colors">
                     Save Draft
                   </button>
-                  <button type="button" id="nextStepBtn"
-                    class="h-11 rounded-xl bg-brand-600 text-white font-bold text-xs uppercase tracking-widest hover:bg-brand-700 shadow-lg shadow-brand-200/50 transition-all flex items-center justify-center gap-2">
-                    Finalize <i class="fas fa-arrow-right"></i>
+                  <button type="button" onclick="saveOrder('generate')"
+                    class="next-step-btn h-11 rounded-xl bg-brand-600 text-white font-bold text-xs uppercase tracking-widest hover:bg-brand-700 shadow-lg shadow-brand-200/50 transition-all flex items-center justify-center gap-2">
+                    Generate Order <i class="fas fa-check-circle"></i>
                   </button>
                 </div>
               </div>
+
             </div>
           </div>
-        </div>
 
+          {{-- BOTTOM: Action Buttons (Persistent on Mobile) --}}
+          <div class="col-span-12 lg:hidden pt-2 grid grid-cols-2 gap-3 border-t border-slate-100 mt-2">
+            <button type="button" onclick="saveOrder('draft')"
+              class="h-11 rounded-xl border border-slate-200 text-slate-500 font-bold text-xs uppercase hover:bg-white hover:text-slate-700 transition-colors">
+              Save Draft
+            </button>
+            <button type="button" onclick="saveOrder('generate')"
+              class="next-step-btn h-11 rounded-xl bg-brand-600 text-white font-bold text-xs uppercase tracking-widest hover:bg-brand-700 shadow-lg shadow-brand-200/50 transition-all flex items-center justify-center gap-2">
+              Generate Order <i class="fas fa-check-circle"></i>
+            </button>
+          </div>
+
+        </div>
       </div>
     </div>
 
-    {{-- Variant Selection Modal --}}
-    <div id="variantModal" class="fixed inset-0 z-50 hidden" aria-labelledby="modal-title" role="dialog"
-      aria-modal="true">
-      <div class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity opacity-0"
-        id="variantModalBackdrop"></div>
+  </div>
+  </div>
 
-      <div class="fixed inset-0 z-10 w-screen overflow-y-auto">
-        <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
-          <div
-            class="relative transform overflow-hidden rounded-xl bg-white text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-lg opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-            id="variantModalPanel">
+  {{-- Variant Selection Modal --}}
+  <div id="variantModal" class="fixed inset-0 z-50 hidden" aria-labelledby="modal-title" role="dialog"
+    aria-modal="true">
+    <div class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity opacity-0" id="variantModalBackdrop">
+    </div>
 
-            <div class="bg-white px-4 pb-4 pt-5 sm:p-6 pb-0">
-              <div class="flex items-start gap-4">
-                <div
-                  class="flex-shrink-0 w-16 h-16 bg-slate-100 rounded-lg flex items-center justify-center overflow-hidden border border-slate-200">
-                  <img id="modalImg" src="" class="w-full h-full object-cover hidden" alt="">
-                  <i id="modalIcon" class="fas fa-box text-slate-300 text-2xl"></i>
-                </div>
-                <div class="flex-1 min-w-0">
-                  <h3 class="text-base font-bold text-slate-900 leading-6" id="modalProductName">Product Name</h3>
-                  <p class="text-xs text-slate-500 mt-1" id="modalProductCategory">Category</p>
-                </div>
-                <button type="button" class="text-slate-400 hover:text-slate-500" onclick="closeVariantModal()">
-                  <i class="fas fa-times"></i>
-                </button>
+    <div class="fixed inset-0 z-10 w-screen overflow-y-auto">
+      <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+        <div
+          class="relative transform overflow-hidden rounded-xl bg-white text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-lg opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+          id="variantModalPanel">
+
+          <div class="bg-white px-4 pb-4 pt-5 sm:p-6 pb-0">
+            <div class="flex items-start gap-4">
+              <div
+                class="flex-shrink-0 w-16 h-16 bg-slate-100 rounded-lg flex items-center justify-center overflow-hidden border border-slate-200">
+                <img id="modalImg" src="" class="w-full h-full object-cover hidden" alt="">
+                <i id="modalIcon" class="fas fa-box text-slate-300 text-2xl"></i>
               </div>
-
-              <div class="mt-6">
-                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wide mb-3">Select Variant</label>
-                <div class="space-y-2 max-h-[300px] overflow-y-auto pr-2" id="modalVariantsList"></div>
+              <div class="flex-1 min-w-0">
+                <h3 class="text-base font-bold text-slate-900 leading-6" id="modalProductName">Product Name</h3>
+                <p class="text-xs text-slate-500 mt-1" id="modalProductCategory">Category</p>
               </div>
-            </div>
-
-            <div class="bg-slate-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6 border-t border-slate-100 mt-6">
-              <button type="button" disabled id="modalAddBtn"
-                class="inline-flex w-full justify-center rounded-lg bg-brand-600 px-3 py-2 text-sm font-bold text-white shadow-sm hover:bg-brand-500 sm:ml-3 sm:w-auto disabled:opacity-50 disabled:grayscale transition-all">
-                Add to Cart
+              <button type="button" class="text-slate-400 hover:text-slate-500" onclick="closeVariantModal()">
+                <i class="fas fa-times"></i>
               </button>
-              <button type="button"
-                class="mt-3 inline-flex w-full justify-center rounded-lg bg-white px-3 py-2 text-sm font-bold text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 hover:bg-slate-50 sm:mt-0 sm:w-auto transition-all"
-                onclick="closeVariantModal()">Cancel</button>
             </div>
+
+            <div class="mt-6">
+              <label class="block text-xs font-bold text-slate-700 uppercase tracking-wide mb-3">Select Variant</label>
+              <div class="space-y-2 max-h-[300px] overflow-y-auto pr-2" id="modalVariantsList"></div>
+            </div>
+          </div>
+
+          <div class="bg-slate-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6 border-t border-slate-100 mt-6">
+            <button type="button" disabled id="modalAddBtn"
+              class="inline-flex w-full justify-center rounded-lg bg-brand-600 px-3 py-2 text-sm font-bold text-white shadow-sm hover:bg-brand-500 sm:ml-3 sm:w-auto disabled:opacity-50 disabled:grayscale transition-all">
+              Add to Cart
+            </button>
+            <button type="button"
+              class="mt-3 inline-flex w-full justify-center rounded-lg bg-white px-3 py-2 text-sm font-bold text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 hover:bg-slate-50 sm:mt-0 sm:w-auto transition-all"
+              onclick="closeVariantModal()">Cancel</button>
           </div>
         </div>
       </div>
     </div>
+  </div>
 
-    {{-- Custom Item Modal --}}
-    <div id="customItemModal" class="fixed inset-0 z-50 hidden" aria-modal="true">
-      <div class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm opacity-0 transition-opacity" id="customBackdrop">
-      </div>
+  {{-- Custom Item Modal --}}
+  <div id="customItemModal" class="fixed inset-0 z-50 hidden" aria-modal="true">
+    <div class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm opacity-0 transition-opacity" id="customBackdrop">
+    </div>
 
-      <div class="fixed inset-0 z-10 w-screen overflow-y-auto">
-        <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
-          <div
-            class="relative transform overflow-hidden rounded-xl bg-white text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-lg opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-            id="customPanel">
+    <div class="fixed inset-0 z-10 w-screen overflow-y-auto">
+      <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+        <div
+          class="relative transform overflow-hidden rounded-xl bg-white text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-lg opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+          id="customPanel">
 
-            <div class="bg-white px-4 pt-5 sm:p-6">
-              <div class="flex items-start justify-between gap-3">
-                <div>
-                  <h3 class="text-base font-black text-slate-900">Add Custom Item</h3>
-                  <p class="text-xs text-slate-500 mt-1">Use when item is not in catalog.</p>
-                </div>
-                <button type="button" class="text-slate-400 hover:text-slate-500" onclick="closeCustomItemModal()">
-                  <i class="fas fa-times"></i>
-                </button>
+          <div class="bg-white px-4 pt-5 sm:p-6">
+            <div class="flex items-start justify-between gap-3">
+              <div>
+                <h3 class="text-base font-black text-slate-900">Add Custom Item</h3>
+                <p class="text-xs text-slate-500 mt-1">Use when item is not in catalog.</p>
+              </div>
+              <button type="button" class="text-slate-400 hover:text-slate-500" onclick="closeCustomItemModal()">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+
+            <div class="mt-4 grid grid-cols-1 gap-3">
+              <div>
+                <label class="text-[10px] font-black text-slate-600 uppercase">Item Name <span
+                    class="text-red-500">*</span></label>
+                <input id="customName" type="text"
+                  class="mt-1 w-full h-10 rounded-xl border border-slate-200 px-3 text-sm font-bold focus:border-brand-400 focus:ring-0"
+                  placeholder="e.g. Extra service / Special part">
               </div>
 
-              <div class="mt-4 grid grid-cols-1 gap-3">
+              <div class="grid grid-cols-2 gap-3">
                 <div>
-                  <label class="text-[10px] font-black text-slate-600 uppercase">Item Name <span
-                      class="text-red-500">*</span></label>
-                  <input id="customName" type="text"
+                  <label class="text-[10px] font-black text-slate-600 uppercase">SKU (optional)</label>
+                  <input id="customSku" type="text"
                     class="mt-1 w-full h-10 rounded-xl border border-slate-200 px-3 text-sm font-bold focus:border-brand-400 focus:ring-0"
-                    placeholder="e.g. Extra service / Special part">
+                    placeholder="e.g. CUST-001">
                 </div>
-
-                <div class="grid grid-cols-2 gap-3">
-                  <div>
-                    <label class="text-[10px] font-black text-slate-600 uppercase">SKU (optional)</label>
-                    <input id="customSku" type="text"
-                      class="mt-1 w-full h-10 rounded-xl border border-slate-200 px-3 text-sm font-bold focus:border-brand-400 focus:ring-0"
-                      placeholder="e.g. CUST-001">
-                  </div>
-                  <div>
-                    <label class="text-[10px] font-black text-slate-600 uppercase">Qty <span
-                        class="text-red-500">*</span></label>
-                    <input id="customQty" type="number" min="1" value="1"
-                      class="mt-1 w-full h-10 rounded-xl border border-slate-200 px-3 text-sm font-bold focus:border-brand-400 focus:ring-0 text-center">
-                  </div>
+                <div>
+                  <label class="text-[10px] font-black text-slate-600 uppercase">Qty <span
+                      class="text-red-500">*</span></label>
+                  <input id="customQty" type="number" min="1" value="1"
+                    class="mt-1 w-full h-10 rounded-xl border border-slate-200 px-3 text-sm font-bold focus:border-brand-400 focus:ring-0 text-center">
                 </div>
+              </div>
 
-                <div class="grid grid-cols-2 gap-3">
-                  <div>
-                    <label class="text-[10px] font-black text-slate-600 uppercase">Unit Price <span
-                        class="text-red-500">*</span></label>
-                    <input id="customPrice" type="number" min="0" step="0.01"
-                      class="mt-1 w-full h-10 rounded-xl border border-slate-200 px-3 text-sm font-bold focus:border-brand-400 focus:ring-0 text-center"
-                      placeholder="0.00">
-                  </div>
-                  <div>
-                    <label class="text-[10px] font-black text-slate-600 uppercase">Discount %</label>
-                    <input id="customDisc" type="number" min="0" max="100" step="0.1"
-                      value="0"
-                      class="mt-1 w-full h-10 rounded-xl border border-slate-200 px-3 text-sm font-bold focus:border-brand-400 focus:ring-0 text-center">
-                  </div>
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="text-[10px] font-black text-slate-600 uppercase">Unit Price <span
+                      class="text-red-500">*</span></label>
+                  <input id="customPrice" type="number" min="0" step="0.01"
+                    class="mt-1 w-full h-10 rounded-xl border border-slate-200 px-3 text-sm font-bold focus:border-brand-400 focus:ring-0 text-center"
+                    placeholder="0.00">
+                </div>
+                <div>
+                  <label class="text-[10px] font-black text-slate-600 uppercase">Discount %</label>
+                  <input id="customDisc" type="number" min="0" max="100" step="0.1" value="0"
+                    class="mt-1 w-full h-10 rounded-xl border border-slate-200 px-3 text-sm font-bold focus:border-brand-400 focus:ring-0 text-center">
                 </div>
               </div>
             </div>
-
-            <div class="bg-slate-50 px-4 py-3 border-t border-slate-100 sm:px-6 flex gap-2 justify-end">
-              <button type="button" onclick="closeCustomItemModal()"
-                class="h-10 px-4 rounded-xl bg-white border border-slate-200 text-slate-700 text-sm font-black hover:bg-slate-50 transition">
-                Cancel
-              </button>
-              <button type="button" onclick="addCustomItemToCart()"
-                class="h-10 px-4 rounded-xl bg-brand-600 text-white text-sm font-black hover:bg-brand-700 transition flex items-center gap-2">
-                <i class="fas fa-plus"></i> Add
-              </button>
-            </div>
-
           </div>
+
+          <div class="bg-slate-50 px-4 py-3 border-t border-slate-100 sm:px-6 flex gap-2 justify-end">
+            <button type="button" onclick="closeCustomItemModal()"
+              class="h-10 px-4 rounded-xl bg-white border border-slate-200 text-slate-700 text-sm font-black hover:bg-slate-50 transition">
+              Cancel
+            </button>
+            <button type="button" onclick="addCustomItemToCart()"
+              class="h-10 px-4 rounded-xl bg-brand-600 text-white text-sm font-black hover:bg-brand-700 transition flex items-center gap-2">
+              <i class="fas fa-plus"></i> Add
+            </button>
+          </div>
+
         </div>
       </div>
     </div>
+  </div>
 
-    {{-- Hidden Inputs --}}
-    <input type="hidden" id="orderUuid" value="{{ $order->uuid }}">
-    <input type="hidden" id="orderCurrency" value="{{ $order->currency->code ?? 'AED' }}">
-    <input type="hidden" id="additionalInput" value="{{ $initialState['additional'] ?? 0 }}">
+  {{-- Hidden Inputs --}}
+  <input type="hidden" id="orderUuid" value="{{ $order->uuid }}">
+  <input type="hidden" id="orderCurrency" value="{{ $order->currency->code ?? 'AED' }}">
+  <input type="hidden" id="additionalInput" value="{{ $initialState['additional'] ?? 0 }}">
 
-    <input type="hidden" id="billToUuid" value="{{ $order->customer->uuid }}">
-    <input type="hidden" id="shipToUuid" value="{{ $order->shippingCustomer->uuid ?? $order->customer->uuid }}">
+  <input type="hidden" id="billToUuid" value="{{ $order->customer->uuid }}">
+  <input type="hidden" id="shipToUuid" value="{{ $order->shippingCustomer->uuid ?? $order->customer->uuid }}">
 
-    {{-- Global Sidebar --}}
-    <div id="sideDrawer" class="fixed inset-0 z-[100] hidden" aria-modal="true">
-      <div class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm opacity-0 transition-opacity duration-300"
-        id="drawerBackdrop" onclick="hideSidebar()"></div>
-      <div
-        class="fixed inset-y-0 right-0 z-10 w-full max-w-md bg-white shadow-2xl translate-x-full transition-transform duration-300 ease-in-out"
-        id="drawerPanel">
-        <div id="drawerContent" class="h-full flex flex-col"></div>
-      </div>
+  {{-- Global Sidebar --}}
+  <div id="sideDrawer" class="fixed inset-0 z-[100] hidden" aria-modal="true">
+    <div class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm opacity-0 transition-opacity duration-300"
+      id="drawerBackdrop" onclick="hideSidebar()"></div>
+    <div
+      class="fixed inset-y-0 right-0 z-10 w-full max-w-md bg-white shadow-2xl translate-x-full transition-transform duration-300 ease-in-out"
+      id="drawerPanel">
+      <div id="drawerContent" class="h-full flex flex-col"></div>
     </div>
+  </div>
   </div>
 @endsection
 
@@ -512,6 +544,7 @@
     const paymentTermsUrl = "{{ company_route('load-payment-terms') }}";
     const paymentMethodsUrl = "{{ company_route('load-payment-methods') }}";
     const orderUpdateUrl = "{{ company_route('sales-orders.update', ['sales_order' => $order->uuid]) }}";
+    const orderFinalizeUrl = "{{ company_route('sales-orders.finalize.store', ['sales_order' => $order->uuid]) }}";
 
     const initialState = @json($initialState ?? null);
     const currentOrder = @json($order);
@@ -566,18 +599,13 @@
     $(document).ready(function() {
       loadProducts();
       loadPaymentTerms();
-      loadPaymentMethods();
 
       $('#productSearch').on('input', function() {
-        renderProducts(this.value, $('#categoryFilter').val() || $('#categoryFilterMobile').val());
+        renderProducts(this.value, $('#categoryFilter').val(), $('#brandFilter').val());
       });
 
-      $('#categoryFilter').on('change', function() {
-        renderProducts($('#productSearch').val(), this.value);
-      });
-
-      $('#categoryFilterMobile').on('change', function() {
-        renderProducts($('#productSearch').val(), this.value);
+      $('#categoryFilter, #brandFilter').on('change', function() {
+        renderProducts($('#productSearch').val(), $('#categoryFilter').val(), $('#brandFilter').val());
       });
 
       $('#shippingInput, #additionalInput, #globalDiscountPercentInput').on('input', renderCart);
@@ -621,18 +649,8 @@
 
           const formatted = dueDate.toISOString().split('T')[0];
           $('#paymentDueDate').val(formatted);
-
-          if (dueDays === 0) {
-            $('#paymentMethodSelect').prop('disabled', false).removeClass('opacity-60').addClass('bg-white')
-              .removeClass('bg-slate-50');
-          } else {
-            $('#paymentMethodSelect').prop('disabled', true).addClass('opacity-60').addClass('bg-slate-50')
-              .removeClass('bg-white').val('');
-          }
         } else {
           $('#paymentDueDate').val('-');
-          $('#paymentMethodSelect').prop('disabled', true).addClass('opacity-60').addClass('bg-slate-50')
-            .removeClass('bg-white').val('');
         }
       });
 
@@ -680,7 +698,7 @@
         method: 'GET',
         success: function(response) {
           allProducts = response || [];
-          populateCategories();
+          populateCategoriesAndBrands();
           renderProducts();
           hydrateCart();
         },
@@ -691,22 +709,43 @@
       });
     }
 
-    function populateCategories() {
-      const categories = [...new Set(allProducts.map(p => p.category).filter(Boolean))].sort();
+    function getProductBrandName(p) {
+      if (!p.brand) return null;
+      if (typeof p.brand === 'object') return p.brand.name || p.brand.title || null;
+      if (typeof p.brand === 'string' && p.brand.trim().startsWith('{')) {
+        try {
+          const parsed = JSON.parse(p.brand);
+          return parsed.name || parsed.title || p.brand;
+        } catch (e) {
+          return p.brand;
+        }
+      }
+      return p.brand;
+    }
 
-      const selectDesktop = $('#categoryFilter');
-      selectDesktop.empty().append(new Option('All Categories', ''));
-      categories.forEach(cat => selectDesktop.append(new Option(cat, cat)));
+    function populateCategoriesAndBrands() {
+      // Categories
+      const categories = [...new Set(allProducts.map(p => {
+        if (!p.category) return null;
+        if (typeof p.category === 'object') return p.category.name || p.category.title || null;
+        return p.category;
+      }).filter(Boolean))].sort();
+      const catSelect = $('#categoryFilter');
+      catSelect.empty().append(new Option('All Categories', ''));
+      categories.forEach(cat => catSelect.append(new Option(cat, cat)));
 
-      const selectMobile = $('#categoryFilterMobile');
-      selectMobile.empty().append(new Option('All Categories', ''));
-      categories.forEach(cat => selectMobile.append(new Option(cat, cat)));
+      // Brands
+      const brands = [...new Set(allProducts.map(p => getProductBrandName(p)).filter(Boolean))].sort();
+      const brandSelect = $('#brandFilter');
+      brandSelect.empty().append(new Option('All Brands', ''));
+      brands.forEach(b => brandSelect.append(new Option(b, b)));
     }
 
     // SKU search helper (safe if sku not present)
     function productMatchesSearch(p, lower, raw) {
       if ((p.name || '').toLowerCase().includes(lower)) return true;
-      if ((p.brand || '').toLowerCase().includes(lower)) return true;
+      const bName = getProductBrandName(p);
+      if ((bName || '').toLowerCase().includes(lower)) return true;
       if ((p.sku || '').toLowerCase().includes(lower)) return true;
 
       // variant sku scan (if API provides)
@@ -722,7 +761,7 @@
       return false;
     }
 
-    function renderProducts(search = '', category = '') {
+    function renderProducts(search = '', category = '', brand = '') {
       const container = $('#productGrid');
       container.empty();
 
@@ -735,6 +774,10 @@
 
       if (category) {
         filtered = filtered.filter(p => p.category === category);
+      }
+
+      if (brand) {
+        filtered = filtered.filter(p => getProductBrandName(p) === brand);
       }
 
       if (!filtered.length) {
@@ -766,7 +809,7 @@
                   ${p.name || ''}
                 </h4>
                 <div class="mt-1 flex items-center justify-between">
-                  <span class="text-[10px] font-black text-slate-900 font-mono">${price}</span>
+                  <span class="text-xs font-black text-slate-900 font-mono">${price}</span>
                   <span class="w-7 h-7 rounded-lg bg-slate-50 text-slate-400 flex items-center justify-center group-hover:bg-brand-600 group-hover:text-white transition">
                     <i class="fas fa-plus text-[10px]"></i>
                   </span>
@@ -1089,7 +1132,7 @@
                   <p class="text-[9px] text-slate-400 truncate font-bold">${attrStr}</p>
                 </div>
                 <div class="text-right">
-                  <span class="text-[11px] font-black text-slate-900">${lineNet.toFixed(2)}</span>
+                  <span class="text-xs font-black text-slate-900">${lineNet.toFixed(2)}</span>
                 </div>
               </div>
 
@@ -1143,9 +1186,27 @@
       $('#cartGrandTotal').text(grandTotal.toFixed(2));
 
       $('#itemCountLabel').text(cart.length + ' Lines • ' + countQty + ' Qty');
-      $('#nextStepBtn').prop('disabled', cart.length === 0).toggleClass('opacity-60 cursor-not-allowed', cart.length ===
+      $('#mobileCartCount').text(cart.length);
+      $('.next-step-btn').prop('disabled', cart.length === 0).toggleClass('opacity-60 cursor-not-allowed', cart
+        .length ===
         0);
     }
+
+    window.switchMobileTab = function(tab) {
+      if (tab === 'products') {
+        $('#productSection').removeClass('hidden').addClass('flex');
+        $('#cartSection').removeClass('flex').addClass('hidden');
+        $('#tab-products').addClass('bg-brand-600 text-white shadow-sm').removeClass(
+          'text-slate-500 hover:bg-slate-100');
+        $('#tab-cart').removeClass('bg-brand-600 text-white shadow-sm').addClass('text-slate-500 hover:bg-slate-100');
+      } else {
+        $('#productSection').removeClass('flex').addClass('hidden');
+        $('#cartSection').removeClass('hidden').addClass('flex');
+        $('#tab-cart').addClass('bg-brand-600 text-white shadow-sm').removeClass('text-slate-500 hover:bg-slate-100');
+        $('#tab-products').removeClass('bg-brand-600 text-white shadow-sm').addClass(
+          'text-slate-500 hover:bg-slate-100');
+      }
+    };
 
     $(document).on('input', '#shippingInput, #globalDiscountPercentInput', renderCart);
     $(document).on('change', '#taxGroupSelect', renderCart);
@@ -1345,27 +1406,54 @@
           }
         },
         error: function(xhr) {
-          console.error(xhr);
-          Swal.fire('Error', 'Failed to update customer.', 'error');
+          const msg = xhr.responseJSON?.message || 'Failed to process order.';
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: msg,
+            confirmButtonColor: '#ef4444'
+          });
         }
       });
     }
 
     function saveOrder(action) {
-      const btn = $('#nextStepBtn');
+      const btn = $('.next-step-btn');
       const originalHtml = btn.html();
 
-      if (action === 'next_step') {
-        btn.prop('disabled', true).html('<i class="fas fa-circle-notch fa-spin"></i> Processing...');
+      // Basic POS Validations
+      if (action === 'generate') {
+        if (cart.length === 0) {
+          Swal.fire({
+            icon: 'warning',
+            title: 'Empty Cart',
+            text: 'You must add at least one item before generating an order.',
+            confirmButtonColor: '#ef4444'
+          });
+          return;
+        }
+
+        const termId = $('#paymentTermSelect').val();
+        if (!termId) {
+          Swal.fire({
+            icon: 'warning',
+            title: 'Payment Terms Required',
+            text: 'Please select a payment term before proceeding.',
+            confirmButtonColor: '#ef4444'
+          });
+          return;
+        }
+      }
+
+      if (action === 'generate') {
+        btn.prop('disabled', true).html('<i class="fas fa-circle-notch fa-spin"></i> Finalizing...');
       }
 
       const payload = {
-        _method: 'PUT',
         _token: $('meta[name="csrf-token"]').attr('content'),
         currency: $('#currencySelect').val(),
         tax_group_id: $('#taxGroupSelect').val(),
         payment_term_id: $('#paymentTermSelect').val(),
-        payment_method_id: $('#paymentMethodSelect').val(),
         due_date: $('#paymentDueDate').val(),
         shipping: $('#shippingInput').val(),
         global_discount_percent: $('#globalDiscountPercentInput').val() || 0,
@@ -1384,19 +1472,30 @@
         }))
       };
 
+      const isGenerate = action === 'generate';
+      const targetUrl = isGenerate ? orderFinalizeUrl : orderUpdateUrl;
+
+      if (!isGenerate) {
+        payload._method = 'PUT';
+      }
+
       $.ajax({
-        url: orderUpdateUrl,
+        url: targetUrl,
         method: 'POST',
         data: payload,
-        success: function() {
-          if (action === 'next_step') {
-            window.location.href = "{{ company_route('sales-orders.finalize', ['sales_order' => $order->uuid]) }}";
+        success: function(resp) {
+          if (isGenerate) {
+            if (resp.redirect) {
+              window.location.href = resp.redirect;
+            } else if (resp.ok) {
+              window.location.href = "{{ company_route('sales-orders.show', ['sales_order' => $order->uuid]) }}";
+            }
           } else {
             Swal.fire({
               icon: 'success',
               title: 'Draft Saved',
               toast: true,
-              position: 'top-end',
+              position: 'bottom-end',
               timer: 2000,
               showConfirmButton: false
             });

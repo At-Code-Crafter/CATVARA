@@ -9,13 +9,17 @@ use App\Http\Requests\Sales\UpdateSalesOrderPaymentStatusRequest;
 use App\Http\Requests\Sales\UpdateSalesOrderRequest;
 use App\Models\Accounting\PaymentStatus;
 use App\Models\Accounting\PaymentTerm;
-use App\Models\Catalog\ProductVariant;
 use App\Models\Company\Company;
 use App\Models\Customer\Customer;
+use App\Models\Inventory\InventoryLocation;
 use App\Models\Pricing\Currency;
+use App\Models\Sales\DeliveryNote;
+use App\Models\Sales\DeliveryNoteItem;
 use App\Models\Sales\Order;
 use App\Models\Sales\OrderStatus;
+use Illuminate\Support\Facades\Auth;
 use App\Services\Sales\OrderCalculationService;
+use App\Services\Inventory\InventoryPostingService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -25,8 +29,10 @@ use Yajra\DataTables\Facades\DataTables;
 class SalesOrderController extends Controller
 {
     public function __construct(
-        protected OrderCalculationService $calcService
+        protected OrderCalculationService $calcService,
+        protected InventoryPostingService $inventoryService
     ) {}
+
     public function index()
     {
         $this->authorize('view', 'orders');
@@ -380,10 +386,10 @@ class SalesOrderController extends Controller
         $enabledCurrencies = collect([$baseCurrency])->merge($exchangeRates->pluck('targetCurrency'))->filter()->unique('id');
 
         return view('catvara.sales-orders.edit', compact(
-            'billToCustomer', 
-            'shipToCustomer', 
-            'order', 
-            'initialState', 
+            'billToCustomer',
+            'shipToCustomer',
+            'order',
+            'initialState',
             'customerDiscount',
             'taxGroups',
             'enabledCurrencies'
@@ -397,7 +403,6 @@ class SalesOrderController extends Controller
         $order = Order::where('company_id', $company->id)
             ->where('uuid', $uuid)
             ->firstOrFail();
-
 
         DB::beginTransaction();
         try {
@@ -414,7 +419,7 @@ class SalesOrderController extends Controller
                 'global_discount_amount' => $request->global_discount_amount,
                 'shipping' => $request->shipping,
                 'additional' => $request->additional,
-                'customer_id' => $order->customer_id
+                'customer_id' => $order->customer_id,
             ]);
 
             // Update order header
@@ -455,12 +460,13 @@ class SalesOrderController extends Controller
                     $order->update(['status_id' => $status->id, 'confirmed_at' => now()]);
                 }
                 DB::commit();
+
                 return response()->json([
                     'success' => true,
                     'redirect_url' => company_route('sales-orders.show', ['sales_order' => $order->uuid]),
                 ]);
             }
-            
+
             DB::commit();
 
             return response()->json([
@@ -488,7 +494,7 @@ class SalesOrderController extends Controller
     public function show(Company $company, $id)
     {
         $order = Order::where('company_id', $company->id)
-            ->where('id', $id)
+            ->where('uuid', $id)
             ->with([
                 'items.productVariant.product',
                 'customer',
@@ -499,10 +505,45 @@ class SalesOrderController extends Controller
                 'status',
                 'creator',
                 'paymentTerm',
+                'deliveryNotes.items.orderItem',
             ])
             ->firstOrFail();
 
-        return view('catvara.sales-orders.show', compact('order'));
+        $locations = InventoryLocation::where('company_id', $company->id)
+            ->where('is_active', true)
+            ->with(['locatable'])
+            ->get()
+            ->map(function ($loc) {
+                return [
+                    'id' => $loc->id,
+                    'name' => $loc->locatable->name ?? ucfirst($loc->type),
+                ];
+            });
+
+        // Fulfillment Summary Stats
+        $totalItems = $order->items->count();
+        $totalQuantityOrdered = $order->items->sum('quantity');
+        $totalQuantityFulfilled = $order->items->sum('fulfilled_quantity');
+        
+        $fulfillmentPercentage = $totalQuantityOrdered > 0 
+            ? round(($totalQuantityFulfilled / $totalQuantityOrdered) * 100, 1) 
+            : 0;
+
+        $fullyFulfilledCount = $order->items->filter(fn($i) => $i->fulfilled_quantity >= $i->quantity)->count();
+        $partialFulfilledCount = $order->items->filter(fn($i) => $i->fulfilled_quantity > 0 && $i->fulfilled_quantity < $i->quantity)->count();
+        $notFulfilledCount = $order->items->filter(fn($i) => $i->fulfilled_quantity <= 0)->count();
+
+        $stats = [
+            'total_items' => $totalItems,
+            'fully' => $fullyFulfilledCount,
+            'partial' => $partialFulfilledCount,
+            'none' => $notFulfilledCount,
+            'percentage' => $fulfillmentPercentage,
+            'total_ordered' => (float)$totalQuantityOrdered,
+            'total_fulfilled' => (float)$totalQuantityFulfilled,
+        ];
+
+        return view('catvara.sales-orders.show', compact('order', 'locations', 'stats'));
     }
 
     public function updatePaymentStatus(UpdateSalesOrderPaymentStatusRequest $request, Company $company, $id)
@@ -523,6 +564,24 @@ class SalesOrderController extends Controller
             'payment_status_code' => $status->code,
             'payment_status_name' => $status->name,
         ]);
+    }
+
+    public function printOrder(Company $company, $uuid)
+    {
+        $order = Order::where('company_id', $company->id)
+            ->where('uuid', $uuid)
+            ->with([
+                'items.productVariant.product',
+                'customer',
+                'billingAddress',
+                'shippingAddress',
+                'company',
+                'currency',
+                'paymentTerm',
+            ])
+            ->firstOrFail();
+
+        return view('catvara.sales-orders.print', compact('order'));
     }
 
     /* ===================== HELPERS ===================== */
@@ -565,7 +624,6 @@ class SalesOrderController extends Controller
             'payment_due_days' => (int) ($term->due_days ?? 0),
         ];
     }
-
 
     public function finalize(Company $company, string $sales_order)
     {
@@ -622,7 +680,6 @@ class SalesOrderController extends Controller
         $validated = $request->validate([
             'currency' => ['required', 'string', 'max:10'],
             'payment_term_id' => ['nullable'],
-            'payment_method_id' => ['nullable'],
             'due_date' => ['nullable', 'date'],
             'shipping' => ['nullable', 'numeric', 'min:0'],
             'additional' => ['nullable', 'numeric', 'min:0'],
@@ -640,19 +697,11 @@ class SalesOrderController extends Controller
             'items.*.tax_group_id' => ['nullable', 'integer'],
         ]);
 
-        // Enforce payment method only when due_days = 0 (server-side safety)
-        if (! empty($validated['payment_term_id'])) {
-            $term = PaymentTerm::query()->find($validated['payment_term_id']);
-            if ($term && (int) $term->due_days === 0) {
-                if (empty($validated['payment_method_id'])) {
-                    return response()->json(['message' => 'Payment method is required for Due Now terms.'], 422);
-                }
-            }
-        }
+        /* Enforced payment method check removed per user request */
 
         DB::transaction(function () use ($order, $validated, $company, $request) {
             $taxGroupId = $validated['tax_group_id'] ? (int) $validated['tax_group_id'] : null;
-            
+
             $totals = $this->calcService->calculate($company->id, [
                 'items' => $validated['items'],
                 'tax_group_id' => $taxGroupId,
@@ -660,7 +709,7 @@ class SalesOrderController extends Controller
                 'global_discount_amount' => $request->global_discount_amount,
                 'shipping' => $validated['shipping'] ?? 0,
                 'additional' => $validated['additional'] ?? 0,
-                'customer_id' => $order->customer_id
+                'customer_id' => $order->customer_id,
             ]);
 
             $currencyId = $this->resolveCurrencyIdFromCode($validated['currency']);
@@ -674,7 +723,6 @@ class SalesOrderController extends Controller
             $order->payment_due_days = $termSnapshot['payment_due_days'];
             $order->due_date = $validated['due_date'] ?? $order->due_date;
 
-            $order->payment_method_id = $validated['payment_method_id'] ?? null;
             $order->tax_total = $totals['tax_total'];
             $order->subtotal = $totals['subtotal'];
             $order->discount_total = $totals['discount_total'];
@@ -724,5 +772,226 @@ class SalesOrderController extends Controller
         }
 
         return $prefix.'0001';
+    }
+
+    public function generateDeliveryNote(Request $request, Company $company, string $sales_order)
+    {
+        $order = Order::where('company_id', $company->id)
+            ->where('uuid', $sales_order)
+            ->with(['items'])
+            ->firstOrFail();
+
+        $validated = $request->validate([
+            'items' => ['required', 'array'],
+            'items.*.order_item_id' => ['required', 'exists:order_items,id'],
+            'items.*.quantity' => ['required', 'numeric', 'min:0'],
+            'inventory_location_id' => ['required', 'exists:inventory_locations,id'],
+            'reference_number' => ['nullable', 'string', 'max:100'],
+            'vehicle_number' => ['nullable', 'string', 'max:50'],
+            'notes' => ['nullable', 'string', 'max:1000'],
+        ]);
+
+        return DB::transaction(function () use ($order, $company, $validated) {
+            $dn = DeliveryNote::create([
+                'uuid' => (string) Str::uuid(),
+                'company_id' => $company->id,
+                'order_id' => $order->id,
+                'inventory_location_id' => $validated['inventory_location_id'],
+                'delivery_note_number' => $this->generateDeliveryNoteNumber($company),
+                'status' => DeliveryNote::STATUS_SHIPPED,
+                'reference_number' => $validated['reference_number'] ?? null,
+                'vehicle_number' => $validated['vehicle_number'] ?? null,
+                'notes' => $validated['notes'] ?? null,
+                'shipped_at' => Carbon::now(),
+                'created_by' => Auth::id(),
+            ]);
+
+            $anyFulfilledInThisSession = false;
+
+            foreach ($validated['items'] as $inputItem) {
+                if ($inputItem['quantity'] <= 0) {
+                    continue;
+                }
+
+                $orderItem = $order->items->firstWhere('id', $inputItem['order_item_id']);
+                if (! $orderItem) {
+                    continue;
+                }
+
+                // Safety: Cannot fulfill more than ordered
+                $remaining = (float) $orderItem->quantity - (float) $orderItem->fulfilled_quantity;
+                $deliverQty = min((float) $inputItem['quantity'], $remaining);
+
+                if ($deliverQty > 0) {
+                    DeliveryNoteItem::create([
+                        'delivery_note_id' => $dn->id,
+                        'order_item_id' => $orderItem->id,
+                        'quantity' => $deliverQty,
+                    ]);
+
+                    $orderItem->fulfilled_quantity = (float) $orderItem->fulfilled_quantity + $deliverQty;
+                    $orderItem->save();
+
+                    // Inventory Integration: Record movement if it's a real product
+                    if ($orderItem->product_variant_id) {
+                        try {
+                            $this->inventoryService->postMovement([
+                                'company_id' => $company->id,
+                                'inventory_location_id' => $dn->inventory_location_id,
+                                'product_variant_id' => $orderItem->product_variant_id,
+                                'reason_code' => 'SALE',
+                                'quantity' => $deliverQty,
+                                'reference_type' => 'delivery_note',
+                                'reference_id' => $dn->id,
+                                'performed_by' => Auth::id(),
+                            ]);
+                        } catch (\Exception $e) {
+                            // If stock is insufficient (and not allowed negative), we fail the transaction
+                            throw new \Exception("Insufficient stock for item: {$orderItem->product_name} at selected location.");
+                        }
+                    }
+
+                    $anyFulfilledInThisSession = true;
+                }
+            }
+
+            if (! $anyFulfilledInThisSession) {
+                // If nothing was actually delivered, rollback
+                throw new \Exception('No items were selected for delivery or they are already fully delivered.');
+            }
+
+            // Sync order status
+            $totalOrdered = $order->items->sum('quantity');
+            $totalFulfilled = $order->items->sum('fulfilled_quantity');
+
+            $statusCode = 'CONFIRMED';
+            if ($totalFulfilled >= $totalOrdered) {
+                $statusCode = 'FULFILLED';
+            } elseif ($totalFulfilled > 0) {
+                $statusCode = 'PARTIALLY_FULFILLED';
+            }
+
+            $status = OrderStatus::where('code', $statusCode)->first();
+            if ($status && $order->status_id !== $status->id) {
+                $order->status_id = $status->id;
+                $order->save();
+            }
+
+            return response()->json([
+                'ok' => true,
+                'message' => 'Delivery Note generated successfully.',
+                'redirect' => company_route('sales-orders.delivery-note.print', ['delivery_note' => $dn->uuid]),
+            ]);
+        });
+    }
+
+    public function printDeliveryNote(Company $company, string $delivery_note)
+    {
+        $dn = DeliveryNote::where('company_id', $company->id)
+            ->where('uuid', $delivery_note)
+            ->with([
+                'order.customer',
+                'order.billingAddress.country',
+                'order.shippingAddress.country',
+                'order.company',
+                'items.orderItem',
+            ])
+            ->firstOrFail();
+
+        return view('catvara.sales-orders.delivery-note', compact('dn'));
+    }
+
+    private function generateDeliveryNoteNumber($company)
+    {
+        $prefix = 'DN-'.Carbon::now()->format('Ymd').'-';
+
+        $lastDn = DeliveryNote::where('company_id', $company->id)
+            ->where('delivery_note_number', 'like', $prefix.'%')
+            ->orderBy('id', 'desc')
+            ->first();
+
+        if ($lastDn) {
+            $lastNum = intval(substr($lastDn->delivery_note_number, strlen($prefix)));
+
+            return $prefix.str_pad($lastNum + 1, 4, '0', STR_PAD_LEFT);
+        }
+
+        return $prefix.'0001';
+    }
+    public function markDeliveryNoteAsDelivered(Company $company, string $delivery_note)
+    {
+        $dn = DeliveryNote::where('company_id', $company->id)
+            ->where('uuid', $delivery_note)
+            ->firstOrFail();
+
+        $dn->update([
+            'status' => DeliveryNote::STATUS_DELIVERED,
+            'delivered_at' => Carbon::now(),
+        ]);
+
+        return response()->json([
+            'ok' => true,
+            'message' => 'Delivery Note marked as DELIVERED.',
+        ]);
+    }
+
+    public function deleteDeliveryNote(Company $company, string $delivery_note)
+    {
+        $dn = DeliveryNote::where('company_id', $company->id)
+            ->where('uuid', $delivery_note)
+            ->with(['items.orderItem', 'order.items'])
+            ->firstOrFail();
+
+        return DB::transaction(function () use ($dn) {
+            $order = $dn->order;
+
+            // Rollback quantities and inventory movements
+            foreach ($dn->items as $item) {
+                if ($item->orderItem) {
+                    $item->orderItem->fulfilled_quantity = max(0, (float) $item->orderItem->fulfilled_quantity - (float) $item->quantity);
+                    $item->orderItem->save();
+
+                    // Inventory Integration: Reverse movement
+                    if ($item->orderItem->product_variant_id && $dn->inventory_location_id) {
+                        $this->inventoryService->postMovement([
+                            'company_id' => $dn->company_id,
+                            'inventory_location_id' => $dn->inventory_location_id,
+                            'product_variant_id' => $item->orderItem->product_variant_id,
+                            'reason_code' => 'RETURN_IN', // Simple restoral
+                            'quantity' => $item->quantity,
+                            'reference_type' => 'delivery_note_reversal',
+                            'reference_id' => $dn->id,
+                            'performed_by' => Auth::id(),
+                        ]);
+                    }
+                }
+            }
+
+            // Sync order status after rollback
+            // Note: We need to reload order items to get fresh fulfilled_quantity
+            $order->load('items');
+            $totalOrdered = $order->items->sum('quantity');
+            $totalFulfilled = $order->items->sum('fulfilled_quantity');
+
+            $statusCode = 'CONFIRMED';
+            if ($totalFulfilled >= $totalOrdered && $totalOrdered > 0) {
+                $statusCode = 'FULFILLED';
+            } elseif ($totalFulfilled > 0) {
+                $statusCode = 'PARTIALLY_FULFILLED';
+            }
+
+            $status = OrderStatus::where('code', $statusCode)->first();
+            if ($status && $order->status_id !== $status->id) {
+                $order->status_id = $status->id;
+                $order->save();
+            }
+
+            $dn->delete();
+
+            return response()->json([
+                'ok' => true,
+                'message' => 'Delivery Note deleted and quantities restored.',
+            ]);
+        });
     }
 }

@@ -100,6 +100,11 @@ class Order extends Model
         return $this->hasMany(OrderItem::class);
     }
 
+    public function deliveryNotes()
+    {
+        return $this->hasMany(DeliveryNote::class);
+    }
+
     public function status()
     {
         return $this->belongsTo(OrderStatus::class, 'status_id');

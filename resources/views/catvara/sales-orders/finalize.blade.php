@@ -66,36 +66,37 @@
   <div class="w-full px-3 sm:px-4 pb-0 h-[100svh] flex flex-col overflow-hidden">
 
     {{-- Header --}}
-    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
-      <div class="flex items-center gap-2">
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+      <div class="flex items-center gap-4">
         <a href="{{ company_route('sales-orders.edit', ['sales_order' => $order->uuid]) }}"
-          class="h-9 w-9 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-slate-400 hover:text-brand-600 hover:border-brand-200 hover:shadow-sm transition-all">
+          class="h-10 w-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-slate-400 hover:text-brand-600 hover:border-brand-200 hover:shadow-lg hover:-translate-x-0.5 transition-all">
           <i class="fas fa-arrow-left text-sm"></i>
         </a>
 
         <div class="flex flex-col">
           <div class="flex items-center gap-2">
             <span
-              class="px-2 py-0.5 rounded-[6px] bg-brand-50 text-brand-700 border border-brand-100 text-[10px] font-black uppercase tracking-widest">
+              class="px-2 py-0.5 rounded-[6px] bg-emerald-50 text-emerald-700 border border-emerald-100 text-[9px] font-black uppercase tracking-[0.2em]">
               Step 03 / 03
             </span>
-            <span class="text-xs font-black text-slate-900">Finalize</span>
+            <div class="h-1 w-1 rounded-full bg-slate-300"></div>
+            <span class="text-[11px] font-black text-slate-400 uppercase tracking-widest">Finalize Order</span>
           </div>
-          <div class="text-[11px] font-bold text-slate-500">
-            Order: <span class="text-slate-800 font-black">{{ $order->order_number }}</span>
-          </div>
+          <h2 class="text-xl font-black text-slate-800 tracking-tight">Review & Confirm Order</h2>
         </div>
       </div>
 
       <div class="flex items-center gap-2">
-        <a href="{{ company_route('sales-orders.create', ['edit_order' => $order->uuid]) }}"
-          class="h-10 px-3 rounded-xl bg-white border border-slate-200 text-slate-600 text-[10px] font-black uppercase tracking-widest hover:bg-slate-50 transition flex items-center gap-2">
-          <i class="fas fa-pen"></i> Edit Customer
-        </a>
+        <div
+          class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100/50 border border-slate-200/50 mr-2">
+          <div class="w-1.5 h-1.5 rounded-full bg-brand-500 animate-pulse"></div>
+          <span class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Active Draft:
+            {{ $order->order_number }}</span>
+        </div>
 
         <a href="{{ company_route('sales-orders.index') }}"
-          class="h-10 px-3 rounded-xl bg-white border border-slate-200 text-slate-600 text-[10px] font-black uppercase tracking-widest hover:bg-slate-50 transition flex items-center gap-2">
-          <i class="fas fa-list"></i> Orders
+          class="h-10 px-4 rounded-xl bg-white border border-slate-200 text-slate-600 text-[10px] font-black uppercase tracking-widest hover:bg-slate-50 transition-all flex items-center gap-2">
+          <i class="fas fa-list"></i> View All
         </a>
       </div>
     </div>
@@ -114,27 +115,51 @@
         <div class="scrollable p-4 space-y-4 min-h-0 flex-1">
 
           {{-- Customer chips --}}
-          <div class="grid grid-cols-1 gap-2">
-            <div class="flex items-center gap-2 px-3 py-2 rounded-xl border border-slate-200 bg-slate-50/40">
-              <div class="w-8 h-8 rounded-lg bg-brand-100 text-brand-700 flex items-center justify-center">
-                <i class="fas fa-receipt text-[12px]"></i>
+          <div class="grid grid-cols-1 gap-3">
+            <div
+              class="group relative px-4 py-3 rounded-2xl border border-slate-200 bg-white hover:border-brand-300 hover:shadow-md transition-all">
+              <div class="flex items-start gap-3">
+                <div class="w-10 h-10 rounded-xl bg-brand-50 text-brand-600 flex items-center justify-center shrink-0">
+                  <i class="fas fa-receipt text-sm"></i>
+                </div>
+                <div class="min-w-0 flex-1">
+                  <div class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Billing Customer</div>
+                  <div class="text-sm font-black text-slate-800 truncate mt-0.5">
+                    {{ $order->customer_name ?? ($billToCustomer->display_name ?? '-') }}
+                  </div>
+                  <div class="text-[11px] font-bold text-slate-500 truncate mt-0.5 flex items-center gap-1">
+                    <i class="fas fa-map-marker-alt text-[10px] opacity-40"></i>
+                    {{ $billAddress ?: 'No billing address defined.' }}
+                  </div>
+                </div>
               </div>
-              <div class="min-w-0">
-                <div class="text-[11px] font-black text-slate-800 truncate">
-                  {{ $order->customer_name ?? ($billToCustomer->display_name ?? '-') }}</div>
-                <div class="text-[10px] font-bold text-slate-500 truncate">{{ $billAddress ?: '-' }}</div>
-              </div>
+              <a href="{{ company_route('sales-orders.edit', ['sales_order' => $order->uuid]) }}"
+                class="absolute top-3 right-3 opacity-0 group-hover:opacity-100 text-[10px] font-black text-indigo-600 bg-indigo-50 px-2 py-1 rounded-lg transition-all">
+                CHANGE
+              </a>
             </div>
 
-            <div class="flex items-center gap-2 px-3 py-2 rounded-xl border border-slate-200 bg-slate-50/40">
-              <div class="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center">
-                <i class="fas fa-user-tag text-[12px]"></i>
+            <div
+              class="group relative px-4 py-3 rounded-2xl border border-slate-200 bg-white hover:border-indigo-300 hover:shadow-md transition-all">
+              <div class="flex items-start gap-3">
+                <div class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
+                  <i class="fas fa-truck text-sm"></i>
+                </div>
+                <div class="min-w-0 flex-1">
+                  <div class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Shipping Delivery</div>
+                  <div class="text-sm font-black text-slate-800 truncate mt-0.5">
+                    {{ $order->shipping_customer_name ?? ($shipToCustomer->display_name ?? '-') }}
+                  </div>
+                  <div class="text-[11px] font-bold text-slate-500 truncate mt-0.5 flex items-center gap-1">
+                    <i class="fas fa-truck-loading text-[10px] opacity-40"></i>
+                    {{ $sellAddress ?: 'No shipping address defined.' }}
+                  </div>
+                </div>
               </div>
-              <div class="min-w-0">
-                <div class="text-[11px] font-black text-slate-800 truncate">
-                  {{ $order->shipping_customer_name ?? ($shipToCustomer->display_name ?? '-') }}</div>
-                <div class="text-[10px] font-bold text-slate-500 truncate">{{ $sellAddress ?: '-' }}</div>
-              </div>
+              <a href="{{ company_route('sales-orders.edit', ['sales_order' => $order->uuid]) }}"
+                class="absolute top-3 right-3 opacity-0 group-hover:opacity-100 text-[10px] font-black text-indigo-600 bg-indigo-50 px-2 py-1 rounded-lg transition-all">
+                CHANGE
+              </a>
             </div>
           </div>
 
@@ -223,20 +248,20 @@
         </div>
 
         {{-- Action bar --}}
-        <div class="p-3 border-t border-slate-100 bg-white flex items-center gap-2">
-          <a href="{{ company_route('sales-orders.edit-basket', ['sales_order' => $order->uuid]) }}"
-            class="h-10 px-4 rounded-xl bg-white border border-slate-200 text-slate-700 text-[11px] font-black uppercase tracking-widest hover:bg-slate-50 transition flex items-center gap-2">
-            <i class="fas fa-arrow-left"></i> Back
+        <div class="p-4 border-t border-slate-100 bg-slate-50/50 flex items-center gap-3">
+          <a href="{{ company_route('sales-orders.edit', ['sales_order' => $order->uuid]) }}"
+            class="h-11 px-5 rounded-xl bg-white border border-slate-200 text-slate-600 text-[11px] font-black uppercase tracking-widest hover:bg-slate-50 hover:text-slate-800 transition-all flex items-center gap-2 shadow-sm">
+            <i class="fas fa-arrow-left"></i> Edit Order
           </a>
 
           <button type="button" onclick="finalSaveDraft()"
-            class="h-10 px-4 rounded-xl bg-white border border-slate-200 text-slate-700 text-[11px] font-black uppercase tracking-widest hover:bg-slate-50 transition flex items-center gap-2">
-            <i class="fas fa-save"></i> Save Draft
+            class="h-11 px-5 rounded-xl bg-white border border-slate-200 text-slate-600 text-[11px] font-black uppercase tracking-widest hover:bg-slate-50 hover:text-slate-800 transition-all flex items-center gap-2 shadow-sm">
+            <i class="fas fa-cloud-upload-alt"></i> Update Draft
           </button>
 
           <button type="button" id="finalConfirmBtn" onclick="finalConfirmOrder()"
-            class="ml-auto h-10 px-4 rounded-xl bg-brand-600 text-white text-[11px] font-black uppercase tracking-widest hover:bg-brand-700 transition flex items-center gap-2 disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed">
-            <i class="fas fa-check"></i> Finalize & Confirm
+            class="ml-auto h-12 px-6 rounded-xl bg-brand-600 text-white text-[12px] font-black uppercase tracking-[0.1em] hover:bg-brand-700 hover:shadow-xl hover:shadow-brand-500/20 active:scale-95 transition-all flex items-center gap-3 disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed">
+            <span id="confirmBtnText">Finalize & Confirm</span> <i class="fas fa-check-circle"></i>
           </button>
         </div>
       </div>
@@ -269,25 +294,41 @@
             <div id="previewItems"></div>
           </div>
 
-          <div class="mt-4 bg-slate-50/40 border border-slate-200 rounded-xl p-4 space-y-2">
-            <div class="flex justify-between text-[12px] font-bold text-slate-600">
-              <span>Items Subtotal</span> <span id="pvSubtotal" class="text-slate-900">0.00</span>
+          <div class="mt-6 bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-4">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+              <span class="text-slate-500 font-bold text-[10px] uppercase tracking-wider">Subtotal</span>
+              <span id="pvSubtotal" class="text-slate-900 font-black font-mono text-sm">0.00</span>
             </div>
-            <div class="flex justify-between text-[11px] font-bold text-slate-500">
-              <span>Line Discounts</span> <span id="pvLineDiscount" class="text-rose-500">-0.00</span>
+
+            <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+              <span class="text-slate-500 font-bold text-[10px] uppercase tracking-wider">Discounts</span>
+              <div class="text-right">
+                <div class="text-rose-500 font-black font-mono text-xs" id="pvLineDiscount">-0.00</div>
+                <div class="text-rose-600 font-black font-mono text-[10px]" id="pvGlobalDiscount">-0.00 (Global)</div>
+              </div>
             </div>
-            <div class="flex justify-between text-[11px] font-bold text-slate-500">
-              <span>Global Discount</span> <span id="pvGlobalDiscount" class="text-rose-600">-0.00</span>
+
+            <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+              <span class="text-slate-500 font-bold text-[10px] uppercase tracking-wider">Logistics & Tax</span>
+              <div class="text-right space-y-1">
+                <div class="flex items-center justify-end gap-2">
+                  <span class="text-[9px] font-black text-slate-400 uppercase">Shipping</span>
+                  <span id="pvShipping" class="text-slate-800 font-black font-mono text-xs">0.00</span>
+                </div>
+                <div class="flex items-center justify-end gap-2">
+                  <span class="text-[9px] font-black text-slate-400 uppercase">Total VAT</span>
+                  <span id="pvTax" class="text-slate-800 font-black font-mono text-xs">0.00</span>
+                </div>
+              </div>
             </div>
-            <div class="flex justify-between text-[12px] font-bold text-slate-600">
-              <span>Shipping</span> <span id="pvShipping" class="text-slate-900">0.00</span>
-            </div>
-            <div class="flex justify-between text-[12px] font-bold text-slate-600">
-              <span>Tax Total</span> <span id="pvTax" class="text-slate-900">0.00</span>
-            </div>
-            <div class="pt-2 border-t border-slate-200 flex justify-between items-center">
-              <span class="text-[12px] font-black uppercase tracking-widest text-brand-600">Grand Total</span>
-              <span class="text-2xl font-black text-brand-600" id="pvGrand">0.00</span>
+
+            <div class="pt-2 flex justify-between items-center">
+              <div>
+                <span class="text-[11px] font-black uppercase tracking-[0.2em] text-brand-600 block">Grand Total</span>
+                <span
+                  class="text-[10px] text-brand-400 font-black uppercase">{{ $order->currency->code ?? 'AED' }}</span>
+              </div>
+              <span class="text-4xl font-black text-brand-600 font-mono tracking-tighter" id="pvGrand">0.00</span>
             </div>
           </div>
 
@@ -473,15 +514,15 @@
           (item.attrs_text || '');
 
         list.append(`
-          <div class="grid grid-cols-12 px-3 py-3 border-t border-slate-200 items-center">
+          <div class="grid grid-cols-12 px-3 py-3 border-t border-slate-100 items-center hover:bg-slate-50/50 transition-colors">
             <div class="col-span-5 min-w-0">
               <div class="text-[12px] font-black text-slate-900 truncate">${escapeHtml(name)}</div>
-              <div class="text-[10px] font-bold text-slate-500 truncate">${escapeHtml(attrs)}</div>
+              <div class="text-[10px] font-bold text-slate-400 uppercase tracking-tighter truncate">${escapeHtml(attrs)}</div>
             </div>
-            <div class="col-span-2 text-center text-[12px] font-black text-slate-800">${qty}</div>
-            <div class="col-span-2 text-right text-[12px] font-black text-slate-800">${unit.toFixed(2)}</div>
-            <div class="col-span-1 text-center text-[11px] font-black text-slate-600">${discP ? discP + '%' : '-'}</div>
-            <div class="col-span-2 text-right text-[12px] font-black text-slate-900">${net.toFixed(2)}</div>
+            <div class="col-span-2 text-center text-[11px] font-black text-slate-600">${qty}</div>
+            <div class="col-span-2 text-right text-[11px] font-black text-slate-600 font-mono">${unit.toFixed(2)}</div>
+            <div class="col-span-1 text-center text-[10px] font-black text-slate-400">${discP ? discP + '%' : '-'}</div>
+            <div class="col-span-2 text-right text-[12px] font-black text-slate-900 font-mono">${net.toFixed(2)}</div>
           </div>
         `);
       });
@@ -510,8 +551,8 @@
 
       $('#previewLineCount').text(cart.length + ' Lines • ' + qtyTotal + ' Qty');
       $('#pvSubtotal').text(itemsGross.toFixed(2));
-      $('#pvLineDiscount').text('-' + lineDiscTotal.toFixed(2));
-      $('#pvGlobalDiscount').text('-' + totalGlobalDisc.toFixed(2));
+      $('#pvLineDiscount').text('- ' + lineDiscTotal.toFixed(2));
+      $('#pvGlobalDiscount').text('- ' + totalGlobalDisc.toFixed(2) + ' (Global)');
       $('#pvShipping').text(shipping.toFixed(2));
       $('#pvTax').text(taxEstimate.toFixed(2));
       $('#pvGrand').text(grand.toFixed(2));

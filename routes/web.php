@@ -227,6 +227,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
                     Route::get('{sales_order}/customer-switcher', 'customerSwitcher')->name('customer-switcher');
                     Route::get('{sales_order}/finalize', 'finalize')->name('finalize');
                     Route::post('{sales_order}/finalize', 'finalizeStore')->name('finalize.store');
+
+                    // Delivery Notes
+                    Route::post('{sales_order}/delivery-note', 'generateDeliveryNote')->name('delivery-note.generate');
+                    Route::patch('delivery-notes/{delivery_note}/delivered', 'markDeliveryNoteAsDelivered')->name('delivery-note.delivered');
+                    Route::get('delivery-notes/{delivery_note}/print', 'printDeliveryNote')->name('delivery-note.print');
+                    Route::delete('delivery-notes/{delivery_note}', 'deleteDeliveryNote')->name('delivery-note.delete');
                 });
 
             Route::resource('sales-orders', \App\Http\Controllers\Admin\Sales\SalesOrderController::class);
