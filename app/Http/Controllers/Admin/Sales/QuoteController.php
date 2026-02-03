@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Admin\Sales;
 
 use App\Http\Controllers\Controller;
+use App\Models\Accounting\PaymentStatus;
 use App\Models\Accounting\PaymentTerm;
-use App\Models\Catalog\ProductVariant;
 use App\Models\Company\Company;
 use App\Models\Customer\Customer;
 use App\Models\Pricing\Currency;
@@ -12,14 +12,20 @@ use App\Models\Sales\Order;
 use App\Models\Sales\OrderStatus;
 use App\Models\Sales\Quote;
 use App\Models\Sales\QuoteStatus;
+use App\Services\Sales\QuoteCalculationService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Yajra\DataTables\Facades\DataTables;
 
 class QuoteController extends Controller
 {
+    public function __construct(
+        protected QuoteCalculationService $calcService
+    ) {}
+
     public function index()
     {
         $this->authorize('view', 'quotes');
@@ -35,7 +41,7 @@ class QuoteController extends Controller
     {
         $companyId = active_company_id();
         $query = Quote::where('quotes.company_id', $companyId)
-            ->with(['customer', 'status']);
+            ->with(['customer', 'status', 'currency']);
 
         // Filters
         if ($request->filled('status_id')) {
@@ -55,33 +61,28 @@ class QuoteController extends Controller
         }
 
         return DataTables::of($query)
-            ->editColumn('quote_number', function ($quote) {
-                return '<span class="font-weight-bold">'.e($quote->quote_number).'</span>';
-            })
-            ->editColumn('created_at', function ($quote) {
-                return $quote->created_at->format('M d, Y');
-            })
-            ->addColumn('customer_name', function ($quote) {
-                return $quote->customer->display_name ?? 'N/A';
-            })
+            ->editColumn('quote_number', fn ($quote) => '<span class="font-weight-bold">'.e($quote->quote_number).'</span>')
+            ->editColumn('created_at', fn ($quote) => optional($quote->created_at)->format('M d, Y'))
+            ->addColumn('customer_name', fn ($quote) => $quote->customer->display_name ?? 'N/A')
             ->editColumn('valid_until', function ($quote) {
-                if (!$quote->valid_until) {
+                if (! $quote->valid_until) {
                     return '—';
                 }
                 $isExpired = $quote->valid_until->isPast();
                 $color = $isExpired ? 'text-danger' : 'text-success';
+
                 return '<span class="'.$color.'">'.$quote->valid_until->format('M d, Y').'</span>';
             })
             ->editColumn('status', function ($quote) {
-                $color = 'secondary';
                 $code = $quote->status->code ?? '';
+                $color = 'secondary';
                 if ($code === 'ACCEPTED') {
                     $color = 'success';
                 } elseif ($code === 'DRAFT') {
                     $color = 'warning';
                 } elseif ($code === 'SENT') {
                     $color = 'info';
-                } elseif ($code === 'REJECTED' || $code === 'EXPIRED') {
+                } elseif (in_array($code, ['REJECTED', 'EXPIRED'])) {
                     $color = 'danger';
                 } elseif ($code === 'CONVERTED') {
                     $color = 'primary';
@@ -90,14 +91,17 @@ class QuoteController extends Controller
                 return '<span class="badge badge-'.$color.'">'.e($quote->status->name ?? '—').'</span>';
             })
             ->editColumn('grand_total', function ($quote) {
-                return '<span class="font-weight-bold text-dark">'.number_format((float) $quote->grand_total, 2).'</span>';
+                $amount = number_format((float) $quote->grand_total, 2);
+                $cur = $quote->currency->code ?? '';
+
+                return '<span class="font-weight-bold text-dark">'.e($cur).' '.$amount.'</span>';
             })
             ->addColumn('actions', function ($quote) {
-                $edit = company_route('quotes.edit', ['quote' => $quote->uuid]);
+                $editUrl = company_route('quotes.edit', ['quote' => $quote->uuid]);
                 $showUrl = company_route('quotes.show', ['quote' => $quote->id]);
 
                 $compact['showUrl'] = $showUrl;
-                $compact['editUrl'] = $edit;
+                $compact['editUrl'] = $editUrl;
                 $compact['deleteUrl'] = null;
                 $compact['editSidebar'] = false;
 
@@ -107,11 +111,20 @@ class QuoteController extends Controller
             ->make(true);
     }
 
-    public function create()
+    public function create(Request $request)
     {
         $this->authorize('create', 'quotes');
 
-        return view('catvara.quotes.create');
+        $editQuote = null;
+        if ($request->filled('edit_quote')) {
+            $editQuote = Quote::where('company_id', $request->company->id)
+                ->where('uuid', $request->edit_quote)
+                ->first();
+        }
+
+        return view('catvara.quotes.create', [
+            'editQuote' => $editQuote,
+        ]);
     }
 
     public function store(Request $request)
@@ -119,118 +132,287 @@ class QuoteController extends Controller
         $this->authorize('create', 'quotes');
 
         $request->validate([
-            'sell_to' => 'required|exists:customers,uuid',
-            'bill_to' => 'nullable|exists:customers,uuid',
+            'bill_to' => 'required|exists:customers,uuid',
+            'ship_to' => 'nullable|exists:customers,uuid',
         ]);
 
         $company = $request->company;
 
-        $sellToCustomer = Customer::where('company_id', $company->id)
-            ->where('uuid', $request->sell_to)
+        $billToCustomer = Customer::where('company_id', $company->id)
+            ->where('uuid', $request->bill_to)
             ->firstOrFail();
 
-        $billToCustomer = $request->filled('bill_to')
-            ? Customer::where('company_id', $company->id)->where('uuid', $request->bill_to)->firstOrFail()
-            : $sellToCustomer;
+        $shipToCustomer = $request->filled('ship_to')
+            ? Customer::where('company_id', $company->id)->where('uuid', $request->ship_to)->firstOrFail()
+            : $billToCustomer;
 
-        $status = QuoteStatus::where('code', 'DRAFT')->first();
-        if (! $status) {
-            $status = QuoteStatus::firstOrCreate(
-                ['code' => 'DRAFT'],
-                ['name' => 'Draft', 'is_active' => true]
-            );
-        }
+        $status = QuoteStatus::firstOrCreate(
+            ['code' => 'DRAFT'],
+            ['name' => 'Draft', 'is_active' => true]
+        );
 
-        // Currency default (adjust as per settings)
-        $defaultCurrencyId = 1;
+        // Currency default: company base currency -> first currency
+        $defaultCurrencyId = $company->base_currency_id
+            ?? (int) (Currency::query()->value('id') ?? 1);
 
         // Default validity: 30 days
         $validUntil = Carbon::now()->addDays(30);
 
-        $quote = Quote::create([
-            'uuid' => Str::uuid(),
-            'company_id' => $company->id,
-            'customer_id' => $sellToCustomer->id,
-            'status_id' => $status->id,
-            'quote_number' => $this->generateQuoteNumber($company),
-            'created_by' => auth()->id(),
-            'currency_id' => $defaultCurrencyId,
-            'valid_until' => $validUntil,
-        ]);
+        return DB::transaction(function () use ($request, $company, $billToCustomer, $shipToCustomer, $status, $defaultCurrencyId, $validUntil) {
+            $quote = Quote::create([
+                'uuid' => Str::uuid(),
+                'company_id' => $company->id,
 
-        // Addresses
-        $quote->addresses()->create([
-            'type' => 'BILLING',
-            'company_id' => $company->id,
-            'address_line_1' => $billToCustomer->address->address_line_1 ?? '',
-            'address_line_2' => $billToCustomer->address->address_line_2 ?? '',
-            'city' => $billToCustomer->address->city ?? '',
-            'state_id' => $billToCustomer->address->state_id ?? '',
-            'zip_code' => $billToCustomer->address->zip_code ?? '',
-            'country_id' => $billToCustomer->address->country_id ?? '',
-            'phone' => $billToCustomer->phone,
-            'email' => $billToCustomer->email,
-        ]);
+                'customer_id' => $billToCustomer->id,
+                'shipping_customer_id' => $shipToCustomer->id,
 
-        $quote->addresses()->create([
-            'type' => 'SHIPPING',
-            'company_id' => $company->id,
-            'address_line_1' => $sellToCustomer->address->address_line_1 ?? '',
-            'address_line_2' => $sellToCustomer->address->address_line_2 ?? '',
-            'city' => $sellToCustomer->address->city ?? '',
-            'state_id' => $sellToCustomer->address->state_id ?? '',
-            'zip_code' => $sellToCustomer->address->zip_code ?? '',
-            'country_id' => $sellToCustomer->address->country_id ?? '',
-            'phone' => $sellToCustomer->phone,
-            'email' => $sellToCustomer->email,
-        ]);
+                'status_id' => $status->id,
+                'quote_number' => $this->generateQuoteNumber($company),
+                'created_by' => Auth::id(),
 
-        return response()->json([
-            'success' => true,
-            'redirect_url' => company_route('quotes.edit', ['quote' => $quote->uuid]),
-        ]);
+                'currency_id' => $defaultCurrencyId,
+                'base_currency_id' => $company->base_currency_id ?? null,
+                'fx_rate' => 1,
+
+                'valid_until' => $validUntil,
+            ]);
+
+            // Address snapshots
+            $quote->addresses()->create([
+                'type' => 'BILLING',
+                'company_id' => $company->id,
+                'address_line_1' => $billToCustomer->address?->address_line_1 ?? '',
+                'address_line_2' => $billToCustomer->address?->address_line_2 ?? null,
+                'city' => $billToCustomer->address?->city ?? null,
+                'state_id' => ! empty($billToCustomer->address?->state_id) ? $billToCustomer->address?->state_id : null,
+                'zip_code' => $billToCustomer->address?->zip_code ?? '',
+                'country_id' => ! empty($billToCustomer->address?->country_id) ? $billToCustomer->address?->country_id : null,
+                'phone' => $billToCustomer->phone,
+                'email' => $billToCustomer->email,
+                'name' => $billToCustomer->legal_name ?? $billToCustomer->display_name,
+                'tax_number' => $billToCustomer->tax_number,
+            ]);
+
+            $quote->addresses()->create([
+                'type' => 'SHIPPING',
+                'company_id' => $company->id,
+                'address_line_1' => $shipToCustomer->address?->address_line_1 ?? '',
+                'address_line_2' => $shipToCustomer->address?->address_line_2 ?? null,
+                'city' => $shipToCustomer->address?->city ?? null,
+                'state_id' => ! empty($shipToCustomer->address?->state_id) ? $shipToCustomer->address?->state_id : null,
+                'zip_code' => $shipToCustomer->address?->zip_code ?? '',
+                'country_id' => ! empty($shipToCustomer->address?->country_id) ? $shipToCustomer->address?->country_id : null,
+                'phone' => $shipToCustomer->phone,
+                'email' => $shipToCustomer->email,
+                'name' => $shipToCustomer->legal_name ?? $shipToCustomer->display_name,
+                'tax_number' => $shipToCustomer->tax_number,
+            ]);
+
+            $redirectUrl = company_route('quotes.edit', ['quote' => $quote->uuid]);
+
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Quote created successfully.',
+                    'quote' => $quote,
+                    'redirect_url' => $redirectUrl,
+                ]);
+            }
+
+            return redirect()->to($redirectUrl);
+        });
     }
 
-    public function edit(Company $company, $id)
+    /**
+     * Update customers (bill_to / ship_to) for an existing quote.
+     */
+    public function updateCustomers(Request $request, Company $company, $uuid)
+    {
+        $this->authorize('edit', 'quotes');
+
+        $request->validate([
+            'bill_to' => 'required|exists:customers,uuid',
+            'ship_to' => 'nullable|exists:customers,uuid',
+        ]);
+
+        $quote = Quote::where('company_id', $company->id)
+            ->where('uuid', $uuid)
+            ->firstOrFail();
+
+        $billToCustomer = Customer::where('company_id', $company->id)
+            ->where('uuid', $request->bill_to)
+            ->firstOrFail();
+
+        $shipToCustomer = $request->filled('ship_to')
+            ? Customer::where('company_id', $company->id)->where('uuid', $request->ship_to)->firstOrFail()
+            : $billToCustomer;
+
+        return DB::transaction(function () use ($quote, $company, $billToCustomer, $shipToCustomer, $request) {
+            $quote->update([
+                'customer_id' => $billToCustomer->id,
+                'shipping_customer_id' => $shipToCustomer->id,
+            ]);
+
+            $quote->addresses()->updateOrCreate(
+                ['type' => 'BILLING'],
+                [
+                    'company_id' => $company->id,
+                    'address_line_1' => $billToCustomer->address?->address_line_1 ?? '',
+                    'address_line_2' => $billToCustomer->address?->address_line_2 ?? null,
+                    'city' => $billToCustomer->address?->city ?? null,
+                    'state_id' => ! empty($billToCustomer->address?->state_id) ? $billToCustomer->address?->state_id : null,
+                    'zip_code' => $billToCustomer->address?->zip_code ?? '',
+                    'country_id' => ! empty($billToCustomer->address?->country_id) ? $billToCustomer->address?->country_id : null,
+                    'phone' => $billToCustomer->phone,
+                    'email' => $billToCustomer->email,
+                    'name' => $billToCustomer->legal_name ?? $billToCustomer->display_name,
+                    'tax_number' => $billToCustomer->tax_number,
+                ]
+            );
+
+            $quote->addresses()->updateOrCreate(
+                ['type' => 'SHIPPING'],
+                [
+                    'company_id' => $company->id,
+                    'address_line_1' => $shipToCustomer->address?->address_line_1 ?? '',
+                    'address_line_2' => $shipToCustomer->address?->address_line_2 ?? null,
+                    'city' => $shipToCustomer->address?->city ?? null,
+                    'state_id' => ! empty($shipToCustomer->address?->state_id) ? $shipToCustomer->address?->state_id : null,
+                    'zip_code' => $shipToCustomer->address?->zip_code ?? '',
+                    'country_id' => ! empty($shipToCustomer->address?->country_id) ? $shipToCustomer->address?->country_id : null,
+                    'phone' => $shipToCustomer->phone,
+                    'email' => $shipToCustomer->email,
+                    'name' => $shipToCustomer->legal_name ?? $shipToCustomer->display_name,
+                    'tax_number' => $shipToCustomer->tax_number,
+                ]
+            );
+
+            if ($request->ajax()) {
+                $quote->load(['addresses', 'customer', 'shippingCustomer']);
+                $billToCustomerModel = $quote->customer;
+                $billToAddress = $quote->addresses->where('type', 'BILLING')->first();
+                $shipToAddress = $quote->addresses->where('type', 'SHIPPING')->first();
+
+                $customerDiscount = $billToCustomerModel->percentage_discount ?? 0;
+                $defaultPaymentTermId = $billToCustomerModel->payment_term_id ?? null;
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Quote customers updated successfully.',
+                    'quote' => $quote,
+                    'customerDiscount' => $customerDiscount,
+                    'payment_term_id' => $defaultPaymentTermId,
+                    'billing_html' => view('catvara.sales-orders.partials._address_card_content', [
+                        'address' => $billToAddress,
+                        'name' => $billToAddress->name,
+                    ])->render(),
+                    'shipping_html' => view('catvara.sales-orders.partials._address_card_content', [
+                        'address' => $shipToAddress,
+                        'name' => $shipToAddress->name,
+                    ])->render(),
+                ]);
+            }
+
+            return redirect()->to(company_route('quotes.edit', ['quote' => $quote->uuid]));
+        });
+    }
+
+    public function customerSwitcher(Request $request, Company $company, $uuid)
     {
         $this->authorize('edit', 'quotes');
 
         $quote = Quote::where('company_id', $company->id)
-            ->whereUuid($id)
-            ->with(['items.productVariant.product'])
+            ->where('uuid', $uuid)
             ->firstOrFail();
 
-        $sellToCustomer = $quote->customer;
+        $type = $request->input('type', 'BILLING');
+        $search = $request->input('q');
+        $customerType = $request->input('customer_type');
 
-        $billToCustomer = $quote->billingAddress
-            ? Customer::where('email', $quote->billingAddress->email)->first()
-            : $sellToCustomer;
+        $query = Customer::where('company_id', $company->id)
+            ->where('is_active', true);
+
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('display_name', 'LIKE', "%{$search}%")
+                    ->orWhere('legal_name', 'LIKE', "%{$search}%")
+                    ->orWhere('email', 'LIKE', "%{$search}%")
+                    ->orWhere('phone', 'LIKE', "%{$search}%")
+                    ->orWhere('customer_code', 'LIKE', "%{$search}%");
+            });
+        }
+
+        if ($customerType) {
+            $query->where('type', $customerType);
+        }
+
+        $customers = $query->orderBy('display_name')->limit(50)->get();
+
+        return view('catvara.quotes.partials._customer_switcher', compact('customers', 'quote', 'type'))->render();
+    }
+
+    public function edit(Company $company, $uuid)
+    {
+        $this->authorize('edit', 'quotes');
+
+        $quote = Quote::where('company_id', $company->id)
+            ->where('uuid', $uuid)
+            ->with(['items.productVariant.product.category', 'customer', 'addresses', 'shippingCustomer', 'currency', 'status'])
+            ->firstOrFail();
+
+        $billToCustomer = $quote->addresses->where('type', 'BILLING')->first();
+        $shipToCustomer = $quote->addresses->where('type', 'SHIPPING')->first();
 
         $initialState = [
             'items' => $quote->items->map(function ($item) {
+                $isCustom = (bool) ($item->is_custom ?? false);
+
                 return [
-                    'variantId' => (string) $item->productVariant->uuid,
-                    'product_id' => (string) optional($item->productVariant)->product->uuid,
+                    'type' => $isCustom ? 'custom' : 'variant',
+                    'variantId' => $isCustom ? null : (string) optional($item->productVariant)->uuid,
+                    'custom_name' => $isCustom ? $item->product_name : null,
+                    'custom_sku' => $isCustom ? $item->custom_sku : null,
+
                     'qty' => (float) $item->quantity,
                     'unitPrice' => (float) $item->unit_price,
-                    'discountPercent' => (float) $item->discount_percent,
+                    'discountPercent' => (float) ($item->discount_percent ?? 0),
+                    'tax_group_id' => $item->tax_group_id,
+                    'taxRate' => (float) ($item->tax_rate ?? 0),
                     'attrs' => [],
                 ];
             })->values(),
 
-            'payment_term_id' => $quote->payment_term_id ?? $sellToCustomer->payment_term_id,
+            'payment_term_id' => $quote->payment_term_id ?? $quote->customer?->payment_term_id,
             'shipping' => (float) $quote->shipping_total,
-            'additional' => $quote->additional_total ?? 0,
-            'vat_rate' => $quote->tax_rate ?? 0,
+            'additional' => 0,
+            'tax_group_id' => $quote->tax_group_id,
+            'global_discount_percent' => (float) $quote->global_discount_percent,
+            'global_discount_amount' => (float) $quote->global_discount_amount,
             'notes' => $quote->notes,
-            'currency' => $quote->currency->code ?? 'AED',
+            'currency' => $quote->currency->code ?? ($company->baseCurrency->code ?? 'AED'),
             'status' => $quote->status->code ?? 'DRAFT',
             'valid_until' => $quote->valid_until ? $quote->valid_until->format('Y-m-d') : null,
         ];
 
-        $customerDiscount = $sellToCustomer->percentage_discount ?? 0;
+        $customerDiscount = $quote->customer?->percentage_discount ?? 0;
 
-        return view('catvara.quotes.edit', compact('sellToCustomer', 'billToCustomer', 'quote', 'initialState', 'customerDiscount'));
+        $taxGroups = \App\Models\Tax\TaxGroup::where('company_id', $company->id)
+            ->where('is_active', true)
+            ->get();
+
+        $baseCurrency = $company->baseCurrency;
+        $exchangeRates = $company->exchangeRates()->with('targetCurrency')->get();
+        $enabledCurrencies = collect([$baseCurrency])->merge($exchangeRates->pluck('targetCurrency'))->filter()->unique('id');
+
+        return view('catvara.quotes.edit', compact(
+            'billToCustomer',
+            'shipToCustomer',
+            'quote',
+            'initialState',
+            'customerDiscount',
+            'taxGroups',
+            'enabledCurrencies'
+        ));
     }
 
     public function update(Request $request, Company $company, $uuid)
@@ -247,9 +429,10 @@ class QuoteController extends Controller
             if ($status) {
                 $quote->update(['status_id' => $status->id, 'sent_at' => now()]);
             }
+
             return response()->json([
                 'success' => true,
-                'status' => $quote->status->name ?? 'Sent',
+                'status' => $quote->fresh()->status->name ?? 'Sent',
             ]);
         }
 
@@ -258,9 +441,10 @@ class QuoteController extends Controller
             if ($status) {
                 $quote->update(['status_id' => $status->id, 'accepted_at' => now()]);
             }
+
             return response()->json([
                 'success' => true,
-                'status' => $quote->status->name ?? 'Accepted',
+                'status' => $quote->fresh()->status->name ?? 'Accepted',
             ]);
         }
 
@@ -269,116 +453,70 @@ class QuoteController extends Controller
             if ($status) {
                 $quote->update(['status_id' => $status->id, 'rejected_at' => now()]);
             }
+
             return response()->json([
                 'success' => true,
-                'status' => $quote->status->name ?? 'Rejected',
+                'status' => $quote->fresh()->status->name ?? 'Rejected',
             ]);
         }
 
-        $data = $request->validate([
-            'payment_term_id' => ['nullable', 'integer'],
-            'valid_until' => ['nullable', 'date'],
-            'notes' => ['nullable', 'string'],
-            'shipping' => ['nullable', 'numeric', 'min:0'],
-            'additional' => ['nullable', 'numeric', 'min:0'],
-            'vat_rate' => ['nullable', 'numeric', 'min:0', 'max:100'],
-            'currency' => ['required', 'string'],
-            'sell_to' => ['nullable', 'exists:customers,uuid'],
-            'bill_to' => ['nullable', 'exists:customers,uuid'],
-            'items' => ['nullable', 'array'],
-            'items.*.variant_id' => ['required_with:items'],
-            'items.*.qty' => ['required_with:items', 'numeric', 'min:1'],
-            'items.*.unit_price' => ['required_with:items', 'numeric', 'min:0'],
-            'items.*.discount_percent' => ['nullable', 'numeric', 'min:0', 'max:100'],
-            'items.*.tax_rate' => ['nullable', 'numeric', 'min:0', 'max:100'],
-        ]);
-
         DB::beginTransaction();
         try {
-            $vatRate = (float) ($data['vat_rate'] ?? 0);
+            $taxGroupId = $request->tax_group_id ? (int) $request->tax_group_id : null;
 
-            $shipping = (float) ($data['shipping'] ?? 0);
-            $additional = (float) ($data['additional'] ?? 0);
-            $shippingTotal = max(0, $shipping + $additional);
-            $shippingTaxTotal = max(0, $shippingTotal * ($vatRate / 100));
+            $currencyId = $this->resolveCurrencyIdFromCode($request->currency);
 
-            $currencyId = $this->resolveCurrencyIdFromCode($data['currency']);
-            $termSnapshot = $this->resolvePaymentTermSnapshot($data['payment_term_id'] ?? null);
+            $termSnapshot = $this->resolvePaymentTermSnapshot($request->payment_term_id);
 
-            $calc = $this->calculateFromItemsPayload(
-                $data['items'] ?? [],
-                $vatRate
-            );
+            $calc = $this->calcService->calculate($company->id, [
+                'items' => $request->items ?? [],
+                'tax_group_id' => $taxGroupId,
+                'global_discount_percent' => $request->global_discount_percent,
+                'global_discount_amount' => $request->global_discount_amount,
+                'shipping' => $request->shipping,
+                'additional' => $request->additional,
+                'customer_id' => $quote->customer_id,
+            ]);
 
-            // Update addresses if sell_to/bill_to provided
-            if (! empty($data['sell_to'])) {
-                $sellToCustomer = Customer::where('company_id', $company->id)->where('uuid', $data['sell_to'])->first();
-                if ($sellToCustomer) {
-                    $quote->update(['customer_id' => $sellToCustomer->id]);
-
-                    $quote->shippingAddress()->updateOrCreate(
-                        ['type' => 'SHIPPING'],
-                        [
-                            'company_id' => $company->id,
-                            'address_line_1' => $sellToCustomer->address->address_line_1 ?? '',
-                            'address_line_2' => $sellToCustomer->address->address_line_2 ?? '',
-                            'city' => $sellToCustomer->address->city ?? '',
-                            'state_id' => $sellToCustomer->address->state_id ?? '',
-                            'zip_code' => $sellToCustomer->address->zip_code ?? '',
-                            'country_id' => $sellToCustomer->address->country_id ?? '',
-                            'phone' => $sellToCustomer->phone,
-                            'email' => $sellToCustomer->email,
-                        ]
-                    );
-                }
-            }
-
-            if (! empty($data['bill_to'])) {
-                $billToCustomer = Customer::where('company_id', $company->id)->where('uuid', $data['bill_to'])->first();
-                if ($billToCustomer) {
-                    $quote->billingAddress()->updateOrCreate(
-                        ['type' => 'BILLING'],
-                        [
-                            'company_id' => $company->id,
-                            'address_line_1' => $billToCustomer->address->address_line_1 ?? '',
-                            'address_line_2' => $billToCustomer->address->address_line_2 ?? '',
-                            'city' => $billToCustomer->address->city ?? '',
-                            'state_id' => $billToCustomer->address->state_id ?? '',
-                            'zip_code' => $billToCustomer->address->zip_code ?? '',
-                            'country_id' => $billToCustomer->address->country_id ?? '',
-                            'phone' => $billToCustomer->phone,
-                            'email' => $billToCustomer->email,
-                        ]
-                    );
-                }
-            }
-
+            // Update quote header
             $quote->update([
                 'currency_id' => $currencyId,
+                'tax_group_id' => $taxGroupId,
+
                 'payment_term_id' => $termSnapshot['payment_term_id'],
                 'payment_term_name' => $termSnapshot['payment_term_name'],
                 'payment_due_days' => $termSnapshot['payment_due_days'],
-                'valid_until' => $data['valid_until'] ?? $quote->valid_until,
-                'notes' => $data['notes'] ?? null,
+
+                'valid_until' => $request->valid_until ?? $quote->valid_until,
+
+                'notes' => $request->notes ?? null,
+
                 'subtotal' => $calc['subtotal'],
                 'discount_total' => $calc['discount_total'],
+                'global_discount_percent' => (float) ($request->global_discount_percent ?? 0),
+                'global_discount_amount' => (float) ($request->global_discount_amount ?? 0),
                 'tax_total' => $calc['tax_total'],
-                'shipping_total' => $shippingTotal,
-                'shipping_tax_total' => $shippingTaxTotal,
-                'grand_total' => $calc['items_grand_total'] + $shippingTotal + $shippingTaxTotal,
+
+                'shipping_total' => $calc['shipping_total'],
+                'shipping_tax_total' => $calc['shipping_tax_total'],
+
+                'grand_total' => $calc['grand_total'],
             ]);
 
-            // Sync items
+            // Sync items: delete + recreate (draft-safe)
             $quote->items()->delete();
-
             foreach ($calc['items_for_db'] as $row) {
                 $quote->items()->create($row);
             }
+
+            $quote->load(['items.productVariant.product', 'customer', 'shippingCustomer', 'currency', 'status', 'addresses']);
 
             DB::commit();
 
             return response()->json([
                 'success' => true,
+                'quote' => $quote,
+                'fx_rate' => $quote->fx_rate,
                 'status' => $quote->status->name ?? 'Draft',
                 'totals' => [
                     'subtotal' => (float) $quote->subtotal,
@@ -403,6 +541,7 @@ class QuoteController extends Controller
             ->with([
                 'items.productVariant.product',
                 'customer',
+                'shippingCustomer',
                 'billingAddress.country',
                 'shippingAddress.country',
                 'company',
@@ -429,7 +568,7 @@ class QuoteController extends Controller
             ->with(['items', 'billingAddress', 'shippingAddress'])
             ->firstOrFail();
 
-        if (!$quote->canConvertToOrder()) {
+        if (! $quote->canConvertToOrder()) {
             return response()->json([
                 'success' => false,
                 'message' => 'This quote cannot be converted to an order. It may be expired, rejected, or already converted.',
@@ -439,45 +578,66 @@ class QuoteController extends Controller
         DB::beginTransaction();
         try {
             // Get order status
-            $orderStatus = OrderStatus::where('code', 'DRAFT')->first();
-            if (!$orderStatus) {
-                $orderStatus = OrderStatus::firstOrCreate(
-                    ['code' => 'DRAFT'],
-                    ['name' => 'Draft', 'is_active' => true]
-                );
-            }
+            $orderStatus = OrderStatus::firstOrCreate(
+                ['code' => 'DRAFT'],
+                ['name' => 'Draft', 'is_active' => true]
+            );
 
-            // Create order
+            $paymentStatus = PaymentStatus::where('code', 'INITIATED')->first()
+                ?? PaymentStatus::firstOrCreate(['code' => 'INITIATED'], ['name' => 'Initiated', 'is_active' => true]);
+
+            // Create order with all fields from quote
             $order = Order::create([
                 'uuid' => Str::uuid(),
                 'company_id' => $company->id,
+
                 'customer_id' => $quote->customer_id,
+                'shipping_customer_id' => $quote->shipping_customer_id ?? $quote->customer_id,
+
                 'status_id' => $orderStatus->id,
+                'payment_status_id' => $paymentStatus->id,
+
                 'order_number' => $this->generateOrderNumber($company),
+
                 'currency_id' => $quote->currency_id,
+                'base_currency_id' => $quote->base_currency_id,
+                'fx_rate' => $quote->fx_rate ?? 1,
+
+                'tax_group_id' => $quote->tax_group_id,
+
                 'payment_term_id' => $quote->payment_term_id,
                 'payment_term_name' => $quote->payment_term_name,
                 'payment_due_days' => $quote->payment_due_days,
+
                 'subtotal' => $quote->subtotal,
-                'tax_total' => $quote->tax_total,
                 'discount_total' => $quote->discount_total,
+                'global_discount_percent' => $quote->global_discount_percent ?? 0,
+                'global_discount_amount' => $quote->global_discount_amount ?? 0,
+                'tax_total' => $quote->tax_total,
                 'shipping_total' => $quote->shipping_total,
                 'shipping_tax_total' => $quote->shipping_tax_total,
+                'rounding_total' => $quote->rounding_total ?? 0,
                 'grand_total' => $quote->grand_total,
+
                 'notes' => $quote->notes,
-                'created_by' => auth()->id(),
+                'created_by' => Auth::id(),
             ]);
 
-            // Copy items
+            // Copy items with all fields
             foreach ($quote->items as $quoteItem) {
                 $order->items()->create([
                     'product_variant_id' => $quoteItem->product_variant_id,
+                    'is_custom' => $quoteItem->is_custom ?? false,
+                    'custom_sku' => $quoteItem->custom_sku,
                     'product_name' => $quoteItem->product_name,
                     'variant_description' => $quoteItem->variant_description,
                     'unit_price' => $quoteItem->unit_price,
                     'quantity' => $quoteItem->quantity,
+                    'line_subtotal' => $quoteItem->line_subtotal ?? ($quoteItem->unit_price * $quoteItem->quantity),
                     'discount_percent' => $quoteItem->discount_percent,
                     'discount_amount' => $quoteItem->discount_amount,
+                    'line_discount_total' => $quoteItem->line_discount_total ?? $quoteItem->discount_amount,
+                    'tax_group_id' => $quoteItem->tax_group_id,
                     'tax_rate' => $quoteItem->tax_rate,
                     'tax_amount' => $quoteItem->tax_amount,
                     'line_total' => $quoteItem->line_total,
@@ -497,6 +657,8 @@ class QuoteController extends Controller
                     'country_id' => $quote->billingAddress->country_id,
                     'phone' => $quote->billingAddress->phone,
                     'email' => $quote->billingAddress->email,
+                    'name' => $quote->billingAddress->name,
+                    'tax_number' => $quote->billingAddress->tax_number,
                 ]);
             }
 
@@ -513,6 +675,8 @@ class QuoteController extends Controller
                     'country_id' => $quote->shippingAddress->country_id,
                     'phone' => $quote->shippingAddress->phone,
                     'email' => $quote->shippingAddress->email,
+                    'name' => $quote->shippingAddress->name,
+                    'tax_number' => $quote->shippingAddress->tax_number,
                 ]);
             }
 
@@ -537,7 +701,7 @@ class QuoteController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to create order: ' . $e->getMessage(),
+                'message' => 'Failed to create order: '.$e->getMessage(),
             ], 422);
         }
     }
@@ -546,7 +710,15 @@ class QuoteController extends Controller
     {
         $quote = Quote::where('company_id', $company->id)
             ->where('uuid', $uuid)
-            ->with(['items.productVariant.product', 'customer', 'billingAddress.country', 'shippingAddress.country', 'company', 'currency'])
+            ->with([
+                'items.productVariant.product',
+                'customer',
+                'shippingCustomer',
+                'billingAddress.country',
+                'shippingAddress.country',
+                'company',
+                'currency',
+            ])
             ->firstOrFail();
 
         return view('catvara.quotes.print', compact('quote'));
@@ -577,6 +749,7 @@ class QuoteController extends Controller
         }
 
         $term = PaymentTerm::find($paymentTermId);
+
         if (! $term) {
             return [
                 'payment_term_id' => null,
@@ -589,66 +762,6 @@ class QuoteController extends Controller
             'payment_term_id' => (int) $term->id,
             'payment_term_name' => (string) $term->name,
             'payment_due_days' => (int) ($term->due_days ?? 0),
-        ];
-    }
-
-    private function calculateFromItemsPayload(array $items, float $globalVatRate): array
-    {
-        $subtotal = 0.0;
-        $discountTotal = 0.0;
-        $taxTotal = 0.0;
-        $itemsGrand = 0.0;
-
-        $rows = [];
-
-        foreach ($items as $item) {
-            $variantUuid = $item['variant_id'];
-            $qty = max(1, (int) ($item['qty'] ?? 1));
-            $unit = (float) ($item['unit_price'] ?? 0);
-
-            $discPct = min(100, max(0, (float) ($item['discount_percent'] ?? 0)));
-
-            $taxRate = array_key_exists('tax_rate', $item)
-                ? min(100, max(0, (float) $item['tax_rate']))
-                : min(100, max(0, $globalVatRate));
-
-            $variant = ProductVariant::with('product')->whereUuid($variantUuid)->firstOrFail();
-
-            $gross = $unit * $qty;
-            $discountAmount = $gross * ($discPct / 100);
-
-            $taxable = max(0, $gross - $discountAmount);
-            $taxAmount = $taxable * ($taxRate / 100);
-
-            $lineTotal = $taxable + $taxAmount;
-
-            $subtotal += $gross;
-            $discountTotal += $discountAmount;
-            $taxTotal += $taxAmount;
-            $itemsGrand += $lineTotal;
-
-            $rows[] = [
-                'product_variant_id' => $variant->id,
-                'quantity' => $qty,
-                'unit_price' => $unit,
-                'product_name' => (string) ($variant->product->name ?? ''),
-                'variant_description' => method_exists($variant, 'getVariantDescription')
-                    ? $variant->getVariantDescription()
-                    : null,
-                'discount_percent' => $discPct,
-                'discount_amount' => $discountAmount,
-                'tax_rate' => $taxRate,
-                'tax_amount' => $taxAmount,
-                'line_total' => $lineTotal,
-            ];
-        }
-
-        return [
-            'subtotal' => round($subtotal, 6),
-            'discount_total' => round($discountTotal, 6),
-            'tax_total' => round($taxTotal, 6),
-            'items_grand_total' => round($itemsGrand, 6),
-            'items_for_db' => $rows,
         ];
     }
 

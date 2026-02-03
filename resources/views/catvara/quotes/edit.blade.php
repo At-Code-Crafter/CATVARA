@@ -189,24 +189,33 @@
                   step="0.01">
               </div>
               <div>
-                <label class="text-[9px] font-bold text-slate-400 uppercase">Additional</label>
-                <input type="number" id="additionalInput"
+                <label class="text-[9px] font-bold text-slate-400 uppercase">Global Disc %</label>
+                <input type="number" id="globalDiscountPercentInput"
                   class="w-full h-8 rounded border-slate-200 text-xs font-bold text-right" value="0" min="0"
-                  step="0.01">
+                  max="100" step="0.01">
               </div>
               <div>
-                <label class="text-[9px] font-bold text-slate-400 uppercase">VAT %</label>
-                <input type="number" id="vatRateInput"
-                  class="w-full h-8 rounded border-slate-200 text-xs font-bold text-right" value="5"
-                  min="0" step="0.01">
+                <label class="text-[9px] font-bold text-slate-400 uppercase">Tax Group</label>
+                <select id="taxGroupSelect"
+                  class="w-full h-8 rounded border-slate-200 text-xs font-bold text-slate-700">
+                  <option value="" data-rate="0">No Tax</option>
+                  @foreach ($taxGroups ?? [] as $tg)
+                    <option value="{{ $tg->id }}" data-rate="{{ $tg->rate }}"
+                      {{ ($quote->tax_group_id ?? '') == $tg->id ? 'selected' : '' }}>
+                      {{ $tg->name }}</option>
+                  @endforeach
+                </select>
               </div>
               <div>
                 <label class="text-[9px] font-bold text-slate-400 uppercase">Currency</label>
                 <select id="currencySelect"
                   class="w-full h-8 rounded border-slate-200 text-xs font-bold text-slate-700">
-                  <option value="AED">AED</option>
-                  <option value="USD">USD</option>
-                  <option value="GBP">GBP</option>
+                  @foreach ($enabledCurrencies ?? [['code' => 'AED']] as $cur)
+                    <option value="{{ is_array($cur) ? $cur['code'] : $cur->code }}"
+                      {{ ($quote->currency->code ?? 'AED') == (is_array($cur) ? $cur['code'] : $cur->code) ? 'selected' : '' }}>
+                      {{ is_array($cur) ? $cur['code'] : $cur->code }}
+                    </option>
+                  @endforeach
                 </select>
               </div>
             </div>
@@ -215,6 +224,14 @@
               <div class="flex justify-between items-center text-xs text-slate-500">
                 <span>Subtotal</span>
                 <span class="font-bold" id="cartSubtotal">0.00</span>
+              </div>
+              <div class="flex justify-between items-center text-xs text-slate-500">
+                <span>Item Discounts</span>
+                <span class="font-bold text-red-500" id="cartItemDiscounts">- 0.00</span>
+              </div>
+              <div class="flex justify-between items-center text-xs text-slate-500">
+                <span>Global Discount</span>
+                <span class="font-bold text-red-500" id="globalDiscountAmountDisplay">- 0.00</span>
               </div>
               <div class="flex justify-between items-center text-xs text-slate-500">
                 <span>Tax / VAT</span>
@@ -311,6 +328,7 @@
     const initialState = @json($initialState ?? null);
     const currentQuote = @json($quote);
     const customerDiscountPercent = {{ $customerDiscount ?? 0 }};
+    const allTaxGroups = @json($taxGroups ?? []);
 
     let allProducts = [];
     let paymentTerms = [];
@@ -319,24 +337,32 @@
     // Init Cart logic based on initialState
     if (initialState && initialState.items) {
       cart = initialState.items.map(item => ({
+        type: item.type || 'variant',
         variant_id: item.variantId,
+        custom_name: item.custom_name || null,
+        custom_sku: item.custom_sku || null,
         qty: parseFloat(item.qty),
         unit_price: parseFloat(item.unitPrice),
         discount_percent: parseFloat(item.discountPercent || 0),
+        tax_group_id: item.tax_group_id || null,
         temp_init: true
       }));
 
       $('#shippingInput').val(initialState.shipping || 0);
-      $('#additionalInput').val(initialState.additional || 0);
-      $('#vatRateInput').val(initialState.vat_rate || 5);
+      $('#globalDiscountPercentInput').val(initialState.global_discount_percent || 0);
+      $('#taxGroupSelect').val(initialState.tax_group_id || '');
       $('#commentsInput').val(initialState.notes || '');
       $('#currencySelect').val(initialState.currency || 'AED');
     } else if (currentQuote.items && currentQuote.items.length > 0) {
       cart = currentQuote.items.map(item => ({
-        variant_id: item.product_variant.id,
+        type: item.is_custom ? 'custom' : 'variant',
+        variant_id: item.product_variant?.id || null,
+        custom_name: item.is_custom ? item.product_name : null,
+        custom_sku: item.is_custom ? item.custom_sku : null,
         qty: parseFloat(item.quantity),
         unit_price: parseFloat(item.unit_price),
         discount_percent: parseFloat(item.discount_percent || 0),
+        tax_group_id: item.tax_group_id || null,
         temp_init: true
       }));
     }
@@ -360,7 +386,7 @@
         renderProducts($('#productSearch').val(), this.value);
       });
 
-      $('#shippingInput, #additionalInput, #vatRateInput').on('input', renderCart);
+      $('#shippingInput, #globalDiscountPercentInput, #taxGroupSelect').on('input change', renderCart);
 
       $('#modalAddBtn').on('click', function() {
         const variantId = $('input[name="selected_variant"]:checked').val();
@@ -728,16 +754,28 @@
       });
 
       const shipping = parseFloat($('#shippingInput').val()) || 0;
-      const additional = parseFloat($('#additionalInput').val()) || 0;
-      const vatRate = parseFloat($('#vatRateInput').val()) || 0;
+      const globalDiscountPercent = parseFloat($('#globalDiscountPercentInput').val()) || 0;
+      const taxGroupId = $('#taxGroupSelect').val();
+      const taxRate = parseFloat($('#taxGroupSelect option:selected').data('rate')) || 0;
 
-      const taxable = subtotal;
-      const tax = taxable * (vatRate / 100);
-      const grand = subtotal + tax + shipping + additional;
+      // Calculate totals matching the controller's QuoteCalculationService logic
+      const itemDiscountTotal = cart.reduce((acc, item) => {
+        const lineTotal = item.qty * item.unit_price;
+        const lineDiscount = lineTotal * ((item.discount_percent || 0) / 100);
+        return acc + lineDiscount;
+      }, 0);
 
-      $('#cartSubtotal').text(subtotal.toFixed(2));
+      const afterItemDiscount = subtotal;
+      const globalDiscountAmount = afterItemDiscount * (globalDiscountPercent / 100);
+      const taxableAmount = afterItemDiscount - globalDiscountAmount + shipping;
+      const tax = taxableAmount * (taxRate / 100);
+      const grand = afterItemDiscount - globalDiscountAmount + tax + shipping;
+
+      $('#cartSubtotal').text((subtotal + itemDiscountTotal).toFixed(2));
+      $('#cartItemDiscounts').text('- ' + itemDiscountTotal.toFixed(2));
+      $('#globalDiscountAmountDisplay').text('- ' + globalDiscountAmount.toFixed(2));
       $('#cartTax').text(tax.toFixed(2));
-      $('#cartShipping').text((shipping + additional).toFixed(2));
+      $('#cartShipping').text(shipping.toFixed(2));
       $('#cartGrandTotal').text(grand.toFixed(2));
 
       $('#itemCountLabel').text(cart.length + ' Items');
@@ -774,6 +812,9 @@
       const originalHtml = btn.html();
       btn.prop('disabled', true).html('<i class="fas fa-circle-notch fa-spin"></i> Processing...');
 
+      const globalDiscountPercent = parseFloat($('#globalDiscountPercentInput').val()) || 0;
+      const globalDiscountAmount = parseFloat($('#globalDiscountAmountDisplay').text().replace('- ', '')) || 0;
+
       const payload = {
         _method: 'PUT',
         _token: $('meta[name="csrf-token"]').attr('content'),
@@ -781,14 +822,19 @@
         payment_term_id: $('#paymentTermSelect').val(),
         valid_until: $('#validUntilDate').val(),
         shipping: $('#shippingInput').val(),
-        additional: $('#additionalInput').val(),
-        vat_rate: $('#vatRateInput').val(),
+        tax_group_id: $('#taxGroupSelect').val() || null,
+        global_discount_percent: globalDiscountPercent,
+        global_discount_amount: globalDiscountAmount,
         notes: $('#commentsInput').val(),
         items: cart.map(i => ({
-          variant_id: i.variant_id,
+          type: i.type || 'variant',
+          variant_id: i.type === 'custom' ? null : i.variant_id,
+          custom_name: i.custom_name || null,
+          custom_sku: i.custom_sku || null,
           qty: i.qty,
           unit_price: i.unit_price,
-          discount_percent: i.discount_percent
+          discount_percent: i.discount_percent,
+          tax_group_id: i.tax_group_id || null
         }))
       };
 

@@ -185,8 +185,11 @@
   {{-- Hidden Form for Submission --}}
   <form id="createQuoteForm" action="{{ company_route('quotes.store') }}" method="POST" class="hidden">
     @csrf
-    <input type="hidden" name="sell_to" id="input_customer_id">
-    <input type="hidden" name="bill_to" id="input_billing_customer_id">
+    <input type="hidden" name="bill_to" id="input_customer_id">
+    <input type="hidden" name="ship_to" id="input_shipping_customer_id">
+    @if (isset($editQuote))
+      <input type="hidden" name="edit_quote" value="{{ $editQuote->uuid }}">
+    @endif
   </form>
 @endsection
 
@@ -266,8 +269,10 @@
       $('#continueBtn').on('click', function() {
         if (!selectedSellTo) return;
 
+        // bill_to = main customer (who pays)
+        // ship_to = shipping customer (where to deliver) - same as bill_to if isBillingSame
         $('#input_customer_id').val(selectedSellTo.uuid);
-        $('#input_billing_customer_id').val(isBillingSame ? null : (selectedBillTo ? selectedBillTo.uuid : null));
+        $('#input_shipping_customer_id').val(isBillingSame ? selectedSellTo.uuid : (selectedBillTo ? selectedBillTo.uuid : selectedSellTo.uuid));
 
         $(this).prop('disabled', true).html('<i class="fas fa-circle-notch fa-spin"></i> Creating Draft...');
 
