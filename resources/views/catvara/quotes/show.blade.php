@@ -30,33 +30,38 @@
       <div class="flex items-center gap-3 flex-wrap">
         @if (!$quote->order_id && in_array($statusCode, ['DRAFT', 'SENT', 'ACCEPTED']))
           @if ($statusCode !== 'SENT')
-            <button type="button" id="sendQuoteBtn" class="btn btn-white">
-              <i class="fas fa-paper-plane mr-2"></i> Send Quote
+            <button type="button" id="sendQuoteBtn"
+              class="inline-flex items-center px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 font-semibold text-sm hover:bg-slate-50 hover:border-slate-300 transition-all shadow-sm">
+              <i class="fas fa-paper-plane mr-2 text-blue-500"></i> Send Quote
             </button>
           @endif
 
-          <button type="button" id="generateOrderBtn" class="btn btn-success">
+          <button type="button" id="generateOrderBtn"
+            class="inline-flex items-center px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 text-white font-bold text-sm hover:from-emerald-600 hover:to-emerald-700 transition-all shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40">
             <i class="fas fa-file-invoice mr-2"></i> Generate Order
           </button>
         @endif
 
         @if ($quote->order_id)
-          <a href="{{ company_route('sales-orders.show', ['sales_order' => $quote->order_id]) }}" class="btn btn-primary">
+          <a href="{{ company_route('sales-orders.show', ['sales_order' => $quote->order_id]) }}"
+            class="inline-flex items-center px-4 py-2.5 rounded-xl bg-brand-600 text-white font-semibold text-sm hover:bg-brand-700 transition-all shadow-sm">
             <i class="fas fa-external-link-alt mr-2"></i> View Order
           </a>
         @endif
 
         @if ($statusCode === 'DRAFT')
-          <a href="{{ company_route('quotes.edit', ['quote' => $quote->uuid]) }}" class="btn btn-white">
-            <i class="fas fa-edit mr-2"></i> Edit
+          <a href="{{ company_route('quotes.edit', ['quote' => $quote->uuid]) }}"
+            class="inline-flex items-center px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 font-semibold text-sm hover:bg-slate-50 hover:border-slate-300 transition-all shadow-sm">
+            <i class="fas fa-edit mr-2 text-amber-500"></i> Edit
           </a>
         @endif
         <a href="{{ company_route('quotes.print', ['quote' => $quote->uuid]) }}" target="_blank"
-          class="btn btn-white">
-          <i class="fas fa-print mr-2"></i> Print
+          class="inline-flex items-center px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 font-semibold text-sm hover:bg-slate-50 hover:border-slate-300 transition-all shadow-sm">
+          <i class="fas fa-print mr-2 text-slate-500"></i> Print
         </a>
-        <a href="{{ company_route('quotes.index') }}" class="btn btn-white">
-          <i class="fas fa-arrow-left mr-2"></i> Back
+        <a href="{{ company_route('quotes.index') }}"
+          class="inline-flex items-center px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 font-semibold text-sm hover:bg-slate-50 hover:border-slate-300 transition-all shadow-sm">
+          <i class="fas fa-arrow-left mr-2 text-slate-500"></i> Back
         </a>
       </div>
     </div>

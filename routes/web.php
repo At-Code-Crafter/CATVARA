@@ -204,8 +204,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
             |--------------------------------------------------------------------------
             */
 
+            Route::get('quotes/data', [\App\Http\Controllers\Admin\Sales\QuoteController::class, 'data'])->name('quotes.data');
             Route::get('quotes/{quote}/print', [\App\Http\Controllers\Admin\Sales\QuoteController::class, 'printQuote'])->name('quotes.print');
             Route::post('quotes/{quote}/generate-order', [\App\Http\Controllers\Admin\Sales\QuoteController::class, 'generateOrder'])->name('quotes.generate-order');
+            Route::put('quotes/{quote}/update-customers', [\App\Http\Controllers\Admin\Sales\QuoteController::class, 'updateCustomers'])->name('quotes.update-customers');
+            Route::get('quotes/{quote}/customer-switcher', [\App\Http\Controllers\Admin\Sales\QuoteController::class, 'customerSwitcher'])->name('quotes.customer-switcher');
             Route::resource('quotes', \App\Http\Controllers\Admin\Sales\QuoteController::class);
 
             /*
