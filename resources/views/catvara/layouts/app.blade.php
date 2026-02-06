@@ -579,6 +579,51 @@
       border-top: 1px solid #f1f5f9;
       width: 100%;
     }
+
+    /* Global Sidebar System */
+    .global-sidebar-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      visibility: hidden;
+      transition: visibility 0.3s;
+    }
+
+    .global-sidebar-overlay.active {
+      visibility: visible;
+    }
+
+    .global-sidebar-backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.4);
+      backdrop-filter: blur(4px);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .global-sidebar-overlay.active .global-sidebar-backdrop {
+      opacity: 1;
+    }
+
+    .global-sidebar {
+      position: absolute;
+      right: 0;
+      top: 0;
+      bottom: 0;
+      width: 100%;
+      max-width: 400px;
+      background: white;
+      box-shadow: -10px 0 25px -5px rgba(0, 0, 0, 0.1);
+      transform: translateX(100%);
+      transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .global-sidebar-overlay.active .global-sidebar {
+      transform: translateX(0);
+    }
   </style>
   @stack('styles')
 </head>
@@ -641,9 +686,9 @@
 
           <div class="h-6 w-px bg-slate-200 mx-2"></div>
 
-          <!-- User Dropdown (Same as before) -->
+          <!-- User Dropdown -->
           <div class="relative group">
-            <button class="flex items-center gap-3 focus:outline-none">
+            <button class="flex items-center gap-3 focus:outline-none py-2">
               <span
                 class="hidden md:block text-sm font-medium text-slate-600 group-hover:text-slate-900 transition-colors">
                 {{ auth()->user()->name }}
@@ -654,29 +699,34 @@
               </div>
             </button>
 
-            <div
-              class="absolute right-0 w-56 mt-2 bg-white rounded-lg shadow-xl border border-slate-100 py-1 z-50 hidden group-hover:block hover:block transform transition-all duration-200 origin-top-right">
-              <div class="px-4 py-3 border-b border-slate-50 bg-slate-50/50">
-                <p class="text-xs text-slate-400 uppercase font-semibold">Signed in as</p>
-                <p class="text-sm font-medium text-slate-900 truncate">{{ auth()->user()->email }}</p>
-              </div>
+            <div class="absolute right-0 w-56 pt-2 z-50 hidden group-hover:block">
+              <div
+                class="bg-white rounded-xl shadow-xl border border-slate-100 py-1 transform transition-all duration-200 origin-top-right">
+                <div class="px-4 py-3 border-b border-slate-100 bg-slate-50/50 rounded-t-xl">
+                  <p class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Signed in as</p>
+                  <p class="text-sm font-semibold text-slate-800 truncate">{{ auth()->user()->email }}</p>
+                </div>
 
-              <div class="py-1">
-                <a href="#"
-                  class="block px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 hover:text-brand-600">Your
-                  Profile</a>
-                <a href="#"
-                  class="block px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 hover:text-brand-600">Company
-                  Settings</a>
-              </div>
+                <div class="py-1">
+                  <a href="{{ route('profile.edit') }}"
+                    class="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-600 hover:bg-slate-50 hover:text-brand-600 transition-colors">
+                    <i class="fas fa-user w-4 text-slate-400"></i> Your Profile
+                  </a>
+                  <a href="{{ route('profile.edit') }}#password"
+                    class="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-600 hover:bg-slate-50 hover:text-brand-600 transition-colors">
+                    <i class="fas fa-key w-4 text-slate-400"></i> Change Password
+                  </a>
+                </div>
 
-              <div class="py-1 border-t border-slate-50">
-                <form method="POST" action="{{ route('logout') }}">
-                  @csrf
-                  <button type="submit" class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50">
-                    Sign out
-                  </button>
-                </form>
+                <div class="py-1 border-t border-slate-100">
+                  <form method="POST" action="{{ route('logout') }}">
+                    @csrf
+                    <button type="submit"
+                      class="flex items-center gap-3 w-full text-left px-4 py-2.5 text-sm text-rose-600 hover:bg-rose-50 transition-colors">
+                      <i class="fas fa-sign-out-alt w-4"></i> Sign out
+                    </button>
+                  </form>
+                </div>
               </div>
             </div>
           </div>
@@ -846,8 +896,174 @@
         }
       });
     };
+
+    /**
+     * GLOBAL SIDEBAR SYSTEM
+     */
+    window.setSidebarContent = function(html) {
+      $('#globalSidebarContent').html(html);
+    }
+
+    window.showSidebar = function() {
+      $('#globalSidebarOverlay').addClass('active');
+      $('body').addClass('overflow-hidden');
+    }
+
+    window.hideSidebar = function() {
+      $('#globalSidebarOverlay').removeClass('active');
+      $('body').removeClass('overflow-hidden');
+    }
+
+    // Default loading state
+    window.setSidebarLoading = function() {
+      window.setSidebarContent(`
+        <div class="flex items-center justify-center h-full">
+          <div class="flex flex-col items-center gap-3">
+            <i class="fas fa-circle-notch fa-spin text-brand-400 text-2xl"></i>
+            <div class="text-slate-400 font-bold text-[10px] uppercase tracking-widest">Loading Content...</div>
+          </div>
+        </div>
+      `);
+    }
+
+    /**
+     * COMMAND PALETTE
+     */
+    let searchTimeout = null;
+    const searchUrl = "{{ isset($company) ? company_route('global-search') : '' }}";
+
+    $(document).keydown(function(e) {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        openCommandPalette();
+      }
+      if (e.key === 'Escape') {
+        closeCommandPalette();
+      }
+    });
+
+    function openCommandPalette() {
+      if (!searchUrl) return;
+      $('#commandPalette').removeClass('hidden');
+      $('#commandSearchInput').focus().val('');
+      $('#commandResults').empty().html(
+        '<div class="p-8 text-center text-slate-400 text-xs font-bold uppercase tracking-widest">Type to search...</div>'
+      );
+    }
+
+    function closeCommandPalette() {
+      $('#commandPalette').addClass('hidden');
+    }
+
+    window.doGlobalSearch = function(val) {
+      if (searchTimeout) clearTimeout(searchTimeout);
+      if (val.length < 2) {
+        $('#commandResults').html(
+          '<div class="p-8 text-center text-slate-400 text-xs font-bold uppercase tracking-widest">Type to search...</div>'
+        );
+        return;
+      }
+
+      searchTimeout = setTimeout(() => {
+        $('#commandResults').html(
+          '<div class="p-8 text-center"><i class="fas fa-circle-notch fa-spin text-brand-500"></i></div>');
+        $.get(searchUrl, {
+          q: val
+        }, function(res) {
+          if (res.length === 0) {
+            $('#commandResults').html(
+              '<div class="p-8 text-center text-slate-400 text-xs">No results found for "' + val + '"</div>');
+            return;
+          }
+          let html = '';
+          res.forEach(item => {
+            html += `
+              <a href="${item.url}" class="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 transition group">
+                <div class="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center text-slate-400 group-hover:bg-brand-50 group-hover:text-brand-600 transition">
+                  <i class="fas ${item.icon}"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <div class="text-[12px] font-black text-slate-800 group-hover:text-brand-700">${item.title}</div>
+                  <div class="text-[10px] font-bold text-slate-400 tracking-tight">${item.type} • ${item.subtitle}</div>
+                </div>
+                <i class="fas fa-arrow-right text-slate-200 text-xs group-hover:text-brand-400 transition"></i>
+              </a>
+            `;
+          });
+          $('#commandResults').html(html);
+        });
+      }, 300);
+    }
+
+    /**
+     * GLOBAL MODAL SYSTEM
+     */
+    window.showModal = function(html, maxWidth = 'max-w-xl') {
+      const content = $('#globalModalContent');
+      // Reset classes
+      content.removeClass(
+        'max-w-xs max-w-sm max-w-md max-w-lg max-w-xl max-w-2xl max-w-3xl max-w-4xl max-w-5xl max-w-6xl max-w-7xl');
+      content.addClass(maxWidth).html(html);
+
+      $('#globalModal').removeClass('hidden');
+      $('body').addClass('overflow-hidden');
+    }
+
+    window.hideModal = function() {
+      $('#globalModal').addClass('hidden');
+      $('body').removeClass('overflow-hidden');
+      $('#globalModalContent').empty();
+    }
   </script>
   @stack('scripts')
+
+  {{-- Command Palette Structure --}}
+  <div id="commandPalette"
+    class="fixed inset-0 z-[9999] hidden flex items-start justify-center pt-[15vh] px-4 pointer-events-none">
+    <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm pointer-events-auto" onclick="closeCommandPalette()">
+    </div>
+    <div
+      class="relative w-full max-w-xl bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-200 pointer-events-auto flex flex-col max-h-[60vh]">
+      <div class="flex items-center px-5 py-4 border-b border-slate-100">
+        <i class="fas fa-search text-slate-400 mr-4"></i>
+        <input type="text" id="commandSearchInput" oninput="doGlobalSearch(this.value)"
+          placeholder="Search items, orders, customers..."
+          class="flex-1 bg-transparent border-none focus:ring-0 text-sm font-bold text-slate-800 p-0">
+        <div class="hidden sm:flex items-center gap-1.5 px-2 py-1 rounded-lg bg-slate-50 border border-slate-100">
+          <span class="text-[9px] font-black text-slate-400 uppercase">ESC</span>
+        </div>
+      </div>
+      <div class="flex-1 overflow-y-auto p-2 space-y-1" id="commandResults">
+        {{-- Results --}}
+      </div>
+      <div class="bg-slate-50 px-5 py-2.5 flex items-center justify-between border-t border-slate-100">
+        <div class="flex gap-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+          <span><i class="fas fa-arrow-up-down mr-1 opacity-50"></i> Select</span>
+          <span><i class="fas fa-arrow-turn-down mr-1 -rotate-90 opacity-50"></i> Open</span>
+        </div>
+        <div class="text-[10px] font-black text-slate-500">
+          CATVARA Intelligence
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {{-- Global Modal Structure --}}
+  <div id="globalModal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4">
+    <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onclick="window.hideModal()"></div>
+    <div id="globalModalContent"
+      class="relative w-full bg-white rounded-3xl shadow-2xl transition-all transform animate-entry">
+      {{-- Content injected here --}}
+    </div>
+  </div>
+
+  {{-- Global Sidebar Structure --}}
+  <div id="globalSidebarOverlay" class="global-sidebar-overlay">
+    <div class="global-sidebar-backdrop" onclick="window.hideSidebar()"></div>
+    <div class="global-sidebar" id="globalSidebarContent">
+      {{-- AJAX Content Here --}}
+    </div>
+  </div>
 </body>
 
 </html>

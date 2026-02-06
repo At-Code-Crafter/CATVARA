@@ -9,6 +9,7 @@ use App\Models\Sales\{
     Quote
 };
 use App\Services\Common\DocumentNumberService;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
@@ -16,7 +17,9 @@ use Carbon\Carbon;
 class OrderService
 {
     public function __construct(
-        protected DocumentNumberService $docService
+        protected DocumentNumberService $docService,
+        protected SalesCalculationService $calcService,
+        protected SalesDocumentService $salesDocService
     ) {}
 
     /**
@@ -26,9 +29,11 @@ class OrderService
     {
         $statusId = OrderStatus::where('code', 'DRAFT')->value('id');
 
-        $dueDate = !empty($data['payment_due_days'])
-            ? Carbon::now()->addDays($data['payment_due_days'])
-            : null;
+        $termSnapshot = $this->salesDocService->resolvePaymentTermSnapshot($data['payment_term_id'] ?? null);
+
+        $dueDate = !empty($data['due_date'])
+            ? Carbon::parse($data['due_date'])
+            : ($termSnapshot['payment_due_days'] > 0 ? Carbon::now()->addDays($termSnapshot['payment_due_days']) : null);
 
         return Order::create([
             'uuid' => Str::uuid(),
@@ -49,12 +54,12 @@ class OrderService
             'currency_id' => $data['currency_id'],
 
             // Payment term snapshot
-            'payment_term_id' => $data['payment_term_id'] ?? null,
-            'payment_term_name' => $data['payment_term_name'] ?? null,
-            'payment_due_days' => $data['payment_due_days'] ?? null,
+            'payment_term_id' => $termSnapshot['payment_term_id'],
+            'payment_term_name' => $termSnapshot['payment_term_name'],
+            'payment_due_days' => $termSnapshot['payment_due_days'],
             'due_date' => $dueDate,
 
-            'created_by' => $data['user_id'] ?? null,
+            'created_by' => $data['user_id'] ?? Auth::id(),
         ]);
     }
 
@@ -65,7 +70,7 @@ class OrderService
     {
         return DB::transaction(function () use ($quote) {
 
-            $quote->loadMissing('items');
+            $quote->loadMissing(['items', 'customer']);
 
             // Create the order
             $order = $this->create([
@@ -75,61 +80,45 @@ class OrderService
                 'source_id' => $quote->id,
                 'currency_id' => $quote->currency_id,
                 'payment_term_id' => $quote->payment_term_id,
-                'payment_term_name' => $quote->payment_term_name,
-                'payment_due_days' => $quote->payment_due_days,
-                'user_id' => auth()->id(),
+                'user_id' => Auth::id(),
             ]);
 
-            // Copy quote items to order items
-            foreach ($quote->items as $quoteItem) {
-                $this->addItem($order, [
-                    'product_variant_id' => $quoteItem->product_variant_id,
-                    'product_name' => $quoteItem->product_name,
-                    'variant_description' => $quoteItem->variant_description,
-                    'unit_price' => $quoteItem->unit_price,
-                    'quantity' => $quoteItem->quantity,
-                    'tax_amount' => $quoteItem->tax_amount,
-                ]);
+            // Sync addresses from Quote if they exist, or from Customer
+            $this->salesDocService->syncAddressSnapshots($order, $quote->customer);
+
+            // Prepare items for calculation
+            $itemsPayload = $quote->items->map(function ($item) {
+                return [
+                    'type' => $item->product_variant_id ? 'variant' : 'custom',
+                    'variant_id' => $item->productVariant?->uuid,
+                    'custom_name' => $item->product_name,
+                    'unit_price' => $item->unit_price,
+                    'qty' => $item->quantity,
+                    'tax_group_id' => $item->tax_group_id,
+                ];
+            })->toArray();
+
+            $calc = $this->calcService->calculate($quote->company_id, [
+                'items' => $itemsPayload,
+                'customer_id' => $quote->customer_id,
+                'tax_group_id' => $quote->tax_group_id,
+            ]);
+
+            // Create Order items from calculation results
+            foreach ($calc['items_for_db'] as $row) {
+                $order->items()->create($row);
             }
 
-            // Calculate totals
-            $order->load('items');
-            $subtotal = $order->items->sum('line_total');
-            $taxTotal = $order->items->sum('tax_amount');
-            $grandTotal = bcadd($subtotal, $taxTotal, 6);
-
+            // Final total update
             $order->update([
-                'subtotal' => $subtotal,
-                'tax_total' => $taxTotal,
-                'grand_total' => $grandTotal,
+                'subtotal' => $calc['subtotal'],
+                'discount_total' => $calc['discount_total'] ?? 0,
+                'tax_total' => $calc['tax_total'],
+                'grand_total' => $calc['grand_total'],
             ]);
 
             return $order;
         });
-    }
-
-    public function addItem(Order $order, array $item): OrderItem
-    {
-        $order->loadMissing('status');
-
-        if ($order->status->is_final) {
-            throw new \RuntimeException('Cannot modify finalized order.');
-        }
-
-        return OrderItem::updateOrCreate(
-            [
-                'order_id' => $order->id,
-                'product_variant_id' => $item['product_variant_id'],
-            ],
-            [
-                'product_name' => $item['product_name'],
-                'variant_description' => $item['variant_description'] ?? null,
-                'unit_price' => $item['unit_price'],
-                'quantity' => $item['quantity'],
-                'line_total' => bcmul($item['unit_price'], $item['quantity'], 6),
-                'tax_amount' => $item['tax_amount'] ?? 0,
-            ]
-        );
     }
 
     /**
@@ -141,20 +130,40 @@ class OrderService
 
         return DB::transaction(function () use ($order, $confirmedStatusId) {
 
-            $order->load('items');
+            $order->load(['items', 'customer']);
 
             if ($order->items->isEmpty()) {
                 throw new \RuntimeException('Cannot confirm empty order.');
             }
 
-            $subtotal = $order->items->sum('line_total');
-            $taxTotal = $order->items->sum('tax_amount');
-            $grandTotal = bcadd($subtotal, $taxTotal, 6);
+            // Re-calculate to be sure
+            $itemsPayload = $order->items->map(function ($item) {
+                return [
+                    'type' => $item->product_variant_id ? 'variant' : 'custom',
+                    'variant_id' => $item->productVariant?->uuid,
+                    'custom_name' => $item->product_name,
+                    'unit_price' => $item->unit_price,
+                    'qty' => $item->quantity,
+                    'tax_group_id' => $item->tax_group_id,
+                    'discount_percent' => $item->discount_percent ?? 0,
+                ];
+            })->toArray();
+
+            $calc = $this->calcService->calculate($order->company_id, [
+                'items' => $itemsPayload,
+                'customer_id' => $order->customer_id,
+                'tax_group_id' => $order->tax_group_id,
+                'global_discount_percent' => $order->global_discount_percent,
+                'global_discount_amount' => $order->global_discount_amount,
+                'shipping' => $order->shipping_total,
+                'additional' => 0,
+            ]);
 
             $order->update([
-                'subtotal' => $subtotal,
-                'tax_total' => $taxTotal,
-                'grand_total' => $grandTotal,
+                'subtotal' => $calc['subtotal'],
+                'tax_total' => $calc['tax_total'],
+                'discount_total' => $calc['discount_total'] ?? 0,
+                'grand_total' => $calc['grand_total'],
                 'status_id' => $confirmedStatusId,
                 'confirmed_at' => now(),
             ]);

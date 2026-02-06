@@ -59,12 +59,16 @@ class CompanyUserController extends Controller
                     }
                     return '<span class="text-slate-600 text-xs font-bold">' . \Carbon\Carbon::parse($row->last_login_at)->format('M d, Y') . '</span>';
                 })
-                ->addColumn('action', function ($row) {
+                ->addColumn('action', function ($row) use ($company) {
                     $viewUrl = company_route('settings.users.show', ['user' => $row->id]);
                     $editUrl = company_route('settings.users.edit', ['user' => $row->id]);
+                    $activitiesUrl = route('settings.users.login-activities', ['company' => $company->uuid, 'user' => $row->id]);
 
                     return '
                     <div class="flex items-center justify-end gap-2">
+                        <a href="' . $activitiesUrl . '" class="text-slate-400 hover:text-brand-600 transition-colors p-1" title="Login Activities">
+                            <i class="fas fa-history"></i>
+                        </a>
                         <a href="' . $viewUrl . '" class="text-slate-400 hover:text-brand-600 transition-colors p-1" title="View Profile">
                             <i class="fas fa-eye"></i>
                         </a>
@@ -108,7 +112,6 @@ class CompanyUserController extends Controller
         DB::beginTransaction();
         try {
             $user = User::create([
-                'uuid' => (string) \Illuminate\Support\Str::uuid(),
                 'name' => $validated['name'],
                 'email' => $validated['email'],
                 'password' => \Illuminate\Support\Facades\Hash::make($validated['password']),
@@ -117,23 +120,10 @@ class CompanyUserController extends Controller
             ]);
 
             // Link to company
-            $user->companies()->attach($company->id, [
-                'is_owner' => false,
-                'is_active' => true,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-
+            $user->assignToCompany($company->id, false, true);
+ 
             // Assign roles
-            foreach ($validated['role_ids'] as $roleId) {
-                DB::table('company_user_role')->insert([
-                    'company_id' => $company->id,
-                    'user_id' => $user->id,
-                    'role_id' => $roleId,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
-            }
+            $user->syncRoles($validated['role_ids'], $company->id);
 
             DB::commit();
             return redirect()->route('settings.users.index', ['company' => $company->uuid])
@@ -213,20 +203,7 @@ class CompanyUserController extends Controller
             }
 
             // Update roles for this company
-            DB::table('company_user_role')
-                ->where('company_id', $company->id)
-                ->where('user_id', $user->id)
-                ->delete();
-
-            foreach ($validated['role_ids'] as $roleId) {
-                DB::table('company_user_role')->insert([
-                    'company_id' => $company->id,
-                    'user_id' => $user->id,
-                    'role_id' => $roleId,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
-            }
+            $user->syncRoles($validated['role_ids'], $company->id);
 
             DB::commit();
             $user->forgetCompanyPermissionsCache($company->id);
@@ -253,17 +230,8 @@ class CompanyUserController extends Controller
 
         DB::beginTransaction();
         try {
-            // Remove roles for this company
-            DB::table('company_user_role')
-                ->where('company_id', $company->id)
-                ->where('user_id', $user->id)
-                ->delete();
-
-            // Detach from company
-            DB::table('company_user')
-                ->where('company_id', $company->id)
-                ->where('user_id', $user->id)
-                ->delete();
+            // Remove from company (and its roles)
+            $user->removeFromCompany($company->id);
 
             DB::commit();
             $user->forgetCompanyPermissionsCache($company->id);
@@ -274,5 +242,14 @@ class CompanyUserController extends Controller
             DB::rollBack();
             return back()->withErrors(['error' => 'Failed to remove user: ' . $e->getMessage()]);
         }
+    }
+    public function loginActivities(Company $company, User $user)
+    {
+        $activities = $user->loginActivities()
+            ->where('logged_at', '>=', now()->subDays(10))
+            ->orderBy('logged_at', 'desc')
+            ->get();
+
+        return view('catvara.settings.users.login-activities', compact('company', 'user', 'activities'));
     }
 }

@@ -37,6 +37,7 @@ return new class extends Migration
             $table->unsignedBigInteger('base_currency_id')->nullable();
 
             $table->unsignedBigInteger('company_status_id');
+            $table->integer('password_expiry_days')->nullable();
 
             $table->timestamps();
             $table->softDeletes();

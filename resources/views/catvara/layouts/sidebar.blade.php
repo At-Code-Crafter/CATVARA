@@ -183,7 +183,7 @@
 
       <p class="px-3 pt-6 mb-2 text-[11px] font-bold text-slate-400 uppercase tracking-widest nav-group-header">
         Settings</p>
-      @php $isSettingsActive = $isActive(['settings.profile.*', 'settings.users.*', 'settings.roles.*', 'settings.payment-methods.*', 'settings.payment-terms.*', 'activity-logs.*']); @endphp
+      @php $isSettingsActive = $isActive(['settings.profile.*', 'settings.users.*', 'settings.roles.*', 'settings.payment-methods.*', 'settings.payment-terms.*', 'settings.exchange-rates.*', 'activity-logs.*']); @endphp
       <div class="nav-group">
         <button
           class="w-full flex items-center justify-between px-4 py-3 text-sm font-semibold rounded-xl transition-all group
@@ -212,6 +212,10 @@
             class="flex items-center py-2 pl-12 pr-4 text-xs font-medium {{ $isActive(['settings.roles.*']) ? 'text-brand-400' : 'text-slate-500 hover:text-brand-400' }}">
             <span class="sidebar-text">Roles</span>
           </a>
+          <a href="{{ company_route('settings.exchange-rates.index') }}"
+            class="flex items-center py-2 pl-12 pr-4 text-xs font-medium {{ $isActive(['settings.exchange-rates.*']) ? 'text-brand-400' : 'text-slate-500 hover:text-brand-400' }}">
+            <span class="sidebar-text">Exchange Rates</span>
+          </a>
           <a href="{{ company_route('settings.payment-methods.index') }}"
             class="flex items-center py-2 pl-12 pr-4 text-xs font-medium {{ $isActive(['settings.payment-methods.*']) ? 'text-brand-400' : 'text-slate-500 hover:text-brand-400' }}">
             <span class="sidebar-text">Payment Methods</span>
@@ -232,7 +236,7 @@
     <p class="px-3 pt-6 mb-2 text-[11px] font-bold text-slate-400 uppercase tracking-widest nav-group-header">
       Administration</p>
 
-    @php $isConfigurationActive = $isActive(['tenants.*', 'users.*','price-channels.*']); @endphp
+    @php $isConfigurationActive = $isActive(['tenants.*', 'users.*','price-channels.*', 'modules.*', 'permissions.*', 'settings.roles.*', 'admin.payment-methods.*', 'admin.payment-terms.*', 'countries.*', 'states.*', 'currencies.*', 'admin.exchange-rates.*', 'admin.activity-logs.*']); @endphp
     <div class="nav-group">
       <button
         class="w-full flex items-center justify-between px-4 py-3 text-sm font-semibold rounded-xl transition-all group
@@ -258,9 +262,67 @@
           <span class="sidebar-text">Users</span>
         </a>
 
+        @if($companyReady)
+        <a href="{{ company_route('settings.roles.index') }}"
+          class="flex items-center py-2 pl-12 pr-4 text-xs font-medium {{ $isActive('settings.roles.*') ? 'text-brand-400' : 'text-slate-500 hover:text-brand-400' }}">
+          <span class="sidebar-text">Roles</span>
+        </a>
+        @endif
+
         <a href="{{ route('price-channels.index') }}"
           class="flex items-center py-2 pl-12 pr-4 text-xs font-medium {{ $isActive('price-channels.*') ? 'text-brand-400' : 'text-slate-500 hover:text-brand-400' }}">
           <span class="sidebar-text">Price Channels</span>
+        </a>
+
+        <a href="{{ route('admin.payment-methods.index') }}"
+          class="flex items-center py-2 pl-12 pr-4 text-xs font-medium {{ $isActive('admin.payment-methods.*') ? 'text-brand-400' : 'text-slate-500 hover:text-brand-400' }}">
+          <span class="sidebar-text">Payment Methods</span>
+        </a>
+
+        <a href="{{ route('admin.payment-terms.index') }}"
+          class="flex items-center py-2 pl-12 pr-4 text-xs font-medium {{ $isActive('admin.payment-terms.*') ? 'text-brand-400' : 'text-slate-500 hover:text-brand-400' }}">
+          <span class="sidebar-text">Payment Terms</span>
+        </a>
+
+        <a href="{{ route('countries.index') }}"
+          class="flex items-center py-2 pl-12 pr-4 text-xs font-medium {{ $isActive('countries.*') ? 'text-brand-400' : 'text-slate-500 hover:text-brand-400' }}">
+          <span class="sidebar-text">Countries</span>
+        </a>
+
+        <a href="{{ route('states.index') }}"
+          class="flex items-center py-2 pl-12 pr-4 text-xs font-medium {{ $isActive('states.*') ? 'text-brand-400' : 'text-slate-500 hover:text-brand-400' }}">
+          <span class="sidebar-text">States / Locations</span>
+        </a>
+
+        <a href="{{ route('currencies.index') }}"
+          class="flex items-center py-2 pl-12 pr-4 text-xs font-medium {{ $isActive('currencies.*') ? 'text-brand-400' : 'text-slate-500 hover:text-brand-400' }}">
+          <span class="sidebar-text">Currencies</span>
+        </a>
+
+        <a href="{{ route('admin.exchange-rates.index') }}"
+          class="flex items-center py-2 pl-12 pr-4 text-xs font-medium {{ $isActive('admin.exchange-rates.*') ? 'text-brand-400' : 'text-slate-500 hover:text-brand-400' }}">
+          <span class="sidebar-text">Exchange Rates</span>
+        </a>
+
+        <a href="{{ route('modules.index') }}"
+          class="flex items-center py-2 pl-12 pr-4 text-xs font-medium {{ $isActive('modules.*') ? 'text-brand-400' : 'text-slate-500 hover:text-brand-400' }}">
+          <span class="sidebar-text">Modules</span>
+        </a>
+
+        <a href="{{ route('permissions.index') }}"
+          class="flex items-center py-2 pl-12 pr-4 text-xs font-medium {{ $isActive('permissions.*') ? 'text-brand-400' : 'text-slate-500 hover:text-brand-400' }}">
+          <span class="sidebar-text">Permissions</span>
+        </a>
+
+        <a href="{{ route('admin.activity-logs.index') }}"
+          class="flex items-center py-2 pl-12 pr-4 text-xs font-medium {{ $isActive('admin.activity-logs.*') ? 'text-brand-400' : 'text-slate-500 hover:text-brand-400' }}">
+          <span class="sidebar-text">Activity Logs</span>
+        </a>
+
+        <a href="{{ route('log-viewer.index') }}" target="_blank"
+          class="flex items-center py-2 pl-12 pr-4 text-xs font-medium text-slate-500 hover:text-brand-400">
+          <span class="sidebar-text">Error Logs</span>
+          <i class="fas fa-external-link-alt text-[8px] ml-1.5 opacity-50"></i>
         </a>
 
       </div>

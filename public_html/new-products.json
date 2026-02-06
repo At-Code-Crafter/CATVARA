@@ -1,0 +1,767 @@
+[
+    {
+        "variant_sku": "OXVA00001",
+        "product_name": "OXVA XLIM Top Fill Cartridge",
+        "category_name": "V260112MLD01(part2)",
+        "variant_attributes": "Version: UK Version; Resistance: 0.4ohm; Capacity: 2ml; Pack Size: 3pcs\/pack",
+        "cost": 2.88,
+        "selling_price": 1.17,
+        "pkg_pieces": 13500
+    },
+    {
+        "variant_sku": "OXVA00011",
+        "product_name": "OXVA XLIM Top Fill Cartridge",
+        "category_name": "V260112MLD01(part2)",
+        "variant_attributes": "Version: UK Version; Resistance: 0.6ohm; Capacity: 2ml; Pack Size: 3pcs\/pack",
+        "cost": 2.88,
+        "selling_price": 1.17,
+        "pkg_pieces": 2700
+    },
+    {
+        "variant_sku": "OXVA00013",
+        "product_name": "OXVA NeXLIM Cartridge",
+        "category_name": "V260112MLD01(part2)",
+        "variant_attributes": "Version: Standard Version; Resistance: 0.8ohm; Capacity: 4ml; Pack Size: 3pcs\/pack",
+        "cost": 3.68,
+        "selling_price": 1.44,
+        "pkg_pieces": 9000
+    },
+    {
+        "variant_sku": "OXVA00023",
+        "product_name": "OXVA XLIM PRO 3 Pod Kit",
+        "category_name": "V251223MSS01(part3)",
+        "variant_attributes": "Version: UK Version; Resistance: 0.6&0.8ohm; Capacity: 2ml; Color: Black Leather",
+        "cost": 8.19,
+        "selling_price": 13.5,
+        "pkg_pieces": 100
+    },
+    {
+        "variant_sku": "OXVA00024",
+        "product_name": "OXVA XLIM PRO 3 Pod Kit",
+        "category_name": "V251223MSS01(part3)",
+        "variant_attributes": "Version: UK Version; Resistance: 0.6&0.8ohm; Capacity: 2ml; Color: Brown Leather",
+        "cost": 8.19,
+        "selling_price": 13.5,
+        "pkg_pieces": 100
+    },
+    {
+        "variant_sku": "OXVA00025",
+        "product_name": "OXVA XLIM PRO 3 Pod Kit",
+        "category_name": "V251223MSS01(part3)",
+        "variant_attributes": "Version: UK Version; Resistance: 0.6&0.8ohm; Capacity: 2ml; Color: Pro Carbon",
+        "cost": 8.19,
+        "selling_price": 13.5,
+        "pkg_pieces": 100
+    },
+    {
+        "variant_sku": "OXVA00026",
+        "product_name": "OXVA XLIM PRO 3 Pod Kit",
+        "category_name": "V251223MSS01(part3)",
+        "variant_attributes": "Version: UK Version; Resistance: 0.6&0.8ohm; Capacity: 2ml; Color: Black Carbon",
+        "cost": 8.19,
+        "selling_price": 13.5,
+        "pkg_pieces": 100
+    },
+    {
+        "variant_sku": "OXVA00027",
+        "product_name": "OXVA XLIM PRO 3 Pod Kit",
+        "category_name": "V251223MSS01(part3)",
+        "variant_attributes": "Version: UK Version; Resistance: 0.6&0.8ohm; Capacity: 2ml; Color: Sky Blue",
+        "cost": 8.19,
+        "selling_price": 13.5,
+        "pkg_pieces": 100
+    },
+    {
+        "variant_sku": "OXVA00028",
+        "product_name": "OXVA XLIM PRO 3 Pod Kit",
+        "category_name": "V251223MSS01(part3)",
+        "variant_attributes": "Version: UK Version; Resistance: 0.6&0.8ohm; Capacity: 2ml; Color: Race Red",
+        "cost": 8.19,
+        "selling_price": 13.5,
+        "pkg_pieces": 100
+    },
+    {
+        "variant_sku": "OXVA00029",
+        "product_name": "OXVA XLIM PRO 3 Pod Kit",
+        "category_name": "V251223MSS01(part3)",
+        "variant_attributes": "Version: UK Version; Resistance: 0.6&0.8ohm; Capacity: 2ml; Color: Pink Silk",
+        "cost": 8.19,
+        "selling_price": 13.5,
+        "pkg_pieces": 100
+    },
+    {
+        "variant_sku": "OXVA00030",
+        "product_name": "OXVA XLIM PRO 3 Pod Kit",
+        "category_name": "V251223MSS01(part3)",
+        "variant_attributes": "Version: UK Version; Resistance: 0.6&0.8ohm; Capacity: 2ml; Color: Purple Silk",
+        "cost": 8.19,
+        "selling_price": 13.5,
+        "pkg_pieces": 100
+    },
+    {
+        "variant_sku": "OXVA00031",
+        "product_name": "OXVA XLIM PRO 3 Pod Kit",
+        "category_name": "V251223MSS01(part3)",
+        "variant_attributes": "Version: UK Version; Resistance: 0.6&0.8ohm; Capacity: 2ml; Color: Titanium Silk",
+        "cost": 8.19,
+        "selling_price": 13.5,
+        "pkg_pieces": 100
+    },
+    {
+        "variant_sku": "OXVA00032",
+        "product_name": "OXVA NeXLIM Pod Kit",
+        "category_name": "V251223MSS01(part3)",
+        "variant_attributes": "Version: TPD Version; Resistance: 0.6&0.8ohm; Capacity: 2ml; Color: Black Warrior",
+        "cost": 9.28,
+        "selling_price": 14.5,
+        "pkg_pieces": 100
+    },
+    {
+        "variant_sku": "OXVA00033",
+        "product_name": "OXVA NeXLIM Pod Kit",
+        "category_name": "V251223MSS01(part3)",
+        "variant_attributes": "Version: TPD Version; Resistance: 0.6&0.8ohm; Capacity: 2ml; Color: Black Gold",
+        "cost": 9.28,
+        "selling_price": 14.5,
+        "pkg_pieces": 100
+    },
+    {
+        "variant_sku": "OXVA00034",
+        "product_name": "OXVA NeXLIM Pod Kit",
+        "category_name": "V251223MSS01(part3)",
+        "variant_attributes": "Version: TPD Version; Resistance: 0.6&0.8ohm; Capacity: 2ml; Color: Dark Brown",
+        "cost": 9.28,
+        "selling_price": 14.5,
+        "pkg_pieces": 100
+    },
+    {
+        "variant_sku": "OXVA00035",
+        "product_name": "OXVA NeXLIM Pod Kit",
+        "category_name": "V251223MSS01(part3)",
+        "variant_attributes": "Version: TPD Version; Resistance: 0.6&0.8ohm; Capacity: 2ml; Color: Pine Green",
+        "cost": 9.28,
+        "selling_price": 14.5,
+        "pkg_pieces": 100
+    },
+    {
+        "variant_sku": "OXVA00036",
+        "product_name": "OXVA NeXLIM Pod Kit",
+        "category_name": "V251223MSS01(part3)",
+        "variant_attributes": "Version: TPD Version; Resistance: 0.6&0.8ohm; Capacity: 2ml; Color: Starry Blue",
+        "cost": 9.28,
+        "selling_price": 14.5,
+        "pkg_pieces": 100
+    },
+    {
+        "variant_sku": "OXVA00037",
+        "product_name": "OXVA NeXLIM Pod Kit",
+        "category_name": "V251223MSS01(part3)",
+        "variant_attributes": "Version: TPD Version; Resistance: 0.6&0.8ohm; Capacity: 2ml; Color: Rose Gold",
+        "cost": 9.28,
+        "selling_price": 14.5,
+        "pkg_pieces": 100
+    },
+    {
+        "variant_sku": "OXVA00038",
+        "product_name": "OXVA NeXLIM Pod Kit",
+        "category_name": "V251223MSS01(part3)",
+        "variant_attributes": "Version: TPD Version; Resistance: 0.6&0.8ohm; Capacity: 2ml; Color: Dark Grey",
+        "cost": 9.28,
+        "selling_price": 14.5,
+        "pkg_pieces": 100
+    },
+    {
+        "variant_sku": "OXVA00039",
+        "product_name": "OXVA NeXLIM Pod Kit",
+        "category_name": "V251223MSS01(part3)",
+        "variant_attributes": "Version: TPD Version; Resistance: 0.6&0.8ohm; Capacity: 2ml; Color: Pearl Pink",
+        "cost": 9.28,
+        "selling_price": 14.5,
+        "pkg_pieces": 100
+    },
+    {
+        "variant_sku": "OXVA00040",
+        "product_name": "OXVA NeXLIM Pod Kit",
+        "category_name": "V251223MSS01(part3)",
+        "variant_attributes": "Version: TPD Version; Resistance: 0.6&0.8ohm; Capacity: 2ml; Color: Coral Orange",
+        "cost": 9.28,
+        "selling_price": 14.5,
+        "pkg_pieces": 100
+    },
+    {
+        "variant_sku": "OXVA00041",
+        "product_name": "OXVA NeXLIM Pod Kit",
+        "category_name": "V251223MSS01(part3)",
+        "variant_attributes": "Version: TPD Version; Resistance: 0.6&0.8ohm; Capacity: 2ml; Color: Dark Blue",
+        "cost": 9.28,
+        "selling_price": 14.5,
+        "pkg_pieces": 100
+    },
+    {
+        "variant_sku": "OXVA00042",
+        "product_name": "OXVA NeXLIM Pod Kit 5th Anniv Edition",
+        "category_name": "V251223MSS01(part3)",
+        "variant_attributes": "Version: TPD Version; Resistance: 0.6&0.8ohm; Capacity: 2ml; Color: Glory Red",
+        "cost": 9.28,
+        "selling_price": 14.5,
+        "pkg_pieces": 100
+    },
+    {
+        "variant_sku": "OXVA00043",
+        "product_name": "OXVA NeXLIM Pod Kit 5th Anniv Edition",
+        "category_name": "V251223MSS01(part3)",
+        "variant_attributes": "Version: TPD Version; Resistance: 0.6&0.8ohm; Capacity: 2ml; Color: Power Black",
+        "cost": 9.28,
+        "selling_price": 14.5,
+        "pkg_pieces": 100
+    },
+    {
+        "variant_sku": "OXVA00044",
+        "product_name": "OXVA XLIM 3 ULTRA Pod Kit",
+        "category_name": "V251223MSS01(part3)",
+        "variant_attributes": "Version: UK Version; Resistance: 0.6&0.8ohm; Capacity: 2ml; Color: Metal Gray",
+        "cost": 9.47,
+        "selling_price": 15.5,
+        "pkg_pieces": 100
+    },
+    {
+        "variant_sku": "OXVA00045",
+        "product_name": "OXVA XLIM 3 ULTRA Pod Kit",
+        "category_name": "V251223MSS01(part3)",
+        "variant_attributes": "Version: UK Version; Resistance: 0.6&0.8ohm; Capacity: 2ml; Color: Metal Silver",
+        "cost": 9.47,
+        "selling_price": 15.5,
+        "pkg_pieces": 100
+    },
+    {
+        "variant_sku": "OXVA00046",
+        "product_name": "OXVA XLIM 3 ULTRA Pod Kit",
+        "category_name": "V251223MSS01(part3)",
+        "variant_attributes": "Version: UK Version; Resistance: 0.6&0.8ohm; Capacity: 2ml; Color: Cherry Pink",
+        "cost": 9.47,
+        "selling_price": 15.5,
+        "pkg_pieces": 100
+    },
+    {
+        "variant_sku": "OXVA00047",
+        "product_name": "OXVA XLIM 3 ULTRA Pod Kit",
+        "category_name": "V251223MSS01(part3)",
+        "variant_attributes": "Version: UK Version; Resistance: 0.6&0.8ohm; Capacity: 2ml; Color: Mint Green",
+        "cost": 9.47,
+        "selling_price": 15.5,
+        "pkg_pieces": 100
+    },
+    {
+        "variant_sku": "OXVA00048",
+        "product_name": "OXVA XLIM 3 ULTRA Pod Kit",
+        "category_name": "V251223MSS01(part3)",
+        "variant_attributes": "Version: UK Version; Resistance: 0.6&0.8ohm; Capacity: 2ml; Color: Ultra Carbon",
+        "cost": 9.47,
+        "selling_price": 15.5,
+        "pkg_pieces": 100
+    },
+    {
+        "variant_sku": "OXVA00049",
+        "product_name": "OXVA XLIM 3 ULTRA Pod Kit",
+        "category_name": "V251223MSS01(part3)",
+        "variant_attributes": "Version: UK Version; Resistance: 0.6&0.8ohm; Capacity: 2ml; Color: Mocha Brown",
+        "cost": 9.47,
+        "selling_price": 15.5,
+        "pkg_pieces": 100
+    },
+    {
+        "variant_sku": "OXVA00050",
+        "product_name": "OXVA XLIM 3 ULTRA Pod Kit",
+        "category_name": "V251223MSS01(part3)",
+        "variant_attributes": "Version: UK Version; Resistance: 0.6&0.8ohm; Capacity: 2ml; Color: Midnight Black",
+        "cost": 9.47,
+        "selling_price": 15.5,
+        "pkg_pieces": 100
+    },
+    {
+        "variant_sku": "OXVA00051",
+        "product_name": "OXVA XLIM 3 ULTRA Pod Kit",
+        "category_name": "V251223MSS01(part3)",
+        "variant_attributes": "Version: UK Version; Resistance: 0.6&0.8ohm; Capacity: 2ml; Color: Bordeaux Red",
+        "cost": 9.47,
+        "selling_price": 15.5,
+        "pkg_pieces": 100
+    },
+    {
+        "variant_sku": "OXVA00052",
+        "product_name": "OXVA XLIM Pro 2 Pod Kit",
+        "category_name": "V251223MSS01(part3)",
+        "variant_attributes": "Version: TPD Version; Resistance: 0.6&0.8ohm; Color: Platinum Black",
+        "cost": 8.19,
+        "selling_price": 12.75,
+        "pkg_pieces": 100
+    },
+    {
+        "variant_sku": "OXVA00053",
+        "product_name": "OXVA XLIM Pro 2 Pod Kit",
+        "category_name": "V251223MSS01(part3)",
+        "variant_attributes": "Version: TPD Version; Resistance: 0.6&0.8ohm; Color: Rose Pink",
+        "cost": 8.19,
+        "selling_price": 12.75,
+        "pkg_pieces": 100
+    },
+    {
+        "variant_sku": "OXVA00054",
+        "product_name": "OXVA XLIM Pro 2 Pod Kit",
+        "category_name": "V251223MSS01(part3)",
+        "variant_attributes": "Version: TPD Version; Resistance: 0.6&0.8ohm; Color: Dark Shadow",
+        "cost": 8.19,
+        "selling_price": 12.75,
+        "pkg_pieces": 100
+    },
+    {
+        "variant_sku": "OXVA00055",
+        "product_name": "OXVA XLIM Pro 2 Pod Kit",
+        "category_name": "V251223MSS01(part3)",
+        "variant_attributes": "Version: UK Version; Resistance: 0.6&0.8ohm; Capacity: 2ml; Color: Ocean Blue",
+        "cost": 8.19,
+        "selling_price": 12.75,
+        "pkg_pieces": 100
+    },
+    {
+        "variant_sku": "OXVA00056",
+        "product_name": "OXVA XLIM Pro 2 Pod Kit",
+        "category_name": "V251223MSS01(part3)",
+        "variant_attributes": "Version: TPD Version; Resistance: 0.6&0.8ohm; Color: Amber Orange",
+        "cost": 8.19,
+        "selling_price": 12.75,
+        "pkg_pieces": 100
+    },
+    {
+        "variant_sku": "OXVA00057",
+        "product_name": "OXVA XLIM Pro 2 Pod Kit",
+        "category_name": "V251223MSS01(part3)",
+        "variant_attributes": "Version: TPD Version; Resistance: 0.6&0.8ohm; Color: Black Carbon",
+        "cost": 8.19,
+        "selling_price": 12.75,
+        "pkg_pieces": 100
+    },
+    {
+        "variant_sku": "OXVA00058",
+        "product_name": "OXVA XLIM Pro 2 Pod Kit",
+        "category_name": "V251223MSS01(part3)",
+        "variant_attributes": "Version: TPD Version; Resistance: 0.6&0.8ohm; Color: Silver Carbon",
+        "cost": 8.19,
+        "selling_price": 12.75,
+        "pkg_pieces": 100
+    },
+    {
+        "variant_sku": "OXVA00059",
+        "product_name": "OXVA XLIM Pro 2 Pod Kit",
+        "category_name": "V251223MSS01(part3)",
+        "variant_attributes": "Version: TPD Version; Resistance: 0.6&0.8ohm; Color: Coral Pink",
+        "cost": 8.19,
+        "selling_price": 12.75,
+        "pkg_pieces": 100
+    },
+    {
+        "variant_sku": "OXVA00060",
+        "product_name": "OXVA XLIM Pro 2 Pod Kit",
+        "category_name": "V251223MSS01(part3)",
+        "variant_attributes": "Version: TPD Version; Resistance: 0.6&0.8ohm; Color: Dream Purple",
+        "cost": 8.19,
+        "selling_price": 12.75,
+        "pkg_pieces": 100
+    },
+    {
+        "variant_sku": "OXVA00061",
+        "product_name": "OXVA XLIM Pro 2 Pod Kit",
+        "category_name": "V251223MSS01(part3)",
+        "variant_attributes": "Version: TPD Version; Resistance: 0.6&0.8ohm; Color: Black Warrior",
+        "cost": 8.19,
+        "selling_price": 12.75,
+        "pkg_pieces": 100
+    },
+    {
+        "variant_sku": "OXVA00062",
+        "product_name": "OXVA XLIM Top Fill Cartridge 0.8ohm",
+        "category_name": "V251223MSS01(part3)",
+        "variant_attributes": "Version: TPD Version; Pack Size: 3pcs\/pack",
+        "cost": 2.38,
+        "selling_price": 1.17,
+        "pkg_pieces": 13500
+    },
+    {
+        "variant_sku": "OXVA00072",
+        "product_name": "OXVA XLIM Top Fill Cartridge",
+        "category_name": "V251223MSS01(part3)",
+        "variant_attributes": "Version: UK Version; Resistance: 0.6ohm; Capacity: 2ml; Pack Size: 3pcs\/pack",
+        "cost": 2.38,
+        "selling_price": 1.17,
+        "pkg_pieces": 17550
+    },
+    {
+        "variant_sku": "OXVA00085",
+        "product_name": "OXVA NeXLIM Cartridge",
+        "category_name": "V260112MLD01(part1)",
+        "variant_attributes": "Version: Standard Version; Resistance: 0.6ohm; Capacity: 4ml; Pack Size: 3pcs\/pack",
+        "cost": 3.68,
+        "selling_price": 1.44,
+        "pkg_pieces": 45000
+    },
+    {
+        "variant_sku": "OXVA00135",
+        "product_name": "OXVA XLIM Pro Pod Kit",
+        "category_name": "V260112MLD01(part1)",
+        "variant_attributes": "Version: TPD Version; Color: Gleamy Blue",
+        "cost": 4.48,
+        "selling_price": 8,
+        "pkg_pieces": 123
+    },
+    {
+        "variant_sku": "OXVA00136",
+        "product_name": "OXVA XLIM Pro Pod Kit",
+        "category_name": "V260112MLD01(part1)",
+        "variant_attributes": "Version: TPD Version; Color: Gleamy Cyan",
+        "cost": 4.48,
+        "selling_price": 8,
+        "pkg_pieces": 50
+    },
+    {
+        "variant_sku": "OXVA00137",
+        "product_name": "OXVA XLIM Pro Pod Kit",
+        "category_name": "V260112MLD01(part1)",
+        "variant_attributes": "Version: TPD Version; Resistance: 0.6&0.8ohm; Color: Brown Leather",
+        "cost": 4.48,
+        "selling_price": 8,
+        "pkg_pieces": 50
+    },
+    {
+        "variant_sku": "OXVA00138",
+        "product_name": "OXVA XLIM Pro Pod Kit",
+        "category_name": "V260112MLD01(part1)",
+        "variant_attributes": "Version: TPD Version; Color: Gleamy Red",
+        "cost": 4.48,
+        "selling_price": 8,
+        "pkg_pieces": 74
+    },
+    {
+        "variant_sku": "OXVA00139",
+        "product_name": "OXVA XLIM Pro Pod Kit",
+        "category_name": "V260112MLD01(part1)",
+        "variant_attributes": "Version: TPD Version; Color: Black Carbon",
+        "cost": 4.48,
+        "selling_price": 8,
+        "pkg_pieces": 66
+    },
+    {
+        "variant_sku": "OXVA00140",
+        "product_name": "OXVA XLIM Pro Pod Kit",
+        "category_name": "V260112MLD01(part1)",
+        "variant_attributes": "Version: TPD Version; Color: Gleamy Green",
+        "cost": 4.48,
+        "selling_price": 8,
+        "pkg_pieces": 50
+    },
+    {
+        "variant_sku": "OXVA00142",
+        "product_name": "OXVA XLIM Pro Pod Kit",
+        "category_name": "V260112MLD01(part1)",
+        "variant_attributes": "Version: TPD Version; Resistance: 0.6&0.8ohm; Color: Aurora Pink",
+        "cost": 4.48,
+        "selling_price": 8,
+        "pkg_pieces": 10
+    },
+    {
+        "variant_sku": "OXVA00143",
+        "product_name": "OXVA XLIM Pro Pod Kit",
+        "category_name": "V260112MLD01(part1)",
+        "variant_attributes": "Version: TPD Version; Color: Gleamy Gray",
+        "cost": 4.48,
+        "selling_price": 8,
+        "pkg_pieces": 64
+    },
+    {
+        "variant_sku": "OXVA00145",
+        "product_name": "OXVA XLIM Pro Pod Kit",
+        "category_name": "V260112MLD01(part1)",
+        "variant_attributes": "Version: TPD Version; Resistance: 0.6&0.8ohm; Color: Denim Green",
+        "cost": 4.48,
+        "selling_price": 8,
+        "pkg_pieces": 10
+    },
+    {
+        "variant_sku": "OXVA00146",
+        "product_name": "OXVA VPRIME Cartridge",
+        "category_name": "V260112MLD01(part1)",
+        "variant_attributes": "Version: Standard Version; Resistance: 0.8ohm; Capacity: 5ml; Pack Size: 2pcs\/pack",
+        "cost": 2.02,
+        "selling_price": 1.55,
+        "pkg_pieces": 1800
+    },
+    {
+        "variant_sku": "OXVA00149",
+        "product_name": "OXVA VPRIME Cartridge",
+        "category_name": "V260112MLD01(part1)",
+        "variant_attributes": "Version: Standard Version; Resistance: 0.2ohm; Capacity: 5ml; Pack Size: 2pcs\/pack",
+        "cost": 2.02,
+        "selling_price": 1.55,
+        "pkg_pieces": 2400
+    },
+    {
+        "variant_sku": "OXVA00153",
+        "product_name": "OXVA VPRIME Cartridge",
+        "category_name": "V260112MLD01(part1)",
+        "variant_attributes": "Version: Standard Version; Resistance: 0.4ohm; Capacity: 5ml; Pack Size: 2pcs\/pack",
+        "cost": 2.02,
+        "selling_price": 1.55,
+        "pkg_pieces": 2400
+    },
+    {
+        "variant_sku": "OXVA00157",
+        "product_name": "OXVA VPRIME Cartridge",
+        "category_name": "V260112MLD01(part1)",
+        "variant_attributes": "Version: Standard Version; Resistance: 0.6ohm; Capacity: 5ml; Pack Size: 2pcs\/pack",
+        "cost": 2.02,
+        "selling_price": 1.55,
+        "pkg_pieces": 2400
+    },
+    {
+        "variant_sku": "OXVA00161",
+        "product_name": "OXVA XLIM SQ PRO 2 Pod Kit",
+        "category_name": "V251223MSS01(part2)",
+        "variant_attributes": "Version: TPD Version; Resistance: 0.6&0.8ohm; Color: Celadon Marble",
+        "cost": 0.06,
+        "selling_price": 14,
+        "pkg_pieces": 25
+    },
+    {
+        "variant_sku": "OXVA00162",
+        "product_name": "OXVA XLIM SQ PRO 2 Pod Kit",
+        "category_name": "V251223MSS01(part2)",
+        "variant_attributes": "Version: TPD Version; Resistance: 0.6&0.8ohm; Color: Dream Purple",
+        "cost": 0.06,
+        "selling_price": 14,
+        "pkg_pieces": 25
+    },
+    {
+        "variant_sku": "OXVA00163",
+        "product_name": "OXVA NeXLIM Cartridge",
+        "category_name": "V251223MSS01(part2)",
+        "variant_attributes": "Version: Standard Version; Resistance: 0.6ohm; Capacity: 4ml; Pack Size: 3pcs\/pack",
+        "cost": 3.68,
+        "selling_price": 1.44,
+        "pkg_pieces": 22500
+    },
+    {
+        "variant_sku": "OXVA00188",
+        "product_name": "OXVA NeXLIM Cartridge",
+        "category_name": "V251223MSS01(part2)",
+        "variant_attributes": "Version: Standard Version; Resistance: 0.8ohm; Capacity: 4ml; Pack Size: 3pcs\/pack",
+        "cost": 3.68,
+        "selling_price": 1.44,
+        "pkg_pieces": 22500
+    },
+    {
+        "variant_sku": "OXVA00213",
+        "product_name": "OXVA XLIM Top Fill Cartridge",
+        "category_name": "V251223MSS01(part2)",
+        "variant_attributes": "Version: UK Version; Resistance: 0.8ohm; Capacity: 2ml; Pack Size: 3pcs\/pack",
+        "cost": 2.38,
+        "selling_price": 1.17,
+        "pkg_pieces": 7887
+    },
+    {
+        "variant_sku": "OXVA00218",
+        "product_name": "OXVA XLIM Top Fill Cartridge 0.8ohm",
+        "category_name": "V251223MSS01(part2)",
+        "variant_attributes": "Version: TPD Version; Pack Size: 3pcs\/pack",
+        "cost": 2.38,
+        "selling_price": 1.17,
+        "pkg_pieces": 46113
+    },
+    {
+        "variant_sku": "OXVA00232",
+        "product_name": "OXVA XLIM Top Fill Cartridge",
+        "category_name": "V251223MSS01(part2)",
+        "variant_attributes": "Version: UK Version; Resistance: 0.6ohm; Capacity: 2ml; Pack Size: 3pcs\/pack",
+        "cost": 2.38,
+        "selling_price": 1.17,
+        "pkg_pieces": 82350
+    },
+    {
+        "variant_sku": "OXVA00252",
+        "product_name": "OXVA XLIM Pro 2 Pod Kit",
+        "category_name": "V251223MSS01(part2)",
+        "variant_attributes": "Version: TPD Version; Resistance: 0.6&0.8ohm; Color: Dream Purple",
+        "cost": 8.19,
+        "selling_price": 12.75,
+        "pkg_pieces": 260
+    },
+    {
+        "variant_sku": "OXVA00253",
+        "product_name": "OXVA XLIM Pro 2 Pod Kit",
+        "category_name": "V251223MSS01(part2)",
+        "variant_attributes": "Version: TPD Version; Resistance: 0.6&0.8ohm; Color: Platinum Black",
+        "cost": 8.19,
+        "selling_price": 12.75,
+        "pkg_pieces": 100
+    },
+    {
+        "variant_sku": "OXVA00254",
+        "product_name": "OXVA XLIM Pro 2 Pod Kit",
+        "category_name": "V251223MSS01(part2)",
+        "variant_attributes": "Version: TPD Version; Resistance: 0.6&0.8ohm; Color: Rose Pink",
+        "cost": 8.19,
+        "selling_price": 12.75,
+        "pkg_pieces": 200
+    },
+    {
+        "variant_sku": "OXVA00255",
+        "product_name": "OXVA XLIM Pro 2 Pod Kit",
+        "category_name": "V251223MSS01(part2)",
+        "variant_attributes": "Version: TPD Version; Resistance: 0.6&0.8ohm; Color: Black Carbon",
+        "cost": 8.19,
+        "selling_price": 12.75,
+        "pkg_pieces": 200
+    },
+    {
+        "variant_sku": "OXVA00256",
+        "product_name": "OXVA XLIM Pro 2 Pod Kit",
+        "category_name": "V251223MSS01(part2)",
+        "variant_attributes": "Version: TPD Version; Resistance: 0.6&0.8ohm; Color: Titanium Blue",
+        "cost": 8.19,
+        "selling_price": 12.75,
+        "pkg_pieces": 100
+    },
+    {
+        "variant_sku": "OXVA00257",
+        "product_name": "OXVA XLIM Pro 2 Pod Kit",
+        "category_name": "V251223MSS01(part2)",
+        "variant_attributes": "Version: TPD Version; Resistance: 0.6&0.8ohm; Color: Black Warrior",
+        "cost": 8.19,
+        "selling_price": 12.75,
+        "pkg_pieces": 200
+    },
+    {
+        "variant_sku": "OXVA00258",
+        "product_name": "OXVA XLIM Pro 2 Pod Kit",
+        "category_name": "V251223MSS01(part2)",
+        "variant_attributes": "Version: TPD Version; Resistance: 0.6&0.8ohm; Color: Dark Shadow",
+        "cost": 8.19,
+        "selling_price": 12.75,
+        "pkg_pieces": 100
+    },
+    {
+        "variant_sku": "OXVA00259",
+        "product_name": "OXVA XLIM Pro 2 Pod Kit",
+        "category_name": "V251223MSS01(part2)",
+        "variant_attributes": "Version: TPD Version; Resistance: 0.6&0.8ohm; Color: Silver Carbon",
+        "cost": 8.19,
+        "selling_price": 12.75,
+        "pkg_pieces": 100
+    },
+    {
+        "variant_sku": "OXVA00260",
+        "product_name": "OXVA XLIM Pro 2 Pod Kit",
+        "category_name": "V251223MSS01(part2)",
+        "variant_attributes": "Version: UK Version; Resistance: 0.6&0.8ohm; Capacity: 2ml; Color: Ocean Blue",
+        "cost": 8.19,
+        "selling_price": 12.75,
+        "pkg_pieces": 100
+    },
+    {
+        "variant_sku": "OXVA00261",
+        "product_name": "OXVA XLIM Pro 2 Pod Kit",
+        "category_name": "V251223MSS01(part2)",
+        "variant_attributes": "Version: TPD Version; Resistance: 0.6&0.8ohm; Color: Amber Orange",
+        "cost": 8.19,
+        "selling_price": 12.75,
+        "pkg_pieces": 100
+    },
+    {
+        "variant_sku": "OXVA00262",
+        "product_name": "OXVA XLIM Pro 2 Pod Kit",
+        "category_name": "V251223MSS01(part2)",
+        "variant_attributes": "Version: TPD Version; Resistance: 0.6&0.8ohm; Color: Coral Pink",
+        "cost": 8.19,
+        "selling_price": 12.75,
+        "pkg_pieces": 200
+    },
+    {
+        "variant_sku": "OXVA00263",
+        "product_name": "OXVA XLIM PRO 3 Pod Kit",
+        "category_name": "V251223MSS01(part2)",
+        "variant_attributes": "Version: UK Version; Resistance: 0.6&0.8ohm; Capacity: 2ml; Color: Black Leather",
+        "cost": 8.19,
+        "selling_price": 13.5,
+        "pkg_pieces": 100
+    },
+    {
+        "variant_sku": "OXVA00264",
+        "product_name": "OXVA XLIM PRO 3 Pod Kit",
+        "category_name": "V251223MSS01(part2)",
+        "variant_attributes": "Version: UK Version; Resistance: 0.6&0.8ohm; Capacity: 2ml; Color: Race Red",
+        "cost": 8.19,
+        "selling_price": 13.5,
+        "pkg_pieces": 100
+    },
+    {
+        "variant_sku": "OXVA00265",
+        "product_name": "OXVA XLIM PRO 3 Pod Kit",
+        "category_name": "V251223MSS01(part2)",
+        "variant_attributes": "Version: UK Version; Resistance: 0.6&0.8ohm; Capacity: 2ml; Color: Pro Carbon",
+        "cost": 8.19,
+        "selling_price": 13.5,
+        "pkg_pieces": 100
+    },
+    {
+        "variant_sku": "OXVA00266",
+        "product_name": "OXVA XLIM PRO 3 Pod Kit",
+        "category_name": "V251223MSS01(part2)",
+        "variant_attributes": "Version: UK Version; Resistance: 0.6&0.8ohm; Capacity: 2ml; Color: Black Carbon",
+        "cost": 8.19,
+        "selling_price": 13.5,
+        "pkg_pieces": 100
+    },
+    {
+        "variant_sku": "OXVA00267",
+        "product_name": "OXVA XLIM PRO 3 Pod Kit",
+        "category_name": "V251223MSS01(part2)",
+        "variant_attributes": "Version: UK Version; Resistance: 0.6&0.8ohm; Capacity: 2ml; Color: Brown Leather",
+        "cost": 8.19,
+        "selling_price": 13.5,
+        "pkg_pieces": 100
+    },
+    {
+        "variant_sku": "OXVA00268",
+        "product_name": "OXVA XLIM PRO 3 Pod Kit",
+        "category_name": "V251223MSS01(part2)",
+        "variant_attributes": "Version: UK Version; Resistance: 0.6&0.8ohm; Capacity: 2ml; Color: Pink Silk",
+        "cost": 8.19,
+        "selling_price": 13.5,
+        "pkg_pieces": 100
+    },
+    {
+        "variant_sku": "OXVA00269",
+        "product_name": "OXVA XLIM PRO 3 Pod Kit",
+        "category_name": "V251223MSS01(part2)",
+        "variant_attributes": "Version: UK Version; Resistance: 0.6&0.8ohm; Capacity: 2ml; Color: Purple Silk",
+        "cost": 8.19,
+        "selling_price": 13.5,
+        "pkg_pieces": 100
+    },
+    {
+        "variant_sku": "OXVA00270",
+        "product_name": "OXVA XLIM PRO 3 Pod Kit",
+        "category_name": "V251223MSS01(part2)",
+        "variant_attributes": "Version: UK Version; Resistance: 0.6&0.8ohm; Capacity: 2ml; Color: Sky Blue",
+        "cost": 8.19,
+        "selling_price": 13.5,
+        "pkg_pieces": 100
+    },
+    {
+        "variant_sku": "OXVA00271",
+        "product_name": "OXVA XLIM PRO 3 Pod Kit",
+        "category_name": "V251223MSS01(part2)",
+        "variant_attributes": "Version: UK Version; Resistance: 0.6&0.8ohm; Capacity: 2ml; Color: Titanium Silk",
+        "cost": 8.19,
+        "selling_price": 13.5,
+        "pkg_pieces": 100
+    }
+]

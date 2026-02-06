@@ -34,47 +34,45 @@ class RoleController extends Controller
             return DataTables::of($query)
                 ->addIndexColumn()
 
-                ->editColumn('name', fn($row) => '<div class="font-weight-600 text-dark">' . e($row->name) . '</div>')
-
-                ->editColumn(
-                    'slug',
-                    fn($row) => $row->slug
-                        ? '<span class="badge badge-light border">' . e($row->slug) . '</span>'
-                        : '<span class="text-muted">—</span>'
-                )
-
-                ->editColumn(
-                    'permissions_count',
-                    fn($row) =>
-                    '<span class="badge badge-info"><i class="fas fa-key mr-1"></i>' . (int)$row->permissions_count . '</span>'
-                )
-
-                ->editColumn(
-                    'is_active',
-                    fn($row) =>
-                    $row->is_active
-                        ? '<span class="badge badge-success">Active</span>'
-                        : '<span class="badge badge-secondary">Inactive</span>'
-                )
-
-                ->editColumn(
-                    'created_at',
-                    fn($row) =>
-                    $row->created_at ? $row->created_at->format('d-M-Y h:i A') : '—'
-                )
-
-                ->addColumn('action', function ($row) use ($company) {
-                    $editUrl = route('settings.roles.edit', ['company' => $company->uuid, 'role' => $row->id]);
-
+                ->addColumn('name_html', function ($row) {
                     return '
-                    <div class="flex items-center justify-end gap-2">
-                        <a href="' . $editUrl . '" class="text-slate-400 hover:text-brand-600 transition-colors p-1" title="Edit">
-                            <i class="fas fa-edit"></i>
-                        </a>
+                    <div class="flex items-center gap-3">
+                        <div class="h-9 w-9 rounded-lg bg-indigo-50 text-indigo-500 flex items-center justify-center">
+                            <i class="fas fa-user-shield text-sm"></i>
+                        </div>
+                        <div>
+                            <p class="font-bold text-slate-800 text-sm">' . e($row->name) . '</p>
+                            <p class="text-xs text-slate-400 font-mono">' . e($row->slug) . '</p>
+                        </div>
                     </div>';
                 })
 
-                ->rawColumns(['name', 'slug', 'permissions_count', 'is_active', 'action'])
+                ->addColumn('permissions_html', function ($row) {
+                    return '
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-brand-50 text-brand-600 text-xs font-bold">
+                        <i class="fas fa-key text-[10px]"></i> ' . (int)$row->permissions_count . '
+                    </span>';
+                })
+
+                ->addColumn('status_html', function ($row) {
+                    return $row->is_active
+                        ? '<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-600 text-xs font-bold">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Active
+                          </span>'
+                        : '<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-100 text-slate-500 text-xs font-bold">
+                            <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span> Inactive
+                          </span>';
+                })
+
+                ->addColumn('actions', function ($row) use ($company) {
+                    $editUrl = route('settings.roles.edit', ['company' => $company->uuid, 'role' => $row->id]);
+                    return '
+                    <a href="' . $editUrl . '" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-brand-50 text-slate-600 hover:text-brand-600 text-xs font-bold transition-colors">
+                        <i class="fas fa-edit"></i> Edit
+                    </a>';
+                })
+
+                ->rawColumns(['name_html', 'permissions_html', 'status_html', 'actions'])
                 ->make(true);
         }
 

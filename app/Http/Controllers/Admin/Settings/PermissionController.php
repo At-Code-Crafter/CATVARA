@@ -40,68 +40,59 @@ class PermissionController extends Controller
             return DataTables::of($query)
                 ->addIndexColumn()
 
-                ->editColumn(
-                    'name',
-                    fn($row) =>
-                    '<div class="font-weight-600 text-dark">' . e($row->name) . '</div>'
-                )
-
-                ->editColumn(
-                    'slug',
-                    fn($row) =>
-                    $row->slug
-                        ? '<span class="badge badge-light border">' . e($row->slug) . '</span>'
-                        : '<span class="text-muted">—</span>'
-                )
-
-                ->addColumn('module', function ($row) {
-                    $label = $row->module_name ?? '—';
-                    $slug  = $row->module_slug ? '<div class="text-muted small">' . e($row->module_slug) . '</div>' : '';
-                    return '<div class="text-dark font-weight-600">' . e($label) . '</div>' . $slug;
-                })
-
-                ->editColumn(
-                    'is_active',
-                    fn($row) =>
-                    (int)$row->is_active === 1
-                        ? '<span class="badge badge-success">Active</span>'
-                        : '<span class="badge badge-secondary">Inactive</span>'
-                )
-
-                ->editColumn(
-                    'created_at',
-                    fn($row) =>
-                    $row->created_at ? \Carbon\Carbon::parse($row->created_at)->format('d-M-Y h:i A') : '—'
-                )
-
-                ->addColumn('action', function ($row) {
-                    $editUrl = route('permissions.edit', $row->id);
-
+                ->addColumn('name_display', function ($row) {
                     return '
-                    <div class="dropdown">
-                        <button class="btn btn-default btn-sm border dropdown-toggle" type="button" data-toggle="dropdown">
-                            <i class="fas fa-cog"></i>
-                        </button>
-                        <div class="dropdown-menu dropdown-menu-right shadow border-0">
-                            <a class="dropdown-item py-2" href="' . $editUrl . '">
-                                <i class="fas fa-edit mr-2 text-primary"></i> Edit Permission
-                            </a>
+                    <div class="flex items-center gap-3">
+                        <div class="h-9 w-9 rounded-lg bg-orange-50 text-orange-500 flex items-center justify-center">
+                            <i class="fas fa-key text-sm"></i>
+                        </div>
+                        <div>
+                            <p class="font-bold text-slate-800 text-sm">' . e($row->name) . '</p>
+                            <p class="text-xs text-slate-400 font-mono">' . e($row->slug) . '</p>
                         </div>
                     </div>';
                 })
 
-                ->rawColumns(['name', 'slug', 'module', 'is_active', 'action'])
+                ->addColumn('module_display', function ($row) {
+                    if ($row->module_name) {
+                        return '
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-purple-50 text-purple-600 text-xs font-bold">
+                            <i class="fas fa-cube text-[10px]"></i> ' . e($row->module_name) . '
+                        </span>';
+                    }
+                    return '<span class="text-slate-400 text-xs">—</span>';
+                })
+
+                ->addColumn('status', function ($row) {
+                    return (int)$row->is_active === 1
+                        ? '<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-600 text-xs font-bold">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Active
+                          </span>'
+                        : '<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-100 text-slate-500 text-xs font-bold">
+                            <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span> Inactive
+                          </span>';
+                })
+
+                ->addColumn('actions', function ($row) {
+                    $editUrl = route('permissions.edit', $row->id);
+                    return '
+                    <a href="' . $editUrl . '" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-brand-50 text-slate-600 hover:text-brand-600 text-xs font-bold transition-colors">
+                        <i class="fas fa-edit"></i> Edit
+                    </a>';
+                })
+
+                ->rawColumns(['name_display', 'module_display', 'status', 'actions'])
                 ->make(true);
         }
 
         $modules = Module::query()->orderBy('name')->get();
-        return view('theme.adminlte.settings.permissions.index', compact('modules'));
+        return view('catvara.admin.permissions.index', compact('modules'));
     }
 
     public function create()
     {
         $modules = Module::query()->orderBy('name')->get();
-        return view('theme.adminlte.settings.permissions.create', compact('modules'));
+        return view('catvara.admin.permissions.form', compact('modules'));
     }
 
     public function store(PermissionStoreRequest $request)
@@ -130,7 +121,7 @@ class PermissionController extends Controller
         $permission = Permission::findOrFail($id);
         $modules = Module::query()->orderBy('name')->get();
 
-        return view('theme.adminlte.settings.permissions.edit', compact('permission', 'modules'));
+        return view('catvara.admin.permissions.form', compact('permission', 'modules'));
     }
 
     public function update(PermissionUpdateRequest $request, string $id)

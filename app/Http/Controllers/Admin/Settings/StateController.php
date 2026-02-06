@@ -16,48 +16,73 @@ class StateController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $query = State::with('country');
+            $query = State::with('country')
+                ->select('states.*')
+                ->leftJoin('countries', 'states.country_id', '=', 'countries.id');
 
             // Apply filters
             if ($request->filled('is_active')) {
-                $query->where('is_active', $request->is_active);
+                $query->where('states.is_active', $request->is_active);
             }
 
             if ($request->filled('country_id')) {
-                $query->where('country_id', $request->country_id);
+                $query->where('states.country_id', $request->country_id);
             }
 
             return DataTables::eloquent($query)
-                ->addColumn('country_name', function ($state) {
-                    return $state->country ? $state->country->name : '-';
+                ->addColumn('name_html', function ($state) {
+                    return '
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-purple-50 flex items-center justify-center shrink-0">
+                                <i class="fas fa-map-marker-alt text-purple-500"></i>
+                            </div>
+                            <div>
+                                <p class="font-semibold text-slate-800">' . e($state->name) . '</p>
+                                ' . ($state->code ? '<p class="text-xs text-slate-400">Code: ' . e($state->code) . '</p>' : '') . '
+                            </div>
+                        </div>';
                 })
-                ->addColumn('status_badge', function ($state) {
+                ->addColumn('country_html', function ($state) {
+                    if (!$state->country) {
+                        return '<span class="text-slate-400">—</span>';
+                    }
+                    return '
+                        <div class="flex items-center gap-2">
+                            <span class="px-2 py-1 text-xs font-bold rounded bg-blue-50 text-blue-600">' . e($state->country->iso_code_2) . '</span>
+                            <span class="text-slate-700">' . e($state->country->name) . '</span>
+                        </div>';
+                })
+                ->addColumn('type_html', function ($state) {
+                    if (!$state->type) {
+                        return '<span class="text-slate-400">—</span>';
+                    }
+                    return '<span class="px-2.5 py-1 text-xs font-medium rounded-full bg-slate-100 text-slate-600">' . e(ucfirst($state->type)) . '</span>';
+                })
+                ->addColumn('status_html', function ($state) {
                     return $state->is_active
-                        ? '<span class="badge badge-success">Active</span>'
-                        : '<span class="badge badge-secondary">Inactive</span>';
+                        ? '<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-600"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>Active</span>'
+                        : '<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-500"><span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>Inactive</span>';
                 })
-                ->addColumn('action', function ($state) {
+                ->addColumn('actions', function ($state) {
                     $editUrl = route('states.edit', $state->uuid);
                     $deleteUrl = route('states.destroy', $state->uuid);
-
                     return '
-                        <div class="btn-group btn-group-sm">
-                            <a href="' . $editUrl . '" class="btn btn-info" title="Edit">
-                                <i class="fas fa-edit"></i>
+                        <div class="flex items-center justify-end gap-1">
+                            <a href="' . $editUrl . '" class="p-2 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-all" title="Edit">
+                                <i class="fas fa-pen text-xs"></i>
                             </a>
-                            <button type="button" class="btn btn-danger btn-delete"
-                                data-url="' . $deleteUrl . '" title="Delete">
-                                <i class="fas fa-trash"></i>
+                            <button type="button" class="p-2 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-all btn-delete" data-url="' . $deleteUrl . '" title="Delete">
+                                <i class="fas fa-trash text-xs"></i>
                             </button>
                         </div>';
                 })
-                ->rawColumns(['status_badge', 'action'])
+                ->rawColumns(['name_html', 'country_html', 'type_html', 'status_html', 'actions'])
                 ->toJson();
         }
 
         $countries = Country::active()->ordered()->get();
 
-        return view('theme.adminlte.settings.states.index', compact('countries'));
+        return view('catvara.admin.states.index', compact('countries'));
     }
 
     /**

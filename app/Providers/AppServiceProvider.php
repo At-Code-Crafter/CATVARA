@@ -31,6 +31,18 @@ class AppServiceProvider extends ServiceProvider
      */
     protected function registerObservers(): void
     {
+        \App\Models\User::observe(\App\Observers\UserObserver::class);
+        \App\Models\Auth\Role::observe(\App\Observers\RoleObserver::class);
+        \App\Models\Auth\Module::observe(\App\Observers\ModuleObserver::class);
+        \App\Models\Auth\Permission::observe(\App\Observers\PermissionObserver::class);
+        \App\Models\Common\Country::observe(\App\Observers\CountryObserver::class);
+        \App\Models\Common\State::observe(\App\Observers\StateObserver::class);
+        \App\Models\Accounting\PaymentMethod::observe(\App\Observers\PaymentMethodObserver::class);
+        \App\Models\Accounting\PaymentTerm::observe(\App\Observers\PaymentTermObserver::class);
+        \App\Models\Sales\Order::observe(\App\Observers\OrderObserver::class);
+        \App\Models\Catalog\Category::observe(\App\Observers\CategoryObserver::class);
+        \App\Models\Catalog\Brand::observe(\App\Observers\BrandObserver::class);
+        \App\Models\Catalog\Attribute::observe(\App\Observers\AttributeObserver::class);
         \App\Models\Pricing\CompanyPriceChannel::observe(\App\Observers\CompanyPriceChannelObserver::class);
         \App\Models\Customer\Customer::observe(\App\Observers\CustomerObserver::class);
     }

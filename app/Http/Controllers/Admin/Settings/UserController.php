@@ -121,7 +121,6 @@ class UserController extends Controller
             }
 
             $user = User::create([
-                'uuid' => (string) Str::uuid(),
                 'name' => $data['name'],
                 'email' => $data['email'],
                 'password' => Hash::make($data['password']),
@@ -275,31 +274,10 @@ class UserController extends Controller
         DB::beginTransaction();
         try {
             // Sync the main pivot (is_owner and is_active)
-            $user->companies()->syncWithoutDetaching([
-                $data['company_id'] => [
-                    'is_owner' => (bool) ($data['is_owner'] ?? false),
-                    'is_active' => (bool) ($data['is_active'] ?? false),
-                    'updated_at' => now(),
-                ],
-            ]);
+            $user->assignToCompany($data['company_id'], (bool) ($data['is_owner'] ?? false), (bool) ($data['is_active'] ?? false));
 
             // Sync the roles (Company User Role)
-            DB::table('company_user_role')
-                ->where('company_id', $data['company_id'])
-                ->where('user_id', $user->id)
-                ->delete();
-
-            if (! empty($data['role_ids'])) {
-                foreach ($data['role_ids'] as $roleId) {
-                    DB::table('company_user_role')->insert([
-                        'company_id' => $data['company_id'],
-                        'user_id' => $user->id,
-                        'role_id' => $roleId,
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ]);
-                }
-            }
+            $user->syncRoles($data['role_ids'] ?? [], (int) $data['company_id']);
 
             DB::commit();
 
@@ -327,15 +305,8 @@ class UserController extends Controller
 
         DB::beginTransaction();
         try {
-            DB::table('company_user_role')
-                ->where('company_id', $request->company_id)
-                ->where('user_id', $user->id)
-                ->delete();
-
-            DB::table('company_user')
-                ->where('company_id', $request->company_id)
-                ->where('user_id', $user->id)
-                ->delete();
+            // Remove from company (and its roles)
+            $user->removeFromCompany((int) $request->company_id);
 
             DB::commit();
 

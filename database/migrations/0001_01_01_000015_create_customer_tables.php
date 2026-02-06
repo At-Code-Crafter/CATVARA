@@ -30,6 +30,10 @@ return new class extends Migration
             $table->string('legal_name')->nullable();
             $table->string('tax_number')->nullable();
 
+            $table->foreignId('tax_group_id')->nullable();
+            $table->boolean('is_tax_exempt')->default(false);
+            $table->string('tax_exempt_reason')->nullable();
+
             $table->decimal('percentage_discount', 5, 2)->default(0);
             $table->string('timezone', 100)->nullable();
 
@@ -55,8 +59,11 @@ return new class extends Migration
             $table->foreign('payment_term_id', 'cust_payment_term_fk')
                 ->references('id')->on('payment_terms')
                 ->nullOnDelete();
-        });
 
+            $table->foreign('tax_group_id', 'cust_tax_group_fk')
+                ->references('id')->on('tax_groups')
+                ->nullOnDelete();
+        });
 
     }
 

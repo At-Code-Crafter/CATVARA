@@ -75,7 +75,7 @@
 
   {{-- Main Content --}}
   <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-      
+
     {{-- Left: Stock Levels --}}
       <div class="lg:col-span-2 space-y-8">
         <div class="card bg-white border-slate-100 shadow-soft overflow-hidden">
@@ -92,15 +92,15 @@
                     </select>
                 </div>
             </div>
-            <div class="p-0">
+            <div class="p-6">
                 <table id="balances-table" class="table-premium w-full text-left">
                     <thead>
                         <tr>
-                            <th>SKU / Product</th>
+                            <th class="px-4!">SKU / Product</th>
                             <th>Location</th>
-                            <th>On Hand</th>
+                            <th class="text-center">On Hand</th>
                             <th>Last Move</th>
-                            <th class="text-right">Action</th>
+                            <th class="text-right px-4!">Action</th>
                         </tr>
                     </thead>
                     <tbody></tbody>
@@ -164,11 +164,15 @@
         columns: [{
             data: 'sku',
             name: 'variant.sku',
+            className: 'px-4',
             render: function(data, type, row) {
+                // Truncate long SKUs
+                let displaySku = data && data.length > 30 ? data.substring(0, 30) + '...' : (data || '—');
+                let displayName = row.product_name && row.product_name.length > 40 ? row.product_name.substring(0, 40) + '...' : (row.product_name || '');
                 return `
-                    <div class="flex flex-col">
-                        <span class="font-bold text-slate-700 text-sm">${data}</span>
-                        <span class="text-xs text-slate-500 truncate max-w-[200px]" title="${row.product_name}">${row.product_name}</span>
+                    <div class="flex flex-col py-1">
+                        <span class="font-bold text-slate-700 text-sm" title="${data || ''}">${displaySku}</span>
+                        <span class="text-xs text-slate-400" title="${row.product_name || ''}">${displayName}</span>
                     </div>
                 `;
             }
@@ -177,25 +181,36 @@
             data: 'location_name',
             name: 'location.locatable.name',
             render: function(data) {
-                return `<span class="text-xs font-semibold text-slate-500 bg-slate-100 px-2 py-1 rounded inline-block">${data}</span>`;
+                return `<span class="text-xs font-semibold text-slate-600 bg-slate-100 px-2.5 py-1 rounded-lg inline-block">${data || '—'}</span>`;
             }
           },
           {
             data: 'quantity',
             name: 'quantity',
-            className: 'text-center font-mono font-bold'
+            className: 'text-center',
+            render: function(data) {
+                let qty = parseFloat(data) || 0;
+                if (qty <= 0) {
+                    return `<span class="inline-flex items-center justify-center min-w-[40px] px-2.5 py-1 rounded-full text-xs font-bold bg-red-50 text-red-600 ring-1 ring-inset ring-red-200">${qty}</span>`;
+                } else if (qty <= 5) {
+                    return `<span class="inline-flex items-center justify-center min-w-[40px] px-2.5 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-600 ring-1 ring-inset ring-amber-200">${qty}</span>`;
+                }
+                return `<span class="inline-flex items-center justify-center min-w-[40px] px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-600 ring-1 ring-inset ring-emerald-200">${qty}</span>`;
+            }
           },
           {
             data: 'last_movement',
             name: 'last_movement_at',
-            className: 'text-xs text-slate-400'
+            render: function(data) {
+                return data ? `<span class="text-xs text-slate-500">${data}</span>` : `<span class="text-xs text-slate-300">—</span>`;
+            }
           },
           {
             data: 'actions',
             name: 'actions',
             orderable: false,
             searchable: false,
-            className: 'text-right'
+            className: 'text-right px-4'
           }
         ],
         language: {

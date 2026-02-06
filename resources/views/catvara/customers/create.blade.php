@@ -191,9 +191,9 @@
                       $timezones = DateTimeZone::listIdentifiers(DateTimeZone::ALL);
                       $groupedTimezones = [];
                       foreach ($timezones as $tz) {
-                        $parts = explode('/', $tz, 2);
-                        $region = $parts[0];
-                        $groupedTimezones[$region][] = $tz;
+                          $parts = explode('/', $tz, 2);
+                          $region = $parts[0];
+                          $groupedTimezones[$region][] = $tz;
                       }
                     @endphp
                     @foreach ($groupedTimezones as $region => $tzList)
@@ -232,6 +232,55 @@
                   @endforeach
                 </select>
               </div>
+
+              {{-- Tax Group --}}
+              <div class="space-y-1.5">
+                <label class="text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-1">
+                  Default Tax Group
+                </label>
+                <select name="tax_group_id" class="w-full pt-1">
+                  <option value="">No default</option>
+                  @foreach ($taxGroups as $tg)
+                    <option value="{{ $tg->id }}" {{ old('tax_group_id') == $tg->id ? 'selected' : '' }}>
+                      {{ $tg->name }}
+                    </option>
+                  @endforeach
+                </select>
+                <p class="text-[10px] text-slate-400 font-semibold mt-1">
+                  Used as default for this customer’s orders/invoices (line items can override).
+                </p>
+              </div>
+
+              {{-- Tax Exempt --}}
+              <div class="pt-2 border-t border-slate-50 space-y-3">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <h4 class="font-bold text-slate-800 text-[11px] uppercase tracking-wider">Tax Exempt</h4>
+                    <p class="text-[10px] text-slate-400 font-medium tracking-tight">Overrides tax group</p>
+                  </div>
+
+                  <label class="relative inline-flex items-center cursor-pointer">
+                    <input type="hidden" name="is_tax_exempt" value="0">
+                    <input type="checkbox" name="is_tax_exempt" value="1" class="sr-only peer"
+                      {{ old('is_tax_exempt', '0') == '1' ? 'checked' : '' }}>
+                    <div
+                      class="w-11 h-6 bg-slate-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500">
+                    </div>
+                  </label>
+                </div>
+
+                <div id="tax_exempt_reason_wrap" class="{{ old('is_tax_exempt', '0') == '1' ? '' : 'hidden' }}">
+                  <label class="text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-1">Exempt
+                    Reason</label>
+                  <div class="input-icon-group">
+                    <i class="fas fa-info-circle"></i>
+                    <input type="text" name="tax_exempt_reason" value="{{ old('tax_exempt_reason') }}"
+                      class="w-full py-2.5 font-semibold placeholder:font-normal"
+                      placeholder="e.g. Export, Government, Charity">
+                  </div>
+                </div>
+              </div>
+
 
               <div class="space-y-1.5">
                 <label class="text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-1">Global Discount
@@ -315,6 +364,22 @@
 
       $('#customer_type').on('change', toggleLegalName);
       toggleLegalName();
+
+      function toggleTaxExemptReason() {
+        const checked = $('input[name="is_tax_exempt"]').is(':checked');
+        if (checked) {
+          $('#tax_exempt_reason_wrap').removeClass('hidden').hide().fadeIn(200);
+        } else {
+          $('#tax_exempt_reason_wrap').fadeOut(150, function() {
+            $(this).addClass('hidden');
+          });
+          $('input[name="tax_exempt_reason"]').val('');
+        }
+      }
+
+      $('input[name="is_tax_exempt"]').on('change', toggleTaxExemptReason);
+      toggleTaxExemptReason();
+
 
       // Country -> State cascading
       $('#country_id').on('change', function() {

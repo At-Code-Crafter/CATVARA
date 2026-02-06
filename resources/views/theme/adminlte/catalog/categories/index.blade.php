@@ -191,7 +191,7 @@
           <i class="fas fa-table"></i> Category Directory
         </h3>
         <div class="text-muted small">
-          
+
         </div>
       </div>
     </div>
@@ -202,7 +202,8 @@
           <thead>
             <tr>
               <th style="min-width: 320px;">Name</th>
-              <th style="min-width: 220px;">Slug</th>
+              {{-- <th style="min-width: 220px;">Slug</th> --}}
+              <th style="min-width: 140px;">Products</th>
               <th style="min-width: 200px;">Parent</th>
               <th style="min-width: 140px;">Children</th>
               <th style="min-width: 120px;">Status</th>
@@ -300,7 +301,8 @@
         // IMPORTANT: column "name" must match selected aliases from controller query
         columns: [
           { data: 'name_html', name: 'name' },
-          { data: 'slug_html', name: 'slug' },
+          // { data: 'slug_html', name: 'slug' },
+          { data: 'products_count_html', name: 'products_count', searchable: false },
           { data: 'parent_html', name: 'parent_name', orderable: true, searchable: true },
           { data: 'children_html', name: 'children_count', searchable: false },
           { data: 'status_badge', name: 'is_active', searchable: false },

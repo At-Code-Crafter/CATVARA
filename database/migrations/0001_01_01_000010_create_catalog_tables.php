@@ -40,6 +40,11 @@ return new class extends Migration
                 ->constrained('categories')
                 ->nullOnDelete();
 
+            $table->foreignId('tax_group_id')
+                ->nullable()
+                ->constrained('tax_groups')
+                ->nullOnDelete();
+
             $table->string('name');
             $table->string('slug');
             $table->string('image')->nullable();
@@ -48,6 +53,8 @@ return new class extends Migration
             $table->timestamps();
 
             $table->unique(['company_id', 'slug'], 'cat_company_slug_unique');
+
+            $table->index(['company_id', 'tax_group_id'], 'cat_company_tax_group_idx');
         });
 
         /**

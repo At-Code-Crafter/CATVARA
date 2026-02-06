@@ -27,27 +27,59 @@ class CountryController extends Controller
             }
 
             return DataTables::eloquent($query)
-                ->addColumn('status_badge', function ($country) {
-                    return $country->is_active
-                        ? '<span class="badge badge-success">Active</span>'
-                        : '<span class="badge badge-secondary">Inactive</span>';
+                ->addColumn('name_html', function ($country) {
+                    return '
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center shrink-0">
+                                <span class="text-sm font-bold text-blue-600">' . substr($country->name, 0, 2) . '</span>
+                            </div>
+                            <div>
+                                <p class="font-semibold text-slate-800">' . e($country->name) . '</p>
+                                <p class="text-xs text-slate-400">' . e($country->capital ?? 'No capital') . '</p>
+                            </div>
+                        </div>';
                 })
-                ->addColumn('action', function ($country) {
+                ->addColumn('iso_html', function ($country) {
+                    return '
+                        <div class="flex items-center gap-2">
+                            <span class="px-2 py-1 text-xs font-bold rounded bg-slate-100 text-slate-700">' . e($country->iso_code_2) . '</span>
+                            <span class="px-2 py-1 text-xs font-medium rounded bg-slate-50 text-slate-500">' . e($country->iso_code_3) . '</span>
+                        </div>';
+                })
+                ->addColumn('region_html', function ($country) {
+                    if (!$country->region) {
+                        return '<span class="text-slate-400">—</span>';
+                    }
+                    return '
+                        <div>
+                            <p class="font-medium text-slate-700">' . e($country->region) . '</p>
+                            ' . ($country->subregion ? '<p class="text-xs text-slate-400">' . e($country->subregion) . '</p>' : '') . '
+                        </div>';
+                })
+                ->addColumn('states_html', function ($country) {
+                    $count = $country->states_count;
+                    $bgColor = $count > 0 ? 'bg-purple-50 text-purple-600' : 'bg-slate-50 text-slate-400';
+                    return '<span class="inline-flex items-center justify-center w-8 h-8 rounded-lg text-sm font-bold ' . $bgColor . '">' . $count . '</span>';
+                })
+                ->addColumn('status_html', function ($country) {
+                    return $country->is_active
+                        ? '<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-600"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>Active</span>'
+                        : '<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-500"><span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>Inactive</span>';
+                })
+                ->addColumn('actions', function ($country) {
                     $editUrl = route('countries.edit', $country->uuid);
                     $deleteUrl = route('countries.destroy', $country->uuid);
-
                     return '
-                        <div class="btn-group btn-group-sm">
-                            <a href="' . $editUrl . '" class="btn btn-info" title="Edit">
-                                <i class="fas fa-edit"></i>
+                        <div class="flex items-center justify-end gap-1">
+                            <a href="' . $editUrl . '" class="p-2 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-all" title="Edit">
+                                <i class="fas fa-pen text-xs"></i>
                             </a>
-                            <button type="button" class="btn btn-danger btn-delete"
-                                data-url="' . $deleteUrl . '" title="Delete">
-                                <i class="fas fa-trash"></i>
+                            <button type="button" class="p-2 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-all btn-delete" data-url="' . $deleteUrl . '" title="Delete">
+                                <i class="fas fa-trash text-xs"></i>
                             </button>
                         </div>';
                 })
-                ->rawColumns(['status_badge', 'action'])
+                ->rawColumns(['name_html', 'iso_html', 'region_html', 'states_html', 'status_html', 'actions'])
                 ->toJson();
         }
 
@@ -57,7 +89,7 @@ class CountryController extends Controller
             ->orderBy('region')
             ->pluck('region');
 
-        return view('theme.adminlte.settings.countries.index', compact('regions'));
+        return view('catvara.admin.countries.index', compact('regions'));
     }
 
     /**

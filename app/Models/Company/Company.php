@@ -14,7 +14,17 @@ class Company extends Model
 {
     use SoftDeletes;
 
-    protected $guarded = [];
+    protected $fillable = [
+        'uuid',
+        'name',
+        'legal_name',
+        'code',
+        'logo',
+        'website_url',
+        'base_currency_id',
+        'company_status_id',
+        'password_expiry_days',
+    ];
 
     protected static function booted()
     {

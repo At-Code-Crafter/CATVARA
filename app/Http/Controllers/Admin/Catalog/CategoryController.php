@@ -3,11 +3,15 @@
 namespace App\Http\Controllers\Admin\Catalog;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Catalog\CategoryStoreRequest;
+use App\Http\Requests\Catalog\CategoryUpdateRequest;
+use App\Models\Catalog\Attribute;
 use App\Models\Catalog\Category;
 use App\Models\Company\Company;
+use App\Models\Tax\TaxGroup;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str; // Added for type hinting in getAttributes and edit/destroy methods
+use Illuminate\Support\Str;
 use Yajra\DataTables\Facades\DataTables;
 
 class CategoryController extends Controller
@@ -18,8 +22,7 @@ class CategoryController extends Controller
 
         $company = $request->company;
 
-        // Non-ajax page load: provide parent list for filter dropdown
-        if (!$request->ajax()) {
+        if (! $request->ajax()) {
             $parents = Category::query()
                 ->where('company_id', $company->id)
                 ->orderBy('name')
@@ -28,19 +31,17 @@ class CategoryController extends Controller
             return view('catvara.catalog.categories.index', compact('parents'));
         }
 
-        // Ajax: DataTables
         $query = $this->baseQuery($request);
 
         return DataTables::of($query)
             ->addIndexColumn()
 
             ->addColumn('name_html', function ($row) {
-                // WordPress-like indentation (supports up to 2 levels via parent + grandparent joins)
                 $depth = 0;
-                if (!empty($row->parent_id)) {
+                if (! empty($row->parent_id)) {
                     $depth = 1;
                 }
-                if (!empty($row->grandparent_id)) {
+                if (! empty($row->grandparent_id)) {
                     $depth = 2;
                 }
 
@@ -49,44 +50,42 @@ class CategoryController extends Controller
                     $indent .= '<span class="text-slate-300 mr-2">—</span>';
                 }
 
-                $sub = '';
-                if (!empty($row->grandparent_name) && !empty($row->parent_name)) {
-                    // Clean up sub-text if needed, or remove it for cleaner look unless essential
-                    //$sub = '<div class="text-slate-400 text-xs mt-0.5">In: '.e($row->grandparent_name).' → '.e($row->parent_name).'</div>';
-                    $sub = '';
-                } elseif (!empty($row->parent_name)) {
-                    //$sub = '<div class="text-slate-400 text-xs mt-0.5">In: '.e($row->parent_name).'</div>';
-                    $sub = '';
-                }
-
                 return '
                     <div class="flex items-center">
-                      <div class="font-medium text-slate-800">' . $indent . e($row->name) . '</div>
-                      ' . $sub . '
+                      <div class="font-medium text-slate-800">'.$indent.e($row->name).'</div>
                     </div>
                 ';
             })
 
-            ->addColumn(
-                'slug_html',
-                fn($row) => '<span class="text-xs font-mono text-slate-500 bg-slate-100 px-2 py-0.5 rounded">' . e($row->slug) . '</span>'
+            ->addColumn('slug_html', fn ($row) => '<span class="text-xs font-mono text-slate-500 bg-slate-100 px-2 py-0.5 rounded">'.e($row->slug).'</span>'
             )
 
-            ->addColumn('parent_html', function ($row) {
-                if (!empty($row->parent_name)) {
-                    return '<span class="text-xs font-medium text-slate-600 bg-slate-100 px-2 py-1 rounded-md border border-slate-200">' . e($row->parent_name) . '</span>';
-                }
+            ->addColumn('products_count_html', function ($row) {
+                $count = (int) ($row->products_count ?? 0);
 
-                return '<span class="text-slate-300 text-xs">—</span>';
+                return $count > 0
+                    ? '<span class="text-xs font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full ring-1 ring-inset ring-emerald-500/10">'.$count.' products</span>'
+                    : '<span class="text-slate-300 text-xs">0 products</span>';
+            })
+
+            ->addColumn('parent_html', function ($row) {
+                return ! empty($row->parent_name)
+                    ? '<span class="text-xs font-medium text-slate-600 bg-slate-100 px-2 py-1 rounded-md border border-slate-200">'.e($row->parent_name).'</span>'
+                    : '<span class="text-slate-300 text-xs">—</span>';
             })
 
             ->addColumn('children_html', function ($row) {
                 $count = (int) ($row->children_count ?? 0);
-                if ($count > 0) {
-                    return '<span class="text-xs font-semibold text-brand-600 bg-brand-50 px-2 py-0.5 rounded-full ring-1 ring-inset ring-brand-500/10">' . $count . '</span>';
-                }
 
-                return '<span class="text-slate-300 text-xs">—</span>';
+                return $count > 0
+                    ? '<span class="text-xs font-semibold text-brand-600 bg-brand-50 px-2 py-0.5 rounded-full ring-1 ring-inset ring-brand-500/10">'.$count.'</span>'
+                    : '<span class="text-slate-300 text-xs">—</span>';
+            })
+
+            ->addColumn('tax_group_html', function ($row) {
+                return ! empty($row->tax_group_name)
+                    ? '<span class="text-xs font-semibold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-full ring-1 ring-inset ring-indigo-600/20">'.e($row->tax_group_name).'</span>'
+                    : '<span class="text-slate-300 text-xs">—</span>';
             })
 
             ->addColumn('status_badge', function ($row) {
@@ -95,9 +94,7 @@ class CategoryController extends Controller
                     : '<span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-slate-50 text-slate-600 ring-1 ring-inset ring-slate-500/20">Inactive</span>';
             })
 
-            ->editColumn('created_at', function ($row) {
-                return $row->created_at ? date('Y-m-d', strtotime($row->created_at)) : '-';
-            })
+            ->editColumn('created_at', fn ($row) => $row->created_at ? date('Y-m-d', strtotime($row->created_at)) : '-')
 
             ->addColumn('action', function ($row) {
                 $editUrl = company_route('catalog.categories.edit', ['category' => $row->id]);
@@ -105,14 +102,14 @@ class CategoryController extends Controller
 
                 return '
                    <div class="flex items-center justify-end gap-2">
-                        <a href="' . $editUrl . '" class="text-slate-400 hover:text-brand-600 transition-colors p-1" title="Edit">
+                        <a href="'.$editUrl.'" class="text-slate-400 hover:text-brand-600 transition-colors p-1" title="Edit">
                             <i class="fas fa-edit"></i>
                         </a>
-                         <button type="button" class="text-slate-400 hover:text-red-600 transition-colors p-1" title="Delete" onclick="confirmDelete(\'' . $deleteUrl . '\')">
+                         <button type="button" class="text-slate-400 hover:text-red-600 transition-colors p-1" title="Delete" onclick="confirmDelete(\''.$deleteUrl.'\')">
                             <i class="fas fa-trash"></i>
                         </button>
                    </div>
-                   ';
+                ';
             })
 
             ->rawColumns([
@@ -120,6 +117,8 @@ class CategoryController extends Controller
                 'slug_html',
                 'parent_html',
                 'children_html',
+                'products_count_html',
+                'tax_group_html',
                 'status_badge',
                 'action',
             ])
@@ -129,8 +128,6 @@ class CategoryController extends Controller
     public function stats(Request $request)
     {
         $base = $this->baseQuery($request);
-
-        // Wrap the same base query to count without breaking joins/prefix aliases
         $sub = DB::query()->fromSub($base, 'x');
 
         $all = (clone $sub)->count();
@@ -146,54 +143,56 @@ class CategoryController extends Controller
         ]);
     }
 
-    /**
-     * Prefix-safe base query with joins + filters
-     * IMPORTANT: selects are plain aliases (name, slug, parent_name...) so DataTables ordering works reliably.
-     */
     private function baseQuery(Request $request)
     {
         $company = $request->company;
 
-        $prefix = DB::getTablePrefix();     // e.g. "ec_"
-        $table = (new Category)->getTable(); // "categories"
+        $prefix = DB::getTablePrefix();
+        $table = (new Category)->getTable(); // categories
 
-        // Because prefix also affects aliases on your connection, reference prefixed aliases in raw expressions
-        $c = $prefix . 'c';
-        $p = $prefix . 'p';
-        $gp = $prefix . 'gp';
-        $cc = $prefix . 'cc';
+        $c = $prefix.'c';
+        $p = $prefix.'p';
+        $gp = $prefix.'gp';
+        $cc = $prefix.'cc';
+        $pc = $prefix.'pc';
+        $tg = $prefix.'tg';
 
-        // children count (direct children per category)
-        $childrenCount = DB::table($table . ' as c2')
+        $childrenCount = DB::table($table.' as c2')
             ->select('c2.parent_id', DB::raw('COUNT(*) as children_count'))
             ->where('c2.company_id', $company->id)
             ->groupBy('c2.parent_id');
 
-        $q = DB::table($table . ' as c')
-            ->leftJoin($table . ' as p', 'p.id', '=', 'c.parent_id')
-            ->leftJoin($table . ' as gp', 'gp.id', '=', 'p.parent_id')
-            ->leftJoinSub($childrenCount, 'cc', function ($join) {
-                $join->on('cc.parent_id', '=', 'c.id');
-            })
+        $productsCount = DB::table('products as pr')
+            ->select('pr.category_id', DB::raw('COUNT(*) as products_count'))
+            ->where('pr.company_id', $company->id)
+            ->groupBy('pr.category_id');
+
+        $q = DB::table($table.' as c')
+            ->leftJoin($table.' as p', 'p.id', '=', 'c.parent_id')
+            ->leftJoin($table.' as gp', 'gp.id', '=', 'p.parent_id')
+            ->leftJoinSub($childrenCount, 'cc', fn ($join) => $join->on('cc.parent_id', '=', 'c.id'))
+            ->leftJoinSub($productsCount, 'pc', fn ($join) => $join->on('pc.category_id', '=', 'c.id'))
+            ->leftJoin('tax_groups as tg', 'tg.id', '=', 'c.tax_group_id')
             ->where('c.company_id', $company->id)
             ->select([
-                // Select as plain names (NO table alias in DataTables column names)
                 'c.id as id',
                 'c.company_id as company_id',
                 'c.parent_id as parent_id',
+                'c.tax_group_id as tax_group_id',
                 'c.name as name',
                 'c.slug as slug',
                 'c.is_active as is_active',
                 'c.created_at as created_at',
 
-                // Prefix-safe alias references:
                 DB::raw("{$p}.name as parent_name"),
                 DB::raw("{$gp}.id as grandparent_id"),
                 DB::raw("{$gp}.name as grandparent_name"),
                 DB::raw("COALESCE({$cc}.children_count, 0) as children_count"),
+                DB::raw("COALESCE({$pc}.products_count, 0) as products_count"),
+
+                DB::raw("{$tg}.name as tax_group_name"),
             ]);
 
-        // Filters
         if ($request->filled('is_active')) {
             $q->where('c.is_active', (int) $request->is_active);
         }
@@ -229,41 +228,49 @@ class CategoryController extends Controller
     {
         $this->authorize('create', 'categories');
 
-        $categories = Category::where('company_id', request()->company->id)->with('children')->get();
-        // Load all attributes for selection
-        $attributes = \App\Models\Catalog\Attribute::where('company_id', request()->company->id)->get();
+        $company = request()->company;
 
-        return view('catvara.catalog.categories.form', compact('categories', 'attributes'));
+        $categories = Category::where('company_id', $company->id)->with('children')->get();
+        $attributes = Attribute::where('company_id', $company->id)->get();
+
+        $taxGroups = TaxGroup::where('company_id', $company->id)
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get(['id', 'name']);
+
+        return view('catvara.catalog.categories.form', compact('categories', 'attributes', 'taxGroups'));
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
+    public function store(CategoryStoreRequest $request)
     {
         $this->authorize('create', 'categories');
 
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'parent_id' => 'nullable|exists:categories,id',
-            'attributes' => 'required|array|min:1',
-            'attributes.*' => 'exists:attributes,id',
-        ]);
+        $company = $request->company;
 
-        $category = new Category;
-        // $category->uuid = Str::uuid();
-        $category->company_id = $request->company->id;
-        $category->parent_id = $request->parent_id;
-        $category->name = $request->name;
-        $category->slug = Str::slug($request->name);
-        $category->is_active = $request->has('is_active');
-        $category->save();
+        $validated = $request->validated();
 
-        // Sync Attributes
-        $category->attributes()->sync($validated['attributes']);
+        DB::beginTransaction();
 
-        return redirect(company_route('catalog.categories.index'))
-            ->with('success', 'Category created successfully.');
+        try {
+            $category = new Category;
+            $category->company_id = $company->id;
+            $category->parent_id = $validated['parent_id'] ?? null;
+            $category->tax_group_id = $validated['tax_group_id'] ?? null;
+            $category->name = $validated['name'];
+            $category->slug = Str::slug($validated['name']);
+            $category->is_active = (bool) ($validated['is_active'] ?? 0);
+            $category->save();
+
+            $category->attributes()->sync($validated['attributes']);
+
+            DB::commit();
+
+            return redirect(company_route('catalog.categories.index'))
+                ->with('success', 'Category created successfully.');
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            throw $e;
+        }
     }
 
     public function edit(Company $company, Category $category)
@@ -273,20 +280,23 @@ class CategoryController extends Controller
         if ($category->company_id !== $company->id) {
             abort(403);
         }
+
         $categories = Category::where('company_id', $company->id)
-            ->where('id', '!=', $category->id) // Prevent self-parenting loop
+            ->where('id', '!=', $category->id)
+            ->with('children')
             ->get();
 
-        // Load all attributes for selection
-        $attributes = \App\Models\Catalog\Attribute::where('company_id', $company->id)->get();
+        $attributes = Attribute::where('company_id', $company->id)->get();
 
-        return view('catvara.catalog.categories.form', compact('category', 'categories', 'attributes'));
+        $taxGroups = TaxGroup::where('company_id', $company->id)
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get(['id', 'name']);
+
+        return view('catvara.catalog.categories.form', compact('category', 'categories', 'attributes', 'taxGroups'));
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, Company $company, Category $category)
+    public function update(CategoryUpdateRequest $request, Company $company, Category $category)
     {
         $this->authorize('edit', 'categories');
 
@@ -294,24 +304,28 @@ class CategoryController extends Controller
             abort(403);
         }
 
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'parent_id' => 'nullable|exists:categories,id',
-            'attributes' => 'required|array|min:1',
-            'attributes.*' => 'exists:attributes,id',
-        ]);
+        $validated = $request->validated();
 
-        $category->parent_id = $request->parent_id;
-        $category->name = $request->name;
-        $category->slug = Str::slug($request->name);
-        $category->is_active = $request->has('is_active');
-        $category->save();
+        DB::beginTransaction();
 
-        // Sync Attributes
-        $category->attributes()->sync($validated['attributes']);
+        try {
+            $category->parent_id = $validated['parent_id'] ?? null;
+            $category->tax_group_id = $validated['tax_group_id'] ?? null;
+            $category->name = $validated['name'];
+            $category->slug = Str::slug($validated['name']);
+            $category->is_active = (bool) ($validated['is_active'] ?? 0);
+            $category->save();
 
-        return redirect(company_route('catalog.categories.index'))
-            ->with('success', 'Category updated successfully.');
+            $category->attributes()->sync($validated['attributes']);
+
+            DB::commit();
+
+            return redirect(company_route('catalog.categories.index'))
+                ->with('success', 'Category updated successfully.');
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            throw $e;
+        }
     }
 
     public function destroy(Company $company, Category $category)
@@ -322,7 +336,6 @@ class CategoryController extends Controller
             abort(403);
         }
 
-        // Check if has children or products... for now simple delete logic or catch exception
         try {
             $category->delete();
 

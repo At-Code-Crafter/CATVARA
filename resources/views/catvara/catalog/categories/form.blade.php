@@ -86,6 +86,33 @@
                   <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
                 @enderror
               </div>
+
+              <!-- Default Tax Group -->
+              <div>
+                <label for="tax_group_id" class="block text-sm font-semibold text-slate-700 mb-2">
+                  Default Tax Group
+                </label>
+
+                <select name="tax_group_id" id="tax_group_id" class="select2 w-full"
+                  data-placeholder="Select tax group (Optional)">
+                  <option value="">None</option>
+                  @foreach ($taxGroups as $tg)
+                    <option value="{{ $tg->id }}"
+                      {{ old('tax_group_id', $category->tax_group_id ?? '') == $tg->id ? 'selected' : '' }}>
+                      {{ $tg->name }}
+                    </option>
+                  @endforeach
+                </select>
+
+                <p class="mt-2 text-xs text-slate-500">
+                  Category-level default tax (later, products/variants/order-lines can override if you enable them).
+                </p>
+
+                @error('tax_group_id')
+                  <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
+                @enderror
+              </div>
+
             </div>
 
             <hr class="border-slate-50">

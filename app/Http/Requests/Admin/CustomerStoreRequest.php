@@ -52,6 +52,10 @@ class CustomerStoreRequest extends FormRequest
             'payment_term_id' => ['nullable', 'exists:payment_terms,id'],
             'percentage_discount' => ['nullable', 'numeric', 'min:0', 'max:100'],
             'timezone' => ['nullable', 'string', 'max:100', Rule::in(timezone_identifiers_list())],
+
+            'tax_group_id' => ['nullable', 'integer', 'exists:tax_groups,id'],
+            'is_tax_exempt' => ['nullable', 'boolean'],
+            'tax_exempt_reason' => ['nullable', 'string', 'max:255'],
         ];
     }
 

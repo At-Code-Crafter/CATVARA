@@ -20,20 +20,52 @@ class CurrencyController extends Controller
 
             return \DataTables::of($data)
                 ->addIndexColumn()
-                ->addColumn('action', function ($row) {
-                    $btn = '<a href="' . route('currencies.edit', $row->id) . '" class="btn btn-primary btn-sm"><i class="fas fa-edit"></i></a>';
-                    return $btn;
+                ->addColumn('name_html', function ($currency) {
+                    return '
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center shrink-0">
+                                <span class="text-lg font-bold text-amber-600">' . e($currency->symbol ?: '$') . '</span>
+                            </div>
+                            <div>
+                                <p class="font-semibold text-slate-800">' . e($currency->name) . '</p>
+                            </div>
+                        </div>';
                 })
-                ->editColumn('is_active', function ($row) {
-                    return $row->is_active
-                        ? '<span class="badge badge-success">Active</span>'
-                        : '<span class="badge badge-danger">Inactive</span>';
+                ->addColumn('code_html', function ($currency) {
+                    return '<span class="px-2.5 py-1 text-xs font-bold rounded bg-slate-100 text-slate-700">' . e($currency->code) . '</span>';
                 })
-                ->rawColumns(['action', 'is_active'])
+                ->addColumn('symbol_html', function ($currency) {
+                    if (!$currency->symbol) {
+                        return '<span class="text-slate-400">—</span>';
+                    }
+                    return '<span class="text-lg font-semibold text-slate-700">' . e($currency->symbol) . '</span>';
+                })
+                ->addColumn('decimals_html', function ($currency) {
+                    return '<span class="inline-flex items-center justify-center w-8 h-8 rounded-lg text-sm font-bold bg-blue-50 text-blue-600">' . $currency->decimal_places . '</span>';
+                })
+                ->addColumn('status_html', function ($currency) {
+                    return $currency->is_active
+                        ? '<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-600"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>Active</span>'
+                        : '<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-500"><span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>Inactive</span>';
+                })
+                ->addColumn('actions', function ($currency) {
+                    $editUrl = route('currencies.edit', $currency->id);
+                    $deleteUrl = route('currencies.destroy', $currency->id);
+                    return '
+                        <div class="flex items-center justify-end gap-1">
+                            <a href="' . $editUrl . '" class="p-2 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-all" title="Edit">
+                                <i class="fas fa-pen text-xs"></i>
+                            </a>
+                            <button type="button" class="p-2 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-all btn-delete" data-url="' . $deleteUrl . '" title="Delete">
+                                <i class="fas fa-trash text-xs"></i>
+                            </button>
+                        </div>';
+                })
+                ->rawColumns(['name_html', 'code_html', 'symbol_html', 'decimals_html', 'status_html', 'actions'])
                 ->make(true);
         }
 
-        return view('theme.adminlte.settings.currencies.index');
+        return view('catvara.admin.currencies.index');
     }
 
     public function create()
