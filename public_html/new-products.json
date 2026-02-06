@@ -6,8 +6,7 @@
         "variant_attributes": "Version: UK Version; Resistance: 0.4ohm; Capacity: 2ml; Pack Size: 3pcs\/pack",
         "cost": 2.88,
         "selling_price": 1.17,
-        "pkg_pieces": 13500,
-        "qty_box": 4500
+        "pkg_pieces": 13500
     },
     {
         "variant_sku": "OXVA00011",
@@ -16,8 +15,7 @@
         "variant_attributes": "Version: UK Version; Resistance: 0.6ohm; Capacity: 2ml; Pack Size: 3pcs\/pack",
         "cost": 2.88,
         "selling_price": 1.17,
-        "pkg_pieces": 2700,
-        "qty_box": 900
+        "pkg_pieces": 2700
     },
     {
         "variant_sku": "OXVA00013",
@@ -26,8 +24,7 @@
         "variant_attributes": "Version: Standard Version; Resistance: 0.8ohm; Capacity: 4ml; Pack Size: 3pcs\/pack",
         "cost": 3.68,
         "selling_price": 1.44,
-        "pkg_pieces": 9000,
-        "qty_box": 3000
+        "pkg_pieces": 9000
     },
     {
         "variant_sku": "OXVA00023",
@@ -36,8 +33,7 @@
         "variant_attributes": "Version: UK Version; Resistance: 0.6&0.8ohm; Capacity: 2ml; Color: Black Leather",
         "cost": 8.19,
         "selling_price": 13.5,
-        "pkg_pieces": 100,
-        "qty_box": 100
+        "pkg_pieces": 100
     },
     {
         "variant_sku": "OXVA00024",
@@ -46,8 +42,7 @@
         "variant_attributes": "Version: UK Version; Resistance: 0.6&0.8ohm; Capacity: 2ml; Color: Brown Leather",
         "cost": 8.19,
         "selling_price": 13.5,
-        "pkg_pieces": 100,
-        "qty_box": 100
+        "pkg_pieces": 100
     },
     {
         "variant_sku": "OXVA00025",
@@ -56,8 +51,7 @@
         "variant_attributes": "Version: UK Version; Resistance: 0.6&0.8ohm; Capacity: 2ml; Color: Pro Carbon",
         "cost": 8.19,
         "selling_price": 13.5,
-        "pkg_pieces": 100,
-        "qty_box": 100
+        "pkg_pieces": 100
     },
     {
         "variant_sku": "OXVA00026",
@@ -66,8 +60,7 @@
         "variant_attributes": "Version: UK Version; Resistance: 0.6&0.8ohm; Capacity: 2ml; Color: Black Carbon",
         "cost": 8.19,
         "selling_price": 13.5,
-        "pkg_pieces": 100,
-        "qty_box": 100
+        "pkg_pieces": 100
     },
     {
         "variant_sku": "OXVA00027",
@@ -76,8 +69,7 @@
         "variant_attributes": "Version: UK Version; Resistance: 0.6&0.8ohm; Capacity: 2ml; Color: Sky Blue",
         "cost": 8.19,
         "selling_price": 13.5,
-        "pkg_pieces": 100,
-        "qty_box": 100
+        "pkg_pieces": 100
     },
     {
         "variant_sku": "OXVA00028",
@@ -86,8 +78,7 @@
         "variant_attributes": "Version: UK Version; Resistance: 0.6&0.8ohm; Capacity: 2ml; Color: Race Red",
         "cost": 8.19,
         "selling_price": 13.5,
-        "pkg_pieces": 100,
-        "qty_box": 100
+        "pkg_pieces": 100
     },
     {
         "variant_sku": "OXVA00029",
@@ -96,8 +87,7 @@
         "variant_attributes": "Version: UK Version; Resistance: 0.6&0.8ohm; Capacity: 2ml; Color: Pink Silk",
         "cost": 8.19,
         "selling_price": 13.5,
-        "pkg_pieces": 100,
-        "qty_box": 100
+        "pkg_pieces": 100
     },
     {
         "variant_sku": "OXVA00030",
@@ -106,8 +96,7 @@
         "variant_attributes": "Version: UK Version; Resistance: 0.6&0.8ohm; Capacity: 2ml; Color: Purple Silk",
         "cost": 8.19,
         "selling_price": 13.5,
-        "pkg_pieces": 100,
-        "qty_box": 100
+        "pkg_pieces": 100
     },
     {
         "variant_sku": "OXVA00031",
@@ -116,8 +105,7 @@
         "variant_attributes": "Version: UK Version; Resistance: 0.6&0.8ohm; Capacity: 2ml; Color: Titanium Silk",
         "cost": 8.19,
         "selling_price": 13.5,
-        "pkg_pieces": 100,
-        "qty_box": 100
+        "pkg_pieces": 100
     },
     {
         "variant_sku": "OXVA00032",
@@ -126,8 +114,7 @@
         "variant_attributes": "Version: TPD Version; Resistance: 0.6&0.8ohm; Capacity: 2ml; Color: Black Warrior",
         "cost": 9.28,
         "selling_price": 14.5,
-        "pkg_pieces": 100,
-        "qty_box": 100
+        "pkg_pieces": 100
     },
     {
         "variant_sku": "OXVA00033",
@@ -136,8 +123,7 @@
         "variant_attributes": "Version: TPD Version; Resistance: 0.6&0.8ohm; Capacity: 2ml; Color: Black Gold",
         "cost": 9.28,
         "selling_price": 14.5,
-        "pkg_pieces": 100,
-        "qty_box": 100
+        "pkg_pieces": 100
     },
     {
         "variant_sku": "OXVA00034",
@@ -146,8 +132,7 @@
         "variant_attributes": "Version: TPD Version; Resistance: 0.6&0.8ohm; Capacity: 2ml; Color: Dark Brown",
         "cost": 9.28,
         "selling_price": 14.5,
-        "pkg_pieces": 100,
-        "qty_box": 100
+        "pkg_pieces": 100
     },
     {
         "variant_sku": "OXVA00035",
@@ -156,8 +141,7 @@
         "variant_attributes": "Version: TPD Version; Resistance: 0.6&0.8ohm; Capacity: 2ml; Color: Pine Green",
         "cost": 9.28,
         "selling_price": 14.5,
-        "pkg_pieces": 100,
-        "qty_box": 100
+        "pkg_pieces": 100
     },
     {
         "variant_sku": "OXVA00036",
@@ -166,8 +150,7 @@
         "variant_attributes": "Version: TPD Version; Resistance: 0.6&0.8ohm; Capacity: 2ml; Color: Starry Blue",
         "cost": 9.28,
         "selling_price": 14.5,
-        "pkg_pieces": 100,
-        "qty_box": 100
+        "pkg_pieces": 100
     },
     {
         "variant_sku": "OXVA00037",
@@ -176,8 +159,7 @@
         "variant_attributes": "Version: TPD Version; Resistance: 0.6&0.8ohm; Capacity: 2ml; Color: Rose Gold",
         "cost": 9.28,
         "selling_price": 14.5,
-        "pkg_pieces": 100,
-        "qty_box": 100
+        "pkg_pieces": 100
     },
     {
         "variant_sku": "OXVA00038",
@@ -186,8 +168,7 @@
         "variant_attributes": "Version: TPD Version; Resistance: 0.6&0.8ohm; Capacity: 2ml; Color: Dark Grey",
         "cost": 9.28,
         "selling_price": 14.5,
-        "pkg_pieces": 100,
-        "qty_box": 100
+        "pkg_pieces": 100
     },
     {
         "variant_sku": "OXVA00039",
@@ -196,8 +177,7 @@
         "variant_attributes": "Version: TPD Version; Resistance: 0.6&0.8ohm; Capacity: 2ml; Color: Pearl Pink",
         "cost": 9.28,
         "selling_price": 14.5,
-        "pkg_pieces": 100,
-        "qty_box": 100
+        "pkg_pieces": 100
     },
     {
         "variant_sku": "OXVA00040",
@@ -206,8 +186,7 @@
         "variant_attributes": "Version: TPD Version; Resistance: 0.6&0.8ohm; Capacity: 2ml; Color: Coral Orange",
         "cost": 9.28,
         "selling_price": 14.5,
-        "pkg_pieces": 100,
-        "qty_box": 100
+        "pkg_pieces": 100
     },
     {
         "variant_sku": "OXVA00041",
@@ -216,8 +195,7 @@
         "variant_attributes": "Version: TPD Version; Resistance: 0.6&0.8ohm; Capacity: 2ml; Color: Dark Blue",
         "cost": 9.28,
         "selling_price": 14.5,
-        "pkg_pieces": 100,
-        "qty_box": 100
+        "pkg_pieces": 100
     },
     {
         "variant_sku": "OXVA00042",
@@ -226,8 +204,7 @@
         "variant_attributes": "Version: TPD Version; Resistance: 0.6&0.8ohm; Capacity: 2ml; Color: Glory Red",
         "cost": 9.28,
         "selling_price": 14.5,
-        "pkg_pieces": 100,
-        "qty_box": 100
+        "pkg_pieces": 100
     },
     {
         "variant_sku": "OXVA00043",
@@ -236,8 +213,7 @@
         "variant_attributes": "Version: TPD Version; Resistance: 0.6&0.8ohm; Capacity: 2ml; Color: Power Black",
         "cost": 9.28,
         "selling_price": 14.5,
-        "pkg_pieces": 100,
-        "qty_box": 100
+        "pkg_pieces": 100
     },
     {
         "variant_sku": "OXVA00044",
@@ -246,8 +222,7 @@
         "variant_attributes": "Version: UK Version; Resistance: 0.6&0.8ohm; Capacity: 2ml; Color: Metal Gray",
         "cost": 9.47,
         "selling_price": 15.5,
-        "pkg_pieces": 100,
-        "qty_box": 100
+        "pkg_pieces": 100
     },
     {
         "variant_sku": "OXVA00045",
@@ -256,8 +231,7 @@
         "variant_attributes": "Version: UK Version; Resistance: 0.6&0.8ohm; Capacity: 2ml; Color: Metal Silver",
         "cost": 9.47,
         "selling_price": 15.5,
-        "pkg_pieces": 100,
-        "qty_box": 100
+        "pkg_pieces": 100
     },
     {
         "variant_sku": "OXVA00046",
@@ -266,8 +240,7 @@
         "variant_attributes": "Version: UK Version; Resistance: 0.6&0.8ohm; Capacity: 2ml; Color: Cherry Pink",
         "cost": 9.47,
         "selling_price": 15.5,
-        "pkg_pieces": 100,
-        "qty_box": 100
+        "pkg_pieces": 100
     },
     {
         "variant_sku": "OXVA00047",
@@ -276,8 +249,7 @@
         "variant_attributes": "Version: UK Version; Resistance: 0.6&0.8ohm; Capacity: 2ml; Color: Mint Green",
         "cost": 9.47,
         "selling_price": 15.5,
-        "pkg_pieces": 100,
-        "qty_box": 100
+        "pkg_pieces": 100
     },
     {
         "variant_sku": "OXVA00048",
@@ -286,8 +258,7 @@
         "variant_attributes": "Version: UK Version; Resistance: 0.6&0.8ohm; Capacity: 2ml; Color: Ultra Carbon",
         "cost": 9.47,
         "selling_price": 15.5,
-        "pkg_pieces": 100,
-        "qty_box": 100
+        "pkg_pieces": 100
     },
     {
         "variant_sku": "OXVA00049",
@@ -296,8 +267,7 @@
         "variant_attributes": "Version: UK Version; Resistance: 0.6&0.8ohm; Capacity: 2ml; Color: Mocha Brown",
         "cost": 9.47,
         "selling_price": 15.5,
-        "pkg_pieces": 100,
-        "qty_box": 100
+        "pkg_pieces": 100
     },
     {
         "variant_sku": "OXVA00050",
@@ -306,8 +276,7 @@
         "variant_attributes": "Version: UK Version; Resistance: 0.6&0.8ohm; Capacity: 2ml; Color: Midnight Black",
         "cost": 9.47,
         "selling_price": 15.5,
-        "pkg_pieces": 100,
-        "qty_box": 100
+        "pkg_pieces": 100
     },
     {
         "variant_sku": "OXVA00051",
@@ -316,8 +285,7 @@
         "variant_attributes": "Version: UK Version; Resistance: 0.6&0.8ohm; Capacity: 2ml; Color: Bordeaux Red",
         "cost": 9.47,
         "selling_price": 15.5,
-        "pkg_pieces": 100,
-        "qty_box": 100
+        "pkg_pieces": 100
     },
     {
         "variant_sku": "OXVA00052",
@@ -326,8 +294,7 @@
         "variant_attributes": "Version: TPD Version; Resistance: 0.6&0.8ohm; Color: Platinum Black",
         "cost": 8.19,
         "selling_price": 12.75,
-        "pkg_pieces": 100,
-        "qty_box": 100
+        "pkg_pieces": 100
     },
     {
         "variant_sku": "OXVA00053",
@@ -336,8 +303,7 @@
         "variant_attributes": "Version: TPD Version; Resistance: 0.6&0.8ohm; Color: Rose Pink",
         "cost": 8.19,
         "selling_price": 12.75,
-        "pkg_pieces": 100,
-        "qty_box": 100
+        "pkg_pieces": 100
     },
     {
         "variant_sku": "OXVA00054",
@@ -346,8 +312,7 @@
         "variant_attributes": "Version: TPD Version; Resistance: 0.6&0.8ohm; Color: Dark Shadow",
         "cost": 8.19,
         "selling_price": 12.75,
-        "pkg_pieces": 100,
-        "qty_box": 100
+        "pkg_pieces": 100
     },
     {
         "variant_sku": "OXVA00055",
@@ -356,8 +321,7 @@
         "variant_attributes": "Version: UK Version; Resistance: 0.6&0.8ohm; Capacity: 2ml; Color: Ocean Blue",
         "cost": 8.19,
         "selling_price": 12.75,
-        "pkg_pieces": 100,
-        "qty_box": 100
+        "pkg_pieces": 100
     },
     {
         "variant_sku": "OXVA00056",
@@ -366,8 +330,7 @@
         "variant_attributes": "Version: TPD Version; Resistance: 0.6&0.8ohm; Color: Amber Orange",
         "cost": 8.19,
         "selling_price": 12.75,
-        "pkg_pieces": 100,
-        "qty_box": 100
+        "pkg_pieces": 100
     },
     {
         "variant_sku": "OXVA00057",
@@ -376,8 +339,7 @@
         "variant_attributes": "Version: TPD Version; Resistance: 0.6&0.8ohm; Color: Black Carbon",
         "cost": 8.19,
         "selling_price": 12.75,
-        "pkg_pieces": 100,
-        "qty_box": 100
+        "pkg_pieces": 100
     },
     {
         "variant_sku": "OXVA00058",
@@ -386,8 +348,7 @@
         "variant_attributes": "Version: TPD Version; Resistance: 0.6&0.8ohm; Color: Silver Carbon",
         "cost": 8.19,
         "selling_price": 12.75,
-        "pkg_pieces": 100,
-        "qty_box": 100
+        "pkg_pieces": 100
     },
     {
         "variant_sku": "OXVA00059",
@@ -396,8 +357,7 @@
         "variant_attributes": "Version: TPD Version; Resistance: 0.6&0.8ohm; Color: Coral Pink",
         "cost": 8.19,
         "selling_price": 12.75,
-        "pkg_pieces": 100,
-        "qty_box": 100
+        "pkg_pieces": 100
     },
     {
         "variant_sku": "OXVA00060",
@@ -406,8 +366,7 @@
         "variant_attributes": "Version: TPD Version; Resistance: 0.6&0.8ohm; Color: Dream Purple",
         "cost": 8.19,
         "selling_price": 12.75,
-        "pkg_pieces": 100,
-        "qty_box": 100
+        "pkg_pieces": 100
     },
     {
         "variant_sku": "OXVA00061",
@@ -416,8 +375,7 @@
         "variant_attributes": "Version: TPD Version; Resistance: 0.6&0.8ohm; Color: Black Warrior",
         "cost": 8.19,
         "selling_price": 12.75,
-        "pkg_pieces": 100,
-        "qty_box": 100
+        "pkg_pieces": 100
     },
     {
         "variant_sku": "OXVA00062",
@@ -426,8 +384,7 @@
         "variant_attributes": "Version: TPD Version; Pack Size: 3pcs\/pack",
         "cost": 2.38,
         "selling_price": 1.17,
-        "pkg_pieces": 13500,
-        "qty_box": 4500
+        "pkg_pieces": 13500
     },
     {
         "variant_sku": "OXVA00072",
@@ -436,8 +393,7 @@
         "variant_attributes": "Version: UK Version; Resistance: 0.6ohm; Capacity: 2ml; Pack Size: 3pcs\/pack",
         "cost": 2.38,
         "selling_price": 1.17,
-        "pkg_pieces": 17550,
-        "qty_box": 5850
+        "pkg_pieces": 17550
     },
     {
         "variant_sku": "OXVA00085",
@@ -446,8 +402,7 @@
         "variant_attributes": "Version: Standard Version; Resistance: 0.6ohm; Capacity: 4ml; Pack Size: 3pcs\/pack",
         "cost": 3.68,
         "selling_price": 1.44,
-        "pkg_pieces": 45000,
-        "qty_box": 15000
+        "pkg_pieces": 45000
     },
     {
         "variant_sku": "OXVA00135",
@@ -456,8 +411,7 @@
         "variant_attributes": "Version: TPD Version; Color: Gleamy Blue",
         "cost": 4.48,
         "selling_price": 8,
-        "pkg_pieces": 123,
-        "qty_box": 123
+        "pkg_pieces": 123
     },
     {
         "variant_sku": "OXVA00136",
@@ -466,8 +420,7 @@
         "variant_attributes": "Version: TPD Version; Color: Gleamy Cyan",
         "cost": 4.48,
         "selling_price": 8,
-        "pkg_pieces": 50,
-        "qty_box": 50
+        "pkg_pieces": 50
     },
     {
         "variant_sku": "OXVA00137",
@@ -476,8 +429,7 @@
         "variant_attributes": "Version: TPD Version; Resistance: 0.6&0.8ohm; Color: Brown Leather",
         "cost": 4.48,
         "selling_price": 8,
-        "pkg_pieces": 50,
-        "qty_box": 50
+        "pkg_pieces": 50
     },
     {
         "variant_sku": "OXVA00138",
@@ -486,8 +438,7 @@
         "variant_attributes": "Version: TPD Version; Color: Gleamy Red",
         "cost": 4.48,
         "selling_price": 8,
-        "pkg_pieces": 74,
-        "qty_box": 74
+        "pkg_pieces": 74
     },
     {
         "variant_sku": "OXVA00139",
@@ -496,8 +447,7 @@
         "variant_attributes": "Version: TPD Version; Color: Black Carbon",
         "cost": 4.48,
         "selling_price": 8,
-        "pkg_pieces": 66,
-        "qty_box": 66
+        "pkg_pieces": 66
     },
     {
         "variant_sku": "OXVA00140",
@@ -506,8 +456,7 @@
         "variant_attributes": "Version: TPD Version; Color: Gleamy Green",
         "cost": 4.48,
         "selling_price": 8,
-        "pkg_pieces": 50,
-        "qty_box": 50
+        "pkg_pieces": 50
     },
     {
         "variant_sku": "OXVA00142",
@@ -516,8 +465,7 @@
         "variant_attributes": "Version: TPD Version; Resistance: 0.6&0.8ohm; Color: Aurora Pink",
         "cost": 4.48,
         "selling_price": 8,
-        "pkg_pieces": 10,
-        "qty_box": 10
+        "pkg_pieces": 10
     },
     {
         "variant_sku": "OXVA00143",
@@ -526,8 +474,7 @@
         "variant_attributes": "Version: TPD Version; Color: Gleamy Gray",
         "cost": 4.48,
         "selling_price": 8,
-        "pkg_pieces": 64,
-        "qty_box": 64
+        "pkg_pieces": 64
     },
     {
         "variant_sku": "OXVA00145",
@@ -536,8 +483,7 @@
         "variant_attributes": "Version: TPD Version; Resistance: 0.6&0.8ohm; Color: Denim Green",
         "cost": 4.48,
         "selling_price": 8,
-        "pkg_pieces": 10,
-        "qty_box": 10
+        "pkg_pieces": 10
     },
     {
         "variant_sku": "OXVA00146",
@@ -546,8 +492,7 @@
         "variant_attributes": "Version: Standard Version; Resistance: 0.8ohm; Capacity: 5ml; Pack Size: 2pcs\/pack",
         "cost": 2.02,
         "selling_price": 1.55,
-        "pkg_pieces": 1800,
-        "qty_box": 900
+        "pkg_pieces": 1800
     },
     {
         "variant_sku": "OXVA00149",
@@ -556,8 +501,7 @@
         "variant_attributes": "Version: Standard Version; Resistance: 0.2ohm; Capacity: 5ml; Pack Size: 2pcs\/pack",
         "cost": 2.02,
         "selling_price": 1.55,
-        "pkg_pieces": 2400,
-        "qty_box": 1200
+        "pkg_pieces": 2400
     },
     {
         "variant_sku": "OXVA00153",
@@ -566,8 +510,7 @@
         "variant_attributes": "Version: Standard Version; Resistance: 0.4ohm; Capacity: 5ml; Pack Size: 2pcs\/pack",
         "cost": 2.02,
         "selling_price": 1.55,
-        "pkg_pieces": 2400,
-        "qty_box": 1200
+        "pkg_pieces": 2400
     },
     {
         "variant_sku": "OXVA00157",
@@ -576,8 +519,7 @@
         "variant_attributes": "Version: Standard Version; Resistance: 0.6ohm; Capacity: 5ml; Pack Size: 2pcs\/pack",
         "cost": 2.02,
         "selling_price": 1.55,
-        "pkg_pieces": 2400,
-        "qty_box": 1200
+        "pkg_pieces": 2400
     },
     {
         "variant_sku": "OXVA00161",
@@ -586,8 +528,7 @@
         "variant_attributes": "Version: TPD Version; Resistance: 0.6&0.8ohm; Color: Celadon Marble",
         "cost": 0.06,
         "selling_price": 14,
-        "pkg_pieces": 25,
-        "qty_box": 25
+        "pkg_pieces": 25
     },
     {
         "variant_sku": "OXVA00162",
@@ -596,8 +537,7 @@
         "variant_attributes": "Version: TPD Version; Resistance: 0.6&0.8ohm; Color: Dream Purple",
         "cost": 0.06,
         "selling_price": 14,
-        "pkg_pieces": 25,
-        "qty_box": 25
+        "pkg_pieces": 25
     },
     {
         "variant_sku": "OXVA00163",
@@ -606,8 +546,7 @@
         "variant_attributes": "Version: Standard Version; Resistance: 0.6ohm; Capacity: 4ml; Pack Size: 3pcs\/pack",
         "cost": 3.68,
         "selling_price": 1.44,
-        "pkg_pieces": 22500,
-        "qty_box": 7500
+        "pkg_pieces": 22500
     },
     {
         "variant_sku": "OXVA00188",
@@ -616,8 +555,7 @@
         "variant_attributes": "Version: Standard Version; Resistance: 0.8ohm; Capacity: 4ml; Pack Size: 3pcs\/pack",
         "cost": 3.68,
         "selling_price": 1.44,
-        "pkg_pieces": 22500,
-        "qty_box": 7500
+        "pkg_pieces": 22500
     },
     {
         "variant_sku": "OXVA00213",
@@ -626,8 +564,7 @@
         "variant_attributes": "Version: UK Version; Resistance: 0.8ohm; Capacity: 2ml; Pack Size: 3pcs\/pack",
         "cost": 2.38,
         "selling_price": 1.17,
-        "pkg_pieces": 7887,
-        "qty_box": 2629
+        "pkg_pieces": 7887
     },
     {
         "variant_sku": "OXVA00218",
@@ -636,8 +573,7 @@
         "variant_attributes": "Version: TPD Version; Pack Size: 3pcs\/pack",
         "cost": 2.38,
         "selling_price": 1.17,
-        "pkg_pieces": 46113,
-        "qty_box": 15371
+        "pkg_pieces": 46113
     },
     {
         "variant_sku": "OXVA00232",
@@ -646,8 +582,7 @@
         "variant_attributes": "Version: UK Version; Resistance: 0.6ohm; Capacity: 2ml; Pack Size: 3pcs\/pack",
         "cost": 2.38,
         "selling_price": 1.17,
-        "pkg_pieces": 82350,
-        "qty_box": 27450
+        "pkg_pieces": 82350
     },
     {
         "variant_sku": "OXVA00252",
@@ -656,8 +591,7 @@
         "variant_attributes": "Version: TPD Version; Resistance: 0.6&0.8ohm; Color: Dream Purple",
         "cost": 8.19,
         "selling_price": 12.75,
-        "pkg_pieces": 260,
-        "qty_box": 260
+        "pkg_pieces": 260
     },
     {
         "variant_sku": "OXVA00253",
@@ -666,8 +600,7 @@
         "variant_attributes": "Version: TPD Version; Resistance: 0.6&0.8ohm; Color: Platinum Black",
         "cost": 8.19,
         "selling_price": 12.75,
-        "pkg_pieces": 100,
-        "qty_box": 100
+        "pkg_pieces": 100
     },
     {
         "variant_sku": "OXVA00254",
@@ -676,8 +609,7 @@
         "variant_attributes": "Version: TPD Version; Resistance: 0.6&0.8ohm; Color: Rose Pink",
         "cost": 8.19,
         "selling_price": 12.75,
-        "pkg_pieces": 200,
-        "qty_box": 200
+        "pkg_pieces": 200
     },
     {
         "variant_sku": "OXVA00255",
@@ -686,8 +618,7 @@
         "variant_attributes": "Version: TPD Version; Resistance: 0.6&0.8ohm; Color: Black Carbon",
         "cost": 8.19,
         "selling_price": 12.75,
-        "pkg_pieces": 200,
-        "qty_box": 200
+        "pkg_pieces": 200
     },
     {
         "variant_sku": "OXVA00256",
@@ -696,8 +627,7 @@
         "variant_attributes": "Version: TPD Version; Resistance: 0.6&0.8ohm; Color: Titanium Blue",
         "cost": 8.19,
         "selling_price": 12.75,
-        "pkg_pieces": 100,
-        "qty_box": 100
+        "pkg_pieces": 100
     },
     {
         "variant_sku": "OXVA00257",
@@ -706,8 +636,7 @@
         "variant_attributes": "Version: TPD Version; Resistance: 0.6&0.8ohm; Color: Black Warrior",
         "cost": 8.19,
         "selling_price": 12.75,
-        "pkg_pieces": 200,
-        "qty_box": 200
+        "pkg_pieces": 200
     },
     {
         "variant_sku": "OXVA00258",
@@ -716,8 +645,7 @@
         "variant_attributes": "Version: TPD Version; Resistance: 0.6&0.8ohm; Color: Dark Shadow",
         "cost": 8.19,
         "selling_price": 12.75,
-        "pkg_pieces": 100,
-        "qty_box": 100
+        "pkg_pieces": 100
     },
     {
         "variant_sku": "OXVA00259",
@@ -726,8 +654,7 @@
         "variant_attributes": "Version: TPD Version; Resistance: 0.6&0.8ohm; Color: Silver Carbon",
         "cost": 8.19,
         "selling_price": 12.75,
-        "pkg_pieces": 100,
-        "qty_box": 100
+        "pkg_pieces": 100
     },
     {
         "variant_sku": "OXVA00260",
@@ -736,8 +663,7 @@
         "variant_attributes": "Version: UK Version; Resistance: 0.6&0.8ohm; Capacity: 2ml; Color: Ocean Blue",
         "cost": 8.19,
         "selling_price": 12.75,
-        "pkg_pieces": 100,
-        "qty_box": 100
+        "pkg_pieces": 100
     },
     {
         "variant_sku": "OXVA00261",
@@ -746,8 +672,7 @@
         "variant_attributes": "Version: TPD Version; Resistance: 0.6&0.8ohm; Color: Amber Orange",
         "cost": 8.19,
         "selling_price": 12.75,
-        "pkg_pieces": 100,
-        "qty_box": 100
+        "pkg_pieces": 100
     },
     {
         "variant_sku": "OXVA00262",
@@ -756,8 +681,7 @@
         "variant_attributes": "Version: TPD Version; Resistance: 0.6&0.8ohm; Color: Coral Pink",
         "cost": 8.19,
         "selling_price": 12.75,
-        "pkg_pieces": 200,
-        "qty_box": 200
+        "pkg_pieces": 200
     },
     {
         "variant_sku": "OXVA00263",
@@ -766,8 +690,7 @@
         "variant_attributes": "Version: UK Version; Resistance: 0.6&0.8ohm; Capacity: 2ml; Color: Black Leather",
         "cost": 8.19,
         "selling_price": 13.5,
-        "pkg_pieces": 100,
-        "qty_box": 100
+        "pkg_pieces": 100
     },
     {
         "variant_sku": "OXVA00264",
@@ -776,8 +699,7 @@
         "variant_attributes": "Version: UK Version; Resistance: 0.6&0.8ohm; Capacity: 2ml; Color: Race Red",
         "cost": 8.19,
         "selling_price": 13.5,
-        "pkg_pieces": 100,
-        "qty_box": 100
+        "pkg_pieces": 100
     },
     {
         "variant_sku": "OXVA00265",
@@ -786,8 +708,7 @@
         "variant_attributes": "Version: UK Version; Resistance: 0.6&0.8ohm; Capacity: 2ml; Color: Pro Carbon",
         "cost": 8.19,
         "selling_price": 13.5,
-        "pkg_pieces": 100,
-        "qty_box": 100
+        "pkg_pieces": 100
     },
     {
         "variant_sku": "OXVA00266",
@@ -796,8 +717,7 @@
         "variant_attributes": "Version: UK Version; Resistance: 0.6&0.8ohm; Capacity: 2ml; Color: Black Carbon",
         "cost": 8.19,
         "selling_price": 13.5,
-        "pkg_pieces": 100,
-        "qty_box": 100
+        "pkg_pieces": 100
     },
     {
         "variant_sku": "OXVA00267",
@@ -806,8 +726,7 @@
         "variant_attributes": "Version: UK Version; Resistance: 0.6&0.8ohm; Capacity: 2ml; Color: Brown Leather",
         "cost": 8.19,
         "selling_price": 13.5,
-        "pkg_pieces": 100,
-        "qty_box": 100
+        "pkg_pieces": 100
     },
     {
         "variant_sku": "OXVA00268",
@@ -816,8 +735,7 @@
         "variant_attributes": "Version: UK Version; Resistance: 0.6&0.8ohm; Capacity: 2ml; Color: Pink Silk",
         "cost": 8.19,
         "selling_price": 13.5,
-        "pkg_pieces": 100,
-        "qty_box": 100
+        "pkg_pieces": 100
     },
     {
         "variant_sku": "OXVA00269",
@@ -826,8 +744,7 @@
         "variant_attributes": "Version: UK Version; Resistance: 0.6&0.8ohm; Capacity: 2ml; Color: Purple Silk",
         "cost": 8.19,
         "selling_price": 13.5,
-        "pkg_pieces": 100,
-        "qty_box": 100
+        "pkg_pieces": 100
     },
     {
         "variant_sku": "OXVA00270",
@@ -836,8 +753,7 @@
         "variant_attributes": "Version: UK Version; Resistance: 0.6&0.8ohm; Capacity: 2ml; Color: Sky Blue",
         "cost": 8.19,
         "selling_price": 13.5,
-        "pkg_pieces": 100,
-        "qty_box": 100
+        "pkg_pieces": 100
     },
     {
         "variant_sku": "OXVA00271",
@@ -846,7 +762,6 @@
         "variant_attributes": "Version: UK Version; Resistance: 0.6&0.8ohm; Capacity: 2ml; Color: Titanium Silk",
         "cost": 8.19,
         "selling_price": 13.5,
-        "pkg_pieces": 100,
-        "qty_box": 100
+        "pkg_pieces": 100
     }
 ]

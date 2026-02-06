@@ -3,25 +3,26 @@
 namespace App\Http\Controllers\Admin\Sales;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Sales\FinalizeSalesOrderRequest;
+use App\Http\Requests\Sales\GenerateDeliveryNoteRequest;
 use App\Http\Requests\Sales\StoreSalesOrderRequest;
 use App\Http\Requests\Sales\UpdateSalesOrderCustomersRequest;
 use App\Http\Requests\Sales\UpdateSalesOrderPaymentStatusRequest;
 use App\Http\Requests\Sales\UpdateSalesOrderRequest;
 use App\Models\Accounting\PaymentStatus;
-use App\Models\Accounting\PaymentTerm;
 use App\Models\Company\Company;
 use App\Models\Customer\Customer;
 use App\Models\Inventory\InventoryLocation;
 use App\Models\Pricing\Currency;
 use App\Models\Sales\DeliveryNote;
-use App\Models\Sales\DeliveryNoteItem;
 use App\Models\Sales\Order;
 use App\Models\Sales\OrderStatus;
-use Illuminate\Support\Facades\Auth;
-use App\Services\Sales\OrderCalculationService;
 use App\Services\Inventory\InventoryPostingService;
-use Carbon\Carbon;
+use App\Services\Sales\SalesCalculationService;
+use App\Services\Sales\SalesDocumentService;
+use App\Services\Sales\TaxService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Yajra\DataTables\Facades\DataTables;
@@ -29,8 +30,12 @@ use Yajra\DataTables\Facades\DataTables;
 class SalesOrderController extends Controller
 {
     public function __construct(
-        protected OrderCalculationService $calcService,
-        protected InventoryPostingService $inventoryService
+        protected SalesCalculationService $calcService,
+        protected SalesDocumentService $docService,
+        protected TaxService $taxService,
+        protected InventoryPostingService $inventoryService,
+        protected \App\Services\Sales\DeliveryNoteService $deliveryNoteService,
+        protected \App\Services\Common\DocumentNumberService $docNumberService
     ) {}
 
     public function index()
@@ -161,7 +166,12 @@ class SalesOrderController extends Controller
                 'status_id' => $status->id,
                 'payment_status_id' => $paymentStatus->id,
 
-                'order_number' => $this->generateOrderNumber($company),
+                'order_number' => $this->docNumberService->generate(
+                    companyId: $company->id,
+                    documentType: 'ORDER',
+                    channel: 'SALES',
+                    year: now()->year
+                ),
                 'created_by' => \Illuminate\Support\Facades\Auth::id(),
 
                 'currency_id' => $defaultCurrencyId,
@@ -220,45 +230,13 @@ class SalesOrderController extends Controller
             ? Customer::where('company_id', $company->id)->where('uuid', $request->ship_to)->firstOrFail()
             : $billToCustomer;
 
-        return DB::transaction(function () use ($order, $company, $billToCustomer, $shipToCustomer, $request) {
+        return DB::transaction(function () use ($order, $billToCustomer, $shipToCustomer, $request) {
             $order->update([
                 'customer_id' => $billToCustomer->id,
                 'shipping_customer_id' => $shipToCustomer->id,
             ]);
 
-            $order->addresses()->updateOrCreate(
-                ['type' => 'BILLING'],
-                [
-                    'company_id' => $company->id,
-                    'address_line_1' => $billToCustomer->address?->address_line_1 ?? '',
-                    'address_line_2' => $billToCustomer->address?->address_line_2 ?? null,
-                    'city' => $billToCustomer->address?->city ?? null,
-                    'state_id' => ! empty($billToCustomer->address?->state_id) ? $billToCustomer->address?->state_id : null,
-                    'zip_code' => $billToCustomer->address?->zip_code ?? '',
-                    'country_id' => ! empty($billToCustomer->address?->country_id) ? $billToCustomer->address?->country_id : null,
-                    'phone' => $billToCustomer->phone,
-                    'email' => $billToCustomer->email,
-                    'name' => $billToCustomer->legal_name ?? $billToCustomer->display_name,
-                    'tax_number' => $billToCustomer->tax_number,
-                ]
-            );
-
-            $order->addresses()->updateOrCreate(
-                ['type' => 'SHIPPING'],
-                [
-                    'company_id' => $company->id,
-                    'address_line_1' => $shipToCustomer->address?->address_line_1 ?? '',
-                    'address_line_2' => $shipToCustomer->address?->address_line_2 ?? null,
-                    'city' => $shipToCustomer->address?->city ?? null,
-                    'state_id' => ! empty($shipToCustomer->address?->state_id) ? $shipToCustomer->address?->state_id : null,
-                    'zip_code' => $shipToCustomer->address?->zip_code ?? '',
-                    'country_id' => ! empty($shipToCustomer->address?->country_id) ? $shipToCustomer->address?->country_id : null,
-                    'phone' => $shipToCustomer->phone,
-                    'email' => $shipToCustomer->email,
-                    'name' => $shipToCustomer->legal_name ?? $shipToCustomer->display_name,
-                    'tax_number' => $shipToCustomer->tax_number,
-                ]
-            );
+            $this->docService->syncAddressSnapshots($order, $billToCustomer, $shipToCustomer);
 
             if ($request->ajax()) {
                 $order->load(['addresses', 'customer', 'shippingCustomer']);
@@ -408,9 +386,9 @@ class SalesOrderController extends Controller
         try {
             $taxGroupId = $request->tax_group_id ? (int) $request->tax_group_id : null;
 
-            $currencyId = $this->resolveCurrencyIdFromCode($request->currency);
+            $currencyId = $this->docService->resolveCurrencyId($request->currency);
 
-            $termSnapshot = $this->resolvePaymentTermSnapshot($request->payment_term_id);
+            $termSnapshot = $this->docService->resolvePaymentTermSnapshot($request->payment_term_id);
 
             $calc = $this->calcService->calculate($company->id, [
                 'items' => $request->items ?? [],
@@ -435,7 +413,7 @@ class SalesOrderController extends Controller
                 'notes' => $request->notes ?? null,
 
                 'subtotal' => $calc['subtotal'],
-                'discount_total' => $calc['discount_total'],
+                'discount_total' => $calc['discount_total'] ?? 0,
                 'global_discount_percent' => (float) ($request->global_discount_percent ?? 0),
                 'global_discount_amount' => (float) ($request->global_discount_amount ?? 0),
                 'tax_total' => $calc['tax_total'],
@@ -524,14 +502,14 @@ class SalesOrderController extends Controller
         $totalItems = $order->items->count();
         $totalQuantityOrdered = $order->items->sum('quantity');
         $totalQuantityFulfilled = $order->items->sum('fulfilled_quantity');
-        
-        $fulfillmentPercentage = $totalQuantityOrdered > 0 
-            ? round(($totalQuantityFulfilled / $totalQuantityOrdered) * 100, 1) 
+
+        $fulfillmentPercentage = $totalQuantityOrdered > 0
+            ? round(($totalQuantityFulfilled / $totalQuantityOrdered) * 100, 1)
             : 0;
 
-        $fullyFulfilledCount = $order->items->filter(fn($i) => $i->fulfilled_quantity >= $i->quantity)->count();
-        $partialFulfilledCount = $order->items->filter(fn($i) => $i->fulfilled_quantity > 0 && $i->fulfilled_quantity < $i->quantity)->count();
-        $notFulfilledCount = $order->items->filter(fn($i) => $i->fulfilled_quantity <= 0)->count();
+        $fullyFulfilledCount = $order->items->filter(fn ($i) => $i->fulfilled_quantity >= $i->quantity)->count();
+        $partialFulfilledCount = $order->items->filter(fn ($i) => $i->fulfilled_quantity > 0 && $i->fulfilled_quantity < $i->quantity)->count();
+        $notFulfilledCount = $order->items->filter(fn ($i) => $i->fulfilled_quantity <= 0)->count();
 
         $stats = [
             'total_items' => $totalItems,
@@ -539,8 +517,8 @@ class SalesOrderController extends Controller
             'partial' => $partialFulfilledCount,
             'none' => $notFulfilledCount,
             'percentage' => $fulfillmentPercentage,
-            'total_ordered' => (float)$totalQuantityOrdered,
-            'total_fulfilled' => (float)$totalQuantityFulfilled,
+            'total_ordered' => (float) $totalQuantityOrdered,
+            'total_fulfilled' => (float) $totalQuantityFulfilled,
         ];
 
         return view('catvara.sales-orders.show', compact('order', 'locations', 'stats'));
@@ -585,45 +563,7 @@ class SalesOrderController extends Controller
     }
 
     /* ===================== HELPERS ===================== */
-
-    private function resolveCurrencyIdFromCode(string $code): int
-    {
-        $code = strtoupper(trim($code));
-        $currency = Currency::query()->where('code', $code)->first();
-
-        if (! $currency) {
-            throw new \Exception("Currency not found for code: {$code}");
-        }
-
-        return (int) $currency->id;
-    }
-
-    private function resolvePaymentTermSnapshot(?int $paymentTermId): array
-    {
-        if (! $paymentTermId) {
-            return [
-                'payment_term_id' => null,
-                'payment_term_name' => null,
-                'payment_due_days' => null,
-            ];
-        }
-
-        $term = PaymentTerm::find($paymentTermId);
-
-        if (! $term) {
-            return [
-                'payment_term_id' => null,
-                'payment_term_name' => null,
-                'payment_due_days' => null,
-            ];
-        }
-
-        return [
-            'payment_term_id' => (int) $term->id,
-            'payment_term_name' => (string) $term->name,
-            'payment_due_days' => (int) ($term->due_days ?? 0),
-        ];
-    }
+    // Helper methods moved to SalesDocumentService
 
     public function finalize(Company $company, string $sales_order)
     {
@@ -670,32 +610,14 @@ class SalesOrderController extends Controller
         ));
     }
 
-    public function finalizeStore(Request $request, Company $company, string $sales_order)
+    public function finalizeStore(FinalizeSalesOrderRequest $request, Company $company, string $sales_order)
     {
         $order = Order::query()
             ->where('uuid', $sales_order)
             ->with(['items'])
             ->firstOrFail();
 
-        $validated = $request->validate([
-            'currency' => ['required', 'string', 'max:10'],
-            'payment_term_id' => ['nullable'],
-            'due_date' => ['nullable', 'date'],
-            'shipping' => ['nullable', 'numeric', 'min:0'],
-            'additional' => ['nullable', 'numeric', 'min:0'],
-            'tax_group_id' => ['nullable', 'integer'],
-            'notes' => ['nullable', 'string', 'max:5000'],
-            'items' => ['required', 'array', 'min:1'],
-
-            'items.*.type' => ['required', 'in:variant,custom'],
-            'items.*.variant_id' => ['nullable', 'string'],
-            'items.*.custom_name' => ['nullable', 'string', 'max:255'],
-            'items.*.custom_sku' => ['nullable', 'string', 'max:255'],
-            'items.*.qty' => ['required', 'numeric', 'min:1'],
-            'items.*.unit_price' => ['required', 'numeric', 'min:0'],
-            'items.*.discount_percent' => ['nullable', 'numeric', 'min:0', 'max:100'],
-            'items.*.tax_group_id' => ['nullable', 'integer'],
-        ]);
+        $validated = $request->validated();
 
         /* Enforced payment method check removed per user request */
 
@@ -712,8 +634,8 @@ class SalesOrderController extends Controller
                 'customer_id' => $order->customer_id,
             ]);
 
-            $currencyId = $this->resolveCurrencyIdFromCode($validated['currency']);
-            $termSnapshot = $this->resolvePaymentTermSnapshot($validated['payment_term_id']);
+            $currencyId = $this->docService->resolveCurrencyId($validated['currency']);
+            $termSnapshot = $this->docService->resolvePaymentTermSnapshot($validated['payment_term_id']);
 
             // Save finalized data
             $order->currency_id = $currencyId;
@@ -725,7 +647,7 @@ class SalesOrderController extends Controller
 
             $order->tax_total = $totals['tax_total'];
             $order->subtotal = $totals['subtotal'];
-            $order->discount_total = $totals['discount_total'];
+            $order->discount_total = $totals['discount_total'] ?? 0;
             $order->global_discount_percent = (float) ($request->global_discount_percent ?? 0);
             $order->global_discount_amount = (float) ($request->global_discount_amount ?? 0);
             $order->notes = $validated['notes'] ?? null;
@@ -756,107 +678,54 @@ class SalesOrderController extends Controller
         ]);
     }
 
-    private function generateOrderNumber($company)
-    {
-        $prefix = 'SO-'.Carbon::now()->format('Ymd').'-';
-
-        $lastOrder = Order::where('company_id', $company->id)
-            ->where('order_number', 'like', $prefix.'%')
-            ->orderBy('id', 'desc')
-            ->first();
-
-        if ($lastOrder) {
-            $lastNum = intval(substr($lastOrder->order_number, strlen($prefix)));
-
-            return $prefix.str_pad($lastNum + 1, 4, '0', STR_PAD_LEFT);
-        }
-
-        return $prefix.'0001';
-    }
-
-    public function generateDeliveryNote(Request $request, Company $company, string $sales_order)
+    public function generateDeliveryNote(GenerateDeliveryNoteRequest $request, Company $company, string $sales_order)
     {
         $order = Order::where('company_id', $company->id)
             ->where('uuid', $sales_order)
             ->with(['items'])
             ->firstOrFail();
 
-        $validated = $request->validate([
-            'items' => ['required', 'array'],
-            'items.*.order_item_id' => ['required', 'exists:order_items,id'],
-            'items.*.quantity' => ['required', 'numeric', 'min:0'],
-            'inventory_location_id' => ['required', 'exists:inventory_locations,id'],
-            'reference_number' => ['nullable', 'string', 'max:100'],
-            'vehicle_number' => ['nullable', 'string', 'max:50'],
-            'notes' => ['nullable', 'string', 'max:1000'],
-        ]);
+        $validated = $request->validated();
 
         return DB::transaction(function () use ($order, $company, $validated) {
-            $dn = DeliveryNote::create([
-                'uuid' => (string) Str::uuid(),
-                'company_id' => $company->id,
-                'order_id' => $order->id,
+            $dn = $this->deliveryNoteService->createFromOrder($order, $validated['items']);
+
+            // Handle additional fields not managed by createFromOrder directly if any
+            $dn->update([
                 'inventory_location_id' => $validated['inventory_location_id'],
-                'delivery_note_number' => $this->generateDeliveryNoteNumber($company),
-                'status' => DeliveryNote::STATUS_SHIPPED,
                 'reference_number' => $validated['reference_number'] ?? null,
                 'vehicle_number' => $validated['vehicle_number'] ?? null,
                 'notes' => $validated['notes'] ?? null,
-                'shipped_at' => Carbon::now(),
-                'created_by' => Auth::id(),
             ]);
 
-            $anyFulfilledInThisSession = false;
+            // 3. Inventory Integration & Safety Check
+            $dn->load('items.orderItem');
+            $anyFulfilled = false;
 
-            foreach ($validated['items'] as $inputItem) {
-                if ($inputItem['quantity'] <= 0) {
-                    continue;
-                }
-
-                $orderItem = $order->items->firstWhere('id', $inputItem['order_item_id']);
-                if (! $orderItem) {
-                    continue;
-                }
-
-                // Safety: Cannot fulfill more than ordered
-                $remaining = (float) $orderItem->quantity - (float) $orderItem->fulfilled_quantity;
-                $deliverQty = min((float) $inputItem['quantity'], $remaining);
-
-                if ($deliverQty > 0) {
-                    DeliveryNoteItem::create([
-                        'delivery_note_id' => $dn->id,
-                        'order_item_id' => $orderItem->id,
-                        'quantity' => $deliverQty,
-                    ]);
-
-                    $orderItem->fulfilled_quantity = (float) $orderItem->fulfilled_quantity + $deliverQty;
-                    $orderItem->save();
-
-                    // Inventory Integration: Record movement if it's a real product
-                    if ($orderItem->product_variant_id) {
-                        try {
-                            $this->inventoryService->postMovement([
-                                'company_id' => $company->id,
-                                'inventory_location_id' => $dn->inventory_location_id,
-                                'product_variant_id' => $orderItem->product_variant_id,
-                                'reason_code' => 'SALE',
-                                'quantity' => $deliverQty,
-                                'reference_type' => 'delivery_note',
-                                'reference_id' => $dn->id,
-                                'performed_by' => Auth::id(),
-                            ]);
-                        } catch (\Exception $e) {
-                            // If stock is insufficient (and not allowed negative), we fail the transaction
-                            throw new \Exception("Insufficient stock for item: {$orderItem->product_name} at selected location.");
-                        }
+            foreach ($dn->items as $dnItem) {
+                $orderItem = $dnItem->orderItem;
+                if ($orderItem && $orderItem->product_variant_id) {
+                    try {
+                        $this->inventoryService->postMovement([
+                            'company_id' => $company->id,
+                            'inventory_location_id' => $dn->inventory_location_id,
+                            'product_variant_id' => $orderItem->product_variant_id,
+                            'reason_code' => 'SALE',
+                            'quantity' => $dnItem->quantity,
+                            'reference_type' => 'delivery_note',
+                            'reference_id' => $dn->id,
+                            'performed_by' => Auth::id(),
+                        ]);
+                    } catch (\Exception $e) {
+                        throw new \Exception("Insufficient stock for item: {$orderItem->product_name}");
                     }
-
-                    $anyFulfilledInThisSession = true;
+                }
+                if ($dnItem->quantity > 0) {
+                    $anyFulfilled = true;
                 }
             }
 
-            if (! $anyFulfilledInThisSession) {
-                // If nothing was actually delivered, rollback
+            if (! $anyFulfilled) {
                 throw new \Exception('No items were selected for delivery or they are already fully delivered.');
             }
 
@@ -901,33 +770,15 @@ class SalesOrderController extends Controller
         return view('catvara.sales-orders.delivery-note', compact('dn'));
     }
 
-    private function generateDeliveryNoteNumber($company)
-    {
-        $prefix = 'DN-'.Carbon::now()->format('Ymd').'-';
+    /* Numbering handled by DeliveryNoteService */
 
-        $lastDn = DeliveryNote::where('company_id', $company->id)
-            ->where('delivery_note_number', 'like', $prefix.'%')
-            ->orderBy('id', 'desc')
-            ->first();
-
-        if ($lastDn) {
-            $lastNum = intval(substr($lastDn->delivery_note_number, strlen($prefix)));
-
-            return $prefix.str_pad($lastNum + 1, 4, '0', STR_PAD_LEFT);
-        }
-
-        return $prefix.'0001';
-    }
     public function markDeliveryNoteAsDelivered(Company $company, string $delivery_note)
     {
         $dn = DeliveryNote::where('company_id', $company->id)
             ->where('uuid', $delivery_note)
             ->firstOrFail();
 
-        $dn->update([
-            'status' => DeliveryNote::STATUS_DELIVERED,
-            'delivered_at' => Carbon::now(),
-        ]);
+        $this->deliveryNoteService->markAsDelivered($dn);
 
         return response()->json([
             'ok' => true,
@@ -939,36 +790,32 @@ class SalesOrderController extends Controller
     {
         $dn = DeliveryNote::where('company_id', $company->id)
             ->where('uuid', $delivery_note)
-            ->with(['items.orderItem', 'order.items'])
+            ->with(['items.orderItem', 'order'])
             ->firstOrFail();
 
         return DB::transaction(function () use ($dn) {
             $order = $dn->order;
 
-            // Rollback quantities and inventory movements
+            // Inventory Integration: Reverse movements before deleting
             foreach ($dn->items as $item) {
-                if ($item->orderItem) {
-                    $item->orderItem->fulfilled_quantity = max(0, (float) $item->orderItem->fulfilled_quantity - (float) $item->quantity);
-                    $item->orderItem->save();
-
-                    // Inventory Integration: Reverse movement
-                    if ($item->orderItem->product_variant_id && $dn->inventory_location_id) {
-                        $this->inventoryService->postMovement([
-                            'company_id' => $dn->company_id,
-                            'inventory_location_id' => $dn->inventory_location_id,
-                            'product_variant_id' => $item->orderItem->product_variant_id,
-                            'reason_code' => 'RETURN_IN', // Simple restoral
-                            'quantity' => $item->quantity,
-                            'reference_type' => 'delivery_note_reversal',
-                            'reference_id' => $dn->id,
-                            'performed_by' => Auth::id(),
-                        ]);
-                    }
+                if ($item->orderItem && $item->orderItem->product_variant_id && $dn->inventory_location_id) {
+                    $this->inventoryService->postMovement([
+                        'company_id' => $dn->company_id,
+                        'inventory_location_id' => $dn->inventory_location_id,
+                        'product_variant_id' => $item->orderItem->product_variant_id,
+                        'reason_code' => 'RESTOCK', // Reversal
+                        'quantity' => $item->quantity,
+                        'reference_type' => 'delivery_note_reversal',
+                        'reference_id' => $dn->id,
+                        'performed_by' => Auth::id(),
+                    ]);
                 }
             }
 
+            // Centralized rollback of fulfillment quantities
+            $this->deliveryNoteService->delete($dn);
+
             // Sync order status after rollback
-            // Note: We need to reload order items to get fresh fulfilled_quantity
             $order->load('items');
             $totalOrdered = $order->items->sum('quantity');
             $totalFulfilled = $order->items->sum('fulfilled_quantity');
@@ -982,11 +829,8 @@ class SalesOrderController extends Controller
 
             $status = OrderStatus::where('code', $statusCode)->first();
             if ($status && $order->status_id !== $status->id) {
-                $order->status_id = $status->id;
-                $order->save();
+                $order->update(['status_id' => $status->id]);
             }
-
-            $dn->delete();
 
             return response()->json([
                 'ok' => true,

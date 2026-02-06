@@ -4,29 +4,27 @@ namespace App\Services\Sales;
 
 use App\Models\Catalog\ProductVariant;
 use App\Models\Customer\Customer;
-use App\Models\Tax\TaxGroup;
 
-class OrderCalculationService
+class SalesCalculationService
 {
     public function __construct(
-        protected TaxCalculationService $taxService
+        protected TaxService $taxService
     ) {}
 
     /**
-     * Calculate all totals for a sales order payload
+     * Calculate all totals for a sales document payload (Order, Quote, Invoice, etc.)
      */
     public function calculate(int $companyId, array $payload): array
     {
         $items = $payload['items'] ?? [];
-        $shipping = (float)($payload['shipping'] ?? 0);
-        $additional = (float)($payload['additional'] ?? 0);
-        $globalDiscPercent = (float)($payload['global_discount_percent'] ?? 0);
-        $globalDiscAmt = (float)($payload['global_discount_amount'] ?? 0);
-        $orderTaxGroupId = $payload['tax_group_id'] ?? null;
+        $shipping = (float) ($payload['shipping'] ?? 0);
+        $additional = (float) ($payload['additional'] ?? 0);
+        $globalDiscPercent = (float) ($payload['global_discount_percent'] ?? 0);
+        $globalDiscAmt = (float) ($payload['global_discount_amount'] ?? 0);
+        $documentTaxGroupId = $payload['tax_group_id'] ?? null;
         $customerId = $payload['customer_id'] ?? null;
 
         $customer = $customerId ? Customer::find($customerId) : null;
-        $isExempt = $customer ? (bool)$customer->is_tax_exempt : false;
 
         $subtotal = 0;
         $itemsLineDiscountTotal = 0;
@@ -36,9 +34,9 @@ class OrderCalculationService
         foreach ($items as $item) {
             $type = $item['type'] ?? 'variant';
             $isCustom = ($type === 'custom');
-            $qty = max(1, (float)($item['qty'] ?? 1));
-            $unitPrice = (float)($item['unit_price'] ?? 0);
-            $discPercent = min(100, max(0, (float)($item['discount_percent'] ?? 0)));
+            $qty = max(1, (float) ($item['qty'] ?? 1));
+            $unitPrice = (float) ($item['unit_price'] ?? 0);
+            $discPercent = min(100, max(0, (float) ($item['discount_percent'] ?? 0)));
 
             $variantId = null;
             $productName = 'Custom Item';
@@ -52,50 +50,40 @@ class OrderCalculationService
                 $variantDescription = $customSku ? "SKU: {$customSku}" : null;
             } else {
                 $variantUuid = $item['variant_id'] ?? null;
-                if (!$variantUuid) continue;
+                if (! $variantUuid) {
+                    continue;
+                }
 
                 $variant = ProductVariant::with(['product.category'])
                     ->where('company_id', $companyId)
                     ->where('uuid', $variantUuid)
                     ->first();
 
-                if (!$variant) continue;
+                if (! $variant) {
+                    continue;
+                }
 
                 $variantId = $variant->id;
                 $productName = $variant->product->name;
-                $variantDescription = method_exists($variant, 'getVariantDescription') 
-                    ? $variant->getVariantDescription() 
+                $variantDescription = method_exists($variant, 'getVariantDescription')
+                    ? $variant->getVariantDescription()
                     : null;
             }
 
-            // Tax resolution
-            $taxGroupId = null;
-            if (!$isExempt) {
-                $taxGroupId = $item['tax_group_id'] ?? null;
-                
-                if (!$taxGroupId && $variant && $variant->product->category) {
-                    $taxGroupId = $variant->product->category->tax_group_id;
-                }
+            // Centralized Tax Resolution
+            $taxGroupId = $this->taxService->resolveTaxGroupId(
+                inputTaxGroupId: $item['tax_group_id'] ?? null,
+                variant: $variant,
+                customer: $customer,
+                documentTaxGroupId: $documentTaxGroupId
+            );
 
-                if (!$taxGroupId && $customer) {
-                    $taxGroupId = $customer->tax_group_id;
-                }
-
-                if (!$taxGroupId) {
-                    $taxGroupId = $orderTaxGroupId;
-                }
-            }
-
-            $taxRate = 0;
-            if ($taxGroupId) {
-                $taxGroup = TaxGroup::find($taxGroupId);
-                $taxRate = $taxGroup ? $taxGroup->activeRateSum() : 0;
-            }
+            $taxRate = $this->taxService->getTaxRate($taxGroupId);
 
             $lineRaw = $unitPrice * $qty;
             $lineDisc = $lineRaw * ($discPercent / 100);
             $taxable = max(0, $lineRaw - $lineDisc);
-            $lineTax = $taxable * ($taxRate / 100);
+            $lineTax = ($taxable * $taxRate) / 100;
             $lineTotal = $taxable + $lineTax;
 
             $subtotal += $lineRaw;
@@ -124,16 +112,12 @@ class OrderCalculationService
         // Global discount
         $postLineSubtotal = $subtotal - $itemsLineDiscountTotal;
         $globalDiscountTotal = ($postLineSubtotal * ($globalDiscPercent / 100)) + $globalDiscAmt;
-        
+
         $shippingTotal = max(0, $shipping + $additional);
-        
-        // Shipping tax (using order level tax group if present)
-        $orderTaxRate = 0;
-        if ($orderTaxGroupId) {
-            $otg = TaxGroup::find($orderTaxGroupId);
-            $orderTaxRate = $otg ? $otg->activeRateSum() : 0;
-        }
-        $shippingTax = $shippingTotal * ($orderTaxRate / 100);
+
+        // Shipping tax (using document level tax group if present)
+        $orderTaxRate = $this->taxService->getTaxRate($documentTaxGroupId);
+        $shippingTax = ($shippingTotal * $orderTaxRate) / 100;
 
         $grandTotal = max(0, $postLineSubtotal - $globalDiscountTotal) + $taxTotal + $shippingTotal + $shippingTax;
 
@@ -145,8 +129,8 @@ class OrderCalculationService
             'tax_total' => $taxTotal,
             'shipping_total' => $shippingTotal,
             'shipping_tax_total' => $shippingTax,
-            'grand_total' => (float)$grandTotal,
-            'items_for_db' => $rows
+            'grand_total' => (float) $grandTotal,
+            'items_for_db' => $rows,
         ];
     }
 }

@@ -12,7 +12,12 @@ use App\Models\Sales\Order;
 use App\Models\Sales\OrderStatus;
 use App\Models\Sales\Quote;
 use App\Models\Sales\QuoteStatus;
-use App\Services\Sales\QuoteCalculationService;
+use App\Http\Requests\Sales\StoreQuoteRequest;
+use App\Http\Requests\Sales\UpdateQuoteCustomersRequest;
+use App\Http\Requests\Sales\UpdateQuoteRequest;
+use App\Services\Sales\SalesCalculationService;
+use App\Services\Sales\SalesDocumentService;
+use App\Services\Sales\TaxService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -23,7 +28,10 @@ use Yajra\DataTables\Facades\DataTables;
 class QuoteController extends Controller
 {
     public function __construct(
-        protected QuoteCalculationService $calcService
+        protected SalesCalculationService $calcService,
+        protected SalesDocumentService $docService,
+        protected TaxService $taxService,
+        protected \App\Services\Common\DocumentNumberService $docNumberService
     ) {}
 
     public function index()
@@ -127,7 +135,7 @@ class QuoteController extends Controller
         ]);
     }
 
-    public function store(Request $request)
+    public function store(StoreQuoteRequest $request)
     {
         $this->authorize('create', 'quotes');
 
@@ -167,7 +175,12 @@ class QuoteController extends Controller
                 'shipping_customer_id' => $shipToCustomer->id,
 
                 'status_id' => $status->id,
-                'quote_number' => $this->generateQuoteNumber($company),
+                'quote_number' => $this->docNumberService->generate(
+                    companyId: $company->id,
+                    documentType: 'QUOTE',
+                    channel: 'SALES',
+                    year: now()->year
+                ),
                 'created_by' => Auth::id(),
 
                 'currency_id' => $defaultCurrencyId,
@@ -178,35 +191,7 @@ class QuoteController extends Controller
             ]);
 
             // Address snapshots
-            $quote->addresses()->create([
-                'type' => 'BILLING',
-                'company_id' => $company->id,
-                'address_line_1' => $billToCustomer->address?->address_line_1 ?? '',
-                'address_line_2' => $billToCustomer->address?->address_line_2 ?? null,
-                'city' => $billToCustomer->address?->city ?? null,
-                'state_id' => ! empty($billToCustomer->address?->state_id) ? $billToCustomer->address?->state_id : null,
-                'zip_code' => $billToCustomer->address?->zip_code ?? '',
-                'country_id' => ! empty($billToCustomer->address?->country_id) ? $billToCustomer->address?->country_id : null,
-                'phone' => $billToCustomer->phone,
-                'email' => $billToCustomer->email,
-                'name' => $billToCustomer->legal_name ?? $billToCustomer->display_name,
-                'tax_number' => $billToCustomer->tax_number,
-            ]);
-
-            $quote->addresses()->create([
-                'type' => 'SHIPPING',
-                'company_id' => $company->id,
-                'address_line_1' => $shipToCustomer->address?->address_line_1 ?? '',
-                'address_line_2' => $shipToCustomer->address?->address_line_2 ?? null,
-                'city' => $shipToCustomer->address?->city ?? null,
-                'state_id' => ! empty($shipToCustomer->address?->state_id) ? $shipToCustomer->address?->state_id : null,
-                'zip_code' => $shipToCustomer->address?->zip_code ?? '',
-                'country_id' => ! empty($shipToCustomer->address?->country_id) ? $shipToCustomer->address?->country_id : null,
-                'phone' => $shipToCustomer->phone,
-                'email' => $shipToCustomer->email,
-                'name' => $shipToCustomer->legal_name ?? $shipToCustomer->display_name,
-                'tax_number' => $shipToCustomer->tax_number,
-            ]);
+            $this->docService->syncAddressSnapshots($quote, $billToCustomer, $shipToCustomer);
 
             $redirectUrl = company_route('quotes.edit', ['quote' => $quote->uuid]);
 
@@ -226,7 +211,7 @@ class QuoteController extends Controller
     /**
      * Update customers (bill_to / ship_to) for an existing quote.
      */
-    public function updateCustomers(Request $request, Company $company, $uuid)
+    public function updateCustomers(UpdateQuoteCustomersRequest $request, Company $company, $uuid)
     {
         $this->authorize('edit', 'quotes');
 
@@ -253,39 +238,7 @@ class QuoteController extends Controller
                 'shipping_customer_id' => $shipToCustomer->id,
             ]);
 
-            $quote->addresses()->updateOrCreate(
-                ['type' => 'BILLING'],
-                [
-                    'company_id' => $company->id,
-                    'address_line_1' => $billToCustomer->address?->address_line_1 ?? '',
-                    'address_line_2' => $billToCustomer->address?->address_line_2 ?? null,
-                    'city' => $billToCustomer->address?->city ?? null,
-                    'state_id' => ! empty($billToCustomer->address?->state_id) ? $billToCustomer->address?->state_id : null,
-                    'zip_code' => $billToCustomer->address?->zip_code ?? '',
-                    'country_id' => ! empty($billToCustomer->address?->country_id) ? $billToCustomer->address?->country_id : null,
-                    'phone' => $billToCustomer->phone,
-                    'email' => $billToCustomer->email,
-                    'name' => $billToCustomer->legal_name ?? $billToCustomer->display_name,
-                    'tax_number' => $billToCustomer->tax_number,
-                ]
-            );
-
-            $quote->addresses()->updateOrCreate(
-                ['type' => 'SHIPPING'],
-                [
-                    'company_id' => $company->id,
-                    'address_line_1' => $shipToCustomer->address?->address_line_1 ?? '',
-                    'address_line_2' => $shipToCustomer->address?->address_line_2 ?? null,
-                    'city' => $shipToCustomer->address?->city ?? null,
-                    'state_id' => ! empty($shipToCustomer->address?->state_id) ? $shipToCustomer->address?->state_id : null,
-                    'zip_code' => $shipToCustomer->address?->zip_code ?? '',
-                    'country_id' => ! empty($shipToCustomer->address?->country_id) ? $shipToCustomer->address?->country_id : null,
-                    'phone' => $shipToCustomer->phone,
-                    'email' => $shipToCustomer->email,
-                    'name' => $shipToCustomer->legal_name ?? $shipToCustomer->display_name,
-                    'tax_number' => $shipToCustomer->tax_number,
-                ]
-            );
+            $this->docService->syncAddressSnapshots($quote, $billToCustomer, $shipToCustomer);
 
             if ($request->ajax()) {
                 $quote->load(['addresses', 'customer', 'shippingCustomer']);
@@ -415,7 +368,7 @@ class QuoteController extends Controller
         ));
     }
 
-    public function update(Request $request, Company $company, $uuid)
+    public function update(UpdateQuoteRequest $request, Company $company, $uuid)
     {
         $this->authorize('edit', 'quotes');
 
@@ -464,9 +417,9 @@ class QuoteController extends Controller
         try {
             $taxGroupId = $request->tax_group_id ? (int) $request->tax_group_id : null;
 
-            $currencyId = $this->resolveCurrencyIdFromCode($request->currency);
+            $currencyId = $this->docService->resolveCurrencyId($request->currency);
 
-            $termSnapshot = $this->resolvePaymentTermSnapshot($request->payment_term_id);
+            $termSnapshot = $this->docService->resolvePaymentTermSnapshot($request->payment_term_id);
 
             $calc = $this->calcService->calculate($company->id, [
                 'items' => $request->items ?? [],
@@ -492,7 +445,7 @@ class QuoteController extends Controller
                 'notes' => $request->notes ?? null,
 
                 'subtotal' => $calc['subtotal'],
-                'discount_total' => $calc['discount_total'],
+                'discount_total' => $calc['discount_total'] ?? 0,
                 'global_discount_percent' => (float) ($request->global_discount_percent ?? 0),
                 'global_discount_amount' => (float) ($request->global_discount_amount ?? 0),
                 'tax_total' => $calc['tax_total'],
@@ -577,114 +530,16 @@ class QuoteController extends Controller
 
         DB::beginTransaction();
         try {
-            // Get order status
-            $orderStatus = OrderStatus::firstOrCreate(
-                ['code' => 'DRAFT'],
-                ['name' => 'Draft', 'is_active' => true]
-            );
-
-            $paymentStatus = PaymentStatus::where('code', 'INITIATED')->first()
-                ?? PaymentStatus::firstOrCreate(['code' => 'INITIATED'], ['name' => 'Initiated', 'is_active' => true]);
-
-            // Create order with all fields from quote
-            $order = Order::create([
-                'uuid' => Str::uuid(),
-                'company_id' => $company->id,
-
-                'customer_id' => $quote->customer_id,
-                'shipping_customer_id' => $quote->shipping_customer_id ?? $quote->customer_id,
-
-                'status_id' => $orderStatus->id,
-                'payment_status_id' => $paymentStatus->id,
-
-                'order_number' => $this->generateOrderNumber($company),
-
-                'currency_id' => $quote->currency_id,
-                'base_currency_id' => $quote->base_currency_id,
-                'fx_rate' => $quote->fx_rate ?? 1,
-
-                'tax_group_id' => $quote->tax_group_id,
-
-                'payment_term_id' => $quote->payment_term_id,
-                'payment_term_name' => $quote->payment_term_name,
-                'payment_due_days' => $quote->payment_due_days,
-
-                'subtotal' => $quote->subtotal,
-                'discount_total' => $quote->discount_total,
-                'global_discount_percent' => $quote->global_discount_percent ?? 0,
-                'global_discount_amount' => $quote->global_discount_amount ?? 0,
-                'tax_total' => $quote->tax_total,
-                'shipping_total' => $quote->shipping_total,
-                'shipping_tax_total' => $quote->shipping_tax_total,
-                'rounding_total' => $quote->rounding_total ?? 0,
-                'grand_total' => $quote->grand_total,
-
-                'notes' => $quote->notes,
-                'created_by' => Auth::id(),
-            ]);
-
-            // Copy items with all fields
-            foreach ($quote->items as $quoteItem) {
-                $order->items()->create([
-                    'product_variant_id' => $quoteItem->product_variant_id,
-                    'is_custom' => $quoteItem->is_custom ?? false,
-                    'custom_sku' => $quoteItem->custom_sku,
-                    'product_name' => $quoteItem->product_name,
-                    'variant_description' => $quoteItem->variant_description,
-                    'unit_price' => $quoteItem->unit_price,
-                    'quantity' => $quoteItem->quantity,
-                    'line_subtotal' => $quoteItem->line_subtotal ?? ($quoteItem->unit_price * $quoteItem->quantity),
-                    'discount_percent' => $quoteItem->discount_percent,
-                    'discount_amount' => $quoteItem->discount_amount,
-                    'line_discount_total' => $quoteItem->line_discount_total ?? $quoteItem->discount_amount,
-                    'tax_group_id' => $quoteItem->tax_group_id,
-                    'tax_rate' => $quoteItem->tax_rate,
-                    'tax_amount' => $quoteItem->tax_amount,
-                    'line_total' => $quoteItem->line_total,
-                ]);
-            }
-
-            // Copy billing address
-            if ($quote->billingAddress) {
-                $order->addresses()->create([
-                    'type' => 'BILLING',
-                    'company_id' => $company->id,
-                    'address_line_1' => $quote->billingAddress->address_line_1,
-                    'address_line_2' => $quote->billingAddress->address_line_2,
-                    'city' => $quote->billingAddress->city,
-                    'state_id' => $quote->billingAddress->state_id,
-                    'zip_code' => $quote->billingAddress->zip_code,
-                    'country_id' => $quote->billingAddress->country_id,
-                    'phone' => $quote->billingAddress->phone,
-                    'email' => $quote->billingAddress->email,
-                    'name' => $quote->billingAddress->name,
-                    'tax_number' => $quote->billingAddress->tax_number,
-                ]);
-            }
-
-            // Copy shipping address
-            if ($quote->shippingAddress) {
-                $order->addresses()->create([
-                    'type' => 'SHIPPING',
-                    'company_id' => $company->id,
-                    'address_line_1' => $quote->shippingAddress->address_line_1,
-                    'address_line_2' => $quote->shippingAddress->address_line_2,
-                    'city' => $quote->shippingAddress->city,
-                    'state_id' => $quote->shippingAddress->state_id,
-                    'zip_code' => $quote->shippingAddress->zip_code,
-                    'country_id' => $quote->shippingAddress->country_id,
-                    'phone' => $quote->shippingAddress->phone,
-                    'email' => $quote->shippingAddress->email,
-                    'name' => $quote->shippingAddress->name,
-                    'tax_number' => $quote->shippingAddress->tax_number,
-                ]);
-            }
+            // Use OrderService for centralized conversion logic
+            $orderService = app(\App\Services\Sales\OrderService::class);
+            $order = $orderService->createFromQuote($quote);
 
             // Update quote status to CONVERTED and link to order
             $convertedStatus = QuoteStatus::where('code', 'CONVERTED')->first();
             $quote->update([
                 'status_id' => $convertedStatus ? $convertedStatus->id : $quote->status_id,
                 'order_id' => $order->id,
+                'accepted_at' => $quote->accepted_at ?? now(),
             ]);
 
             DB::commit();
@@ -725,77 +580,6 @@ class QuoteController extends Controller
     }
 
     /* ===================== HELPERS ===================== */
+    // Helper methods moved to SalesDocumentService
 
-    private function resolveCurrencyIdFromCode(string $code): int
-    {
-        $code = strtoupper(trim($code));
-        $currency = Currency::query()->where('code', $code)->first();
-
-        if (! $currency) {
-            throw new \Exception("Currency not found for code: {$code}");
-        }
-
-        return (int) $currency->id;
-    }
-
-    private function resolvePaymentTermSnapshot(?int $paymentTermId): array
-    {
-        if (! $paymentTermId) {
-            return [
-                'payment_term_id' => null,
-                'payment_term_name' => null,
-                'payment_due_days' => null,
-            ];
-        }
-
-        $term = PaymentTerm::find($paymentTermId);
-
-        if (! $term) {
-            return [
-                'payment_term_id' => null,
-                'payment_term_name' => null,
-                'payment_due_days' => null,
-            ];
-        }
-
-        return [
-            'payment_term_id' => (int) $term->id,
-            'payment_term_name' => (string) $term->name,
-            'payment_due_days' => (int) ($term->due_days ?? 0),
-        ];
-    }
-
-    private function generateQuoteNumber($company)
-    {
-        $prefix = 'QT-'.Carbon::now()->format('Ymd').'-';
-        $lastQuote = Quote::where('company_id', $company->id)
-            ->where('quote_number', 'like', $prefix.'%')
-            ->orderBy('id', 'desc')
-            ->first();
-
-        if ($lastQuote) {
-            $lastNum = intval(substr($lastQuote->quote_number, strlen($prefix)));
-
-            return $prefix.str_pad($lastNum + 1, 4, '0', STR_PAD_LEFT);
-        }
-
-        return $prefix.'0001';
-    }
-
-    private function generateOrderNumber($company)
-    {
-        $prefix = 'SO-'.Carbon::now()->format('Ymd').'-';
-        $lastOrder = Order::where('company_id', $company->id)
-            ->where('order_number', 'like', $prefix.'%')
-            ->orderBy('id', 'desc')
-            ->first();
-
-        if ($lastOrder) {
-            $lastNum = intval(substr($lastOrder->order_number, strlen($prefix)));
-
-            return $prefix.str_pad($lastNum + 1, 4, '0', STR_PAD_LEFT);
-        }
-
-        return $prefix.'0001';
-    }
 }
