@@ -8,6 +8,16 @@ use App\Models\User;
 class UserObserver
 {
     /**
+     * Handle the User "creating" event.
+     */
+    public function creating(User $user): void
+    {
+        if (empty($user->uuid)) {
+            $user->uuid = (string) \Illuminate\Support\Str::uuid();
+        }
+    }
+
+    /**
      * Handle the User "created" event.
      */
     public function created(User $user): void

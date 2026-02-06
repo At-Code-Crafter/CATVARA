@@ -38,6 +38,7 @@ class CompanyProfileController extends Controller
             'legal_name' => 'nullable|string|max:255',
             'website_url' => 'nullable|url|max:255',
             'logo' => 'nullable|image|max:2048',
+            'password_expiry_days' => 'nullable|integer|min:0',
             
             // Details
             'address' => 'nullable|string|max:500',
@@ -65,7 +66,8 @@ class CompanyProfileController extends Controller
                 'name' => $request->name,
                 'legal_name' => $request->legal_name,
                 'website_url' => $request->website_url,
-                'logo' => $logoPath
+                'logo' => $logoPath,
+                'password_expiry_days' => $request->password_expiry_days,
             ]);
             
             // 2. Update Details

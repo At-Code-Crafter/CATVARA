@@ -8,6 +8,7 @@ use App\Models\Company\Company;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Traits\HasCompanyAccess;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -15,7 +16,7 @@ use Illuminate\Support\Facades\DB;
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable, SoftDeletes;
+    use HasFactory, Notifiable, SoftDeletes, HasCompanyAccess;
 
     /**
      * The attributes that are mass assignable.
@@ -28,6 +29,7 @@ class User extends Authenticatable
         'email',
         'password',
         'last_login_at',
+        'password_changed_at',
         'is_active',
         'user_type',
     ];
@@ -52,6 +54,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'password_changed_at' => 'datetime',
         ];
     }
 
@@ -183,5 +186,33 @@ class User extends Authenticatable
 
         // also clear request memo (safe no-op; new request anyway)
         // (memo is per request, so no action needed)
+    }
+
+    public function loginActivities()
+    {
+        return $this->hasMany(UserLoginActivity::class);
+    }
+
+    public function hasPasswordExpired(): bool
+    {
+        $companyId = session('current_company_id');
+        if (!$companyId) {
+            return false;
+        }
+
+        $company = Company::find($companyId);
+        if (!$company || !$company->password_expiry_days) {
+            return false;
+        }
+
+        if (!$this->password_changed_at) {
+            // If never changed, we consider it expired if the company has expiry days set
+            // or we could use created_at as the reference.
+            $referenceDate = $this->created_at;
+        } else {
+            $referenceDate = $this->password_changed_at;
+        }
+
+        return $referenceDate->addDays($company->password_expiry_days)->isPast();
     }
 }

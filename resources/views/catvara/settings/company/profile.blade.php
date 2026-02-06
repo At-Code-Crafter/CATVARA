@@ -84,6 +84,19 @@
                     class="w-full py-2.5 font-semibold placeholder:font-normal" placeholder="https://example.com">
                 </div>
               </div>
+
+              <div class="space-y-1.5">
+                <label class="text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-1">Password Expiry
+                  (Days)</label>
+                <div class="input-icon-group border-amber-100 bg-amber-50/30">
+                  <i class="fas fa-key text-xs text-amber-500"></i>
+                  <input type="number" name="password_expiry_days"
+                    value="{{ old('password_expiry_days', $company->password_expiry_days) }}"
+                    class="w-full py-2.5 font-semibold placeholder:font-normal bg-transparent"
+                    placeholder="0 = Never expire">
+                </div>
+                <p class="text-[9px] text-amber-600 font-bold ml-1">Force users to change password every X days.</p>
+              </div>
             </div>
           </div>
 

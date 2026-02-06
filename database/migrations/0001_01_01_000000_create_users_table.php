@@ -20,6 +20,7 @@ return new class extends Migration
             $table->string('password');
             $table->boolean('is_active')->default(true);
             $table->string('profile_photo')->nullable();
+            $table->timestamp('password_changed_at')->nullable();
             $table->timestamp('last_login_at')->nullable();
             $table->string('user_type')->default('ADMIN');
             $table->rememberToken();
@@ -41,6 +42,16 @@ return new class extends Migration
             $table->longText('payload');
             $table->integer('last_activity')->index();
         });
+
+        Schema::create('user_login_activities', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->string('ip_address', 45)->nullable();
+            $table->text('user_agent')->nullable();
+            $table->string('location')->nullable();
+            $table->timestamp('logged_at');
+            $table->timestamps();
+        });
     }
 
     /**
@@ -51,5 +62,6 @@ return new class extends Migration
         Schema::dropIfExists('users');
         Schema::dropIfExists('password_reset_tokens');
         Schema::dropIfExists('sessions');
+        Schema::dropIfExists('user_login_activities');
     }
 };

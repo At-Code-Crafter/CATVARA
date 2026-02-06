@@ -182,6 +182,22 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
                 Route::put('company-profile', [\App\Http\Controllers\Admin\Company\CompanyProfileController::class, 'update'])
                     ->name('company-profile.update');
+
+                /**
+                 * User Login Activities
+                 */
+                Route::get('users/{user}/login-activities', [\App\Http\Controllers\Admin\Company\CompanyUserController::class, 'loginActivities'])
+                    ->name('users.login-activities');
+            });
+
+            /*
+            |--------------------------------------------------------------------------
+            | Password Management
+            |--------------------------------------------------------------------------
+            */
+            Route::prefix('auth/password')->as('auth.password.')->group(function () {
+                Route::get('change', [\App\Http\Controllers\Auth\PasswordChangeController::class, 'showChangeForm'])->name('change');
+                Route::post('change', [\App\Http\Controllers\Auth\PasswordChangeController::class, 'change'])->name('update');
             });
 
             /*
