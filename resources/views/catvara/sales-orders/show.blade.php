@@ -29,6 +29,13 @@
           </a>
         @endif
 
+        @if ($statusCode === 'CONFIRMED' || $statusCode === 'PARTIALLY_FULFILLED')
+          <button type="button" id="generateInvoiceBtn"
+            class="btn btn-primary bg-emerald-600 hover:bg-emerald-700 text-white border-none shadow-sm">
+            <i class="fas fa-file-invoice mr-2"></i> Generate Invoice
+          </button>
+        @endif
+
         @if ($canDeliver)
           <button onclick="openDeliveryModal()" class="btn btn-primary bg-indigo-600 hover:bg-indigo-700 text-white">
             <i class="fas fa-truck mr-2"></i> Delivery Note
@@ -431,30 +438,30 @@
                         </thead>
                         <tbody class="divide-y divide-slate-50">
                             ${items.map(item => `
-                                              <tr class="${item.remaining <= 0 ? 'bg-slate-50/50 grayscale opacity-50' : ''}">
-                                                  <td class="p-3">
-                                                      <div class="font-bold text-slate-700 truncate max-w-[150px]">${item.name}</div>
-                                                      <div class="text-[9px] text-slate-400 uppercase mt-0.5">${item.variant || '-'}</div>
-                                                  </td>
-                                                  <td class="p-3 text-center font-bold text-slate-600">
-                                                      ${item.remaining}
-                                                  </td>
-                                                  <td class="p-3 text-center">
-                                                      <span class="badge ${item.stock >= item.remaining ? 'badge-success' : (item.stock > 0 ? 'badge-warning' : 'badge-danger')} text-[9px] scale-90">
-                                                          ${item.stock}
-                                                      </span>
-                                                  </td>
-                                                  <td class="p-3 text-right">
-                                                      <input type="number" 
-                                                             class="delivery-qty w-16 px-2 py-1 rounded-lg border border-slate-200 text-right font-bold text-indigo-600 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
-                                                             data-item-id="${item.id}"
-                                                             value="${item.remaining}"
-                                                             min="0"
-                                                             max="${item.remaining}"
-                                                             ${item.remaining <= 0 ? 'disabled' : ''} />
-                                                  </td>
-                                              </tr>
-                                          `).join('')}
+                                                  <tr class="${item.remaining <= 0 ? 'bg-slate-50/50 grayscale opacity-50' : ''}">
+                                                      <td class="p-3">
+                                                          <div class="font-bold text-slate-700 truncate max-w-[150px]">${item.name}</div>
+                                                          <div class="text-[9px] text-slate-400 uppercase mt-0.5">${item.variant || '-'}</div>
+                                                      </td>
+                                                      <td class="p-3 text-center font-bold text-slate-600">
+                                                          ${item.remaining}
+                                                      </td>
+                                                      <td class="p-3 text-center">
+                                                          <span class="badge ${item.stock >= item.remaining ? 'badge-success' : (item.stock > 0 ? 'badge-warning' : 'badge-danger')} text-[9px] scale-90">
+                                                              ${item.stock}
+                                                          </span>
+                                                      </td>
+                                                      <td class="p-3 text-right">
+                                                          <input type="number" 
+                                                                 class="delivery-qty w-16 px-2 py-1 rounded-lg border border-slate-200 text-right font-bold text-indigo-600 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
+                                                                 data-item-id="${item.id}"
+                                                                 value="${item.remaining}"
+                                                                 min="0"
+                                                                 max="${item.remaining}"
+                                                                 ${item.remaining <= 0 ? 'disabled' : ''} />
+                                                      </td>
+                                                  </tr>
+                                              `).join('')}
                         </tbody>
                     </table>
                 </div>
@@ -625,5 +632,41 @@
         }
       });
     }
+    document.getElementById('generateInvoiceBtn')?.addEventListener('click', function() {
+      const btn = this;
+      Swal.fire({
+        title: 'Generate Invoice?',
+        text: "This will create a draft invoice from this sales order.",
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, generate it',
+        confirmButtonColor: '#10b981',
+        showLoaderOnConfirm: true,
+        preConfirm: () => {
+          return $.post(
+            "{{ company_route('sales-orders.generate-invoice', ['sales_order' => $order->uuid]) }}", {
+              _token: "{{ csrf_token() }}"
+            }).catch(xhr => {
+            Swal.showValidationMessage(`Error: ${xhr.responseJSON?.message || 'Generation failed'}`);
+          });
+        }
+      }).then((result) => {
+        if (result.isConfirmed && result.value.success) {
+          Swal.fire({
+            icon: 'success',
+            title: 'Invoice Generated!',
+            text: result.value.message,
+            timer: 1500,
+            showConfirmButton: false
+          }).then(() => {
+            if (result.value.redirect_url) {
+              window.location.href = result.value.redirect_url;
+            } else {
+              window.location.reload();
+            }
+          });
+        }
+      });
+    });
   </script>
 @endsection

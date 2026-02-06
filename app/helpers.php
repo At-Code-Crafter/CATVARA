@@ -199,3 +199,17 @@ if (! function_exists('db_raw')) {
         return \Illuminate\Support\Facades\DB::raw($prefixed);
     }
 }
+
+/**
+ * Robust money formatter
+ */
+if (! function_exists('money')) {
+    function money($amount, $currency = 'USD')
+    {
+        $amount = (float) $amount;
+        
+        // Simple but effective formatting
+        // In a real app, this could use NumberFormatter for locale-specific display
+        return ($currency ?: 'USD') . ' ' . number_format($amount, 2);
+    }
+}

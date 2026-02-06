@@ -1,366 +1,176 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quotation {{ $quote->quote_number }}</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            font-size: 12px;
-            line-height: 1.5;
-            color: #333;
-            padding: 20px;
-        }
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-        }
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 30px;
-            padding-bottom: 20px;
-            border-bottom: 2px solid #e5e7eb;
-        }
-        .company-info h1 {
-            font-size: 24px;
-            color: #1e293b;
-            margin-bottom: 5px;
-        }
-        .company-info p {
-            color: #64748b;
-            font-size: 11px;
-        }
-        .quote-info {
-            text-align: right;
-        }
-        .quote-info h2 {
-            font-size: 28px;
-            color: #3b82f6;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-        }
-        .quote-info .quote-number {
-            font-size: 14px;
-            font-weight: bold;
-            color: #1e293b;
-            margin-top: 5px;
-        }
-        .quote-info .quote-date {
-            font-size: 11px;
-            color: #64748b;
-        }
-        .addresses {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 30px;
-        }
-        .address-block {
-            width: 48%;
-        }
-        .address-block h3 {
-            font-size: 10px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: #64748b;
-            margin-bottom: 8px;
-            padding-bottom: 5px;
-            border-bottom: 1px solid #e5e7eb;
-        }
-        .address-block .name {
-            font-weight: bold;
-            font-size: 14px;
-            color: #1e293b;
-            margin-bottom: 5px;
-        }
-        .address-block p {
-            color: #475569;
-            font-size: 11px;
-        }
-        .validity-info {
-            background: #f0fdf4;
-            border: 1px solid #bbf7d0;
-            border-radius: 6px;
-            padding: 12px 16px;
-            margin-bottom: 20px;
-            display: flex;
-            justify-content: space-between;
-        }
-        .validity-info.expired {
-            background: #fef2f2;
-            border-color: #fecaca;
-        }
-        .validity-info span {
-            font-size: 11px;
-        }
-        .validity-info .label {
-            color: #64748b;
-        }
-        .validity-info .value {
-            font-weight: bold;
-            color: #166534;
-        }
-        .validity-info.expired .value {
-            color: #dc2626;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 20px;
-        }
-        thead th {
-            background: #f8fafc;
-            color: #64748b;
-            font-size: 10px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            padding: 12px 10px;
-            text-align: left;
-            border-bottom: 2px solid #e5e7eb;
-        }
-        thead th:last-child {
-            text-align: right;
-        }
-        tbody td {
-            padding: 12px 10px;
-            border-bottom: 1px solid #f1f5f9;
-            vertical-align: top;
-        }
-        tbody td:last-child {
-            text-align: right;
-        }
-        .item-name {
-            font-weight: 600;
-            color: #1e293b;
-        }
-        .item-variant {
-            font-size: 10px;
-            color: #94a3b8;
-            text-transform: uppercase;
-        }
-        .text-center {
-            text-align: center;
-        }
-        .text-right {
-            text-align: right;
-        }
-        .totals {
-            margin-left: auto;
-            width: 280px;
-        }
-        .totals-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 8px 0;
-            border-bottom: 1px solid #f1f5f9;
-        }
-        .totals-row.grand-total {
-            border-top: 2px solid #e5e7eb;
-            border-bottom: none;
-            padding-top: 12px;
-            margin-top: 5px;
-        }
-        .totals-row .label {
-            color: #64748b;
-        }
-        .totals-row .value {
-            font-weight: 600;
-            color: #1e293b;
-        }
-        .totals-row.grand-total .label {
-            font-size: 14px;
-            font-weight: bold;
-            color: #1e293b;
-        }
-        .totals-row.grand-total .value {
-            font-size: 18px;
-            font-weight: bold;
-            color: #3b82f6;
-        }
-        .notes {
-            margin-top: 30px;
-            padding: 15px;
-            background: #f8fafc;
-            border-radius: 6px;
-        }
-        .notes h4 {
-            font-size: 10px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: #64748b;
-            margin-bottom: 8px;
-        }
-        .notes p {
-            color: #475569;
-            font-size: 11px;
-        }
-        .footer {
-            margin-top: 40px;
-            padding-top: 20px;
-            border-top: 1px solid #e5e7eb;
-            text-align: center;
-            color: #94a3b8;
-            font-size: 10px;
-        }
-        @media print {
-            body {
-                padding: 0;
-            }
-            .no-print {
-                display: none;
-            }
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <div class="company-info">
-                <h1>{{ $quote->company->name ?? 'Company Name' }}</h1>
-                <p>{{ $quote->company->address ?? '' }}</p>
-                <p>{{ $quote->company->phone ?? '' }} | {{ $quote->company->email ?? '' }}</p>
-            </div>
-            <div class="quote-info">
-                <h2>Quotation</h2>
-                <div class="quote-number">{{ $quote->quote_number }}</div>
-                <div class="quote-date">Date: {{ $quote->created_at->format('M d, Y') }}</div>
-            </div>
-        </div>
+@extends('catvara.layouts.print')
 
-        <div class="addresses">
-            <div class="address-block">
-                <h3>Bill To</h3>
-                <div class="name">{{ $quote->customer->display_name ?? 'N/A' }}</div>
-                @if ($quote->billingAddress)
-                    <p>{{ $quote->billingAddress->address_line_1 }}</p>
-                    @if ($quote->billingAddress->address_line_2)
-                        <p>{{ $quote->billingAddress->address_line_2 }}</p>
-                    @endif
-                    <p>{{ $quote->billingAddress->city ?? '' }}, {{ $quote->billingAddress->state->name ?? '' }} {{ $quote->billingAddress->zip_code ?? '' }}</p>
-                    <p>{{ $quote->billingAddress->country->name ?? '' }}</p>
-                    <p style="margin-top: 8px;">{{ $quote->billingAddress->email ?? $quote->customer->email }}</p>
-                    <p>{{ $quote->billingAddress->phone ?? $quote->customer->phone }}</p>
-                @endif
-            </div>
-            <div class="address-block">
-                <h3>Ship To</h3>
-                <div class="name">{{ $quote->customer->display_name ?? 'N/A' }}</div>
-                @if ($quote->shippingAddress)
-                    <p>{{ $quote->shippingAddress->address_line_1 }}</p>
-                    @if ($quote->shippingAddress->address_line_2)
-                        <p>{{ $quote->shippingAddress->address_line_2 }}</p>
-                    @endif
-                    <p>{{ $quote->shippingAddress->city ?? '' }}, {{ $quote->shippingAddress->state->name ?? '' }} {{ $quote->shippingAddress->zip_code ?? '' }}</p>
-                    <p>{{ $quote->shippingAddress->country->name ?? '' }}</p>
-                @endif
-            </div>
-        </div>
+@section('title', 'Quote ' . $quote->quote_number)
 
+@section('content')
+  <div class="print-container">
+    {{-- Document Header --}}
+    <div class="flex justify-between items-start mb-12">
+      <div>
+        <h1 class="text-3xl font-black text-slate-900 tracking-tight uppercase mb-1">Quotation</h1>
+        <div class="text-sm font-bold text-slate-500 tracking-widest uppercase">No: <span
+            class="text-slate-900">{{ $quote->quote_number }}</span></div>
+        <div class="text-sm font-bold text-slate-500 tracking-widest uppercase mt-1">Date: <span
+            class="text-slate-900">{{ $quote->created_at->format('d M, Y') }}</span></div>
         @if ($quote->valid_until)
-            @php
-                $isExpired = $quote->valid_until->isPast();
-            @endphp
-            <div class="validity-info {{ $isExpired ? 'expired' : '' }}">
-                <span>
-                    <span class="label">Payment Terms:</span>
-                    <span class="value">{{ $quote->paymentTerm->name ?? 'Direct' }}</span>
-                </span>
-                <span>
-                    <span class="label">Valid Until:</span>
-                    <span class="value">{{ $quote->valid_until->format('M d, Y') }}</span>
-                </span>
-                <span>
-                    <span class="label">Currency:</span>
-                    <span class="value">{{ $quote->currency->code ?? 'AED' }}</span>
-                </span>
-            </div>
+          <div class="text-sm font-bold text-slate-500 tracking-widest uppercase mt-1">Valid Until: <span
+              class="text-slate-900">{{ $quote->valid_until->format('d M, Y') }}</span></div>
         @endif
-
-        <table>
-            <thead>
-                <tr>
-                    <th style="width: 40%;">Description</th>
-                    <th class="text-center" style="width: 12%;">Qty</th>
-                    <th class="text-right" style="width: 16%;">Unit Price</th>
-                    <th class="text-center" style="width: 12%;">Discount</th>
-                    <th class="text-right" style="width: 20%;">Amount</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach ($quote->items as $item)
-                    <tr>
-                        <td>
-                            <div class="item-name">{{ $item->product_name }}</div>
-                            @if ($item->variant_description)
-                                <div class="item-variant">{{ $item->variant_description }}</div>
-                            @endif
-                        </td>
-                        <td class="text-center">{{ (float) $item->quantity }}</td>
-                        <td class="text-right">{{ number_format((float) $item->unit_price, 2) }}</td>
-                        <td class="text-center">
-                            @if ($item->discount_amount > 0)
-                                -{{ number_format((float) $item->discount_amount, 2) }}
-                            @else
-                                -
-                            @endif
-                        </td>
-                        <td class="text-right" style="font-weight: 600;">{{ number_format((float) $item->line_total, 2) }}</td>
-                    </tr>
-                @endforeach
-            </tbody>
-        </table>
-
-        <div class="totals">
-            <div class="totals-row">
-                <span class="label">Subtotal</span>
-                <span class="value">{{ number_format((float) $quote->subtotal, 2) }}</span>
-            </div>
-            @if ($quote->discount_total > 0)
-                <div class="totals-row">
-                    <span class="label">Discount</span>
-                    <span class="value" style="color: #10b981;">-{{ number_format((float) $quote->discount_total, 2) }}</span>
-                </div>
-            @endif
-            @if ($quote->shipping_total > 0)
-                <div class="totals-row">
-                    <span class="label">Shipping</span>
-                    <span class="value">{{ number_format((float) $quote->shipping_total, 2) }}</span>
-                </div>
-            @endif
-            <div class="totals-row">
-                <span class="label">Tax</span>
-                <span class="value">{{ number_format((float) $quote->tax_total, 2) }}</span>
-            </div>
-            <div class="totals-row grand-total">
-                <span class="label">Grand Total</span>
-                <span class="value">{{ number_format((float) $quote->grand_total, 2) }} {{ $quote->currency->code ?? '' }}</span>
-            </div>
-        </div>
-
-        @if ($quote->notes)
-            <div class="notes">
-                <h4>Notes</h4>
-                <p>{{ $quote->notes }}</p>
-            </div>
+      </div>
+      <div class="text-right">
+        @if ($quote->company->logo)
+          <img src="{{ storage_url($quote->company->logo) }}" class="h-12 w-auto ml-auto mb-2">
+        @else
+          <div class="text-xl font-black text-brand-600 uppercase">{{ $quote->company->name }}</div>
         @endif
-
-        <div class="footer">
-            <p>Thank you for your business!</p>
-            <p>Generated on {{ now()->format('M d, Y h:i A') }}</p>
+        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">
+          {{ $quote->company->address }}<br>
+          {{ $quote->company->email }} | {{ $quote->company->phone }}
         </div>
+      </div>
     </div>
 
-    <script>
-        window.onload = function() {
-            window.print();
-        };
-    </script>
-</body>
-</html>
+    {{-- Addresses --}}
+    <div class="grid grid-cols-2 gap-12 mb-12">
+      <div>
+        <div class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3 border-b border-slate-100 pb-1">
+          Bill To</div>
+        <div class="text-sm font-black text-brand-600 mb-1">{{ $quote->customer->display_name ?? 'N/A' }}</div>
+        <div class="text-[11px] font-medium text-slate-600 leading-relaxed">
+          @if ($quote->billingAddress)
+            {{ $quote->billingAddress->address_line_1 }}<br>
+            @if ($quote->billingAddress->address_line_2)
+              {{ $quote->billingAddress->address_line_2 }}<br>
+            @endif
+            {{ $quote->billingAddress->city }}, {{ $quote->billingAddress->state->name ?? '' }}
+            {{ $quote->billingAddress->zip_code }}<br>
+            {{ $quote->billingAddress->country->name ?? '' }}
+          @else
+            No billing address provided.
+          @endif
+        </div>
+      </div>
+      <div>
+        <div class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3 border-b border-slate-100 pb-1">
+          Ship To</div>
+        <div class="text-sm font-black text-indigo-600 mb-1">
+          {{ $quote->shippingCustomer->display_name ?? ($quote->customer->display_name ?? 'N/A') }}</div>
+        <div class="text-[11px] font-medium text-slate-600 leading-relaxed">
+          @if ($quote->shippingAddress)
+            {{ $quote->shippingAddress->address_line_1 }}<br>
+            @if ($quote->shippingAddress->address_line_2)
+              {{ $quote->shippingAddress->address_line_2 }}<br>
+            @endif
+            {{ $quote->shippingAddress->city }}, {{ $quote->shippingAddress->state->name ?? '' }}
+            {{ $quote->shippingAddress->zip_code }}<br>
+            {{ $quote->shippingAddress->country->name ?? '' }}
+          @else
+            @if ($quote->billingAddress)
+              Same as Billing Address
+            @else
+              No shipping address provided.
+            @endif
+          @endif
+        </div>
+      </div>
+    </div>
+
+    {{-- Items Table --}}
+    <div class="mb-12">
+      <table class="w-full">
+        <thead>
+          <tr class="border-b-2 border-slate-900">
+            <th class="text-left py-3 text-[10px] font-black uppercase tracking-widest text-slate-500 w-[50%]">Item
+              Description</th>
+            <th class="text-center py-3 text-[10px] font-black uppercase tracking-widest text-slate-500">Qty</th>
+            <th class="text-right py-3 text-[10px] font-black uppercase tracking-widest text-slate-500">Price</th>
+            <th class="text-right py-3 text-[10px] font-black uppercase tracking-widest text-slate-500">Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          @foreach ($quote->items as $item)
+            <tr class="border-b border-slate-100">
+              <td class="py-4">
+                <div class="text-[11px] font-black text-slate-800">{{ $item->product_name }}</div>
+                @if ($item->variant_description)
+                  <div class="text-[9px] font-bold text-slate-400 uppercase tracking-tighter mt-0.5">
+                    {{ $item->variant_description }}</div>
+                @endif
+              </td>
+              <td class="text-center py-4 text-[11px] font-black text-slate-600">{{ (float) $item->quantity }}</td>
+              <td class="text-right py-4 text-[11px] font-black text-slate-600 font-mono">
+                {{ number_format($item->unit_price, 2) }}</td>
+              <td class="text-right py-4 text-[11px] font-black text-slate-900 font-mono">
+                {{ number_format($item->line_total, 2) }}</td>
+            </tr>
+          @endforeach
+        </tbody>
+      </table>
+    </div>
+
+    {{-- Footer Totals --}}
+    <div class="flex justify-end pr-0">
+      <div class="w-64 space-y-3">
+        <div class="flex justify-between items-center text-[11px] font-bold text-slate-500 border-b border-slate-50 pb-2">
+          <span>Subtotal</span>
+          <span class="text-slate-900 font-black font-mono">{{ number_format($quote->subtotal, 2) }}</span>
+        </div>
+        @if ($quote->discount_total > 0)
+          <div
+            class="flex justify-between items-center text-[11px] font-bold text-rose-500 border-b border-slate-50 pb-2">
+            <span>Discounts</span>
+            <span class="font-black font-mono">-{{ number_format($quote->discount_total, 2) }}</span>
+          </div>
+        @endif
+        <div class="flex justify-between items-center text-[11px] font-bold text-slate-500 border-b border-slate-50 pb-2">
+          <span>Tax & Logistics</span>
+          <span
+            class="text-slate-900 font-black font-mono">{{ number_format($quote->tax_total + $quote->shipping_total, 2) }}</span>
+        </div>
+        <div class="flex justify-between items-center pt-2">
+          <div>
+            <span class="text-[10px] font-black uppercase tracking-[0.2em] text-brand-600 block">Grand Total</span>
+            <span
+              class="text-[9px] text-brand-400 font-black uppercase leading-none">{{ $quote->currency->code ?? 'AED' }}</span>
+          </div>
+          <span
+            class="text-2xl font-black text-brand-600 font-mono tracking-tighter">{{ number_format($quote->grand_total, 2) }}</span>
+        </div>
+      </div>
+    </div>
+
+    {{-- Extra Info --}}
+    <div class="mt-24 pt-8 border-t-2 border-slate-100 grid grid-cols-2 gap-12">
+      <div>
+        <div class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Terms & Notes</div>
+        @if ($quote->notes)
+          <p class="text-[10px] font-medium text-slate-600 leading-relaxed">{{ $quote->notes }}</p>
+        @endif
+        <p class="text-[10px] font-black text-slate-800 mt-2">Payment Terms: <span
+            class="text-brand-600">{{ $quote->paymentTerm->name ?? 'N/A' }}</span></p>
+      </div>
+      <div class="text-right">
+        <div class="h-12 w-32 border-b border-slate-200 ml-auto mb-2"></div>
+        <div class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Authorized Signature</div>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    @media print {
+      .no-print {
+        display: none;
+      }
+
+      body {
+        background: white;
+        margin: 0;
+        padding: 0;
+      }
+
+      @page {
+        margin: 2cm;
+      }
+    }
+  </style>
+@endsection

@@ -3,18 +3,15 @@
 namespace App\Http\Controllers\Admin\Sales;
 
 use App\Http\Controllers\Controller;
-use App\Models\Accounting\PaymentStatus;
-use App\Models\Accounting\PaymentTerm;
+use App\Http\Requests\Sales\StoreQuoteRequest;
+use App\Http\Requests\Sales\UpdateQuoteCustomersRequest;
+use App\Http\Requests\Sales\UpdateQuoteRequest;
 use App\Models\Company\Company;
 use App\Models\Customer\Customer;
 use App\Models\Pricing\Currency;
 use App\Models\Sales\Order;
-use App\Models\Sales\OrderStatus;
 use App\Models\Sales\Quote;
 use App\Models\Sales\QuoteStatus;
-use App\Http\Requests\Sales\StoreQuoteRequest;
-use App\Http\Requests\Sales\UpdateQuoteCustomersRequest;
-use App\Http\Requests\Sales\UpdateQuoteRequest;
 use App\Services\Sales\SalesCalculationService;
 use App\Services\Sales\SalesDocumentService;
 use App\Services\Sales\TaxService;
@@ -139,10 +136,7 @@ class QuoteController extends Controller
     {
         $this->authorize('create', 'quotes');
 
-        $request->validate([
-            'bill_to' => 'required|exists:customers,uuid',
-            'ship_to' => 'nullable|exists:customers,uuid',
-        ]);
+        $request->validated();
 
         $company = $request->company;
 
@@ -215,10 +209,7 @@ class QuoteController extends Controller
     {
         $this->authorize('edit', 'quotes');
 
-        $request->validate([
-            'bill_to' => 'required|exists:customers,uuid',
-            'ship_to' => 'nullable|exists:customers,uuid',
-        ]);
+        $request->validated();
 
         $quote = Quote::where('company_id', $company->id)
             ->where('uuid', $uuid)
@@ -232,7 +223,7 @@ class QuoteController extends Controller
             ? Customer::where('company_id', $company->id)->where('uuid', $request->ship_to)->firstOrFail()
             : $billToCustomer;
 
-        return DB::transaction(function () use ($quote, $company, $billToCustomer, $shipToCustomer, $request) {
+        return DB::transaction(function () use ($quote, $billToCustomer, $shipToCustomer, $request) {
             $quote->update([
                 'customer_id' => $billToCustomer->id,
                 'shipping_customer_id' => $shipToCustomer->id,

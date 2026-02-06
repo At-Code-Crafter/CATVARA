@@ -241,7 +241,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
                 ->controller(\App\Http\Controllers\Admin\Sales\SalesOrderController::class)
                 ->group(function () {
                     Route::get('{sales_order}/print', 'printOrder')->name('print');
-                    Route::post('{sales_order}/generate-invoice', 'storeFromOrder')->name('generate-invoice');
+                    Route::post('{sales_order}/generate-invoice', [\App\Http\Controllers\Admin\Accounting\InvoiceController::class, 'storeFromOrder'])->name('generate-invoice');
                     Route::put('{sales_order}/update-customers', 'updateCustomers')->name('update-customers');
                     Route::get('{sales_order}/customer-switcher', 'customerSwitcher')->name('customer-switcher');
                     Route::get('{sales_order}/finalize', 'finalize')->name('finalize');
@@ -265,12 +265,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('pos/components/custom-item-modal', [\App\Http\Controllers\Admin\Sales\SalesOrderComponentController::class, 'customItemModal'])
                 ->name('pos.components.custom-item-modal');
 
-            /**
-             * Invoices
-             */
-            Route::get('invoices/{invoice}/print', [\App\Http\Controllers\Admin\Accounting\InvoiceController::class, 'print'])
-                ->name('invoices.print');
-
             /*
             |--------------------------------------------------------------------------
             | Accounting Management
@@ -278,7 +272,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
             */
 
             Route::prefix('accounting')->as('accounting.')->group(function () {
+                /**
+                 * Invoices
+                 */
+                Route::get('invoices/data', [\App\Http\Controllers\Admin\Accounting\InvoiceController::class, 'data'])->name('invoices.data');
+                Route::get('invoices/{invoice}/print', [\App\Http\Controllers\Admin\Accounting\InvoiceController::class, 'print'])->name('invoices.print');
+                Route::post('invoices/{invoice}/post', [\App\Http\Controllers\Admin\Accounting\InvoiceController::class, 'post'])->name('invoices.post');
+                Route::resource('invoices', \App\Http\Controllers\Admin\Accounting\InvoiceController::class)->only(['index', 'show']);
 
+                /**
+                 * Payments
+                 */
                 Route::post('payments/{payment}/confirm', [\App\Http\Controllers\Admin\Accounting\PaymentController::class, 'confirm'])
                     ->name('payments.confirm');
 
