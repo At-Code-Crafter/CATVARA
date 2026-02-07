@@ -758,13 +758,16 @@ class SalesOrderController extends Controller
                 throw new \Exception('No items were selected for delivery or they are already fully delivered.');
             }
 
-            // Sync order status
+            // Sync order status and check if fully fulfilled
+            $order->load('items'); // Reload to get updated fulfilled_quantity
             $totalOrdered = $order->items->sum('quantity');
             $totalFulfilled = $order->items->sum('fulfilled_quantity');
 
             $statusCode = 'CONFIRMED';
-            if ($totalFulfilled >= $totalOrdered) {
+            $isFullyFulfilled = false;
+            if ($totalFulfilled >= $totalOrdered && $totalOrdered > 0) {
                 $statusCode = 'FULFILLED';
+                $isFullyFulfilled = true;
             } elseif ($totalFulfilled > 0) {
                 $statusCode = 'PARTIALLY_FULFILLED';
             }
@@ -772,8 +775,14 @@ class SalesOrderController extends Controller
             $status = OrderStatus::where('code', $statusCode)->first();
             if ($status && $order->status_id !== $status->id) {
                 $order->status_id = $status->id;
-                $order->save();
             }
+
+            // Auto-mark as fulfilled if all items are delivered
+            if ($isFullyFulfilled && !$order->is_fulfilled) {
+                $order->is_fulfilled = true;
+            }
+
+            $order->save();
 
             return response()->json([
                 'ok' => true,
