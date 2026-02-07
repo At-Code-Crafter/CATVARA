@@ -21,6 +21,7 @@
           $statusCode = $order->status->code ?? '';
           $canEdit = $statusCode === 'DRAFT';
           $canDeliver = in_array($statusCode, ['CONFIRMED', 'PARTIALLY_FULFILLED']);
+          $isFulfilled = $order->is_fulfilled ?? false;
         @endphp
 
         @if ($canEdit)
@@ -34,6 +35,19 @@
             class="btn btn-primary bg-emerald-600 hover:bg-emerald-700 text-white border-none shadow-sm">
             <i class="fas fa-file-invoice mr-2"></i> Generate Invoice
           </button>
+
+          {{-- Mark as Fulfillment Button --}}
+          @if ($isFulfilled)
+            <button type="button" disabled
+              class="btn bg-gray-400 text-white border-none shadow-sm cursor-not-allowed">
+              <i class="fas fa-check-circle mr-2"></i> Already Marked as Fulfillment
+            </button>
+          @else
+            <button type="button" id="markFulfillmentBtn"
+              class="btn btn-primary bg-amber-500 hover:bg-amber-600 text-white border-none shadow-sm">
+              <i class="fas fa-box-check mr-2"></i> Mark as Fulfillment
+            </button>
+          @endif
         @endif
 
         @if ($canDeliver)
@@ -428,7 +442,7 @@
       let html = `
             <div class="text-left">
                 <p class="text-sm text-slate-500 mb-4">Specify quantities and details for this delivery session.</p>
-                
+
                 <div class="mb-6 space-y-1.5">
                     <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Dispatch From (Warehouse/Store)</label>
                     <select id="dn-location" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm font-bold text-slate-700 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-hidden">
@@ -462,7 +476,7 @@
                                                               </span>
                                                           </td>
                                                           <td class="p-3 text-right">
-                                                              <input type="number" 
+                                                              <input type="number"
                                                                      class="delivery-qty w-16 px-2 py-1 rounded-lg border border-slate-200 text-right font-bold text-indigo-600 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
                                                                      data-item-id="${item.id}"
                                                                      value="${item.remaining}"
@@ -642,7 +656,56 @@
         }
       });
     }
+
+    // Mark as Fulfillment Button
+    document.getElementById('markFulfillmentBtn')?.addEventListener('click', function() {
+      Swal.fire({
+        title: 'Mark as Fulfillment?',
+        text: "Are you sure? If you click yes, the stock quantity will be updated according to the ordered items.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, mark as fulfilled',
+        confirmButtonColor: '#f59e0b',
+        cancelButtonText: 'Cancel',
+        showLoaderOnConfirm: true,
+        preConfirm: () => {
+          return $.post(
+            "{{ company_route('sales-orders.mark-as-fulfillment', ['sales_order' => $order->uuid]) }}", {
+              _token: "{{ csrf_token() }}"
+            }).catch(xhr => {
+            Swal.showValidationMessage(`Error: ${xhr.responseJSON?.message || 'Fulfillment failed'}`);
+          });
+        }
+      }).then((result) => {
+        if (result.isConfirmed && result.value.success) {
+          Swal.fire({
+            icon: 'success',
+            title: 'Fulfilled!',
+            text: result.value.message,
+            timer: 1500,
+            showConfirmButton: false
+          }).then(() => {
+            window.location.reload();
+          });
+        }
+      });
+    });
+
+    // Generate Invoice Button
     document.getElementById('generateInvoiceBtn')?.addEventListener('click', function() {
+      const isFulfilled = {{ $order->is_fulfilled ? 'true' : 'false' }};
+
+      if (!isFulfilled) {
+        Swal.fire({
+          title: 'Fulfillment Required',
+          text: "Please click 'Mark as Fulfillment' button first before generating an invoice.",
+          icon: 'warning',
+          confirmButtonText: 'OK',
+          confirmButtonColor: '#f59e0b'
+        });
+        return;
+      }
+
       const btn = this;
       Swal.fire({
         title: 'Generate Invoice?',

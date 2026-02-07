@@ -15,6 +15,7 @@ use App\Models\Pricing\Currency;
 use App\Models\Pricing\PriceChannel;
 // use App\Models\Inventory\InventoryBalance; // Removed for separation
 use App\Models\Pricing\VariantPrice;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;

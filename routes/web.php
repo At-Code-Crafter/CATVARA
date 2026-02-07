@@ -243,6 +243,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
                     Route::get('{sales_order}/print', 'printOrder')->name('print');
                     Route::get('{sales_order}/print-proforma', 'printProforma')->name('print-proforma');
                     Route::post('{sales_order}/generate-invoice', [\App\Http\Controllers\Admin\Accounting\InvoiceController::class, 'storeFromOrder'])->name('generate-invoice');
+                    Route::post('{sales_order}/mark-as-fulfillment', 'markAsFulfillment')->name('mark-as-fulfillment');
                     Route::put('{sales_order}/update-customers', 'updateCustomers')->name('update-customers');
                     Route::get('{sales_order}/customer-switcher', 'customerSwitcher')->name('customer-switcher');
                     Route::get('{sales_order}/finalize', 'finalize')->name('finalize');

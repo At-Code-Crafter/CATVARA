@@ -63,6 +63,9 @@ class Order extends Model
         'paid_total',
         'refunded_total',
 
+        // Fulfillment tracking
+        'is_fulfilled',
+
         'confirmed_at',
         'created_by',
         'notes',
@@ -86,6 +89,8 @@ class Order extends Model
 
         'paid_total' => 'decimal:6',
         'refunded_total' => 'decimal:6',
+
+        'is_fulfilled' => 'boolean',
     ];
 
     /* ================= Relations ================= */

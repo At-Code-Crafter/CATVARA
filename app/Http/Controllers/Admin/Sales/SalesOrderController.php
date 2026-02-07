@@ -717,29 +717,40 @@ class SalesOrderController extends Controller
             ]);
 
             // 3. Inventory Integration & Safety Check
+            // Skip inventory posting if order is already marked as fulfilled
             $dn->load('items.orderItem');
             $anyFulfilled = false;
 
-            foreach ($dn->items as $dnItem) {
-                $orderItem = $dnItem->orderItem;
-                if ($orderItem && $orderItem->product_variant_id) {
-                    try {
-                        $this->inventoryService->postMovement([
-                            'company_id' => $company->id,
-                            'inventory_location_id' => $dn->inventory_location_id,
-                            'product_variant_id' => $orderItem->product_variant_id,
-                            'reason_code' => 'SALE',
-                            'quantity' => $dnItem->quantity,
-                            'reference_type' => 'delivery_note',
-                            'reference_id' => $dn->id,
-                            'performed_by' => Auth::id(),
-                        ]);
-                    } catch (\Exception $e) {
-                        throw new \Exception("Insufficient stock for item: {$orderItem->product_name}");
+            if (!$order->is_fulfilled) {
+                foreach ($dn->items as $dnItem) {
+                    $orderItem = $dnItem->orderItem;
+                    if ($orderItem && $orderItem->product_variant_id) {
+                        try {
+                            $this->inventoryService->postMovement([
+                                'company_id' => $company->id,
+                                'inventory_location_id' => $dn->inventory_location_id,
+                                'product_variant_id' => $orderItem->product_variant_id,
+                                'reason_code' => 'SALE',
+                                'quantity' => $dnItem->quantity,
+                                'reference_type' => 'delivery_note',
+                                'reference_id' => $dn->id,
+                                'performed_by' => Auth::id(),
+                            ]);
+                        } catch (\Exception $e) {
+                            throw new \Exception("Insufficient stock for item: {$orderItem->product_name}");
+                        }
+                    }
+                    if ($dnItem->quantity > 0) {
+                        $anyFulfilled = true;
                     }
                 }
-                if ($dnItem->quantity > 0) {
-                    $anyFulfilled = true;
+            } else {
+                // Order already fulfilled, just check if any items were selected
+                foreach ($dn->items as $dnItem) {
+                    if ($dnItem->quantity > 0) {
+                        $anyFulfilled = true;
+                        break;
+                    }
                 }
             }
 
@@ -868,6 +879,63 @@ class SalesOrderController extends Controller
             return response()->json([
                 'ok' => true,
                 'message' => 'Delivery Note deleted and quantities restored.',
+            ]);
+        });
+    }
+
+    /**
+     * Mark an order as fulfilled (updates stock without creating delivery note)
+     */
+    public function markAsFulfillment(Request $request, Company $company, string $sales_order)
+    {
+        $order = Order::where('company_id', $company->id)
+            ->where('uuid', $sales_order)
+            ->with(['items'])
+            ->firstOrFail();
+
+        if ($order->is_fulfilled) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Order is already marked as fulfilled.',
+            ], 400);
+        }
+
+        // Get default inventory location
+        $inventoryLocation = InventoryLocation::where('company_id', $company->id)->first();
+        if (!$inventoryLocation) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No inventory location found. Please set up an inventory location first.',
+            ], 400);
+        }
+
+        return DB::transaction(function () use ($order, $company, $inventoryLocation) {
+            // Update stock for each item
+            foreach ($order->items as $orderItem) {
+                if ($orderItem->product_variant_id && $orderItem->quantity > 0) {
+                    try {
+                        $this->inventoryService->postMovement([
+                            'company_id' => $company->id,
+                            'inventory_location_id' => $inventoryLocation->id,
+                            'product_variant_id' => $orderItem->product_variant_id,
+                            'reason_code' => 'SALE',
+                            'quantity' => $orderItem->quantity,
+                            'reference_type' => 'order_fulfillment',
+                            'reference_id' => $order->id,
+                            'performed_by' => Auth::id(),
+                        ]);
+                    } catch (\Exception $e) {
+                        throw new \Exception("Insufficient stock for item: {$orderItem->product_name}");
+                    }
+                }
+            }
+
+            // Mark order as fulfilled
+            $order->update(['is_fulfilled' => true]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Order marked as fulfilled. Stock has been updated.',
             ]);
         });
     }
