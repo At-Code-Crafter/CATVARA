@@ -919,16 +919,19 @@ class SalesOrderController extends Controller
         }
 
         return DB::transaction(function () use ($order, $company, $inventoryLocation) {
-            // Update stock for each item
+            // Update stock for each item - only for PENDING quantity (not already delivered)
             foreach ($order->items as $orderItem) {
-                if ($orderItem->product_variant_id && $orderItem->quantity > 0) {
+                // Calculate pending quantity: order qty - already fulfilled via delivery notes
+                $pendingQty = $orderItem->quantity - ($orderItem->fulfilled_quantity ?? 0);
+
+                if ($orderItem->product_variant_id && $pendingQty > 0) {
                     try {
                         $this->inventoryService->postMovement([
                             'company_id' => $company->id,
                             'inventory_location_id' => $inventoryLocation->id,
                             'product_variant_id' => $orderItem->product_variant_id,
                             'reason_code' => 'SALE',
-                            'quantity' => $orderItem->quantity,
+                            'quantity' => $pendingQty,
                             'reference_type' => 'order_fulfillment',
                             'reference_id' => $order->id,
                             'performed_by' => Auth::id(),
