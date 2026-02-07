@@ -3,10 +3,10 @@
 namespace App\Http\Controllers\Admin\Company;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\Company\CompanyProfileUpdateRequest;
 use App\Models\Company\Company;
 use App\Models\Company\CompanyDetail;
 use App\Models\Company\DocumentSequence;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -29,29 +29,10 @@ class CompanyProfileController extends Controller
     /**
      * Update the company profile.
      */
-    public function update(Request $request)
+    public function update(CompanyProfileUpdateRequest $request)
     {
         $company = Company::where('id', active_company()->id)->first();
-        
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'legal_name' => 'nullable|string|max:255',
-            'website_url' => 'nullable|url|max:255',
-            'logo' => 'nullable|image|max:2048',
-            'password_expiry_days' => 'nullable|integer|min:0',
-            
-            // Details
-            'address' => 'nullable|string|max:500',
-            'tax_number' => 'nullable|string|max:50',
-            'phone' => 'nullable|string|max:20',
-            'email' => 'nullable|email|max:255',
 
-            // Sequences
-            'sequences' => 'nullable|array',
-            'sequences.*.prefix' => 'nullable|string|max:20',
-            'sequences.*.postfix' => 'nullable|string|max:20',
-        ]);
-        
         try {
             DB::beginTransaction();
             

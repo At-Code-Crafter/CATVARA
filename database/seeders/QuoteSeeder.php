@@ -17,8 +17,9 @@ class QuoteSeeder extends Seeder
             ['code' => 'DRAFT', 'name' => 'Draft'],
             ['code' => 'SENT', 'name' => 'Sent'],
             ['code' => 'ACCEPTED', 'name' => 'Accepted', 'is_final' => true],
+            ['code' => 'REJECTED', 'name' => 'Rejected', 'is_final' => true],
             ['code' => 'EXPIRED', 'name' => 'Expired', 'is_final' => true],
-            ['code' => 'CANCELLED', 'name' => 'Cancelled', 'is_final' => true],
+            ['code' => 'CONVERTED', 'name' => 'Converted to Order', 'is_final' => true],
         ];
 
         foreach ($statuses as $s) {

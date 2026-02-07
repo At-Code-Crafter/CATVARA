@@ -241,6 +241,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
                 ->controller(\App\Http\Controllers\Admin\Sales\SalesOrderController::class)
                 ->group(function () {
                     Route::get('{sales_order}/print', 'printOrder')->name('print');
+                    Route::get('{sales_order}/print-proforma', 'printProforma')->name('print-proforma');
                     Route::post('{sales_order}/generate-invoice', [\App\Http\Controllers\Admin\Accounting\InvoiceController::class, 'storeFromOrder'])->name('generate-invoice');
                     Route::put('{sales_order}/update-customers', 'updateCustomers')->name('update-customers');
                     Route::get('{sales_order}/customer-switcher', 'customerSwitcher')->name('customer-switcher');
@@ -251,6 +252,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
                     Route::post('{sales_order}/delivery-note', 'generateDeliveryNote')->name('delivery-note.generate');
                     Route::patch('delivery-notes/{delivery_note}/delivered', 'markDeliveryNoteAsDelivered')->name('delivery-note.delivered');
                     Route::get('delivery-notes/{delivery_note}/print', 'printDeliveryNote')->name('delivery-note.print');
+                    Route::get('delivery-notes/{delivery_note}/print-label', 'printLabel')->name('delivery-note.print-label');
                     Route::delete('delivery-notes/{delivery_note}', 'deleteDeliveryNote')->name('delivery-note.delete');
                 });
 

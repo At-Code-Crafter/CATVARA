@@ -35,6 +35,9 @@ class StorePaymentRequest extends FormRequest
             'apply_to_type' => 'nullable|in:order,invoice',
             'apply_to_id' => 'required_with:apply_to_type|nullable|integer',
             'apply_amount' => 'required_with:apply_to_type|nullable|numeric|min:0.01',
+
+            // Attachments
+            'attachments.*' => 'nullable|file|mimes:jpg,jpeg,png,gif,pdf,doc,docx|max:5120',
         ];
     }
 

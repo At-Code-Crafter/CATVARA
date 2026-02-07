@@ -562,6 +562,24 @@ class SalesOrderController extends Controller
         return view('catvara.sales-orders.print', compact('order'));
     }
 
+    public function printProforma(Company $company, $uuid)
+    {
+        $order = Order::where('company_id', $company->id)
+            ->where('uuid', $uuid)
+            ->with([
+                'items.productVariant.product',
+                'customer',
+                'billingAddress',
+                'shippingAddress',
+                'company',
+                'currency',
+                'paymentTerm',
+            ])
+            ->firstOrFail();
+
+        return view('catvara.sales-orders.print-proforma', compact('order'));
+    }
+
     /* ===================== HELPERS ===================== */
     // Helper methods moved to SalesDocumentService
 
@@ -768,6 +786,21 @@ class SalesOrderController extends Controller
             ->firstOrFail();
 
         return view('catvara.sales-orders.delivery-note', compact('dn'));
+    }
+
+    public function printLabel(Company $company, string $delivery_note)
+    {
+        $dn = DeliveryNote::where('company_id', $company->id)
+            ->where('uuid', $delivery_note)
+            ->with([
+                'order.customer',
+                'order.shippingAddress.country',
+                'order.company',
+                'items.orderItem',
+            ])
+            ->firstOrFail();
+
+        return view('catvara.sales-orders.print-label', compact('dn'));
     }
 
     /* Numbering handled by DeliveryNoteService */

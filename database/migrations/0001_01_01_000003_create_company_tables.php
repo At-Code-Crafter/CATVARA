@@ -69,6 +69,21 @@ return new class extends Migration
                 ->cascadeOnDelete();
         });
 
+        Schema::create('company_banks', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('company_id')->constrained()->cascadeOnDelete();
+            $table->string('bank_name');
+            $table->string('account_name');
+            $table->string('account_number');
+            $table->string('iban')->nullable();
+            $table->string('swift_code')->nullable();
+            $table->string('branch')->nullable();
+            $table->foreignId('currency_id')->nullable()->constrained();
+            $table->boolean('is_active')->default(true);
+            $table->timestamps();
+            $table->softDeletes();
+        });
+
         Schema::create('document_sequences', function (Blueprint $table) {
             $table->id();
 
@@ -112,6 +127,7 @@ return new class extends Migration
         Schema::dropIfExists('companies');
         Schema::dropIfExists('company_statuses');
         Schema::dropIfExists('document_sequences');
+        Schema::dropIfExists('company_banks');
         Schema::enableForeignKeyConstraints();
     }
 };

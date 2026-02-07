@@ -43,7 +43,11 @@
         @endif
         <a href="{{ company_route('sales-orders.print', ['sales_order' => $order->uuid]) }}" target="_blank"
           class="btn btn-white">
-          <i class="fas fa-print mr-2"></i> Print
+          <i class="fas fa-print mr-2"></i> Print Order
+        </a>
+        <a href="{{ company_route('sales-orders.print-proforma', ['sales_order' => $order->uuid]) }}" target="_blank"
+          class="btn btn-white">
+          <i class="fas fa-file-contract mr-2"></i> Proforma
         </a>
         <a href="{{ company_route('sales-orders.index') }}" class="btn btn-white">
           <i class="fas fa-arrow-left mr-2"></i> Back
@@ -347,6 +351,12 @@
                     title="Print Note">
                     <i class="fas fa-print text-xs"></i>
                   </a>
+                  <a href="{{ company_route('sales-orders.delivery-note.print-label', ['delivery_note' => $dn->uuid]) }}"
+                    target="_blank"
+                    class="h-8 w-8 rounded-lg bg-white shadow-xs border border-slate-200 flex items-center justify-center text-slate-400 hover:bg-indigo-50 hover:text-indigo-500 transition-all"
+                    title="Print Label">
+                    <i class="fas fa-tag text-xs"></i>
+                  </a>
                   @if ($dn->status !== 'DELIVERED')
                     <button onclick="markAsDelivered('{{ $dn->uuid }}')"
                       class="h-8 w-8 rounded-lg bg-white shadow-xs border border-slate-200 flex items-center justify-center text-emerald-500 hover:bg-emerald-50 hover:border-emerald-200 transition-all font-bold"
@@ -438,30 +448,30 @@
                         </thead>
                         <tbody class="divide-y divide-slate-50">
                             ${items.map(item => `
-                                                  <tr class="${item.remaining <= 0 ? 'bg-slate-50/50 grayscale opacity-50' : ''}">
-                                                      <td class="p-3">
-                                                          <div class="font-bold text-slate-700 truncate max-w-[150px]">${item.name}</div>
-                                                          <div class="text-[9px] text-slate-400 uppercase mt-0.5">${item.variant || '-'}</div>
-                                                      </td>
-                                                      <td class="p-3 text-center font-bold text-slate-600">
-                                                          ${item.remaining}
-                                                      </td>
-                                                      <td class="p-3 text-center">
-                                                          <span class="badge ${item.stock >= item.remaining ? 'badge-success' : (item.stock > 0 ? 'badge-warning' : 'badge-danger')} text-[9px] scale-90">
-                                                              ${item.stock}
-                                                          </span>
-                                                      </td>
-                                                      <td class="p-3 text-right">
-                                                          <input type="number" 
-                                                                 class="delivery-qty w-16 px-2 py-1 rounded-lg border border-slate-200 text-right font-bold text-indigo-600 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
-                                                                 data-item-id="${item.id}"
-                                                                 value="${item.remaining}"
-                                                                 min="0"
-                                                                 max="${item.remaining}"
-                                                                 ${item.remaining <= 0 ? 'disabled' : ''} />
-                                                      </td>
-                                                  </tr>
-                                              `).join('')}
+                                                      <tr class="${item.remaining <= 0 ? 'bg-slate-50/50 grayscale opacity-50' : ''}">
+                                                          <td class="p-3">
+                                                              <div class="font-bold text-slate-700 truncate max-w-[150px]">${item.name}</div>
+                                                              <div class="text-[9px] text-slate-400 uppercase mt-0.5">${item.variant || '-'}</div>
+                                                          </td>
+                                                          <td class="p-3 text-center font-bold text-slate-600">
+                                                              ${item.remaining}
+                                                          </td>
+                                                          <td class="p-3 text-center">
+                                                              <span class="badge ${item.stock >= item.remaining ? 'badge-success' : (item.stock > 0 ? 'badge-warning' : 'badge-danger')} text-[9px] scale-90">
+                                                                  ${item.stock}
+                                                              </span>
+                                                          </td>
+                                                          <td class="p-3 text-right">
+                                                              <input type="number" 
+                                                                     class="delivery-qty w-16 px-2 py-1 rounded-lg border border-slate-200 text-right font-bold text-indigo-600 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
+                                                                     data-item-id="${item.id}"
+                                                                     value="${item.remaining}"
+                                                                     min="0"
+                                                                     max="${item.remaining}"
+                                                                     ${item.remaining <= 0 ? 'disabled' : ''} />
+                                                          </td>
+                                                      </tr>
+                                                  `).join('')}
                         </tbody>
                     </table>
                 </div>

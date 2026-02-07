@@ -25,7 +25,7 @@
           <div class="text-xl font-black text-brand-600 uppercase">{{ $invoice->company->name }}</div>
         @endif
         <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">
-          {{ $invoice->company->address }}<br>
+          {!! $invoice->company->address?->render() !!}<br>
           {{ $invoice->company->email }} | {{ $invoice->company->phone }}
         </div>
       </div>
@@ -42,17 +42,12 @@
         <div class="text-sm font-bold text-slate-900 uppercase mb-1">
           {{ $billTo->name ?? ($invoice->customer->legal_name ?? $invoice->customer->display_name) }}</div>
         <div class="text-xs text-slate-500 leading-relaxed font-medium">
-          {{ $billTo->address_line_1 ?? '' }}<br>
-          @if ($billTo->address_line_2)
-            {{ $billTo->address_line_2 }}<br>
-          @endif
-          {{ $billTo->city ?? '' }}{{ $billTo->zip_code ? ', ' . $billTo->zip_code : '' }}<br>
-          {{ $billTo->state->name ?? '' }}{{ $billTo->country->name ? ', ' . $billTo->country->name : '' }}
+          {!! $billTo?->render() !!}
         </div>
-        @if ($invoice->customer->tax_number || $billTo->tax_number)
+        @if ($invoice->customer->tax_number || $billTo?->tax_number)
           <div class="mt-2 pt-2 border-t border-slate-100">
             <div class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">TRN: <span
-                class="text-slate-700">{{ $billTo->tax_number ?? $invoice->customer->tax_number }}</span></div>
+                class="text-slate-700">{{ $billTo?->tax_number ?? $invoice->customer->tax_number }}</span></div>
           </div>
         @endif
       </div>
@@ -61,12 +56,7 @@
         <div class="text-sm font-bold text-slate-900 uppercase mb-1">
           {{ $shipTo->name ?? $invoice->customer->display_name }}</div>
         <div class="text-xs text-slate-500 leading-relaxed font-medium">
-          {{ $shipTo->address_line_1 ?? '' }}<br>
-          @if ($shipTo->address_line_2)
-            {{ $shipTo->address_line_2 }}<br>
-          @endif
-          {{ $shipTo->city ?? '' }}{{ $shipTo->zip_code ? ', ' . $shipTo->zip_code : '' }}<br>
-          {{ $shipTo->state->name ?? '' }}{{ $shipTo->country->name ? ', ' . $shipTo->country->name : '' }}
+          {!! $shipTo?->render() ?? 'Same as Billing Address' !!}
         </div>
       </div>
     </div>
@@ -165,6 +155,23 @@
               Due in {{ $invoice->payment_due_days }} days
             @endif
           </div>
+
+          @if ($invoice->company->banks->count() > 0)
+            <div class="mt-4 pt-4 border-t border-slate-100">
+              @foreach ($invoice->company->banks as $bank)
+                <div class="text-[9px] text-slate-500 mb-2 leading-relaxed">
+                  <span class="font-bold text-slate-900">{{ $bank->bank_name }}</span><br>
+                  Account: {{ $bank->account_number }}<br>
+                  @if ($bank->iban)
+                    IBAN: {{ $bank->iban }}<br>
+                  @endif
+                  @if ($bank->swift_code)
+                    SWIFT: {{ $bank->swift_code }}
+                  @endif
+                </div>
+              @endforeach
+            </div>
+          @endif
         </div>
       </div>
     </div>

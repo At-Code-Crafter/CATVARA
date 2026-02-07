@@ -28,6 +28,9 @@ class UpdatePaymentRequest extends FormRequest
             'reference' => 'nullable|string|max:255',
             'description' => 'nullable|string|max:1000',
             'exchange_rate' => 'nullable|numeric|min:0.00000001|max:999999.99999999',
+
+            // Attachments
+            'attachments.*' => 'nullable|file|mimes:jpg,jpeg,png,gif,pdf,doc,docx|max:5120',
         ];
     }
 

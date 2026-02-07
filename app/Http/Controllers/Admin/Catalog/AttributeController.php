@@ -3,9 +3,10 @@
 namespace App\Http\Controllers\Admin\Catalog;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\Catalog\AttributeStoreRequest;
+use App\Http\Requests\Admin\Catalog\AttributeUpdateRequest;
 use App\Models\Catalog\Attribute;
 use App\Models\Catalog\AttributeValue;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Yajra\DataTables\Facades\DataTables;
@@ -122,15 +123,9 @@ class AttributeController extends Controller
         return view('catvara.catalog.attributes.form');
     }
 
-    public function store(Request $request)
+    public function store(AttributeStoreRequest $request)
     {
         $this->authorize('create', 'attributes');
-
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'code' => 'required|string|max:255',
-            'values' => 'required|string', // Comma separated for MVP convenience
-        ]);
 
         $attribute = new Attribute;
         $attribute->company_id = $request->company->id;
@@ -167,19 +162,13 @@ class AttributeController extends Controller
         return view('catvara.catalog.attributes.form', compact('attribute'));
     }
 
-    public function update(Request $request, \App\Models\Company\Company $company, Attribute $attribute)
+    public function update(AttributeUpdateRequest $request, \App\Models\Company\Company $company, Attribute $attribute)
     {
         $this->authorize('edit', 'attributes');
 
         if ($attribute->company_id !== $company->id) {
             abort(403);
         }
-
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'new_values' => 'nullable|string',
-            'existing_values' => 'nullable|array',
-        ]);
 
         $attribute->name = $request->name;
         $attribute->is_active = $request->has('is_active');

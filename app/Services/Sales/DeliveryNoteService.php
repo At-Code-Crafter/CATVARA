@@ -33,7 +33,8 @@ class DeliveryNoteService
                 'delivery_note_number' => $this->docNumberService->generate(
                     companyId: $order->company_id,
                     documentType: 'DELIVERY_NOTE',
-                    channel: 'SALES'
+                    channel: 'SALES',
+                    year: now()->year
                 ),
                 'status' => DeliveryNote::STATUS_SHIPPED,
                 'shipped_at' => now(),
