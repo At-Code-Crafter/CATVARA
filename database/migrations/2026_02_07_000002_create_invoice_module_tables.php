@@ -37,12 +37,13 @@ return new class extends Migration
              * Customer relations
              */
             $table->unsignedBigInteger('customer_id')->nullable();
+            $table->unsignedBigInteger('shipping_customer_id')->nullable();
 
             /**
              * Statuses
              */
             $table->unsignedBigInteger('status_id');
-            $table->string('payment_status', 20)->default('UNPAID');
+            $table->unsignedBigInteger('payment_status_id')->nullable();
 
             /**
              * Origin tracking
@@ -70,7 +71,10 @@ return new class extends Migration
              */
             $table->decimal('subtotal', 18, 6)->default(0);
             $table->decimal('discount_total', 18, 6)->default(0);
+            $table->decimal('global_discount_percent', 10, 2)->default(0);
+            $table->decimal('global_discount_amount', 18, 6)->default(0);
             $table->decimal('shipping_total', 18, 6)->default(0);
+            $table->decimal('shipping_tax_total', 18, 6)->default(0);
             $table->decimal('tax_total', 18, 6)->default(0);
             $table->decimal('rounding_total', 18, 6)->default(0);
             $table->decimal('grand_total', 18, 6)->default(0);
@@ -161,7 +165,9 @@ return new class extends Migration
         Schema::table('invoices', function (Blueprint $table) {
             $table->foreign('company_id', 'inv_company_fk')->references('id')->on('companies')->cascadeOnDelete();
             $table->foreign('customer_id', 'inv_customer_fk')->references('id')->on('customers')->nullOnDelete();
+            $table->foreign('shipping_customer_id', 'inv_shipping_customer_fk')->references('id')->on('customers')->nullOnDelete();
             $table->foreign('status_id', 'inv_status_fk')->references('id')->on('invoice_statuses')->restrictOnDelete();
+            $table->foreign('payment_status_id', 'inv_payment_status_fk')->references('id')->on('payment_statuses')->nullOnDelete();
             $table->foreign('currency_id', 'inv_currency_fk')->references('id')->on('currencies')->restrictOnDelete();
             $table->foreign('payment_term_id', 'inv_term_fk')->references('id')->on('payment_terms')->nullOnDelete();
         });

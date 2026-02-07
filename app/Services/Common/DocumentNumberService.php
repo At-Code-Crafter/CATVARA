@@ -3,7 +3,7 @@
 namespace App\Services\Common;
 
 use Illuminate\Support\Facades\DB;
-use App\Models\Common\DocumentSequence;
+use App\Models\Company\DocumentSequence;
 
 class DocumentNumberService
 {

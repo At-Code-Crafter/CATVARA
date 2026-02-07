@@ -2,6 +2,7 @@
 
 namespace App\Services\Sales;
 
+use App\Models\Accounting\PaymentStatus;
 use App\Models\Sales\{
     Order,
     OrderItem,
@@ -28,6 +29,7 @@ class OrderService
     public function create(array $data): Order
     {
         $statusId = OrderStatus::where('code', 'DRAFT')->value('id');
+        $paymentStatusId = PaymentStatus::where('code', 'PENDING')->value('id');
 
         $termSnapshot = $this->salesDocService->resolvePaymentTermSnapshot($data['payment_term_id'] ?? null);
 
@@ -40,6 +42,7 @@ class OrderService
             'company_id' => $data['company_id'],
             'customer_id' => $data['customer_id'] ?? null,
             'status_id' => $statusId,
+            'payment_status_id' => $paymentStatusId,
 
             'source' => $data['source'] ?? null,
             'source_id' => $data['source_id'] ?? null,
