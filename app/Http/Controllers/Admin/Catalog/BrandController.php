@@ -3,9 +3,10 @@
 namespace App\Http\Controllers\Admin\Catalog;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\Catalog\BrandStoreRequest;
+use App\Http\Requests\Admin\Catalog\BrandUpdateRequest;
 use App\Models\Catalog\Brand;
 use App\Models\Company\Company;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Yajra\DataTables\Facades\DataTables;
@@ -78,15 +79,9 @@ class BrandController extends Controller
         return view('catvara.catalog.brands.form', compact('brands'));
     }
 
-    public function store(Request $request)
+    public function store(BrandStoreRequest $request)
     {
         // $this->authorize('create', 'brands');
-
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'parent_id' => 'nullable|exists:brands,id',
-            'logo' => 'nullable|image|max:2048',
-        ]);
 
         $brand = new Brand();
         $brand->uuid = (string) Str::uuid();
@@ -122,19 +117,13 @@ class BrandController extends Controller
         return view('catvara.catalog.brands.form', compact('brand', 'brands'));
     }
 
-    public function update(Request $request, Company $company, Brand $brand)
+    public function update(BrandUpdateRequest $request, Company $company, Brand $brand)
     {
         // $this->authorize('edit', 'brands');
 
         if ($brand->company_id !== $company->id) {
             abort(403);
         }
-
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'parent_id' => 'nullable|exists:brands,id',
-            'logo' => 'nullable|image|max:2048',
-        ]);
 
         $brand->parent_id = $request->parent_id;
         $brand->name = $request->name;

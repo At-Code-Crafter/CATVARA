@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\CompanySelectRequest;
 use App\Models\Company\Company;
 use Illuminate\Http\Request;
 
@@ -64,12 +65,8 @@ class CompanyContextController extends Controller
     /**
      * POST /select-company
      */
-    public function store(Request $request)
+    public function store(CompanySelectRequest $request)
     {
-        $request->validate([
-            'company_uuid' => ['required', 'uuid'],
-        ]);
-
         $user = $request->user();
 
         $company = Company::where('uuid', $request->company_uuid)->firstOrFail();

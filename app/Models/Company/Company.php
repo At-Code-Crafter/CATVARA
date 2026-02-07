@@ -86,4 +86,9 @@ class Company extends Model
          ->withPivot('is_active')
          ->withTimestamps();
     }
+
+    public function banks()
+    {
+        return $this->hasMany(CompanyBank::class);
+    }
 }

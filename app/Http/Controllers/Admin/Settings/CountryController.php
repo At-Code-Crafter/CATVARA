@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Admin\Settings;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\Settings\CountryStoreRequest;
+use App\Http\Requests\Admin\Settings\CountryUpdateRequest;
 use App\Models\Common\Country;
 use Illuminate\Http\Request;
 use Yajra\DataTables\Facades\DataTables;
@@ -122,20 +124,9 @@ class CountryController extends Controller
     /**
      * Store a newly created country.
      */
-    public function store(Request $request)
+    public function store(CountryStoreRequest $request)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:100',
-            'iso_code_2' => 'required|string|size:2|unique:countries,iso_code_2',
-            'iso_code_3' => 'required|string|size:3|unique:countries,iso_code_3',
-            'numeric_code' => 'nullable|string|max:3',
-            'phone_code' => 'nullable|string|max:10',
-            'currency_code' => 'nullable|string|max:3',
-            'capital' => 'nullable|string|max:100',
-            'region' => 'nullable|string|max:50',
-            'subregion' => 'nullable|string|max:100',
-        ]);
-
+        $validated = $request->validated();
         $validated['is_active'] = $request->has('is_active');
 
         Country::create($validated);
@@ -155,20 +146,9 @@ class CountryController extends Controller
     /**
      * Update the specified country.
      */
-    public function update(Request $request, Country $country)
+    public function update(CountryUpdateRequest $request, Country $country)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:100',
-            'iso_code_2' => 'required|string|size:2|unique:countries,iso_code_2,' . $country->id,
-            'iso_code_3' => 'required|string|size:3|unique:countries,iso_code_3,' . $country->id,
-            'numeric_code' => 'nullable|string|max:3',
-            'phone_code' => 'nullable|string|max:10',
-            'currency_code' => 'nullable|string|max:3',
-            'capital' => 'nullable|string|max:100',
-            'region' => 'nullable|string|max:50',
-            'subregion' => 'nullable|string|max:100',
-        ]);
-
+        $validated = $request->validated();
         $validated['is_active'] = $request->has('is_active');
 
         $country->update($validated);

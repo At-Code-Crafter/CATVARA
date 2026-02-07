@@ -3,10 +3,11 @@
 namespace App\Http\Controllers\Admin\Settings;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\Settings\PaymentMethodStoreRequest;
+use App\Http\Requests\Admin\Settings\PaymentMethodUpdateRequest;
 use App\Models\Accounting\PaymentMethod;
 use App\Models\Company\Company;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 use Yajra\DataTables\Facades\DataTables;
 
 class PaymentMethodController extends Controller
@@ -78,16 +79,9 @@ class PaymentMethodController extends Controller
     /**
      * Store a newly created payment method.
      */
-    public function store(Request $request)
+    public function store(PaymentMethodStoreRequest $request)
     {
-        $validated = $request->validate([
-            'code' => 'required|string|max:50|unique:payment_methods,code|alpha_dash:ascii',
-            'name' => 'required|string|max:255',
-            'type' => 'required|in:CASH,CARD,GATEWAY,BANK,WALLET,CREDIT',
-            'is_active' => 'boolean',
-            'allow_refund' => 'boolean',
-            'requires_reference' => 'boolean',
-        ]);
+        $validated = $request->validated();
 
         PaymentMethod::create([
             'company_id' => active_company_id(),
@@ -118,17 +112,10 @@ class PaymentMethodController extends Controller
     /**
      * Update the specified payment method.
      */
-    public function update(Request $request, Company $company, $id)
+    public function update(PaymentMethodUpdateRequest $request, Company $company, $id)
     {
-        $validated = $request->validate([
-            'code' => ['required', 'string', 'max:50', 'alpha_dash:ascii', Rule::unique('payment_methods')->ignore($id)],
-            'name' => 'required|string|max:255',
-            'type' => 'required|in:CASH,CARD,GATEWAY,BANK,WALLET,CREDIT',
-            'is_active' => 'boolean',
-            'allow_refund' => 'boolean',
-            'requires_reference' => 'boolean',
-        ]);
         $paymentMethod = PaymentMethod::where('company_id', $company->id)->findOrFail($id);
+        $validated = $request->validated();
 
         $paymentMethod->update([
             'company_id' => $company->id,

@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Admin\Settings;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\Settings\UserAssignCompanyRequest;
+use App\Http\Requests\Admin\Settings\UserRolesByCompanyRequest;
+use App\Http\Requests\Admin\Settings\UserRemoveCompanyRequest;
 use App\Http\Requests\Admin\Settings\UserStoreRequest;
 use App\Http\Requests\Admin\Settings\UserUpdateRequest;
 use App\Models\Auth\Role;
@@ -248,12 +250,8 @@ class UserController extends Controller
     /**
      * Ajax: roles list by company_id (for assignment form)
      */
-    public function rolesByCompany(Request $request)
+    public function rolesByCompany(UserRolesByCompanyRequest $request)
     {
-        $request->validate([
-            'company_id' => ['required', 'integer', 'exists:companies,id'],
-        ]);
-
         $roles = Role::query()
             ->select('id', 'name')
             ->where('company_id', $request->company_id)
@@ -297,12 +295,8 @@ class UserController extends Controller
         }
     }
 
-    public function removeCompany(Request $request, User $user)
+    public function removeCompany(UserRemoveCompanyRequest $request, User $user)
     {
-        $request->validate([
-            'company_id' => ['required', 'integer', 'exists:companies,id'],
-        ]);
-
         DB::beginTransaction();
         try {
             // Remove from company (and its roles)

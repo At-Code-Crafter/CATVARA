@@ -164,6 +164,7 @@ return new class extends Migration
             $table->string('sku');
             $table->string('barcode')->nullable();
             $table->decimal('cost_price', 18, 6)->nullable();
+            $table->integer('safety_stock')->default(0);
             $table->boolean('is_active')->default(true);
 
             $table->timestamps();

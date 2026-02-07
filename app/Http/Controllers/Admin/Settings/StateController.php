@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Admin\Settings;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\Settings\StateStoreRequest;
+use App\Http\Requests\Admin\Settings\StateUpdateRequest;
 use App\Models\Common\Country;
 use App\Models\Common\State;
 use Illuminate\Http\Request;
@@ -117,15 +119,9 @@ class StateController extends Controller
     /**
      * Store a newly created state.
      */
-    public function store(Request $request)
+    public function store(StateStoreRequest $request)
     {
-        $validated = $request->validate([
-            'country_id' => 'required|exists:countries,id',
-            'name' => 'required|string|max:100',
-            'code' => 'nullable|string|max:10|unique:states,code,NULL,id,country_id,' . $request->country_id,
-            'type' => 'nullable|string|max:50',
-        ]);
-
+        $validated = $request->validated();
         $validated['is_active'] = $request->has('is_active');
 
         State::create($validated);
@@ -147,15 +143,9 @@ class StateController extends Controller
     /**
      * Update the specified state.
      */
-    public function update(Request $request, State $state)
+    public function update(StateUpdateRequest $request, State $state)
     {
-        $validated = $request->validate([
-            'country_id' => 'required|exists:countries,id',
-            'name' => 'required|string|max:100',
-            'code' => 'nullable|string|max:10|unique:states,code,' . $state->id . ',id,country_id,' . $request->country_id,
-            'type' => 'nullable|string|max:50',
-        ]);
-
+        $validated = $request->validated();
         $validated['is_active'] = $request->has('is_active');
 
         $state->update($validated);

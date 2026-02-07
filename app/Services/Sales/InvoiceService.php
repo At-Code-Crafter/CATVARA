@@ -34,7 +34,8 @@ class InvoiceService
             $invoiceNumber = $this->docNumberService->generate(
                 companyId: $order->company_id,
                 documentType: 'INVOICE',
-                channel: ($order->source ?? 'SALES') === 'POS' ? 'POS' : 'SALES'
+                channel: ($order->source ?? 'SALES') === 'POS' ? 'POS' : 'SALES',
+                year: now()->year
             );
 
             $invoice = Invoice::create([

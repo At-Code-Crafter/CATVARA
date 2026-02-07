@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Admin\Catalog;
 
 use App\Exports\Catalog\ProductExport;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\Catalog\ProductStoreRequest;
+use App\Http\Requests\Admin\Catalog\ProductUpdateRequest;
 use App\Models\Catalog\Attribute;
 use App\Models\Catalog\Category;
 use App\Models\Catalog\Product;
@@ -13,7 +15,6 @@ use App\Models\Pricing\Currency;
 use App\Models\Pricing\PriceChannel;
 // use App\Models\Inventory\InventoryBalance; // Removed for separation
 use App\Models\Pricing\VariantPrice;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
@@ -160,20 +161,9 @@ class ProductController extends Controller
         return view('catvara.catalog.products.edit', compact('product', 'categories', 'brands', 'attributes', 'channels', 'locations', 'currency'));
     }
 
-    public function update(Request $request, \App\Models\Company\Company $company, $id)
+    public function update(ProductUpdateRequest $request, \App\Models\Company\Company $company, $id)
     {
         $this->authorize('edit', 'products');
-
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'category_id' => 'required|string', // Can be ID or "new:Name"
-            'brand_id' => 'nullable|string', // Can be ID or "new:Name"
-            'variants' => 'nullable|array',
-            'prices' => 'nullable|array',
-            'primary_image' => 'nullable|image|max:2048',
-            'images' => 'nullable|array',
-            'images.*' => 'image|max:2048',
-        ]);
 
         try {
             DB::beginTransaction();
@@ -239,18 +229,9 @@ class ProductController extends Controller
         }
     }
 
-    public function store(Request $request)
+    public function store(ProductStoreRequest $request)
     {
         $this->authorize('create', 'products');
-
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'category_id' => 'required|string', // Can be ID or "new:Name"
-            'brand_id' => 'nullable|string', // Can be ID or "new:Name"
-            'description' => 'nullable|string',
-            'variants' => 'required|array',
-            'image' => 'nullable|image|max:5120', // 5MB
-        ]);
 
         try {
             DB::beginTransaction();

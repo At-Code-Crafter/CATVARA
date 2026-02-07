@@ -3,10 +3,11 @@
 namespace App\Http\Controllers\Admin\Company;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\Company\CompanyUserStoreRequest;
+use App\Http\Requests\Admin\Company\CompanyUserUpdateRequest;
 use App\Models\User;
 use App\Models\Company\Company;
 use App\Models\Auth\Role;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Yajra\DataTables\Facades\DataTables;
 
@@ -97,17 +98,10 @@ class CompanyUserController extends Controller
     /**
      * Store a new user and link to company.
      */
-    public function store(Request $request)
+    public function store(CompanyUserStoreRequest $request)
     {
         $company = active_company();
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:8|confirmed',
-            'role_ids' => 'required|array',
-            'role_ids.*' => 'exists:roles,id',
-            'is_active' => 'boolean',
-        ]);
+        $validated = $request->validated();
 
         DB::beginTransaction();
         try {
@@ -172,7 +166,7 @@ class CompanyUserController extends Controller
     /**
      * Update the specified user.
      */
-    public function update(Request $request, Company $company, string $id)
+    public function update(CompanyUserUpdateRequest $request, Company $company, string $id)
     {
         $user = User::query()
             ->join('company_user', 'company_user.user_id', '=', 'users.id')
@@ -181,14 +175,7 @@ class CompanyUserController extends Controller
             ->select('users.*')
             ->firstOrFail();
 
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
-            'password' => 'nullable|string|min:8|confirmed',
-            'role_ids' => 'required|array',
-            'role_ids.*' => 'exists:roles,id',
-            'is_active' => 'boolean',
-        ]);
+        $validated = $request->validated();
 
         DB::beginTransaction();
         try {

@@ -3,6 +3,9 @@
 namespace App\Http\Controllers\Admin\Catalog;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\Catalog\ProductImportPreviewRequest;
+use App\Http\Requests\Admin\Catalog\ProductImportProcessRequest;
+use App\Http\Requests\Admin\Catalog\ProductImportUploadRequest;
 use App\Imports\Catalog\ProductImport;
 use App\Models\Catalog\Attribute;
 use App\Models\Catalog\AttributeValue;
@@ -17,7 +20,6 @@ use App\Models\Inventory\InventoryReason;
 use App\Models\Pricing\Currency;
 use App\Models\Pricing\PriceChannel;
 use App\Models\Pricing\VariantPrice;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -40,12 +42,8 @@ class ProductImportController extends Controller
         return view('catvara.catalog.products.import', compact('priceChannels', 'locations'));
     }
 
-    public function upload(Request $request)
+    public function upload(ProductImportUploadRequest $request)
     {
-        $request->validate([
-            'file' => 'required|mimes:xlsx,xls,csv|max:10240',
-        ]);
-
         $path = $request->file('file')->store('temp_imports');
         $absolutePath = storage_path('app/private/'.$path);
 
@@ -77,13 +75,8 @@ class ProductImportController extends Controller
         ]);
     }
 
-    public function preview(Request $request)
+    public function preview(ProductImportPreviewRequest $request)
     {
-        $request->validate([
-            'temp_path' => 'required|string',
-            'sheet_index' => 'required|integer',
-        ]);
-
         $absolutePath = storage_path('app/private/'.$request->temp_path);
         $sheetIndex = $request->sheet_index;
 
@@ -257,13 +250,8 @@ class ProductImportController extends Controller
         return $mapping;
     }
 
-    public function process(Request $request)
+    public function process(ProductImportProcessRequest $request)
     {
-        $request->validate([
-            'temp_path' => 'required|string',
-            'sheet_index' => 'required|integer',
-        ]);
-
         $companyId = $request->company->id;
         $absolutePath = storage_path('app/private/'.$request->temp_path);
         $data = Excel::toArray(new ProductImport($companyId), $absolutePath)[$request->sheet_index];

@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Admin\Settings;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\Settings\ExchangeRateStoreRequest;
+use App\Http\Requests\Admin\Settings\ExchangeRateUpdateRequest;
 use App\Models\Company\Company;
 use App\Models\Pricing\Currency;
 use App\Models\Pricing\ExchangeRate;
@@ -76,17 +78,10 @@ class ExchangeRateController extends Controller
         return view('catvara.settings.exchange-rates.form', compact('currencies', 'companyCurrency'));
     }
 
-    public function store(Request $request)
+    public function store(ExchangeRateStoreRequest $request)
     {
         $this->authorize('create', 'exchange-rates');
-
-        $validated = $request->validate([
-            'base_currency_id' => 'required|exists:currencies,id',
-            'target_currency_id' => 'required|exists:currencies,id|different:base_currency_id',
-            'rate' => 'required|numeric|min:0.00000001',
-            'effective_date' => 'nullable|date',
-            'source' => 'nullable|string|max:100',
-        ]);
+        $validated = $request->validated();
 
         $rate = new ExchangeRate();
         $rate->company_id = $request->company->id;
@@ -119,7 +114,7 @@ class ExchangeRateController extends Controller
         ]);
     }
 
-    public function update(Request $request, Company $company, ExchangeRate $exchangeRate)
+    public function update(ExchangeRateUpdateRequest $request, Company $company, ExchangeRate $exchangeRate)
     {
         $this->authorize('edit', 'exchange-rates');
 
@@ -127,13 +122,7 @@ class ExchangeRateController extends Controller
             abort(403);
         }
 
-        $validated = $request->validate([
-            'base_currency_id' => 'required|exists:currencies,id',
-            'target_currency_id' => 'required|exists:currencies,id|different:base_currency_id',
-            'rate' => 'required|numeric|min:0.00000001',
-            'effective_date' => 'nullable|date',
-            'source' => 'nullable|string|max:100',
-        ]);
+        $validated = $request->validated();
 
         $exchangeRate->base_currency_id = $validated['base_currency_id'];
         $exchangeRate->target_currency_id = $validated['target_currency_id'];
