@@ -22,6 +22,14 @@
           $canEdit = $statusCode === 'DRAFT';
           $canDeliver = in_array($statusCode, ['CONFIRMED', 'PARTIALLY_FULFILLED']);
           $isFulfilled = $order->is_fulfilled ?? false;
+
+          // Check if all items are fully delivered via delivery notes
+          $totalOrdered = $order->items->sum('quantity');
+          $totalFulfilledQty = $order->items->sum('fulfilled_quantity');
+          $isFullyDelivered = $totalOrdered > 0 && $totalFulfilledQty >= $totalOrdered;
+
+          // Show as fulfilled if explicitly marked OR if fully delivered via delivery notes
+          $showAsFulfilled = $isFulfilled || $isFullyDelivered;
         @endphp
 
         @if ($canEdit)
@@ -37,7 +45,7 @@
           </button>
 
           {{-- Mark as Fulfillment Button --}}
-          @if ($isFulfilled)
+          @if ($showAsFulfilled)
             <button type="button" disabled
               class="btn bg-gray-400 text-white border-none shadow-sm cursor-not-allowed">
               <i class="fas fa-check-circle mr-2"></i> Already Marked as Fulfillment
@@ -694,8 +702,10 @@
     // Generate Invoice Button
     document.getElementById('generateInvoiceBtn')?.addEventListener('click', function() {
       const isFulfilled = {{ $order->is_fulfilled ? 'true' : 'false' }};
+      const isFullyDelivered = {{ $isFullyDelivered ? 'true' : 'false' }};
+      const showAsFulfilled = isFulfilled || isFullyDelivered;
 
-      if (!isFulfilled) {
+      if (!showAsFulfilled) {
         Swal.fire({
           title: 'Fulfillment Required',
           text: "Please click 'Mark as Fulfillment' button first before generating an invoice.",
