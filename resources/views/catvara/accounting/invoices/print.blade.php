@@ -5,169 +5,161 @@
 @section('content')
   <div class="print-container">
     {{-- Document Header --}}
-    <div class="flex justify-between items-start mb-12">
+    <div class="flex justify-between items-start mb-10 pb-6 border-b border-slate-200">
       <div>
-        <h1 class="text-3xl font-black text-slate-900 tracking-tight uppercase mb-1">Invoice</h1>
-        <div class="text-sm font-bold text-slate-500 tracking-widest uppercase">No: <span
-            class="text-slate-900">{{ $invoice->invoice_number }}</span></div>
-        <div class="text-sm font-bold text-slate-500 tracking-widest uppercase mt-1">Date: <span
-            class="text-slate-900">{{ $invoice->issued_at ? $invoice->issued_at->format('d M, Y') : $invoice->created_at->format('d M, Y') }}</span>
-        </div>
-        @if ($invoice->due_date)
-          <div class="text-sm font-bold text-slate-500 tracking-widest uppercase mt-1">Due Date: <span
-              class="text-slate-900">{{ $invoice->due_date->format('d M, Y') }}</span></div>
+        {{-- Company Logo/Name --}}
+        @if ($invoice->company->logo)
+          <img src="{{ storage_url($invoice->company->logo) }}" class="h-14 w-auto object-contain mb-2">
+        @else
+          <div class="flex items-center gap-3 mb-2">
+            <div class="w-10 h-10 bg-slate-900 rounded flex items-center justify-center">
+              <span class="text-white text-lg font-bold">{{ strtoupper(substr($invoice->company->name, 0, 1)) }}</span>
+            </div>
+            <div class="text-xl font-bold text-slate-900">{{ $invoice->company->name }}</div>
+          </div>
         @endif
+        <div class="text-[10px] text-slate-500 leading-relaxed">
+          @if($invoice->company->address)
+            {!! $invoice->company->address->render() !!}<br>
+          @endif
+          @if($invoice->company->email || $invoice->company->phone)
+            {{ $invoice->company->email }} {{ $invoice->company->phone ? '| ' . $invoice->company->phone : '' }}
+          @endif
+        </div>
       </div>
       <div class="text-right">
-        @if ($invoice->company->logo)
-          <img src="{{ storage_url($invoice->company->logo) }}" class="h-12 w-auto ml-auto mb-2">
-        @else
-          <div class="text-xl font-black text-brand-600 uppercase">{{ $invoice->company->name }}</div>
-        @endif
-        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">
-          {!! $invoice->company->address?->render() !!}<br>
-          {{ $invoice->company->email }} | {{ $invoice->company->phone }}
-        </div>
+        <div class="text-3xl font-bold text-slate-900 mb-3">INVOICE</div>
+        <table class="ml-auto text-sm">
+          <tr>
+            <td class="text-slate-500 pr-4 py-0.5">Invoice No:</td>
+            <td class="font-bold text-slate-900">{{ $invoice->invoice_number }}</td>
+          </tr>
+          <tr>
+            <td class="text-slate-500 pr-4 py-0.5">Date:</td>
+            <td class="font-medium text-slate-700">{{ $invoice->issued_at ? $invoice->issued_at->format('d M, Y') : $invoice->created_at->format('d M, Y') }}</td>
+          </tr>
+          @if ($invoice->due_date)
+          <tr>
+            <td class="text-slate-500 pr-4 py-0.5">Due Date:</td>
+            <td class="font-medium text-slate-700">{{ $invoice->due_date->format('d M, Y') }}</td>
+          </tr>
+          @endif
+        </table>
       </div>
     </div>
 
     {{-- Addresses --}}
-    <div class="grid grid-cols-2 gap-12 mb-12">
+    <div class="grid grid-cols-2 gap-12 mb-10">
       @php
         $billTo = $invoice->billingAddress;
         $shipTo = $invoice->shippingAddress;
       @endphp
       <div>
-        <div class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Billed To</div>
-        <div class="text-sm font-bold text-slate-900 uppercase mb-1">
+        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Bill To</div>
+        <div class="text-sm font-bold text-slate-900 mb-1">
           {{ $billTo->name ?? ($invoice->customer->legal_name ?? $invoice->customer->display_name) }}</div>
-        <div class="text-xs text-slate-500 leading-relaxed font-medium">
+        <div class="text-xs text-slate-600 leading-relaxed">
           {!! $billTo?->render() !!}
         </div>
         @if ($invoice->customer->tax_number || $billTo?->tax_number)
-          <div class="mt-2 pt-2 border-t border-slate-100">
-            <div class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">TRN: <span
-                class="text-slate-700">{{ $billTo?->tax_number ?? $invoice->customer->tax_number }}</span></div>
-          </div>
+          <div class="text-[10px] text-slate-500 mt-2">TRN: {{ $billTo?->tax_number ?? $invoice->customer->tax_number }}</div>
         @endif
       </div>
       <div>
-        <div class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Shipped To</div>
-        <div class="text-sm font-bold text-slate-900 uppercase mb-1">
+        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Ship To</div>
+        <div class="text-sm font-bold text-slate-900 mb-1">
           {{ $shipTo->name ?? $invoice->customer->display_name }}</div>
-        <div class="text-xs text-slate-500 leading-relaxed font-medium">
+        <div class="text-xs text-slate-600 leading-relaxed">
           {!! $shipTo?->render() ?? 'Same as Billing Address' !!}
         </div>
       </div>
     </div>
 
     {{-- Items Table --}}
-    <table class="w-full mb-12">
+    <table class="w-full mb-8">
       <thead>
-        <tr class="border-b-2 border-slate-900">
-          <th class="py-4 text-left text-[10px] font-black text-slate-900 uppercase tracking-widest w-12">#</th>
-          <th class="py-4 text-left text-[10px] font-black text-slate-900 uppercase tracking-widest">Description</th>
-          <th class="py-4 text-right text-[10px] font-black text-slate-900 uppercase tracking-widest w-24">Price</th>
-          <th class="py-4 text-center text-[10px] font-black text-slate-900 uppercase tracking-widest w-20">Qty</th>
-          <th class="py-4 text-right text-[10px] font-black text-slate-900 uppercase tracking-widest w-32">Total</th>
+        <tr class="border-y border-slate-300">
+          <th class="py-3 text-left text-[10px] font-bold text-slate-600 uppercase w-10">#</th>
+          <th class="py-3 text-left text-[10px] font-bold text-slate-600 uppercase">Description</th>
+          <th class="py-3 text-right text-[10px] font-bold text-slate-600 uppercase w-24">Price</th>
+          <th class="py-3 text-center text-[10px] font-bold text-slate-600 uppercase w-16">Qty</th>
+          <th class="py-3 text-right text-[10px] font-bold text-slate-600 uppercase w-28">Total</th>
         </tr>
       </thead>
       <tbody>
         @foreach ($invoice->items as $index => $item)
           <tr class="border-b border-slate-100">
-            <td class="py-4 text-xs font-bold text-slate-400">{{ str_pad($index + 1, 2, '0', STR_PAD_LEFT) }}</td>
-            <td class="py-4">
-              <div class="text-sm font-bold text-slate-800 uppercase">{{ $item->product_name }}</div>
+            <td class="py-3 text-xs text-slate-500">{{ $index + 1 }}</td>
+            <td class="py-3">
+              <div class="text-sm text-slate-800">{{ $item->product_name }}</div>
               @if ($item->variant_description)
-                <div class="text-[10px] font-medium text-slate-400 mt-0.5 tracking-wide">{{ $item->variant_description }}
-                </div>
+                <div class="text-[10px] text-slate-400 mt-0.5">{{ $item->variant_description }}</div>
               @endif
             </td>
-            <td class="py-4 text-right text-sm font-bold text-slate-700">
-              {{ money($item->unit_price, $invoice->currency->code) }}</td>
-            <td class="py-4 text-center text-sm font-bold text-slate-700">{{ $item->quantity }}</td>
-            <td class="py-4 text-right text-sm font-black text-slate-900">
-              {{ money($item->line_total, $invoice->currency->code) }}</td>
+            <td class="py-3 text-right text-sm text-slate-700">{{ money($item->unit_price, $invoice->currency->code) }}</td>
+            <td class="py-3 text-center text-sm text-slate-700">{{ (int)$item->quantity }}</td>
+            <td class="py-3 text-right text-sm font-medium text-slate-900">{{ money($item->line_total, $invoice->currency->code) }}</td>
           </tr>
         @endforeach
       </tbody>
     </table>
 
     {{-- Summary --}}
-    <div class="flex justify-end">
+    <div class="flex justify-end mb-10">
       <div class="w-72">
-        <div class="flex justify-between py-2 border-b border-slate-50">
-          <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Subtotal</div>
-          <div class="text-sm font-bold text-slate-700">{{ money($invoice->subtotal, $invoice->currency->code) }}</div>
+        <div class="flex justify-between py-2">
+          <span class="text-sm text-slate-500">Subtotal</span>
+          <span class="text-sm text-slate-700">{{ money($invoice->subtotal, $invoice->currency->code) }}</span>
         </div>
         @if ($invoice->discount_total > 0)
-          <div class="flex justify-between py-2 border-b border-slate-50">
-            <div class="flex flex-col">
-              <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Discount</div>
-              @if ($invoice->global_discount_percent > 0)
-                <div class="text-[8px] font-bold text-slate-300 uppercase tracking-tighter">Incl.
-                  {{ (float) $invoice->global_discount_percent }}% Global</div>
-              @endif
-            </div>
-            <div class="text-sm font-bold text-emerald-600">
-              -{{ money($invoice->discount_total, $invoice->currency->code) }}</div>
+          <div class="flex justify-between py-2">
+            <span class="text-sm text-slate-500">Discount</span>
+            <span class="text-sm text-emerald-600">-{{ money($invoice->discount_total, $invoice->currency->code) }}</span>
           </div>
         @endif
         @if ($invoice->shipping_total > 0)
-          <div class="flex justify-between py-2 border-b border-slate-50">
-            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Shipping</div>
-            <div class="text-sm font-bold text-slate-700">{{ money($invoice->shipping_total, $invoice->currency->code) }}
-            </div>
+          <div class="flex justify-between py-2">
+            <span class="text-sm text-slate-500">Shipping</span>
+            <span class="text-sm text-slate-700">{{ money($invoice->shipping_total, $invoice->currency->code) }}</span>
           </div>
         @endif
-        <div class="flex justify-between py-2 border-b border-slate-50">
-          <div class="flex flex-col">
-            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Tax Total</div>
-            @if ($invoice->shipping_tax_total > 0)
-              <div class="text-[8px] font-bold text-slate-300 uppercase tracking-tighter">Incl.
-                {{ money($invoice->shipping_tax_total, $invoice->currency->code) }} Shipping Tax</div>
-            @endif
-          </div>
-          <div class="text-sm font-bold text-slate-700">{{ money($invoice->tax_total, $invoice->currency->code) }}</div>
+        <div class="flex justify-between py-2">
+          <span class="text-sm text-slate-500">Tax</span>
+          <span class="text-sm text-slate-700">{{ money($invoice->tax_total, $invoice->currency->code) }}</span>
         </div>
-        <div class="flex justify-between py-4 mt-2">
-          <div class="text-xs font-black text-slate-900 uppercase tracking-[0.2em]">Grand Total</div>
-          <div class="text-xl font-black text-brand-600">{{ money($invoice->grand_total, $invoice->currency->code) }}
-          </div>
+        <div class="flex justify-between py-3 border-t-2 border-slate-900 mt-2">
+          <span class="text-base font-bold text-slate-900">Total</span>
+          <span class="text-base font-bold text-slate-900">{{ money($invoice->grand_total, $invoice->currency->code) }}</span>
         </div>
       </div>
     </div>
 
-    {{-- Footer/Notes --}}
-    <div class="mt-16 pt-12 border-t-2 border-slate-900">
+    {{-- Footer --}}
+    <div class="pt-6 border-t border-slate-200">
       <div class="grid grid-cols-2 gap-12">
         <div>
-          <div class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Notes</div>
-          <div class="text-[10px] font-medium text-slate-500 leading-relaxed uppercase tracking-wider">
+          <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Notes</div>
+          <div class="text-xs text-slate-600 leading-relaxed">
             {!! nl2br(e($invoice->notes ?? 'Thank you for your business.')) !!}
           </div>
         </div>
         <div class="text-right">
-          <div class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Payment Info</div>
-          <div class="text-[10px] font-bold text-slate-900 uppercase tracking-widest">
-            Payment Term: {{ $invoice->payment_term_name ?? 'Standard' }}<br>
+          <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Payment Terms</div>
+          <div class="text-xs text-slate-600">
+            {{ $invoice->payment_term_name ?? 'Standard' }}
             @if ($invoice->payment_due_days)
-              Due in {{ $invoice->payment_due_days }} days
+              (Due in {{ $invoice->payment_due_days }} days)
             @endif
           </div>
-
           @if ($invoice->company->banks->count() > 0)
-            <div class="mt-4 pt-4 border-t border-slate-100">
-              @foreach ($invoice->company->banks as $bank)
-                <div class="text-[9px] text-slate-500 mb-2 leading-relaxed">
-                  <span class="font-bold text-slate-900">{{ $bank->bank_name }}</span><br>
-                  Account: {{ $bank->account_number }}<br>
-                  @if ($bank->iban)
-                    IBAN: {{ $bank->iban }}<br>
-                  @endif
-                  @if ($bank->swift_code)
-                    SWIFT: {{ $bank->swift_code }}
-                  @endif
+            <div class="mt-4 pt-3 border-t border-slate-100 text-left">
+              <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Bank Details</div>
+              @foreach ($invoice->company->banks->take(1) as $bank)
+                <div class="text-xs text-slate-600 leading-relaxed">
+                  {{ $bank->bank_name }}<br>
+                  A/C: {{ $bank->account_number }}
+                  @if ($bank->iban) | IBAN: {{ $bank->iban }} @endif
+                  @if ($bank->swift_code) | SWIFT: {{ $bank->swift_code }} @endif
                 </div>
               @endforeach
             </div>
