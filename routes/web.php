@@ -184,6 +184,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
                     ->name('company-profile.update');
 
                 /**
+                 * Company Banks
+                 */
+                Route::resource('company-banks', \App\Http\Controllers\Admin\Settings\CompanyBankController::class);
+
+                /**
                  * User Login Activities
                  */
                 Route::get('users/{user}/login-activities', [\App\Http\Controllers\Admin\Company\CompanyUserController::class, 'loginActivities'])

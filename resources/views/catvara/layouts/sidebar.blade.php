@@ -183,7 +183,7 @@
 
       <p class="px-3 pt-6 mb-2 text-[11px] font-bold text-slate-400 uppercase tracking-widest nav-group-header">
         Settings</p>
-      @php $isSettingsActive = $isActive(['settings.profile.*', 'settings.users.*', 'settings.roles.*', 'settings.payment-methods.*', 'settings.payment-terms.*', 'settings.exchange-rates.*', 'activity-logs.*']); @endphp
+      @php $isSettingsActive = $isActive(['settings.profile.*', 'settings.company-profile.*', 'settings.company-banks.*', 'settings.users.*', 'settings.roles.*', 'settings.payment-methods.*', 'settings.payment-terms.*', 'settings.exchange-rates.*', 'activity-logs.*']); @endphp
       <div class="nav-group">
         <button
           class="w-full flex items-center justify-between px-4 py-3 text-sm font-semibold rounded-xl transition-all group
@@ -203,6 +203,10 @@
           <a href="{{ company_route('settings.company-profile.edit') }}"
             class="flex items-center py-2 pl-12 pr-4 text-xs font-medium {{ $isActive(['settings.company-profile.*']) ? 'text-brand-400' : 'text-slate-500 hover:text-brand-400' }}">
             <span class="sidebar-text">Company Profile</span>
+          </a>
+          <a href="{{ company_route('settings.company-banks.index') }}"
+            class="flex items-center py-2 pl-12 pr-4 text-xs font-medium {{ $isActive(['settings.company-banks.*']) ? 'text-brand-400' : 'text-slate-500 hover:text-brand-400' }}">
+            <span class="sidebar-text">Company Bank Accounts</span>
           </a>
           <a href="{{ company_route('settings.users.index') }}"
             class="flex items-center py-2 pl-12 pr-4 text-xs font-medium {{ $isActive(['settings.users.*']) ? 'text-brand-400' : 'text-slate-500 hover:text-brand-400' }}">
