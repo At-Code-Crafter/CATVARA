@@ -105,9 +105,6 @@ return new class extends Migration
 
                 $table->foreign('created_by', 'quote_user_fk')
                     ->references('id')->on('users')->nullOnDelete();
-
-                $table->foreign('order_id', 'quote_order_fk')
-                    ->references('id')->on('orders')->nullOnDelete();
             });
         }
 

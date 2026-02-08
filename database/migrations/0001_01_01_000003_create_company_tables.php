@@ -78,7 +78,7 @@ return new class extends Migration
             $table->string('iban')->nullable();
             $table->string('swift_code')->nullable();
             $table->string('branch')->nullable();
-            $table->foreignId('currency_id')->nullable()->constrained();
+            $table->unsignedBigInteger('currency_id');
             $table->boolean('is_active')->default(true);
             $table->timestamps();
             $table->softDeletes();

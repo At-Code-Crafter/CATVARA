@@ -4,8 +4,10 @@ namespace App\Services\Sales;
 
 use App\Models\Accounting\Invoice;
 use App\Models\Accounting\InvoiceStatus;
+use App\Models\Inventory\InventoryLocation;
 use App\Models\Sales\Order;
 use App\Services\Common\DocumentNumberService;
+use App\Services\Inventory\InventoryPostingService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -15,16 +17,45 @@ class InvoiceService
 {
     public function __construct(
         protected DocumentNumberService $docNumberService,
-        protected SalesDocumentService $salesDocService
-    ) {}
+        protected SalesDocumentService $salesDocService,
+        protected InventoryPostingService $inventoryService
+    ) {
+    }
 
     /**
      * Create an Invoice from a Sales Order
      */
-    public function createFromOrder(Order $order): Invoice
+    public function createFromOrder(Order $order, bool $autoFulfill = false): Invoice
     {
-        return DB::transaction(function () use ($order) {
+        return DB::transaction(function () use ($order, $autoFulfill) {
             $order->loadMissing(['items', 'currency', 'paymentTerm', 'customer', 'shippingCustomer', 'addresses']);
+
+            // 1. Auto-fulfill if requested and not already fulfilled
+            if ($autoFulfill && !$order->is_fulfilled) {
+                $inventoryLocation = InventoryLocation::where('company_id', $order->company_id)->first();
+                if ($inventoryLocation) {
+                    foreach ($order->items as $orderItem) {
+                        $pendingQty = $orderItem->quantity - ($orderItem->fulfilled_quantity ?? 0);
+                        if ($orderItem->product_variant_id && $pendingQty > 0) {
+                            $this->inventoryService->postMovement([
+                                'company_id' => $order->company_id,
+                                'inventory_location_id' => $inventoryLocation->id,
+                                'product_variant_id' => $orderItem->product_variant_id,
+                                'reason_code' => 'SALE',
+                                'quantity' => $pendingQty,
+                                'reference_type' => 'invoice_auto_fulfillment',
+                                'reference_id' => $order->id,
+                                'performed_by' => Auth::id(),
+                            ]);
+
+                            // Update fulfilled quantity on order item if not using delivery notes
+                            // (If using delivery notes, this might be tricky, but for auto-fulfillment it's usually 1:1)
+                            $orderItem->increment('fulfilled_quantity', $pendingQty);
+                        }
+                    }
+                    $order->update(['is_fulfilled' => true]);
+                }
+            }
 
             $draftStatus = InvoiceStatus::where('code', 'DRAFT')->first();
             if (!$draftStatus) {

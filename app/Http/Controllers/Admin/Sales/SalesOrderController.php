@@ -100,7 +100,7 @@ class SalesOrderController extends Controller
             })
             ->addColumn('actions', function ($order) {
                 $editUrl = company_route('sales-orders.edit', ['sales_order' => $order->uuid]);
-                $showUrl = company_route('sales-orders.show', ['sales_order' => $order->id]);
+                $showUrl = company_route('sales-orders.show', ['sales_order' => $order->uuid]);
 
                 $compact['showUrl'] = $showUrl;
                 $compact['editUrl'] = $editUrl;

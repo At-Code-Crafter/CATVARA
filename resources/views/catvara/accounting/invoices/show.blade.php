@@ -12,12 +12,12 @@
           @php
             $statusCode = $invoice->status->code ?? 'DRAFT';
             $statusColor = match ($statusCode) {
-                'DRAFT' => 'badge-warning',
-                'ISSUED' => 'badge-info',
-                'PAID' => 'badge-success',
-                'PARTIALLY_PAID' => 'badge-primary',
-                'VOIDED' => 'badge-danger',
-                default => 'badge-secondary',
+              'DRAFT' => 'badge-warning',
+              'ISSUED' => 'badge-info',
+              'PAID' => 'badge-success',
+              'PARTIALLY_PAID' => 'badge-primary',
+              'VOIDED' => 'badge-danger',
+              default => 'badge-secondary',
             };
           @endphp
           <span class="badge {{ $statusColor }}">
@@ -41,8 +41,18 @@
           </button>
         @endif
 
+        <div class="flex items-center gap-2 mr-2">
+          <label class="inline-flex items-center cursor-pointer">
+            <input type="checkbox" id="hideVariantsToggle" class="sr-only peer">
+            <div
+              class="relative w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-brand-500">
+            </div>
+            <span class="ms-2 text-[11px] font-bold text-slate-500 uppercase tracking-wider">Hide Variants</span>
+          </label>
+        </div>
+
         <a href="{{ company_route('accounting.invoices.print', ['invoice' => $invoice->uuid]) }}" target="_blank"
-          class="btn btn-white">
+          id="printInvoiceBtn" class="btn btn-white">
           <i class="fas fa-print mr-2 text-slate-500"></i> Print
         </a>
         <a href="{{ company_route('sales-orders.show', ['sales_order' => $invoice->source_id]) }}" class="btn btn-white">
@@ -82,7 +92,7 @@
                       {{ $billTo->address_line_2 }}<br>
                     @endif
                     {{ $billTo->city ?? '' }}{{ $billTo->zip_code ? ', ' . $billTo->zip_code : '' }}<br>
-                    {{ $billTo->state->name ?? '' }}{{ $billTo->country->name ? ', ' . $billTo->country->name : '' }}
+                    {{ $billTo->state->name ?? '' }}{{ ($billTo->country->name ?? null) ? ', ' . $billTo->country->name : '' }}
                   </span>
                 </p>
                 @if ($billTo->phone)
@@ -159,11 +169,14 @@
                     </td>
                     <td class="px-6 py-4 text-center font-bold text-slate-700">{{ $item->quantity }}</td>
                     <td class="px-6 py-4 text-right font-medium text-slate-600">
-                      {{ money($item->unit_price, $invoice->currency->code) }}</td>
+                      {{ money($item->unit_price, $invoice->currency->code) }}
+                    </td>
                     <td class="px-6 py-4 text-right font-medium text-slate-600">
-                      {{ money($item->tax_amount, $invoice->currency->code) }}</td>
+                      {{ money($item->tax_amount, $invoice->currency->code) }}
+                    </td>
                     <td class="px-6 py-4 text-right font-bold text-slate-900">
-                      {{ money($item->line_total, $invoice->currency->code) }}</td>
+                      {{ money($item->line_total, $invoice->currency->code) }}
+                    </td>
                   </tr>
                 @endforeach
               </tbody>
@@ -260,9 +273,22 @@
 
   @if (!$invoice->posted_at)
     <script>
-      document.getElementById('postInvoiceBtn')?.addEventListener('click', function() {
+      // Hide Variants Toggle
+      document.getElementById('hideVariantsToggle')?.addEventListener('change', function () {
+        const isChecked = this.checked;
+        const printBtn = document.getElementById('printInvoiceBtn');
+        const baseUrl = "{{ company_route('accounting.invoices.print', ['invoice' => $invoice->uuid]) }}";
+
+        if (isChecked) {
+          printBtn.href = baseUrl + "?hide_variants=1";
+        } else {
+          printBtn.href = baseUrl;
+        }
+      });
+
+      document.getElementById('postInvoiceBtn')?.addEventListener('click', function () {
         if (!confirm(
-            'Are you sure you want to POST this invoice? This will finalize the document and cannot be undone.'))
+          'Are you sure you want to POST this invoice? This will finalize the document and cannot be undone.'))
           return;
 
         const btn = this;
@@ -270,12 +296,12 @@
         btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Posting...';
 
         fetch("{{ company_route('accounting.invoices.post', ['invoice' => $invoice->uuid]) }}", {
-            method: 'POST',
-            headers: {
-              'X-CSRF-TOKEN': '{{ csrf_token() }}',
-              'Accept': 'application/json'
-            }
-          })
+          method: 'POST',
+          headers: {
+            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+            'Accept': 'application/json'
+          }
+        })
           .then(response => response.json())
           .then(data => {
             if (data.success) {

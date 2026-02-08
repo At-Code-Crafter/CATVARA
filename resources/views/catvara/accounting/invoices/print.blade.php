@@ -19,11 +19,14 @@
           </div>
         @endif
         <div class="text-[10px] text-slate-500 leading-relaxed">
-          @if($invoice->company->address)
-            {!! $invoice->company->address->render() !!}<br>
+          @if ($invoice->company->detail?->address || $invoice->company->address)
+            {{ $invoice->company->detail->address ?? $invoice->company->address->render() }}<br>
           @endif
-          @if($invoice->company->email || $invoice->company->phone)
-            {{ $invoice->company->email }} {{ $invoice->company->phone ? '| ' . $invoice->company->phone : '' }}
+          @if ($invoice->company->detail?->tax_number)
+            TRN: {{ $invoice->company->detail->tax_number }}<br>
+          @endif
+          @if ($invoice->company->website_url)
+            {{ $invoice->company->website_url }}<br>
           @endif
         </div>
       </div>
@@ -36,13 +39,15 @@
           </tr>
           <tr>
             <td class="text-slate-500 pr-4 py-0.5">Date:</td>
-            <td class="font-medium text-slate-700">{{ $invoice->issued_at ? $invoice->issued_at->format('d M, Y') : $invoice->created_at->format('d M, Y') }}</td>
+            <td class="font-medium text-slate-700">
+              {{ $invoice->issued_at ? $invoice->issued_at->format('d M, Y') : $invoice->created_at->format('d M, Y') }}
+            </td>
           </tr>
           @if ($invoice->due_date)
-          <tr>
-            <td class="text-slate-500 pr-4 py-0.5">Due Date:</td>
-            <td class="font-medium text-slate-700">{{ $invoice->due_date->format('d M, Y') }}</td>
-          </tr>
+            <tr>
+              <td class="text-slate-500 pr-4 py-0.5">Due Date:</td>
+              <td class="font-medium text-slate-700">{{ $invoice->due_date->format('d M, Y') }}</td>
+            </tr>
           @endif
         </table>
       </div>
@@ -57,18 +62,21 @@
       <div>
         <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Bill To</div>
         <div class="text-sm font-bold text-slate-900 mb-1">
-          {{ $billTo->name ?? ($invoice->customer->legal_name ?? $invoice->customer->display_name) }}</div>
+          {{ $billTo->name ?? ($invoice->customer->legal_name ?? $invoice->customer->display_name) }}
+        </div>
         <div class="text-xs text-slate-600 leading-relaxed">
           {!! $billTo?->render() !!}
         </div>
         @if ($invoice->customer->tax_number || $billTo?->tax_number)
-          <div class="text-[10px] text-slate-500 mt-2">TRN: {{ $billTo?->tax_number ?? $invoice->customer->tax_number }}</div>
+          <div class="text-[10px] text-slate-500 mt-2">TRN: {{ $billTo?->tax_number ?? $invoice->customer->tax_number }}
+          </div>
         @endif
       </div>
       <div>
         <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Ship To</div>
         <div class="text-sm font-bold text-slate-900 mb-1">
-          {{ $shipTo->name ?? $invoice->customer->display_name }}</div>
+          {{ $shipTo->name ?? $invoice->customer->display_name }}
+        </div>
         <div class="text-xs text-slate-600 leading-relaxed">
           {!! $shipTo?->render() ?? 'Same as Billing Address' !!}
         </div>
@@ -92,13 +100,14 @@
             <td class="py-3 text-xs text-slate-500">{{ $index + 1 }}</td>
             <td class="py-3">
               <div class="text-sm text-slate-800">{{ $item->product_name }}</div>
-              @if ($item->variant_description)
+              @if ($item->variant_description && !($hideVariants ?? false))
                 <div class="text-[10px] text-slate-400 mt-0.5">{{ $item->variant_description }}</div>
               @endif
             </td>
             <td class="py-3 text-right text-sm text-slate-700">{{ money($item->unit_price, $invoice->currency->code) }}</td>
-            <td class="py-3 text-center text-sm text-slate-700">{{ (int)$item->quantity }}</td>
-            <td class="py-3 text-right text-sm font-medium text-slate-900">{{ money($item->line_total, $invoice->currency->code) }}</td>
+            <td class="py-3 text-center text-sm text-slate-700">{{ (int) $item->quantity }}</td>
+            <td class="py-3 text-right text-sm font-medium text-slate-900">
+              {{ money($item->line_total, $invoice->currency->code) }}</td>
           </tr>
         @endforeach
       </tbody>
@@ -129,7 +138,8 @@
         </div>
         <div class="flex justify-between py-3 border-t-2 border-slate-900 mt-2">
           <span class="text-base font-bold text-slate-900">Total</span>
-          <span class="text-base font-bold text-slate-900">{{ money($invoice->grand_total, $invoice->currency->code) }}</span>
+          <span
+            class="text-base font-bold text-slate-900">{{ money($invoice->grand_total, $invoice->currency->code) }}</span>
         </div>
       </div>
     </div>
@@ -154,12 +164,14 @@
           @if ($invoice->company->banks->count() > 0)
             <div class="mt-4 pt-3 border-t border-slate-100 text-left">
               <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Bank Details</div>
-              @foreach ($invoice->company->banks->take(1) as $bank)
-                <div class="text-xs text-slate-600 leading-relaxed">
-                  {{ $bank->bank_name }}<br>
-                  A/C: {{ $bank->account_number }}
+              @foreach ($invoice->company->banks as $bank)
+                <div class="text-xs text-slate-600 leading-relaxed mb-2">
+                  <span class="font-bold text-slate-800">{{ $bank->bank_name }}</span><br>
+                  A/C Name: {{ $bank->account_name }}<br>
+                  A/C No: {{ $bank->account_number }}
                   @if ($bank->iban) | IBAN: {{ $bank->iban }} @endif
                   @if ($bank->swift_code) | SWIFT: {{ $bank->swift_code }} @endif
+                  @if ($bank->branch) | Branch: {{ $bank->branch }} @endif
                 </div>
               @endforeach
             </div>
