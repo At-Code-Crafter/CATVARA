@@ -205,6 +205,59 @@
       </div>
     </div>
 
+    <!-- Bank Details -->
+    @php
+      $companyBank = \App\Models\Company\CompanyBank::where('company_id', $order->company_id)
+          ->where('is_active', true)
+          ->first();
+    @endphp
+    @if ($companyBank)
+      <div class="card p-6 border-slate-100 shadow-soft relative overflow-hidden">
+        <div class="absolute top-0 left-0 w-1 h-full bg-indigo-400"></div>
+        <div class="flex items-center gap-3 mb-6">
+          <div class="h-10 w-10 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-500 shadow-sm">
+            <i class="fas fa-university"></i>
+          </div>
+          <div>
+            <h3 class="font-bold text-slate-800">Bank Details</h3>
+            <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Payment Information</p>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+          <div class="bg-slate-50 rounded-xl p-4">
+            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Bank Name</p>
+            <p class="font-bold text-slate-800">{{ $companyBank->bank_name }}</p>
+          </div>
+          <div class="bg-slate-50 rounded-xl p-4">
+            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Account Name</p>
+            <p class="font-bold text-slate-800">{{ $companyBank->account_name }}</p>
+          </div>
+          <div class="bg-slate-50 rounded-xl p-4">
+            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Account Number</p>
+            <p class="font-bold text-slate-800 font-mono">{{ $companyBank->account_number }}</p>
+          </div>
+          @if ($companyBank->iban)
+            <div class="bg-indigo-50 rounded-xl p-4 md:col-span-2">
+              <p class="text-[10px] font-bold text-indigo-400 uppercase tracking-widest mb-1">IBAN</p>
+              <p class="font-bold text-indigo-700 font-mono text-sm tracking-wide">{{ $companyBank->iban }}</p>
+            </div>
+          @endif
+          @if ($companyBank->swift_code)
+            <div class="bg-amber-50 rounded-xl p-4">
+              <p class="text-[10px] font-bold text-amber-500 uppercase tracking-widest mb-1">SWIFT / BIC</p>
+              <p class="font-bold text-amber-700 font-mono">{{ $companyBank->swift_code }}</p>
+            </div>
+          @endif
+          @if ($companyBank->branch)
+            <div class="bg-slate-50 rounded-xl p-4">
+              <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Branch</p>
+              <p class="font-bold text-slate-800">{{ $companyBank->branch }}</p>
+            </div>
+          @endif
+        </div>
+      </div>
+    @endif
+
     <!-- Items Table -->
     <div class="card bg-white border-slate-100 shadow-soft overflow-hidden">
       <div class="p-0">
