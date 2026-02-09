@@ -67,6 +67,20 @@
 
       @page {
         margin: 1cm;
+        /* Hide URL, date and page numbers in print header/footer */
+      }
+
+      /* Hide browser's default headers and footers */
+      @page :first {
+        margin-top: 0;
+      }
+    }
+
+    /* Force browsers to not show URL in print */
+    @media print {
+      html {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
       }
     }
   </style>

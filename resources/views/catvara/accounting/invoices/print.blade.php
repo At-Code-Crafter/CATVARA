@@ -32,21 +32,21 @@
       </div>
       <div class="text-right">
         <div class="text-3xl font-bold text-slate-900 mb-3">INVOICE</div>
-        <table class="ml-auto text-sm">
+        <table class="ml-auto text-sm text-right">
           <tr>
-            <td class="text-slate-500 pr-4 py-0.5">Invoice No:</td>
-            <td class="font-bold text-slate-900">{{ $invoice->invoice_number }}</td>
+            <td class="text-slate-500 pr-4 py-0.5 text-right">Invoice No:</td>
+            <td class="font-bold text-slate-900 text-right">{{ $invoice->invoice_number }}</td>
           </tr>
           <tr>
-            <td class="text-slate-500 pr-4 py-0.5">Date:</td>
-            <td class="font-medium text-slate-700">
+            <td class="text-slate-500 pr-4 py-0.5 text-right">Date:</td>
+            <td class="font-medium text-slate-700 text-right">
               {{ $invoice->issued_at ? $invoice->issued_at->format('d M, Y') : $invoice->created_at->format('d M, Y') }}
             </td>
           </tr>
           @if ($invoice->due_date)
             <tr>
-              <td class="text-slate-500 pr-4 py-0.5">Due Date:</td>
-              <td class="font-medium text-slate-700">{{ $invoice->due_date->format('d M, Y') }}</td>
+              <td class="text-slate-500 pr-4 py-0.5 text-right">Due Date:</td>
+              <td class="font-medium text-slate-700 text-right">{{ $invoice->due_date->format('d M, Y') }}</td>
             </tr>
           @endif
         </table>
