@@ -4,185 +4,212 @@
 
 @section('content')
   <div class="print-container">
-    {{-- Document Header --}}
-    <div class="flex justify-between items-start mb-10 pb-6 border-b border-slate-200">
+    {{-- Top Header Row --}}
+    <div class="flex justify-between items-start mb-0 pb-4 border-b border-slate-200">
       <div>
-        {{-- Company Logo/Name --}}
-        @if ($invoice->company->logo)
-          <img src="{{ storage_url($invoice->company->logo) }}" class="h-14 w-auto object-contain mb-2">
-        @else
-          <div class="flex items-center gap-3 mb-2">
-            <div class="w-10 h-10 bg-slate-900 rounded flex items-center justify-center">
-              <span class="text-white text-lg font-bold">{{ strtoupper(substr($invoice->company->name, 0, 1)) }}</span>
-            </div>
-            <div class="text-xl font-bold text-slate-900">{{ $invoice->company->name }}</div>
-          </div>
-        @endif
-        <div class="text-[10px] text-slate-500 leading-relaxed">
-          @if ($invoice->company->detail?->address || $invoice->company->address)
-            {{ $invoice->company->detail->address ?? $invoice->company->address->render() }}<br>
-          @endif
-          @if ($invoice->company->detail?->tax_number)
-            TRN: {{ $invoice->company->detail->tax_number }}<br>
-          @endif
-          @if ($invoice->company->website_url)
-            {{ $invoice->company->website_url }}<br>
-          @endif
-        </div>
+        <div class="text-4xl font-bold text-slate-900">INVOICE</div>
+      </div>
+      <div>
+        <div class="text-xs text-slate-500">Invoice number</div>
+        <div class="text-base font-bold text-slate-900">{{ $invoice->invoice_number }}</div>
       </div>
       <div class="text-right">
-        <div class="text-3xl font-bold text-slate-900 mb-3">INVOICE</div>
-        <table class="ml-auto text-sm text-right">
-          <tr>
-            <td class="text-slate-500 pr-4 py-0.5 text-right">Invoice No:</td>
-            <td class="font-bold text-slate-900 text-right">{{ $invoice->invoice_number }}</td>
-          </tr>
-          <tr>
-            <td class="text-slate-500 pr-4 py-0.5 text-right">Date:</td>
-            <td class="font-medium text-slate-700 text-right">
-              {{ $invoice->issued_at ? $invoice->issued_at->format('d M, Y') : $invoice->created_at->format('d M, Y') }}
-            </td>
-          </tr>
-          @if ($invoice->due_date)
-            <tr>
-              <td class="text-slate-500 pr-4 py-0.5 text-right">Due Date:</td>
-              <td class="font-medium text-slate-700 text-right">{{ $invoice->due_date->format('d M, Y') }}</td>
-            </tr>
-          @endif
-        </table>
+        <div class="text-xs text-slate-500">Invoice total</div>
+        <div class="text-xl font-bold text-slate-900">{{ $invoice->currency->symbol }}{{ number_format($invoice->grand_total, 2) }}</div>
       </div>
     </div>
 
-    {{-- Addresses --}}
-    <div class="grid grid-cols-2 gap-12 mb-10">
+    {{-- Second Row: Logo, Dates, Additional Details --}}
+    <div class="flex mb-0 border-b border-slate-200">
+      {{-- Company Logo --}}
+      <div class="flex-1 py-4">
+        @if ($invoice->company->logo)
+          <img src="{{ storage_url($invoice->company->logo) }}" class="h-16 w-auto object-contain">
+        @else
+          <div class="text-2xl font-bold text-slate-900">{{ $invoice->company->name }}</div>
+        @endif
+      </div>
+      {{-- Dates --}}
+      <div class="flex-1 py-4">
+        <div class="mb-3">
+          <div class="text-xs font-semibold text-slate-700">Date of issue</div>
+          <div class="text-sm text-slate-900">
+            {{ $invoice->issued_at ? $invoice->issued_at->format('F d, Y') : $invoice->created_at->format('F d, Y') }}
+          </div>
+        </div>
+        <div>
+          <div class="text-xs font-semibold text-slate-700">Date of supply</div>
+          <div class="text-sm text-slate-900">
+            {{ $invoice->issued_at ? $invoice->issued_at->format('F d, Y') : $invoice->created_at->format('F d, Y') }}
+          </div>
+        </div>
+      </div>
+      {{-- Additional Details / Payment Terms --}}
+      <div class="flex-1 bg-slate-100 py-4 px-6">
+        <div class="text-sm text-slate-600 mb-2">Additional details</div>
+        @if ($invoice->payment_term_name)
+          <div class="text-xs text-slate-700">
+            <strong>Payment Terms:</strong> {{ $invoice->payment_term_name }}
+            @if ($invoice->payment_due_days)
+              (Due in {{ $invoice->payment_due_days }} days)
+            @endif
+          </div>
+        @endif
+        @if ($invoice->notes)
+          <div class="text-xs text-slate-600 mt-2">{{ $invoice->notes }}</div>
+        @endif
+      </div>
+    </div>
+
+    {{-- Addresses Row: Bill To, Ship To, Merchant --}}
+    <div class="flex mb-6 py-4 border-b border-slate-200">
       @php
         $billTo = $invoice->billingAddress;
         $shipTo = $invoice->shippingAddress;
       @endphp
-      <div>
-        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Bill To</div>
-        <div class="text-sm font-bold text-slate-900 mb-1">
+      {{-- Bill To --}}
+      <div class="flex-1">
+        <div class="text-xs font-bold text-slate-700 mb-1">Bill to</div>
+        <div class="text-sm font-semibold text-slate-900">
           {{ $billTo->name ?? ($invoice->customer->legal_name ?? $invoice->customer->display_name) }}
         </div>
-        <div class="text-xs text-slate-600 leading-relaxed">
+        <div class="text-xs text-slate-600 leading-relaxed mt-1">
           {!! $billTo?->render() !!}
         </div>
-        @if ($invoice->customer->tax_number || $billTo?->tax_number)
-          <div class="text-[10px] text-slate-500 mt-2">TRN: {{ $billTo?->tax_number ?? $invoice->customer->tax_number }}
-          </div>
-        @endif
       </div>
-      <div>
-        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Ship To</div>
-        <div class="text-sm font-bold text-slate-900 mb-1">
+      {{-- Ship To --}}
+      <div class="flex-1">
+        <div class="text-xs font-bold text-slate-700 mb-1">Ship to</div>
+        <div class="text-sm font-semibold text-slate-900">
           {{ $shipTo->name ?? $invoice->customer->display_name }}
         </div>
-        <div class="text-xs text-slate-600 leading-relaxed">
+        <div class="text-xs text-slate-600 leading-relaxed mt-1">
           {!! $shipTo?->render() ?? 'Same as Billing Address' !!}
         </div>
       </div>
-    </div>
-
-    {{-- Payment Terms & Bank Details --}}
-    <div class="mb-8 rounded-lg">
-      <div class="grid grid-cols-2 gap-8 items-start">
-        <div>
-          <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Payment Terms</div>
-          <div class="text-sm font-semibold text-slate-800">
-            {{ $invoice->payment_term_name ?? 'Standard' }}
-            @if ($invoice->payment_due_days)
-              <span class="text-slate-500 font-normal">(Due in {{ $invoice->payment_due_days }} days)</span>
-            @endif
-          </div>
-        </div>
-        <div>
-          <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Bank Details</div>
-          @if ($invoice->company->banks->count() > 0)
-            @foreach ($invoice->company->banks->take(1) as $bank)
-              <div class="text-xs text-slate-700 leading-relaxed space-y-0.5">
-                <div><span class="font-semibold">{{ $bank->bank_name }}</span></div>
-                <div>A/C: <span class="font-medium">{{ $bank->account_number }}</span></div>
-                @if ($bank->iban)<div>IBAN: <span class="font-medium">{{ $bank->iban }}</span></div>@endif
-                @if ($bank->swift_code)<div>SWIFT: <span class="font-medium">{{ $bank->swift_code }}</span></div>@endif
-              </div>
-            @endforeach
-          @else
-            <div class="text-xs text-slate-500">-</div>
+      {{-- Merchant --}}
+      <div class="flex-1 text-right">
+        <div class="text-xs font-bold text-slate-700 mb-1">Merchant</div>
+        <div class="text-sm font-semibold text-slate-900">{{ $invoice->company->name }}</div>
+        <div class="text-xs text-slate-600 leading-relaxed mt-1">
+          @if ($invoice->company->detail?->address)
+            {{ $invoice->company->detail->address }}<br>
+          @endif
+          @if ($invoice->company->detail?->email)
+            {{ $invoice->company->detail->email }}<br>
+          @endif
+          @if ($invoice->company->detail?->tax_number)
+            {{ $invoice->company->detail->tax_number }}
           @endif
         </div>
       </div>
     </div>
 
     {{-- Items Table --}}
-    <table class="w-full mb-8">
+    <table class="w-full mb-6">
       <thead>
-        <tr class="border-y border-slate-300">
-          <th class="py-3 text-left text-[10px] font-bold text-slate-600 uppercase w-10">#</th>
-          <th class="py-3 text-left text-[10px] font-bold text-slate-600 uppercase">Description</th>
-          <th class="py-3 text-right text-[10px] font-bold text-slate-600 uppercase w-24">Price</th>
-          <th class="py-3 text-center text-[10px] font-bold text-slate-600 uppercase w-16">Qty</th>
-          <th class="py-3 text-center text-[10px] font-bold text-slate-600 uppercase w-20">Discount</th>
-          <th class="py-3 text-right text-[10px] font-bold text-slate-600 uppercase w-28">Total</th>
+        <tr class="border-b border-slate-300">
+          <th class="py-3 text-left text-xs font-semibold text-slate-700">Description</th>
+          <th class="py-3 text-center text-xs font-semibold text-slate-700 w-20">Quantity</th>
+          <th class="py-3 text-right text-xs font-semibold text-slate-700 w-24">Unit price</th>
+          <th class="py-3 text-center text-xs font-semibold text-slate-700 w-20">VAT rate</th>
+          <th class="py-3 text-right text-xs font-semibold text-slate-700 w-24">Amount</th>
         </tr>
       </thead>
       <tbody>
-        @foreach ($invoice->items as $index => $item)
+        @foreach ($invoice->items as $item)
           <tr class="border-b border-slate-100">
-            <td class="py-3 text-xs text-slate-500">{{ $index + 1 }}</td>
             <td class="py-3">
               <div class="text-sm text-slate-800">{{ $item->product_name }}</div>
               @if ($item->variant_description && !($hideVariants ?? false))
-                <div class="text-[10px] text-slate-400 mt-0.5">{{ $item->variant_description }}</div>
+                <div class="text-xs text-slate-400 mt-0.5">{{ $item->variant_description }}</div>
               @endif
             </td>
-            <td class="py-3 text-right text-sm text-slate-700">{{ money($item->unit_price, $invoice->currency->code) }}</td>
             <td class="py-3 text-center text-sm text-slate-700">{{ (int) $item->quantity }}</td>
-            <td class="py-3 text-center text-sm text-slate-600">
-              {{ money($item->discount_amount ?? 0, $invoice->currency->code) }}
+            <td class="py-3 text-right text-sm text-slate-700">{{ money($item->unit_price, $invoice->currency->code) }}</td>
+            <td class="py-3 text-center text-sm text-slate-700">{{ $item->tax_percentage ?? 20 }}%</td>
+            <td class="py-3 text-right text-sm text-slate-900">
+              {{ money($item->line_total, $invoice->currency->code) }}
+              @if ($item->discount_amount > 0)
+                <div class="text-xs text-pink-600">-{{ money($item->discount_amount, $invoice->currency->code) }}</div>
+              @endif
             </td>
-            <td class="py-3 text-right text-sm font-medium text-slate-900">
-              {{ money($item->line_total, $invoice->currency->code) }}</td>
           </tr>
         @endforeach
       </tbody>
     </table>
 
     {{-- Summary --}}
-    <div class="flex justify-end mb-10">
-      <div class="w-72">
-        <div class="flex justify-between py-2">
-          <span class="text-sm text-slate-500">Subtotal</span>
-          <span class="text-sm text-slate-700">{{ money($invoice->subtotal, $invoice->currency->code) }}</span>
+    <div class="flex justify-end mb-8">
+      <div class="w-80">
+        <div class="flex justify-between py-2 border-b border-slate-100">
+          <span class="text-sm text-slate-700 font-semibold">Subtotal</span>
+          <span class="text-sm text-slate-900">{{ money($invoice->subtotal, $invoice->currency->code) }}</span>
         </div>
         @if ($invoice->discount_total > 0)
-          <div class="flex justify-between py-2">
-            <span class="text-sm text-slate-500">Discount</span>
-            <span class="text-sm text-emerald-600">-{{ money($invoice->discount_total, $invoice->currency->code) }}</span>
+          <div class="flex justify-between py-2 border-b border-slate-100">
+            <span class="text-sm text-slate-700">Discount</span>
+            <span class="text-sm text-pink-600">-{{ money($invoice->discount_total, $invoice->currency->code) }}</span>
           </div>
         @endif
-        @if ($invoice->shipping_total > 0)
-          <div class="flex justify-between py-2">
-            <span class="text-sm text-slate-500">Shipping</span>
-            <span class="text-sm text-slate-700">{{ money($invoice->shipping_total, $invoice->currency->code) }}</span>
-          </div>
-        @endif
-        <div class="flex justify-between py-2">
-          <span class="text-sm text-slate-500">Tax</span>
-          <span class="text-sm text-slate-700">{{ money($invoice->tax_total, $invoice->currency->code) }}</span>
+        <div class="flex justify-between py-2 border-b border-slate-100">
+          <span class="text-sm text-slate-700 font-semibold">VAT <span class="font-normal">(20%)</span></span>
+          <span class="text-sm text-slate-900">{{ money($invoice->tax_total, $invoice->currency->code) }}</span>
         </div>
-        <div class="flex justify-between py-3 border-t-2 border-slate-900 mt-2">
-          <span class="text-base font-bold text-slate-900">Total</span>
-          <span
-            class="text-base font-bold text-slate-900">{{ money($invoice->grand_total, $invoice->currency->code) }}</span>
+        @if ($invoice->shipping_total > 0)
+          <div class="flex justify-between py-2 border-b border-slate-100">
+            <span class="text-sm text-slate-700 font-semibold">Shipping</span>
+            <span class="text-sm text-slate-900">{{ money($invoice->shipping_total, $invoice->currency->code) }}</span>
+          </div>
+        @endif
+        <div class="flex justify-between py-3 border-b-2 border-slate-900">
+          <span class="text-sm font-bold text-slate-900">Total</span>
+          <span class="text-sm font-bold text-slate-900">{{ money($invoice->grand_total, $invoice->currency->code) }}</span>
         </div>
       </div>
     </div>
 
-    {{-- Footer - Notes Only --}}
-    <div class="pt-6 border-t border-slate-200">
-      <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Additional Notes</div>
+    {{-- Additional Notes with Payment Terms --}}
+    <div class="mb-6 pb-4 border-b border-slate-200">
+      {{-- <div class="text-xs font-bold text-slate-700 mb-2">Additional Notes</div> --}}
       <div class="text-xs text-slate-600 leading-relaxed">
-        {!! nl2br(e($invoice->notes ?? 'Thank you for your business.')) !!}
+        {{-- {!! nl2br(e($invoice->notes ?? 'Thank you for your business.')) !!} --}}
+        @if ($invoice->payment_term_name)
+          <br><br><strong>Payment Terms:</strong> {{ $invoice->payment_term_name }}
+          @if ($invoice->payment_due_days)
+            (Due in {{ $invoice->payment_due_days }} days)
+          @endif
+        @endif
+      </div>
+    </div>
+
+    {{-- Bank Details --}}
+    @if ($invoice->company->banks->count() > 0)
+      <div class="mb-6">
+        <div class="text-xs font-bold text-slate-700 mb-2">Bank Details</div>
+        @foreach ($invoice->company->banks->take(1) as $bank)
+          <div class="text-xs text-slate-600 leading-relaxed">
+            <span class="font-semibold">{{ $bank->bank_name }}</span><br>
+            A/C Name: {{ $bank->account_name ?? $invoice->company->name }}<br>
+            A/C No: {{ $bank->account_number }}
+            @if ($bank->iban) | IBAN: {{ $bank->iban }} @endif
+            @if ($bank->swift_code) | SWIFT: {{ $bank->swift_code }} @endif
+          </div>
+        @endforeach
+      </div>
+    @endif
+
+    {{-- Page Footer --}}
+    <div class="mt-8 pt-4 border-t border-slate-300 flex justify-between text-xs text-slate-500">
+      <div>
+        Provided by: {{ $invoice->company->name }}<br>
+        @if ($invoice->company->detail?->tax_number)
+          VAT ID: {{ $invoice->company->detail->tax_number }}
+        @endif
+      </div>
+      <div class="text-right">
+        Issued on {{ $invoice->issued_at ? $invoice->issued_at->format('F d, Y') : $invoice->created_at->format('F d, Y') }}<br>
+        Page 1 of 1 for {{ $invoice->invoice_number }}
       </div>
     </div>
   </div>
