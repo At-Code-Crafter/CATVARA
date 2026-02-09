@@ -199,18 +199,19 @@
       </div>
     @endif
 
-    {{-- Page Footer --}}
-    <div class="mt-8 pt-4 border-t border-slate-300 flex justify-between text-xs text-slate-500">
-      <div>
-        Provided by: {{ $invoice->company->name }}<br>
-        @if ($invoice->company->detail?->tax_number)
-          VAT ID: {{ $invoice->company->detail->tax_number }}
-        @endif
-      </div>
-      <div class="text-right">
-        Issued on {{ $invoice->issued_at ? $invoice->issued_at->format('F d, Y') : $invoice->created_at->format('F d, Y') }}<br>
-        Page 1 of 1 for {{ $invoice->invoice_number }}
-      </div>
+  </div>
+
+  {{-- Page Footer - Fixed at bottom --}}
+  <div class="print-footer pt-4 border-t border-slate-300 flex justify-between text-xs text-slate-500">
+    <div>
+      Provided by: {{ $invoice->company->name }}<br>
+      @if ($invoice->company->detail?->tax_number)
+        VAT ID: {{ $invoice->company->detail->tax_number }}
+      @endif
+    </div>
+    <div class="text-right">
+      Issued on {{ $invoice->issued_at ? $invoice->issued_at->format('F d, Y') : $invoice->created_at->format('F d, Y') }}<br>
+      Page 1 of 1 for {{ $invoice->invoice_number }}
     </div>
   </div>
 @endsection
