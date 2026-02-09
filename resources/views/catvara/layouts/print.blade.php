@@ -87,15 +87,21 @@
 </head>
 
 <body class="bg-white font-sans text-slate-900">
-  <div class="no-print p-4 bg-slate-100 flex justify-center gap-4 border-b border-slate-200">
-    <button onclick="window.print()"
-      class="h-10 px-6 rounded-xl bg-brand-600 text-white text-[11px] font-black uppercase tracking-widest hover:bg-brand-700 transition flex items-center gap-2">
-      <i class="fas fa-print"></i> Print Document
-    </button>
-    <button onclick="handleClosePreview()"
-      class="h-10 px-6 rounded-xl bg-white border border-slate-200 text-slate-600 text-[11px] font-black uppercase tracking-widest hover:bg-slate-50 transition">
-      Close Preview
-    </button>
+  <div class="no-print p-4 bg-slate-100 flex flex-col items-center gap-2 border-b border-slate-200">
+    <div class="flex justify-center gap-4">
+      <button onclick="window.print()"
+        class="h-10 px-6 rounded-xl bg-brand-400 text-white text-[11px] font-black uppercase tracking-widest hover:bg-brand-500 transition flex items-center gap-2">
+        <i class="fas fa-print"></i> Print Document
+      </button>
+      <button onclick="handleClosePreview()"
+        class="h-10 px-6 rounded-xl bg-white border border-slate-200 text-slate-600 text-[11px] font-black uppercase tracking-widest hover:bg-slate-50 transition">
+        Close Preview
+      </button>
+    </div>
+    <p class="text-[10px] text-slate-500">
+      <i class="fas fa-info-circle text-blue-400 mr-1"></i>
+      <strong>Tip:</strong> To hide URL in print, click "More settings" in print dialog and uncheck "Headers and footers"
+    </p>
   </div>
 
   @yield('content')

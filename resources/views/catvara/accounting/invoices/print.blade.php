@@ -83,6 +83,36 @@
       </div>
     </div>
 
+    {{-- Payment Terms & Bank Details --}}
+    <div class="mb-8 rounded-lg">
+      <div class="grid grid-cols-2 gap-8 items-start">
+        <div>
+          <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Payment Terms</div>
+          <div class="text-sm font-semibold text-slate-800">
+            {{ $invoice->payment_term_name ?? 'Standard' }}
+            @if ($invoice->payment_due_days)
+              <span class="text-slate-500 font-normal">(Due in {{ $invoice->payment_due_days }} days)</span>
+            @endif
+          </div>
+        </div>
+        <div>
+          <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Bank Details</div>
+          @if ($invoice->company->banks->count() > 0)
+            @foreach ($invoice->company->banks->take(1) as $bank)
+              <div class="text-xs text-slate-700 leading-relaxed space-y-0.5">
+                <div><span class="font-semibold">{{ $bank->bank_name }}</span></div>
+                <div>A/C: <span class="font-medium">{{ $bank->account_number }}</span></div>
+                @if ($bank->iban)<div>IBAN: <span class="font-medium">{{ $bank->iban }}</span></div>@endif
+                @if ($bank->swift_code)<div>SWIFT: <span class="font-medium">{{ $bank->swift_code }}</span></div>@endif
+              </div>
+            @endforeach
+          @else
+            <div class="text-xs text-slate-500">-</div>
+          @endif
+        </div>
+      </div>
+    </div>
+
     {{-- Items Table --}}
     <table class="w-full mb-8">
       <thead>
@@ -91,6 +121,7 @@
           <th class="py-3 text-left text-[10px] font-bold text-slate-600 uppercase">Description</th>
           <th class="py-3 text-right text-[10px] font-bold text-slate-600 uppercase w-24">Price</th>
           <th class="py-3 text-center text-[10px] font-bold text-slate-600 uppercase w-16">Qty</th>
+          <th class="py-3 text-center text-[10px] font-bold text-slate-600 uppercase w-20">Discount</th>
           <th class="py-3 text-right text-[10px] font-bold text-slate-600 uppercase w-28">Total</th>
         </tr>
       </thead>
@@ -106,6 +137,9 @@
             </td>
             <td class="py-3 text-right text-sm text-slate-700">{{ money($item->unit_price, $invoice->currency->code) }}</td>
             <td class="py-3 text-center text-sm text-slate-700">{{ (int) $item->quantity }}</td>
+            <td class="py-3 text-center text-sm text-slate-600">
+              {{ money($item->discount_amount ?? 0, $invoice->currency->code) }}
+            </td>
             <td class="py-3 text-right text-sm font-medium text-slate-900">
               {{ money($item->line_total, $invoice->currency->code) }}</td>
           </tr>
@@ -144,39 +178,11 @@
       </div>
     </div>
 
-    {{-- Footer --}}
+    {{-- Footer - Notes Only --}}
     <div class="pt-6 border-t border-slate-200">
-      <div class="grid grid-cols-2 gap-12">
-        <div>
-          <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Notes</div>
-          <div class="text-xs text-slate-600 leading-relaxed">
-            {!! nl2br(e($invoice->notes ?? 'Thank you for your business.')) !!}
-          </div>
-        </div>
-        <div class="text-right">
-          <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Payment Terms</div>
-          <div class="text-xs text-slate-600">
-            {{ $invoice->payment_term_name ?? 'Standard' }}
-            @if ($invoice->payment_due_days)
-              (Due in {{ $invoice->payment_due_days }} days)
-            @endif
-          </div>
-          @if ($invoice->company->banks->count() > 0)
-            <div class="mt-4 pt-3 border-t border-slate-100 text-left">
-              <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Bank Details</div>
-              @foreach ($invoice->company->banks as $bank)
-                <div class="text-xs text-slate-600 leading-relaxed mb-2">
-                  <span class="font-bold text-slate-800">{{ $bank->bank_name }}</span><br>
-                  A/C Name: {{ $bank->account_name }}<br>
-                  A/C No: {{ $bank->account_number }}
-                  @if ($bank->iban) | IBAN: {{ $bank->iban }} @endif
-                  @if ($bank->swift_code) | SWIFT: {{ $bank->swift_code }} @endif
-                  @if ($bank->branch) | Branch: {{ $bank->branch }} @endif
-                </div>
-              @endforeach
-            </div>
-          @endif
-        </div>
+      <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Additional Notes</div>
+      <div class="text-xs text-slate-600 leading-relaxed">
+        {!! nl2br(e($invoice->notes ?? 'Thank you for your business.')) !!}
       </div>
     </div>
   </div>
