@@ -171,16 +171,16 @@
 
     {{-- Additional Notes with Payment Terms --}}
     <div class="mb-6 pb-4 border-b border-slate-200">
-      {{-- <div class="text-xs font-bold text-slate-700 mb-2">Additional Notes</div> --}}
+      {{-- <div class="text-xs font-bold text-slate-700 mb-2">Additional Notes</div>
       <div class="text-xs text-slate-600 leading-relaxed">
-        {{-- {!! nl2br(e($invoice->notes ?? 'Thank you for your business.')) !!} --}}
+        {!! nl2br(e($invoice->notes ?? 'Thank you for your business.')) !!}
         @if ($invoice->payment_term_name)
           <br><br><strong>Payment Terms:</strong> {{ $invoice->payment_term_name }}
           @if ($invoice->payment_due_days)
             (Due in {{ $invoice->payment_due_days }} days)
           @endif
         @endif
-      </div>
+      </div> --}}
     </div>
 
     {{-- Bank Details --}}
