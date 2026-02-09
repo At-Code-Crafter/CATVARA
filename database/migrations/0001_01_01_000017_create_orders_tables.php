@@ -98,6 +98,8 @@ return new class extends Migration
             $table->decimal('global_discount_amount', 18, 6)->default(0);
             $table->decimal('grand_total', 18, 6)->default(0);
 
+            $table->boolean('is_fulfilled')->default(false);
+
             /**
              * Payment snapshot (optional caching, can be recalculated from payments later)
              */

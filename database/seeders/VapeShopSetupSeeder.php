@@ -95,6 +95,7 @@ class VapeShopSetupSeeder extends Seeder
                 'legal_name' => 'Vape Shop Distro UK',
                 'website_url' => 'https://vapeshopdistro.co.uk',
                 'company_status_id' => $activeStatus->id,
+                'base_currency_id' => $gbp->id,
             ]
         );
 
