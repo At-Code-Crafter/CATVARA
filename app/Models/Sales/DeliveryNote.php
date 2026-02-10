@@ -2,6 +2,7 @@
 
 namespace App\Models\Sales;
 
+use App\Models\Common\Address;
 use App\Models\Company\Company;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
@@ -52,5 +53,20 @@ class DeliveryNote extends Model
     public function items()
     {
         return $this->hasMany(DeliveryNoteItem::class);
+    }
+
+    public function addresses()
+    {
+        return $this->morphMany(Address::class, 'addressable');
+    }
+
+    public function billingAddress()
+    {
+        return $this->morphOne(Address::class, 'addressable')->where('type', 'BILLING');
+    }
+
+    public function shippingAddress()
+    {
+        return $this->morphOne(Address::class, 'addressable')->where('type', 'SHIPPING');
     }
 }

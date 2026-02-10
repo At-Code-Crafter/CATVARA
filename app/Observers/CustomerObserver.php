@@ -4,10 +4,15 @@ namespace App\Observers;
 
 use App\Models\Common\ActivityLog;
 use App\Models\Customer\Customer;
+use App\Services\Common\DocumentNumberService;
 use Illuminate\Support\Str;
 
 class CustomerObserver
 {
+    public function __construct(
+        protected DocumentNumberService $docNumberService
+    ) {}
+
     /**
      * Handle the Customer "creating" event.
      */
@@ -17,8 +22,14 @@ class CustomerObserver
             $customer->uuid = (string) Str::uuid();
         }
 
-        if (empty($customer->customer_code)) {
-            $customer->customer_code = $customer->generateCustomerCode();
+        if (empty($customer->customer_code) && $customer->company_id) {
+            $customer->customer_code = $this->docNumberService->generate(
+                companyId: $customer->company_id,
+                documentType: 'CUSTOMER',
+                channel: 'CRM',
+                year: null, // Customer codes usually don't reset yearly, they are global or perpetual
+                fallbackPrefix: 'C-'
+            );
         }
     }
 

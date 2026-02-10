@@ -14,19 +14,53 @@
           </span>
         </div>
         <p class="text-slate-400 text-sm mt-1 font-medium">Placed on {{ $order->created_at->format('M d, Y') }} at
-          {{ $order->created_at->format('h:i A') }}</p>
+          {{ $order->created_at->format('h:i A') }}
+        </p>
       </div>
       <div class="flex items-center gap-3">
         @php
           $statusCode = $order->status->code ?? '';
           $canEdit = $statusCode === 'DRAFT';
           $canDeliver = in_array($statusCode, ['CONFIRMED', 'PARTIALLY_FULFILLED']);
+          $isFulfilled = $order->is_fulfilled ?? false;
+
+          // Check if all items are fully delivered via delivery notes
+          $totalOrdered = $order->items->sum('quantity');
+          $totalFulfilledQty = $order->items->sum('fulfilled_quantity');
+          $isFullyDelivered = $totalOrdered > 0 && $totalFulfilledQty >= $totalOrdered;
+
+          // Show as fulfilled if explicitly marked OR if fully delivered via delivery notes
+          $showAsFulfilled = $isFulfilled || $isFullyDelivered;
         @endphp
 
         @if ($canEdit)
           <a href="{{ company_route('sales-orders.edit', ['sales_order' => $order->uuid]) }}" class="btn btn-white">
             <i class="fas fa-edit mr-2"></i> Edit
           </a>
+        @endif
+
+        @php
+          $hasInvoice = $order->invoice !== null;
+          $canGenerateInvoice = !$hasInvoice && !in_array($statusCode, ['DRAFT', 'CANCELLED', 'REJECTED']);
+        @endphp
+
+        @if ($hasInvoice)
+          <a href="{{ company_route('accounting.invoices.show', ['invoice' => $order->invoice->uuid]) }}"
+            class="btn btn-primary bg-blue-600 hover:bg-blue-700 text-white border-none shadow-sm">
+            <i class="fas fa-file-invoice mr-2"></i> View Invoice
+          </a>
+        @elseif ($canGenerateInvoice)
+          <button type="button" id="generateInvoiceBtn"
+            class="btn btn-primary bg-emerald-600 hover:bg-emerald-700 text-white border-none shadow-sm">
+            <i class="fas fa-file-invoice mr-2"></i> Generate Invoice
+          </button>
+        @endif
+
+        @if (!$showAsFulfilled && in_array($statusCode, ['CONFIRMED', 'PARTIALLY_FULFILLED']))
+          <button type="button" id="markFulfillmentBtn"
+            class="btn btn-primary bg-amber-500 hover:bg-amber-600 text-white border-none shadow-sm">
+            <i class="fas fa-box-check mr-2"></i> Mark as Fulfillment
+          </button>
         @endif
 
         @if ($canDeliver)
@@ -36,7 +70,11 @@
         @endif
         <a href="{{ company_route('sales-orders.print', ['sales_order' => $order->uuid]) }}" target="_blank"
           class="btn btn-white">
-          <i class="fas fa-print mr-2"></i> Print
+          <i class="fas fa-print mr-2"></i> Print Order
+        </a>
+        <a href="{{ company_route('sales-orders.print-proforma', ['sales_order' => $order->uuid]) }}" target="_blank"
+          class="btn btn-white">
+          <i class="fas fa-file-contract mr-2"></i> Proforma
         </a>
         <a href="{{ company_route('sales-orders.index') }}" class="btn btn-white">
           <i class="fas fa-arrow-left mr-2"></i> Back
@@ -93,7 +131,8 @@
                 <p>{{ $order->shippingAddress->address_line_2 }}</p>
               @endif
               <p>{{ $order->shippingAddress->city ?? '' }}, {{ $order->shippingAddress->state->name ?? '' }}
-                {{ $order->shippingAddress->zip_code ?? '' }}</p>
+                {{ $order->shippingAddress->zip_code ?? '' }}
+              </p>
               <p>{{ $order->shippingAddress->country->name ?? '' }}</p>
               <p class="pt-2 font-bold"><i class="fas fa-phone mr-2 text-xs"></i>
                 {{ $order->shippingAddress->phone ?? $order->customer->phone }}</p>
@@ -115,14 +154,16 @@
         <div class="space-y-2">
           @if ($order->billingAddress)
             <p class="text-lg font-bold text-orange-400">
-              {{ $order->billingAddress->first_name ?? $order->customer->display_name }}</p>
+              {{ $order->billingAddress->first_name ?? $order->customer->display_name }}
+            </p>
             <div class="text-sm text-slate-500 space-y-1">
               <p>{{ $order->billingAddress->address_line_1 }}</p>
               @if ($order->billingAddress->address_line_2)
                 <p>{{ $order->billingAddress->address_line_2 }}</p>
               @endif
               <p>{{ $order->billingAddress->city ?? '' }}, {{ $order->billingAddress->state->name ?? '' }}
-                {{ $order->billingAddress->zip_code ?? '' }}</p>
+                {{ $order->billingAddress->zip_code ?? '' }}
+              </p>
               <p>{{ $order->billingAddress->country->name ?? '' }}</p>
             </div>
           @else
@@ -164,6 +205,59 @@
       </div>
     </div>
 
+    <!-- Bank Details -->
+    @php
+      $companyBank = \App\Models\Company\CompanyBank::where('company_id', $order->company_id)
+          ->where('is_active', true)
+          ->first();
+    @endphp
+    @if ($companyBank)
+      <div class="card p-6 border-slate-100 shadow-soft relative overflow-hidden">
+        <div class="absolute top-0 left-0 w-1 h-full bg-indigo-400"></div>
+        <div class="flex items-center gap-3 mb-6">
+          <div class="h-10 w-10 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-500 shadow-sm">
+            <i class="fas fa-university"></i>
+          </div>
+          <div>
+            <h3 class="font-bold text-slate-800">Bank Details</h3>
+            <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Payment Information</p>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+          <div class="bg-slate-50 rounded-xl p-4">
+            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Bank Name</p>
+            <p class="font-bold text-slate-800">{{ $companyBank->bank_name }}</p>
+          </div>
+          <div class="bg-slate-50 rounded-xl p-4">
+            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Account Name</p>
+            <p class="font-bold text-slate-800">{{ $companyBank->account_name }}</p>
+          </div>
+          <div class="bg-slate-50 rounded-xl p-4">
+            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Account Number</p>
+            <p class="font-bold text-slate-800 font-mono">{{ $companyBank->account_number }}</p>
+          </div>
+          @if ($companyBank->iban)
+            <div class="bg-indigo-50 rounded-xl p-4 md:col-span-2">
+              <p class="text-[10px] font-bold text-indigo-400 uppercase tracking-widest mb-1">IBAN</p>
+              <p class="font-bold text-indigo-700 font-mono text-sm tracking-wide">{{ $companyBank->iban }}</p>
+            </div>
+          @endif
+          @if ($companyBank->swift_code)
+            <div class="bg-amber-50 rounded-xl p-4">
+              <p class="text-[10px] font-bold text-amber-500 uppercase tracking-widest mb-1">SWIFT / BIC</p>
+              <p class="font-bold text-amber-700 font-mono">{{ $companyBank->swift_code }}</p>
+            </div>
+          @endif
+          @if ($companyBank->branch)
+            <div class="bg-slate-50 rounded-xl p-4">
+              <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Branch</p>
+              <p class="font-bold text-slate-800">{{ $companyBank->branch }}</p>
+            </div>
+          @endif
+        </div>
+      </div>
+    @endif
+
     <!-- Items Table -->
     <div class="card bg-white border-slate-100 shadow-soft overflow-hidden">
       <div class="p-0">
@@ -185,7 +279,8 @@
                   <div class="font-bold text-slate-800">{{ $item->product_name }}</div>
                   @if ($item->variant_description)
                     <div class="text-[10px] text-slate-400 font-medium uppercase tracking-tight">
-                      {{ $item->variant_description }}</div>
+                      {{ $item->variant_description }}
+                    </div>
                   @endif
                 </td>
                 <td class="text-center font-bold text-slate-600">{{ (float) $item->quantity }}</td>
@@ -196,8 +291,7 @@
                   @endphp
                   <div class="flex flex-col items-center gap-1">
                     <div class="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden max-w-[100px] mx-auto">
-                      <div class="h-full {{ $barColor }} transition-all duration-500"
-                        style="width: {{ $percent }}%"></div>
+                      <div class="h-full {{ $barColor }} transition-all duration-500" style="width: {{ $percent }}%"></div>
                     </div>
                     <span
                       class="text-[9px] font-black {{ $percent >= 100 ? 'text-emerald-500' : ($percent > 0 ? 'text-indigo-500' : 'text-slate-400') }}">
@@ -331,7 +425,8 @@
                     </span>
                   </div>
                   <p class="text-[9px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">
-                    {{ $dn->created_at->format('M d, Y') }}</p>
+                    {{ $dn->created_at->format('M d, Y') }}
+                  </p>
                 </div>
                 <div class="flex items-center gap-2">
                   <a href="{{ company_route('sales-orders.delivery-note.print', ['delivery_note' => $dn->uuid]) }}"
@@ -339,6 +434,12 @@
                     class="h-8 w-8 rounded-lg bg-white shadow-xs border border-slate-200 flex items-center justify-center text-slate-400 hover:bg-brand-50 hover:text-brand-500 transition-all"
                     title="Print Note">
                     <i class="fas fa-print text-xs"></i>
+                  </a>
+                  <a href="{{ company_route('sales-orders.delivery-note.print-label', ['delivery_note' => $dn->uuid]) }}"
+                    target="_blank"
+                    class="h-8 w-8 rounded-lg bg-white shadow-xs border border-slate-200 flex items-center justify-center text-slate-400 hover:bg-indigo-50 hover:text-indigo-500 transition-all"
+                    title="Print Label">
+                    <i class="fas fa-tag text-xs"></i>
                   </a>
                   @if ($dn->status !== 'DELIVERED')
                     <button onclick="markAsDelivered('{{ $dn->uuid }}')"
@@ -372,8 +473,7 @@
                 <div class="space-y-1.5">
                   @foreach ($dn->items as $dnItem)
                     <div class="flex justify-between items-center text-[10px]">
-                      <span
-                        class="text-slate-500 font-medium truncate pr-4">{{ $dnItem->orderItem->product_name }}</span>
+                      <span class="text-slate-500 font-medium truncate pr-4">{{ $dnItem->orderItem->product_name }}</span>
                       <span class="font-black text-slate-700 whitespace-nowrap">x {{ (float) $dnItem->quantity }}</span>
                     </div>
                   @endforeach
@@ -395,93 +495,93 @@
     function openDeliveryModal() {
       const locations = {!! json_encode($locations) !!};
       const items = {!! json_encode(
-          $order->items->map(function ($item) {
-              return [
-                  'id' => $item->id,
-                  'name' => $item->product_name,
-                  'variant' => $item->variant_description,
-                  'ordered' => (float) $item->quantity,
-                  'fulfilled' => (float) $item->fulfilled_quantity,
-                  'remaining' => (float) $item->quantity - (float) $item->fulfilled_quantity,
-                  'stock' => (float) ($item->productVariant ? $item->productVariant->inventory->sum('quantity') : 0),
-              ];
-          }),
-      ) !!};
+    $order->items->map(function ($item) {
+      return [
+        'id' => $item->id,
+        'name' => $item->product_name,
+        'variant' => $item->variant_description,
+        'ordered' => (float) $item->quantity,
+        'fulfilled' => (float) $item->fulfilled_quantity,
+        'remaining' => (float) $item->quantity - (float) $item->fulfilled_quantity,
+        'stock' => (float) ($item->productVariant ? $item->productVariant->inventory->sum('quantity') : 0),
+      ];
+    }),
+  ) !!};
 
       let html = `
-            <div class="text-left">
-                <p class="text-sm text-slate-500 mb-4">Specify quantities and details for this delivery session.</p>
-                
-                <div class="mb-6 space-y-1.5">
-                    <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Dispatch From (Warehouse/Store)</label>
-                    <select id="dn-location" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm font-bold text-slate-700 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-hidden">
-                        ${locations.map(loc => `<option value="${loc.id}">${loc.name}</option>`).join('')}
-                    </select>
-                </div>
+              <div class="text-left">
+                  <p class="text-sm text-slate-500 mb-4">Specify quantities and details for this delivery session.</p>
 
-                <div class="max-h-[300px] overflow-y-auto rounded-xl border border-slate-100 mb-4 bg-white">
-                    <table class="w-full text-left text-xs">
-                        <thead class="bg-slate-50 sticky top-0 z-10">
-                            <tr>
-                                <th class="p-3 font-bold text-slate-400 uppercase tracking-widest">Item</th>
-                                <th class="p-3 font-bold text-slate-400 uppercase tracking-widest text-center">Remaining</th>
-                                <th class="p-3 font-bold text-slate-400 uppercase tracking-widest text-center">Stock</th>
-                                <th class="p-3 font-bold text-slate-400 uppercase tracking-widest text-right">Deliver Now</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-50">
-                            ${items.map(item => `
-                                              <tr class="${item.remaining <= 0 ? 'bg-slate-50/50 grayscale opacity-50' : ''}">
-                                                  <td class="p-3">
-                                                      <div class="font-bold text-slate-700 truncate max-w-[150px]">${item.name}</div>
-                                                      <div class="text-[9px] text-slate-400 uppercase mt-0.5">${item.variant || '-'}</div>
-                                                  </td>
-                                                  <td class="p-3 text-center font-bold text-slate-600">
-                                                      ${item.remaining}
-                                                  </td>
-                                                  <td class="p-3 text-center">
-                                                      <span class="badge ${item.stock >= item.remaining ? 'badge-success' : (item.stock > 0 ? 'badge-warning' : 'badge-danger')} text-[9px] scale-90">
-                                                          ${item.stock}
-                                                      </span>
-                                                  </td>
-                                                  <td class="p-3 text-right">
-                                                      <input type="number" 
-                                                             class="delivery-qty w-16 px-2 py-1 rounded-lg border border-slate-200 text-right font-bold text-indigo-600 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
-                                                             data-item-id="${item.id}"
-                                                             value="${item.remaining}"
-                                                             min="0"
-                                                             max="${item.remaining}"
-                                                             ${item.remaining <= 0 ? 'disabled' : ''} />
-                                                  </td>
-                                              </tr>
-                                          `).join('')}
-                        </tbody>
-                    </table>
-                </div>
-                <div class="flex justify-between items-center mb-6 px-1">
-                    <button type="button" onclick="autoFillRemaining()" class="text-[10px] font-black uppercase tracking-widest text-indigo-600 hover:text-indigo-800 transition-colors">
-                        <i class="fas fa-magic mr-1"></i> Ship Remaining
-                    </button>
-                    <button type="button" onclick="clearAllQuantities()" class="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-600 transition-colors">
-                        <i class="fas fa-times mr-1"></i> Clear
-                    </button>
-                </div>
-                <div class="grid grid-cols-2 gap-4 mb-4">
-                    <div class="space-y-1.5">
-                        <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Reference No.</label>
-                        <input type="text" id="dn-reference" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-hidden" placeholder="LPO / Job No.">
-                    </div>
-                    <div class="space-y-1.5">
-                        <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Vehicle No.</label>
-                        <input type="text" id="dn-vehicle" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-hidden" placeholder="AE-12345">
-                    </div>
-                </div>
-                <div class="space-y-1.5">
-                    <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Internal Notes</label>
-                    <textarea id="dn-notes" class="w-full p-4 rounded-xl border border-slate-200 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-hidden" rows="2" placeholder="Driver instructions etc..."></textarea>
-                </div>
-            </div>
-        `;
+                  <div class="mb-6 space-y-1.5">
+                      <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Dispatch From (Warehouse/Store)</label>
+                      <select id="dn-location" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm font-bold text-slate-700 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-hidden">
+                          ${locations.map(loc => `<option value="${loc.id}">${loc.name}</option>`).join('')}
+                      </select>
+                  </div>
+
+                  <div class="max-h-[300px] overflow-y-auto rounded-xl border border-slate-100 mb-4 bg-white">
+                      <table class="w-full text-left text-xs">
+                          <thead class="bg-slate-50 sticky top-0 z-10">
+                              <tr>
+                                  <th class="p-3 font-bold text-slate-400 uppercase tracking-widest">Item</th>
+                                  <th class="p-3 font-bold text-slate-400 uppercase tracking-widest text-center">Remaining</th>
+                                  <th class="p-3 font-bold text-slate-400 uppercase tracking-widest text-center">Stock</th>
+                                  <th class="p-3 font-bold text-slate-400 uppercase tracking-widest text-right">Deliver Now</th>
+                              </tr>
+                          </thead>
+                          <tbody class="divide-y divide-slate-50">
+                              ${items.map(item => `
+                                                        <tr class="${item.remaining <= 0 ? 'bg-slate-50/50 grayscale opacity-50' : ''}">
+                                                            <td class="p-3">
+                                                                <div class="font-bold text-slate-700 truncate max-w-[150px]">${item.name}</div>
+                                                                <div class="text-[9px] text-slate-400 uppercase mt-0.5">${item.variant || '-'}</div>
+                                                            </td>
+                                                            <td class="p-3 text-center font-bold text-slate-600">
+                                                                ${item.remaining}
+                                                            </td>
+                                                            <td class="p-3 text-center">
+                                                                <span class="badge ${item.stock >= item.remaining ? 'badge-success' : (item.stock > 0 ? 'badge-warning' : 'badge-danger')} text-[9px] scale-90">
+                                                                    ${item.stock}
+                                                                </span>
+                                                            </td>
+                                                            <td class="p-3 text-right">
+                                                                <input type="number"
+                                                                       class="delivery-qty w-16 px-2 py-1 rounded-lg border border-slate-200 text-right font-bold text-indigo-600 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
+                                                                       data-item-id="${item.id}"
+                                                                       value="${item.remaining}"
+                                                                       min="0"
+                                                                       max="${item.remaining}"
+                                                                       ${item.remaining <= 0 ? 'disabled' : ''} />
+                                                            </td>
+                                                        </tr>
+                                                    `).join('')}
+                          </tbody>
+                      </table>
+                  </div>
+                  <div class="flex justify-between items-center mb-6 px-1">
+                      <button type="button" onclick="autoFillRemaining()" class="text-[10px] font-black uppercase tracking-widest text-indigo-600 hover:text-indigo-800 transition-colors">
+                          <i class="fas fa-magic mr-1"></i> Ship Remaining
+                      </button>
+                      <button type="button" onclick="clearAllQuantities()" class="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-600 transition-colors">
+                          <i class="fas fa-times mr-1"></i> Clear
+                      </button>
+                  </div>
+                  <div class="grid grid-cols-2 gap-4 mb-4">
+                      <div class="space-y-1.5">
+                          <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Reference No.</label>
+                          <input type="text" id="dn-reference" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-hidden" placeholder="LPO / Job No.">
+                      </div>
+                      <div class="space-y-1.5">
+                          <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Vehicle No.</label>
+                          <input type="text" id="dn-vehicle" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-hidden" placeholder="AE-12345">
+                      </div>
+                  </div>
+                  <div class="space-y-1.5">
+                      <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Internal Notes</label>
+                      <textarea id="dn-notes" class="w-full p-4 rounded-xl border border-slate-200 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-hidden" rows="2" placeholder="Driver instructions etc..."></textarea>
+                  </div>
+              </div>
+          `;
 
       Swal.fire({
         title: 'Generate Delivery Note',
@@ -493,7 +593,7 @@
         showLoaderOnConfirm: true,
         preConfirm: () => {
           const quantities = [];
-          $('.delivery-qty').each(function() {
+          $('.delivery-qty').each(function () {
             const val = parseFloat($(this).val()) || 0;
             if (val > 0) {
               quantities.push({
@@ -541,7 +641,7 @@
     }
 
     function autoFillRemaining() {
-      $('.delivery-qty').each(function() {
+      $('.delivery-qty').each(function () {
         if (!$(this).prop('disabled')) {
           $(this).val($(this).attr('max'));
         }
@@ -549,7 +649,7 @@
     }
 
     function clearAllQuantities() {
-      $('.delivery-qty').each(function() {
+      $('.delivery-qty').each(function () {
         if (!$(this).prop('disabled')) {
           $(this).val(0);
         }
@@ -625,5 +725,77 @@
         }
       });
     }
+
+    // Mark as Fulfillment Button
+    document.getElementById('markFulfillmentBtn')?.addEventListener('click', function () {
+      Swal.fire({
+        title: 'Mark as Fulfillment?',
+        text: "Are you sure? If you click yes, the stock quantity will be updated according to the ordered items.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, mark as fulfilled',
+        confirmButtonColor: '#f59e0b',
+        cancelButtonText: 'Cancel',
+        showLoaderOnConfirm: true,
+        preConfirm: () => {
+          return $.post(
+            "{{ company_route('sales-orders.mark-as-fulfillment', ['sales_order' => $order->uuid]) }}", {
+            _token: "{{ csrf_token() }}"
+          }).catch(xhr => {
+            Swal.showValidationMessage(`Error: ${xhr.responseJSON?.message || 'Fulfillment failed'}`);
+          });
+        }
+      }).then((result) => {
+        if (result.isConfirmed && result.value.success) {
+          Swal.fire({
+            icon: 'success',
+            title: 'Fulfilled!',
+            text: result.value.message,
+            timer: 1500,
+            showConfirmButton: false
+          }).then(() => {
+            window.location.reload();
+          });
+        }
+      });
+    });
+
+    // Generate Invoice Button
+    document.getElementById('generateInvoiceBtn')?.addEventListener('click', function () {
+      const btn = this;
+      Swal.fire({
+        title: 'Generate Invoice?',
+        text: "This will create a draft invoice from this sales order.",
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, generate it',
+        confirmButtonColor: '#10b981',
+        showLoaderOnConfirm: true,
+        preConfirm: () => {
+          return $.post(
+            "{{ company_route('sales-orders.generate-invoice', ['sales_order' => $order->uuid]) }}", {
+            _token: "{{ csrf_token() }}"
+          }).catch(xhr => {
+            Swal.showValidationMessage(`Error: ${xhr.responseJSON?.message || 'Generation failed'}`);
+          });
+        }
+      }).then((result) => {
+        if (result.isConfirmed && result.value.success) {
+          Swal.fire({
+            icon: 'success',
+            title: 'Invoice Generated!',
+            text: result.value.message,
+            timer: 1500,
+            showConfirmButton: false
+          }).then(() => {
+            if (result.value.redirect_url) {
+              window.location.href = result.value.redirect_url;
+            } else {
+              window.location.reload();
+            }
+          });
+        }
+      });
+    });
   </script>
 @endsection

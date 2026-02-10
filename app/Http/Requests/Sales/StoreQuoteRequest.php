@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Sales;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreQuoteRequest extends FormRequest
 {
@@ -14,8 +15,16 @@ class StoreQuoteRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'bill_to' => ['required', 'string', 'exists:customers,uuid'],
-            'ship_to' => ['nullable', 'string', 'exists:customers,uuid'],
+            'bill_to' => [
+                'required',
+                'string',
+                Rule::exists('customers', 'uuid')->where('company_id', active_company_id()),
+            ],
+            'ship_to' => [
+                'nullable',
+                'string',
+                Rule::exists('customers', 'uuid')->where('company_id', active_company_id()),
+            ],
         ];
     }
 }

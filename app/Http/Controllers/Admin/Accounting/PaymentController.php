@@ -3,6 +3,10 @@
 namespace App\Http\Controllers\Admin\Accounting;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Accounting\ApplyPaymentRequest;
+use App\Http\Requests\Accounting\DeletePaymentAttachmentRequest;
+use App\Http\Requests\Accounting\StorePaymentRequest;
+use App\Http\Requests\Accounting\UpdatePaymentRequest;
 use App\Models\Accounting\Payment;
 use App\Models\Accounting\PaymentApplication;
 use App\Models\Accounting\PaymentMethod;
@@ -160,28 +164,9 @@ class PaymentController extends Controller
     /**
      * Store a newly created payment
      */
-    public function store(Company $company, Request $request)
+    public function store(Company $company, StorePaymentRequest $request)
     {
         $this->authorize('create', 'payments');
-
-        $request->validate([
-            'payment_method_id' => 'required|exists:payment_methods,id',
-            'currency_id' => 'required|exists:currencies,id',
-            'amount' => 'required|numeric|min:0.01',
-            'customer_id' => 'nullable|exists:customers,id',
-            'source' => 'required|in:WEB,POS,MANUAL,API',
-            'direction' => 'required|in:IN,OUT',
-            'paid_at' => 'required|date',
-            'reference' => 'nullable|string|max:255',
-            'description' => 'nullable|string|max:1000',
-            'exchange_rate' => 'nullable|numeric|min:0.00000001',
-            // Application fields (optional)
-            'apply_to_type' => 'nullable|in:order,invoice',
-            'apply_to_id' => 'nullable|integer',
-            'apply_amount' => 'nullable|numeric|min:0.01',
-            // Attachments
-            'attachments.*' => 'nullable|file|mimes:jpg,jpeg,png,gif,pdf,doc,docx|max:5120',
-        ]);
 
         $companyId = $company->id;
 
@@ -280,24 +265,11 @@ class PaymentController extends Controller
     /**
      * Update the specified payment
      */
-    public function update(Company $company, Request $request, Payment $payment)
+    public function update(Company $company, UpdatePaymentRequest $request, Payment $payment)
     {
         $this->authorize('edit', 'payments');
 
         $this->ensureCompanyAccess($payment);
-
-        $request->validate([
-            'payment_method_id' => 'required|exists:payment_methods,id',
-            'currency_id' => 'required|exists:currencies,id',
-            'amount' => 'required|numeric|min:0.01',
-            'customer_id' => 'nullable|exists:customers,id',
-            'paid_at' => 'required|date',
-            'reference' => 'nullable|string|max:255',
-            'description' => 'nullable|string|max:1000',
-            'exchange_rate' => 'nullable|numeric|min:0.00000001',
-            // Attachments
-            'attachments.*' => 'nullable|file|mimes:jpg,jpeg,png,gif,pdf,doc,docx|max:5120',
-        ]);
 
         $companyId = $company->id;
 
@@ -377,19 +349,11 @@ class PaymentController extends Controller
     /**
      * Apply payment to a document
      */
-    public function apply(Company $company, Request $request, Payment $payment)
+    public function apply(Company $company, ApplyPaymentRequest $request, Payment $payment)
     {
         $this->authorize('create', 'allocations');
 
         $this->ensureCompanyAccess($payment);
-
-        $request->validate([
-            'paymentable_type' => 'required|in:order,invoice',
-            'paymentable_id' => 'required|integer',
-            'amount' => 'required|numeric|min:0.01',
-            'exchange_rate' => 'nullable|numeric|min:0.00000001',
-            'notes' => 'nullable|string|max:500',
-        ]);
 
         try {
             $type = $request->paymentable_type === 'order' ? Order::class : \App\Models\Accounting\Invoice::class;
@@ -467,7 +431,7 @@ class PaymentController extends Controller
     /**
      * Delete an attachment from a payment
      */
-    public function deleteAttachment(Company $company, Payment $payment, Request $request)
+    public function deleteAttachment(Company $company, Payment $payment, DeletePaymentAttachmentRequest $request)
     {
         $this->authorize('edit', 'payments');
 
@@ -476,10 +440,6 @@ class PaymentController extends Controller
         if (!$payment->canBeEdited()) {
             return response()->json(['error' => 'Payment cannot be edited'], 403);
         }
-
-        $request->validate([
-            'attachment_id' => 'required|integer',
-        ]);
 
         $attachment = \App\Models\Attachment::where('id', $request->attachment_id)
             ->where('attachable_type', Payment::class)

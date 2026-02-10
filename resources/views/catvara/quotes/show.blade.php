@@ -11,13 +11,13 @@
           <h2 class="text-3xl font-bold text-slate-800 tracking-tight">Quote #{{ $quote->quote_number }}</h2>
           @php
             $statusCode = $quote->status->code ?? 'DRAFT';
-            $statusColor = match($statusCode) {
-              'DRAFT' => 'badge-warning',
-              'SENT' => 'badge-info',
-              'ACCEPTED' => 'badge-success',
-              'REJECTED', 'EXPIRED' => 'badge-danger',
-              'CONVERTED' => 'badge-primary',
-              default => 'badge-secondary'
+            $statusColor = match ($statusCode) {
+                'DRAFT' => 'badge-warning',
+                'SENT' => 'badge-info',
+                'ACCEPTED' => 'badge-success',
+                'REJECTED', 'EXPIRED' => 'badge-danger',
+                'CONVERTED' => 'badge-primary',
+                default => 'badge-secondary',
             };
           @endphp
           <span class="badge {{ $statusColor }}">
@@ -30,37 +30,32 @@
       <div class="flex items-center gap-3 flex-wrap">
         @if (!$quote->order_id && in_array($statusCode, ['DRAFT', 'SENT', 'ACCEPTED']))
           @if ($statusCode !== 'SENT')
-            <button type="button" id="sendQuoteBtn"
-              class="inline-flex items-center px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 font-semibold text-sm hover:bg-slate-50 hover:border-slate-300 transition-all shadow-sm">
+            <button type="button" id="sendQuoteBtn" class="btn btn-white">
               <i class="fas fa-paper-plane mr-2 text-blue-500"></i> Send Quote
             </button>
           @endif
 
           <button type="button" id="generateOrderBtn"
-            class="inline-flex items-center px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 text-white font-bold text-sm hover:from-emerald-600 hover:to-emerald-700 transition-all shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40">
+            class="btn btn-primary bg-linear-to-r from-emerald-500 to-emerald-600 border-none shadow-lg shadow-emerald-500/25">
             <i class="fas fa-file-invoice mr-2"></i> Generate Order
           </button>
         @endif
 
         @if ($quote->order_id)
-          <a href="{{ company_route('sales-orders.show', ['sales_order' => $quote->order_id]) }}"
-            class="inline-flex items-center px-4 py-2.5 rounded-xl bg-brand-600 text-white font-semibold text-sm hover:bg-brand-700 transition-all shadow-sm">
+          <a href="{{ company_route('sales-orders.show', ['sales_order' => $quote->order_id]) }}" class="btn btn-primary">
             <i class="fas fa-external-link-alt mr-2"></i> View Order
           </a>
         @endif
 
         @if ($statusCode === 'DRAFT')
-          <a href="{{ company_route('quotes.edit', ['quote' => $quote->uuid]) }}"
-            class="inline-flex items-center px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 font-semibold text-sm hover:bg-slate-50 hover:border-slate-300 transition-all shadow-sm">
+          <a href="{{ company_route('quotes.edit', ['quote' => $quote->uuid]) }}" class="btn btn-white">
             <i class="fas fa-edit mr-2 text-amber-500"></i> Edit
           </a>
         @endif
-        <a href="{{ company_route('quotes.print', ['quote' => $quote->uuid]) }}" target="_blank"
-          class="inline-flex items-center px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 font-semibold text-sm hover:bg-slate-50 hover:border-slate-300 transition-all shadow-sm">
+        <a href="{{ company_route('quotes.print', ['quote' => $quote->uuid]) }}" target="_blank" class="btn btn-white">
           <i class="fas fa-print mr-2 text-slate-500"></i> Print
         </a>
-        <a href="{{ company_route('quotes.index') }}"
-          class="inline-flex items-center px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 font-semibold text-sm hover:bg-slate-50 hover:border-slate-300 transition-all shadow-sm">
+        <a href="{{ company_route('quotes.index') }}" class="btn btn-white">
           <i class="fas fa-arrow-left mr-2 text-slate-500"></i> Back
         </a>
       </div>
@@ -89,7 +84,8 @@
           </div>
           <div>
             <p class="text-amber-800 font-bold">Quote Expiring Soon</p>
-            <p class="text-amber-600 text-sm">This quote expires in {{ $daysLeft }} day(s) on {{ $quote->valid_until->format('M d, Y') }}.</p>
+            <p class="text-amber-600 text-sm">This quote expires in {{ $daysLeft }} day(s) on
+              {{ $quote->valid_until->format('M d, Y') }}.</p>
           </div>
         </div>
       @endif
@@ -167,7 +163,8 @@
           </div>
           <div class="flex justify-between items-center text-sm">
             <span class="text-slate-400 font-medium">Valid Until</span>
-            <span class="font-bold {{ ($quote->valid_until && $quote->valid_until->isPast()) ? 'text-red-500' : 'text-green-500' }}">
+            <span
+              class="font-bold {{ $quote->valid_until && $quote->valid_until->isPast() ? 'text-red-500' : 'text-green-500' }}">
               {{ $quote->valid_until ? $quote->valid_until->format('M d, Y') : 'N/A' }}
             </span>
           </div>
@@ -179,7 +176,7 @@
             <div class="flex justify-between items-center text-sm">
               <span class="text-slate-400 font-medium">Converted to Order</span>
               <a href="{{ company_route('sales-orders.show', ['sales_order' => $quote->order_id]) }}"
-                 class="font-bold text-brand-500 hover:text-brand-600">
+                class="font-bold text-brand-500 hover:text-brand-600">
                 {{ $quote->order->order_number ?? 'View Order' }}
               </a>
             </div>
@@ -187,6 +184,59 @@
         </div>
       </div>
     </div>
+
+    <!-- Bank Details -->
+    @php
+      $companyBank = \App\Models\Company\CompanyBank::where('company_id', $quote->company_id)
+          ->where('is_active', true)
+          ->first();
+    @endphp
+    @if ($companyBank)
+      <div class="card p-6 border-slate-100 shadow-soft relative overflow-hidden">
+        <div class="absolute top-0 left-0 w-1 h-full bg-indigo-400"></div>
+        <div class="flex items-center gap-3 mb-6">
+          <div class="h-10 w-10 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-500 shadow-sm">
+            <i class="fas fa-university"></i>
+          </div>
+          <div>
+            <h3 class="font-bold text-slate-800">Bank Details</h3>
+            <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Payment Information</p>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+          <div class="bg-slate-50 rounded-xl p-4">
+            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Bank Name</p>
+            <p class="font-bold text-slate-800">{{ $companyBank->bank_name }}</p>
+          </div>
+          <div class="bg-slate-50 rounded-xl p-4">
+            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Account Name</p>
+            <p class="font-bold text-slate-800">{{ $companyBank->account_name }}</p>
+          </div>
+          <div class="bg-slate-50 rounded-xl p-4">
+            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Account Number</p>
+            <p class="font-bold text-slate-800 font-mono">{{ $companyBank->account_number }}</p>
+          </div>
+          @if ($companyBank->iban)
+            <div class="bg-indigo-50 rounded-xl p-4 md:col-span-2">
+              <p class="text-[10px] font-bold text-indigo-400 uppercase tracking-widest mb-1">IBAN</p>
+              <p class="font-bold text-indigo-700 font-mono text-sm tracking-wide">{{ $companyBank->iban }}</p>
+            </div>
+          @endif
+          @if ($companyBank->swift_code)
+            <div class="bg-amber-50 rounded-xl p-4">
+              <p class="text-[10px] font-bold text-amber-500 uppercase tracking-widest mb-1">SWIFT / BIC</p>
+              <p class="font-bold text-amber-700 font-mono">{{ $companyBank->swift_code }}</p>
+            </div>
+          @endif
+          @if ($companyBank->branch)
+            <div class="bg-slate-50 rounded-xl p-4">
+              <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Branch</p>
+              <p class="font-bold text-slate-800">{{ $companyBank->branch }}</p>
+            </div>
+          @endif
+        </div>
+      </div>
+    @endif
 
     <!-- Items Table -->
     <div class="card bg-white border-slate-100 shadow-soft overflow-hidden">
@@ -273,99 +323,100 @@
 @endsection
 
 @push('scripts')
-<script>
-  $(document).ready(function() {
-    // Send Quote
-    $('#sendQuoteBtn').on('click', function() {
-      Swal.fire({
-        title: 'Send Quote?',
-        text: 'This will mark the quote as sent to the customer.',
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonText: 'Yes, Send It',
-        cancelButtonText: 'Cancel',
-        confirmButtonColor: '#3b82f6'
-      }).then((result) => {
-        if (result.isConfirmed) {
-          $.ajax({
-            url: "{{ company_route('quotes.update', ['quote' => $quote->uuid]) }}",
-            method: 'POST',
-            data: {
-              _method: 'PUT',
-              _token: $('meta[name="csrf-token"]').attr('content'),
-              action: 'send'
-            },
-            success: function(response) {
-              Swal.fire({
-                icon: 'success',
-                title: 'Quote Sent!',
-                text: 'The quote status has been updated.',
-                timer: 2000,
-                showConfirmButton: false
-              }).then(() => {
-                window.location.reload();
-              });
-            },
-            error: function(xhr) {
-              Swal.fire('Error', 'Failed to update quote status.', 'error');
-            }
-          });
-        }
+  <script>
+    $(document).ready(function() {
+      // Send Quote
+      $('#sendQuoteBtn').on('click', function() {
+        Swal.fire({
+          title: 'Send Quote?',
+          text: 'This will mark the quote as sent to the customer.',
+          icon: 'question',
+          showCancelButton: true,
+          confirmButtonText: 'Yes, Send It',
+          cancelButtonText: 'Cancel',
+          confirmButtonColor: '#3b82f6'
+        }).then((result) => {
+          if (result.isConfirmed) {
+            $.ajax({
+              url: "{{ company_route('quotes.update', ['quote' => $quote->uuid]) }}",
+              method: 'POST',
+              data: {
+                _method: 'PUT',
+                _token: $('meta[name="csrf-token"]').attr('content'),
+                action: 'send'
+              },
+              success: function(response) {
+                Swal.fire({
+                  icon: 'success',
+                  title: 'Quote Sent!',
+                  text: 'The quote status has been updated.',
+                  timer: 2000,
+                  showConfirmButton: false
+                }).then(() => {
+                  window.location.reload();
+                });
+              },
+              error: function(xhr) {
+                Swal.fire('Error', 'Failed to update quote status.', 'error');
+              }
+            });
+          }
+        });
       });
-    });
 
-    // Generate Order
-    $('#generateOrderBtn').on('click', function() {
-      const btn = $(this);
+      // Generate Order
+      $('#generateOrderBtn').on('click', function() {
+        const btn = $(this);
 
-      Swal.fire({
-        title: 'Generate Order from Quote?',
-        html: `
+        Swal.fire({
+          title: 'Generate Order from Quote?',
+          html: `
           <p class="text-sm text-slate-600 mb-3">This will create a new sales order with all the items and details from this quote.</p>
           <p class="text-sm text-slate-500">The quote will be marked as <strong>Converted</strong>.</p>
         `,
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonText: '<i class="fas fa-file-invoice mr-2"></i> Generate Order',
-        cancelButtonText: 'Cancel',
-        confirmButtonColor: '#10b981'
-      }).then((result) => {
-        if (result.isConfirmed) {
-          btn.prop('disabled', true).html('<i class="fas fa-circle-notch fa-spin mr-2"></i> Generating...');
+          icon: 'question',
+          showCancelButton: true,
+          confirmButtonText: '<i class="fas fa-file-invoice mr-2"></i> Generate Order',
+          cancelButtonText: 'Cancel',
+          confirmButtonColor: '#10b981'
+        }).then((result) => {
+          if (result.isConfirmed) {
+            btn.prop('disabled', true).html('<i class="fas fa-circle-notch fa-spin mr-2"></i> Generating...');
 
-          $.ajax({
-            url: "{{ company_route('quotes.generate-order', ['quote' => $quote->id]) }}",
-            method: 'POST',
-            data: {
-              _token: $('meta[name="csrf-token"]').attr('content')
-            },
-            success: function(response) {
-              if (response.success) {
-                Swal.fire({
-                  icon: 'success',
-                  title: 'Order Created!',
-                  text: 'The sales order has been generated successfully.',
-                  confirmButtonText: 'View Order',
-                  showCancelButton: true,
-                  cancelButtonText: 'Stay Here'
-                }).then((result) => {
-                  if (result.isConfirmed && response.redirect_url) {
-                    window.location.href = response.redirect_url;
-                  } else {
-                    window.location.reload();
-                  }
-                });
+            $.ajax({
+              url: "{{ company_route('quotes.generate-order', ['quote' => $quote->id]) }}",
+              method: 'POST',
+              data: {
+                _token: $('meta[name="csrf-token"]').attr('content')
+              },
+              success: function(response) {
+                if (response.success) {
+                  Swal.fire({
+                    icon: 'success',
+                    title: 'Order Created!',
+                    text: 'The sales order has been generated successfully.',
+                    confirmButtonText: 'View Order',
+                    showCancelButton: true,
+                    cancelButtonText: 'Stay Here'
+                  }).then((result) => {
+                    if (result.isConfirmed && response.redirect_url) {
+                      window.location.href = response.redirect_url;
+                    } else {
+                      window.location.reload();
+                    }
+                  });
+                }
+              },
+              error: function(xhr) {
+                btn.prop('disabled', false).html(
+                  '<i class="fas fa-file-invoice mr-2"></i> Generate Order');
+                const message = xhr.responseJSON?.message || 'Failed to generate order.';
+                Swal.fire('Error', message, 'error');
               }
-            },
-            error: function(xhr) {
-              btn.prop('disabled', false).html('<i class="fas fa-file-invoice mr-2"></i> Generate Order');
-              const message = xhr.responseJSON?.message || 'Failed to generate order.';
-              Swal.fire('Error', message, 'error');
-            }
-          });
-        }
+            });
+          }
+        });
       });
     });
-  });
-</script>
+  </script>
 @endpush

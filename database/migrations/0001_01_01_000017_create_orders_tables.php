@@ -73,6 +73,7 @@ return new class extends Migration
             $table->unsignedBigInteger('currency_id');
             $table->unsignedBigInteger('base_currency_id')->nullable();
             $table->decimal('fx_rate', 18, 10)->default(1);
+            $table->unsignedBigInteger('tax_group_id')->nullable();
 
             /**
              * Payment term snapshot (CRITICAL)
@@ -93,7 +94,11 @@ return new class extends Migration
 
             $table->decimal('tax_total', 18, 6)->default(0);
             $table->decimal('rounding_total', 18, 6)->default(0);
+            $table->decimal('global_discount_percent', 5, 2)->default(0);
+            $table->decimal('global_discount_amount', 18, 6)->default(0);
             $table->decimal('grand_total', 18, 6)->default(0);
+
+            $table->boolean('is_fulfilled')->default(false);
 
             /**
              * Payment snapshot (optional caching, can be recalculated from payments later)
@@ -150,6 +155,7 @@ return new class extends Migration
             $table->decimal('discount_amount', 18, 6)->default(0);
             $table->decimal('discount_percent', 5, 2)->default(0);
             $table->decimal('line_discount_total', 18, 6)->default(0);
+            $table->unsignedBigInteger('tax_group_id')->nullable();
 
             /**
              * Tax snapshot
@@ -196,6 +202,9 @@ return new class extends Migration
             $table->foreign('base_currency_id', 'order_base_currency_fk')
                 ->references('id')->on('currencies')->nullOnDelete();
 
+            $table->foreign('tax_group_id', 'order_tax_group_fk')
+                ->references('id')->on('tax_groups')->nullOnDelete();
+
             $table->foreign('payment_term_id', 'order_payment_term_fk')
                 ->references('id')->on('payment_terms')->nullOnDelete();
 
@@ -209,6 +218,9 @@ return new class extends Migration
 
             $table->foreign('product_variant_id', 'oi_variant_fk')
                 ->references('id')->on('product_variants')->nullOnDelete();
+
+            $table->foreign('tax_group_id', 'oi_tax_group_fk')
+                ->references('id')->on('tax_groups')->nullOnDelete();
         });
     }
 
@@ -217,6 +229,7 @@ return new class extends Migration
         Schema::table('order_items', function (Blueprint $table) {
             $table->dropForeign('oi_order_fk');
             $table->dropForeign('oi_variant_fk');
+            $table->dropForeign('oi_tax_group_fk');
         });
 
         Schema::table('orders', function (Blueprint $table) {
@@ -227,6 +240,7 @@ return new class extends Migration
             $table->dropForeign('order_payment_status_fk');
             $table->dropForeign('order_currency_fk');
             $table->dropForeign('order_base_currency_fk');
+            $table->dropForeign('order_tax_group_fk');
             $table->dropForeign('order_payment_term_fk');
             $table->dropForeign('order_user_fk');
         });

@@ -18,6 +18,7 @@ use App\Models\Inventory\Store;
 use App\Models\Inventory\Warehouse;
 use App\Models\Inventory\InventoryLocation;
 use App\Models\Auth\Role;
+use App\Models\Company\DocumentSequence;
 
 class VapeShopSetupSeeder extends Seeder
 {
@@ -94,6 +95,7 @@ class VapeShopSetupSeeder extends Seeder
                 'legal_name' => 'Vape Shop Distro UK',
                 'website_url' => 'https://vapeshopdistro.co.uk',
                 'company_status_id' => $activeStatus->id,
+                'base_currency_id' => $gbp->id,
             ]
         );
 
@@ -161,6 +163,31 @@ class VapeShopSetupSeeder extends Seeder
             ['company_id' => $company->id, 'slug' => 'admin'],
             ['name' => 'Admin', 'is_active' => true]
         );
+
+        // Create Document Sequences for all document types
+        $currentYear = now()->year;
+        $documentSequences = [
+            ['document_type' => 'QUOTE', 'channel' => 'SALES', 'prefix' => 'QT-', 'year' => $currentYear],
+            ['document_type' => 'ORDER', 'channel' => 'SALES', 'prefix' => 'SO-', 'year' => $currentYear],
+            ['document_type' => 'INVOICE', 'channel' => 'SALES', 'prefix' => 'INV-', 'year' => $currentYear],
+            ['document_type' => 'DELIVERY_NOTE', 'channel' => 'SALES', 'prefix' => 'DN-', 'year' => null],
+            ['document_type' => 'CUSTOMER', 'channel' => null, 'prefix' => 'C', 'year' => null],
+        ];
+
+        foreach ($documentSequences as $seq) {
+            DocumentSequence::updateOrCreate(
+                [
+                    'company_id' => $company->id,
+                    'document_type' => $seq['document_type'],
+                    'channel' => $seq['channel'],
+                    'year' => $seq['year'],
+                ],
+                [
+                    'prefix' => $seq['prefix'],
+                    'current_number' => 0,
+                ]
+            );
+        }
 
         /**
          * 4️⃣ INVENTORY LOCATIONS (Stores & Warehouses)

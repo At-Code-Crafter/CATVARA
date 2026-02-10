@@ -79,12 +79,4 @@ class Customer extends Model
         return $this->hasMany(\App\Models\Sales\Order::class);
     }
 
-    public function generateCustomerCode()
-    {
-        return \App\Models\Company\DocumentSequence::getNextCode(
-            $this->company_id,
-            'CUSTOMER',
-            'C'
-        );
-    }
 }

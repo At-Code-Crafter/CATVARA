@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Route;
  * - Keep this file in your autoload "files" (composer.json) and run: composer dump-autoload
  * - This helper set is intentionally simple and safe (no extra engineering).
  */
-if (! function_exists('setting')) {
+if (!function_exists('setting')) {
     function setting($key, $default = null)
     {
         // Keep your current placeholder logic as-is.
@@ -20,7 +20,7 @@ if (! function_exists('setting')) {
 /**
  * Current selected company id (from session)
  */
-if (! function_exists('active_company_id')) {
+if (!function_exists('active_company_id')) {
     function active_company_id(): ?int
     {
         $id = session('current_company_id');
@@ -32,7 +32,7 @@ if (! function_exists('active_company_id')) {
 /**
  * Whether a company is selected
  */
-if (! function_exists('company_selected')) {
+if (!function_exists('company_selected')) {
     function company_selected(): bool
     {
         return (bool) active_company_id();
@@ -42,7 +42,7 @@ if (! function_exists('company_selected')) {
 /**
  * Selected company model (minimal columns; avoids heavy loads)
  */
-if (! function_exists('active_company')) {
+if (!function_exists('active_company')) {
     function active_company(): ?Company
     {
         static $memo = null;
@@ -55,7 +55,7 @@ if (! function_exists('active_company')) {
         $loaded = true;
 
         $id = active_company_id();
-        if (! $id) {
+        if (!$id) {
             return $memo = null;
         }
 
@@ -67,7 +67,7 @@ if (! function_exists('active_company')) {
 /**
  * Whether current user can switch company (has > 1 company)
  */
-if (! function_exists('can_switch_company')) {
+if (!function_exists('can_switch_company')) {
     function can_switch_company(): bool
     {
         static $memo = null;
@@ -76,7 +76,7 @@ if (! function_exists('can_switch_company')) {
         }
 
         $user = auth()->user();
-        if (! $user) {
+        if (!$user) {
             return $memo = false;
         }
 
@@ -87,7 +87,7 @@ if (! function_exists('can_switch_company')) {
 /**
  * Get all companies for current user (for dropdowns in footer/header if needed)
  */
-if (! function_exists('my_companies')) {
+if (!function_exists('my_companies')) {
     function my_companies()
     {
         static $memo = null;
@@ -100,7 +100,7 @@ if (! function_exists('my_companies')) {
         $loaded = true;
 
         $user = auth()->user();
-        if (! $user) {
+        if (!$user) {
             return $memo = collect();
         }
 
@@ -120,15 +120,15 @@ if (! function_exists('my_companies')) {
  *  company_route('company.dashboard')  // auto injects company uuid
  *  company_route('company.settings.roles.index')
  */
-if (! function_exists('company_route')) {
+if (!function_exists('company_route')) {
     function company_route(string $name, array $params = [], string $fallback = '#'): string
     {
-        if (! Route::has($name)) {
+        if (!Route::has($name)) {
             return $fallback;
         }
 
         $company = active_company();
-        if (! $company) {
+        if (!$company) {
             return $fallback;
         }
 
@@ -139,7 +139,7 @@ if (! function_exists('company_route')) {
 /**
  * Safe route generator for non-company routes (settings/auth/etc)
  */
-if (! function_exists('safe_route')) {
+if (!function_exists('safe_route')) {
     function safe_route(string $name, array $params = [], string $fallback = '#'): string
     {
         return Route::has($name) ? route($name, $params) : $fallback;
@@ -149,17 +149,17 @@ if (! function_exists('safe_route')) {
 /**
  * Convenience: active company name/code for UI
  */
-if (! function_exists('active_company_label')) {
+if (!function_exists('active_company_label')) {
     function active_company_label(string $fallback = 'No company selected'): string
     {
         $c = active_company();
-        if (! $c) {
+        if (!$c) {
             return $fallback;
         }
 
         $code = $c->code ? " ({$c->code})" : '';
 
-        return $c->name.$code;
+        return $c->name . $code;
     }
 }
 
@@ -170,7 +170,7 @@ if (! function_exists('active_company_label')) {
  * Example: db_raw("SUM(order_items.quantity)") -> DB::raw("SUM(prefix_order_items.quantity)")
  * Note: This uses a dot heuristic. It may prefix aliases if you use them with dots.
  */
-if (! function_exists('db_raw')) {
+if (!function_exists('db_raw')) {
     function db_raw(string $expression)
     {
         $prefix = \Illuminate\Support\Facades\DB::getTablePrefix();
@@ -190,12 +190,37 @@ if (! function_exists('db_raw')) {
 
             // If the table is already prefixed, don't prefix again.
             if (str_starts_with($table, $prefix)) {
-                return $table.$separator;
+                return $table . $separator;
             }
 
-            return $prefix.$table.$separator;
+            return $prefix . $table . $separator;
         }, $expression);
 
         return \Illuminate\Support\Facades\DB::raw($prefixed);
+    }
+}
+
+/**
+ * Robust money formatter
+ */
+if (!function_exists('money')) {
+    function money($amount, $currency = 'USD')
+    {
+        $amount = (float) $amount;
+
+        // Simple but effective formatting
+        // In a real app, this could use NumberFormatter for locale-specific display
+        return ($currency ?: 'USD') . ' ' . number_format($amount, 2);
+    }
+}
+/**
+ * Get public URL for a storage path
+ */
+if (!function_exists('storage_url')) {
+    function storage_url($path)
+    {
+        if (!$path)
+            return null;
+        return asset('storage/' . $path);
     }
 }

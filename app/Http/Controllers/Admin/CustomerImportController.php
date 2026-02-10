@@ -4,12 +4,14 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Imports\Customer\CustomerImport;
+use App\Http\Requests\Admin\Customer\CustomerImportUploadRequest;
+use App\Http\Requests\Admin\Customer\CustomerImportPreviewRequest;
+use App\Http\Requests\Admin\Customer\CustomerImportProcessRequest;
 use App\Models\Accounting\PaymentTerm;
 use App\Models\Common\Address;
 use App\Models\Common\Country;
 use App\Repositories\Customer\CustomerRepository;
 use App\Services\Customer\CustomerService;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Facades\Excel;
@@ -36,13 +38,9 @@ class CustomerImportController extends Controller
         return view('catvara.customers.import', compact('paymentTerms', 'countries'));
     }
 
-    public function upload(Request $request)
+    public function upload(CustomerImportUploadRequest $request)
     {
         try {
-            $request->validate([
-                'file' => 'required|mimes:xlsx,xls,csv|max:10240',
-            ]);
-
             $path = $request->file('file')->store('temp_imports');
             $absolutePath = storage_path('app/private/'.$path);
 
@@ -75,13 +73,8 @@ class CustomerImportController extends Controller
         }
     }
 
-    public function preview(Request $request)
+    public function preview(CustomerImportPreviewRequest $request)
     {
-        $request->validate([
-            'temp_path' => 'required|string',
-            'sheet_index' => 'required|integer',
-        ]);
-
         $absolutePath = storage_path('app/private/'.$request->temp_path);
         $sheetIndex = $request->sheet_index;
 
@@ -213,13 +206,8 @@ class CustomerImportController extends Controller
         return $mapping;
     }
 
-    public function process(Request $request)
+    public function process(CustomerImportProcessRequest $request)
     {
-        $request->validate([
-            'temp_path' => 'required|string',
-            'sheet_index' => 'required|integer',
-        ]);
-
         $companyId = $request->company->id;
         $absolutePath = storage_path('app/private/'.$request->temp_path);
         $data = Excel::toArray(new CustomerImport($companyId), $absolutePath)[$request->sheet_index];

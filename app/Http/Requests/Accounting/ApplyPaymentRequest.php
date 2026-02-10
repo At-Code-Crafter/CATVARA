@@ -23,6 +23,7 @@ class ApplyPaymentRequest extends FormRequest
             'paymentable_type' => 'required|in:order,invoice',
             'paymentable_id' => 'required|integer',
             'amount' => 'required|numeric|min:0.01|max:999999999.999999',
+            'exchange_rate' => 'nullable|numeric|min:0.00000001|max:999999.99999999',
             'notes' => 'nullable|string|max:500',
         ];
     }

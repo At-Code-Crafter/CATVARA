@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Admin\Settings;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\Settings\PriceChannelStoreRequest;
+use App\Http\Requests\Admin\Settings\PriceChannelUpdateRequest;
 use App\Models\Pricing\PriceChannel;
 use Illuminate\Http\Request;
 use Yajra\DataTables\Facades\DataTables;
@@ -55,15 +57,10 @@ class PriceChannelController extends Controller
     /**
      * Store a newly created price channel.
      */
-    public function store(Request $request)
+    public function store(PriceChannelStoreRequest $request)
     {
         $this->authorize('create', 'price-channels');
-
-        $validated = $request->validate([
-            'code' => 'required|string|max:50|unique:price_channels,code|alpha_dash:ascii',
-            'name' => 'required|string|max:255',
-            'is_active' => 'boolean',
-        ]);
+        $validated = $request->validated();
 
         PriceChannel::create([
             'code' => strtoupper($validated['code']),
@@ -90,15 +87,10 @@ class PriceChannelController extends Controller
     /**
      * Update the specified price channel.
      */
-    public function update(Request $request, PriceChannel $priceChannel)
+    public function update(PriceChannelUpdateRequest $request, PriceChannel $priceChannel)
     {
         $this->authorize('edit', 'price-channels');
-
-        $validated = $request->validate([
-            'code' => 'required|string|max:50|alpha_dash:ascii|unique:price_channels,code,'.$priceChannel->id,
-            'name' => 'required|string|max:255',
-            'is_active' => 'boolean',
-        ]);
+        $validated = $request->validated();
 
         $priceChannel->update([
             'code' => strtoupper($validated['code']),

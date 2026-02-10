@@ -17,6 +17,7 @@ class DatabaseSeeder extends Seeder
         $this->call(OrderSeeder::class);
         $this->call(PaymentSeeder::class);
         $this->call(TaxGroupSeeder::class);
+        $this->call(QuoteSeeder::class);
 
         // 2. Interactive Application Setup (Company & Users)
         $this->command->call('app:setup-application');

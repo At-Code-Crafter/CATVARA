@@ -100,7 +100,7 @@ class SalesOrderController extends Controller
             })
             ->addColumn('actions', function ($order) {
                 $editUrl = company_route('sales-orders.edit', ['sales_order' => $order->uuid]);
-                $showUrl = company_route('sales-orders.show', ['sales_order' => $order->id]);
+                $showUrl = company_route('sales-orders.show', ['sales_order' => $order->uuid]);
 
                 $compact['showUrl'] = $showUrl;
                 $compact['editUrl'] = $editUrl;
@@ -562,6 +562,24 @@ class SalesOrderController extends Controller
         return view('catvara.sales-orders.print', compact('order'));
     }
 
+    public function printProforma(Company $company, $uuid)
+    {
+        $order = Order::where('company_id', $company->id)
+            ->where('uuid', $uuid)
+            ->with([
+                'items.productVariant.product',
+                'customer',
+                'billingAddress',
+                'shippingAddress',
+                'company',
+                'currency',
+                'paymentTerm',
+            ])
+            ->firstOrFail();
+
+        return view('catvara.sales-orders.print-proforma', compact('order'));
+    }
+
     /* ===================== HELPERS ===================== */
     // Helper methods moved to SalesDocumentService
 
@@ -699,29 +717,40 @@ class SalesOrderController extends Controller
             ]);
 
             // 3. Inventory Integration & Safety Check
+            // Skip inventory posting if order is already marked as fulfilled
             $dn->load('items.orderItem');
             $anyFulfilled = false;
 
-            foreach ($dn->items as $dnItem) {
-                $orderItem = $dnItem->orderItem;
-                if ($orderItem && $orderItem->product_variant_id) {
-                    try {
-                        $this->inventoryService->postMovement([
-                            'company_id' => $company->id,
-                            'inventory_location_id' => $dn->inventory_location_id,
-                            'product_variant_id' => $orderItem->product_variant_id,
-                            'reason_code' => 'SALE',
-                            'quantity' => $dnItem->quantity,
-                            'reference_type' => 'delivery_note',
-                            'reference_id' => $dn->id,
-                            'performed_by' => Auth::id(),
-                        ]);
-                    } catch (\Exception $e) {
-                        throw new \Exception("Insufficient stock for item: {$orderItem->product_name}");
+            if (!$order->is_fulfilled) {
+                foreach ($dn->items as $dnItem) {
+                    $orderItem = $dnItem->orderItem;
+                    if ($orderItem && $orderItem->product_variant_id) {
+                        try {
+                            $this->inventoryService->postMovement([
+                                'company_id' => $company->id,
+                                'inventory_location_id' => $dn->inventory_location_id,
+                                'product_variant_id' => $orderItem->product_variant_id,
+                                'reason_code' => 'SALE',
+                                'quantity' => $dnItem->quantity,
+                                'reference_type' => 'delivery_note',
+                                'reference_id' => $dn->id,
+                                'performed_by' => Auth::id(),
+                            ]);
+                        } catch (\Exception $e) {
+                            throw new \Exception("Insufficient stock for item: {$orderItem->product_name}");
+                        }
+                    }
+                    if ($dnItem->quantity > 0) {
+                        $anyFulfilled = true;
                     }
                 }
-                if ($dnItem->quantity > 0) {
-                    $anyFulfilled = true;
+            } else {
+                // Order already fulfilled, just check if any items were selected
+                foreach ($dn->items as $dnItem) {
+                    if ($dnItem->quantity > 0) {
+                        $anyFulfilled = true;
+                        break;
+                    }
                 }
             }
 
@@ -729,13 +758,16 @@ class SalesOrderController extends Controller
                 throw new \Exception('No items were selected for delivery or they are already fully delivered.');
             }
 
-            // Sync order status
+            // Sync order status and check if fully fulfilled
+            $order->load('items'); // Reload to get updated fulfilled_quantity
             $totalOrdered = $order->items->sum('quantity');
             $totalFulfilled = $order->items->sum('fulfilled_quantity');
 
             $statusCode = 'CONFIRMED';
-            if ($totalFulfilled >= $totalOrdered) {
+            $isFullyFulfilled = false;
+            if ($totalFulfilled >= $totalOrdered && $totalOrdered > 0) {
                 $statusCode = 'FULFILLED';
+                $isFullyFulfilled = true;
             } elseif ($totalFulfilled > 0) {
                 $statusCode = 'PARTIALLY_FULFILLED';
             }
@@ -743,8 +775,14 @@ class SalesOrderController extends Controller
             $status = OrderStatus::where('code', $statusCode)->first();
             if ($status && $order->status_id !== $status->id) {
                 $order->status_id = $status->id;
-                $order->save();
             }
+
+            // Auto-mark as fulfilled if all items are delivered
+            if ($isFullyFulfilled && !$order->is_fulfilled) {
+                $order->is_fulfilled = true;
+            }
+
+            $order->save();
 
             return response()->json([
                 'ok' => true,
@@ -768,6 +806,21 @@ class SalesOrderController extends Controller
             ->firstOrFail();
 
         return view('catvara.sales-orders.delivery-note', compact('dn'));
+    }
+
+    public function printLabel(Company $company, string $delivery_note)
+    {
+        $dn = DeliveryNote::where('company_id', $company->id)
+            ->where('uuid', $delivery_note)
+            ->with([
+                'order.customer',
+                'order.shippingAddress.country',
+                'order.company',
+                'items.orderItem',
+            ])
+            ->firstOrFail();
+
+        return view('catvara.sales-orders.print-label', compact('dn'));
     }
 
     /* Numbering handled by DeliveryNoteService */
@@ -835,6 +888,66 @@ class SalesOrderController extends Controller
             return response()->json([
                 'ok' => true,
                 'message' => 'Delivery Note deleted and quantities restored.',
+            ]);
+        });
+    }
+
+    /**
+     * Mark an order as fulfilled (updates stock without creating delivery note)
+     */
+    public function markAsFulfillment(Request $request, Company $company, string $sales_order)
+    {
+        $order = Order::where('company_id', $company->id)
+            ->where('uuid', $sales_order)
+            ->with(['items'])
+            ->firstOrFail();
+
+        if ($order->is_fulfilled) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Order is already marked as fulfilled.',
+            ], 400);
+        }
+
+        // Get default inventory location
+        $inventoryLocation = InventoryLocation::where('company_id', $company->id)->first();
+        if (!$inventoryLocation) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No inventory location found. Please set up an inventory location first.',
+            ], 400);
+        }
+
+        return DB::transaction(function () use ($order, $company, $inventoryLocation) {
+            // Update stock for each item - only for PENDING quantity (not already delivered)
+            foreach ($order->items as $orderItem) {
+                // Calculate pending quantity: order qty - already fulfilled via delivery notes
+                $pendingQty = $orderItem->quantity - ($orderItem->fulfilled_quantity ?? 0);
+
+                if ($orderItem->product_variant_id && $pendingQty > 0) {
+                    try {
+                        $this->inventoryService->postMovement([
+                            'company_id' => $company->id,
+                            'inventory_location_id' => $inventoryLocation->id,
+                            'product_variant_id' => $orderItem->product_variant_id,
+                            'reason_code' => 'SALE',
+                            'quantity' => $pendingQty,
+                            'reference_type' => 'order_fulfillment',
+                            'reference_id' => $order->id,
+                            'performed_by' => Auth::id(),
+                        ]);
+                    } catch (\Exception $e) {
+                        throw new \Exception("Insufficient stock for item: {$orderItem->product_name}");
+                    }
+                }
+            }
+
+            // Mark order as fulfilled
+            $order->update(['is_fulfilled' => true]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Order marked as fulfilled. Stock has been updated.',
             ]);
         });
     }

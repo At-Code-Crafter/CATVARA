@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin\Settings;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\Settings\CompanySettingsUpdateRequest;
 use App\Models\Company\Company;
 use App\Models\Company\CompanyDetail;
 use Illuminate\Http\Request;
@@ -26,23 +27,10 @@ class CompanySettingsController extends Controller
     /**
      * Update the company settings.
      */
-    public function update(Request $request)
+    public function update(CompanySettingsUpdateRequest $request)
     {
         $company = $request->company;
-        
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'legal_name' => 'nullable|string|max:255',
-            'website_url' => 'nullable|url|max:255',
-            'logo' => 'nullable|image|max:2048',
-            
-            // Details
-            'address' => 'nullable|string|max:500',
-            'tax_number' => 'nullable|string|max:50',
-            'invoice_prefix' => 'nullable|string|max:10',
-            'quote_prefix' => 'nullable|string|max:10',
-        ]);
-        
+
         try {
             DB::beginTransaction();
             

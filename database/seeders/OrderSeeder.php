@@ -17,6 +17,8 @@ class OrderSeeder extends Seeder
             ['code' => 'CONFIRMED', 'name' => 'Confirmed'],
             ['code' => 'PARTIALLY_FULFILLED', 'name' => 'Partially Fulfilled'],
             ['code' => 'FULFILLED', 'name' => 'Fulfilled', 'is_final' => true],
+            ['code' => 'INVOICED', 'name' => 'Invoiced'],
+            ['code' => 'REJECTED', 'name' => 'Rejected', 'is_final' => true],
             ['code' => 'CANCELLED', 'name' => 'Cancelled', 'is_final' => true],
         ];
 

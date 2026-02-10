@@ -46,29 +46,15 @@ class Address extends Model
     }
 
     // use if conditions if empty address 2 then not show and same with city
-    public function render($html = false): string
+    public function render($html = true): string
     {
-        if (! $this) {
-            return '';
-        }
-
-        $lines = [
-            implode(', ', array_filter([
-                $this->address_line_1 ?? ($this->address1 ?? null),
-                $this->address_line_2 ?? ($this->address2 ?? null),
-            ])),
-            implode(', ', array_filter([
-                $this->city ?? null,
-                $this->state->name ?? null,
-            ])),
-            implode(' ', array_filter([
-                $this->country->name ?? null,
-                $this->postal_code ?? ($this->zip ?? null),
-            ])),
+        $parts = [
+            $this->address_line_1,
+            $this->address_line_2,
+            implode(', ', array_filter([$this->city, $this->state->name ?? null, $this->zip_code])),
+            $this->country->name ?? null,
         ];
 
-        $lines = array_filter($lines);
-
-        return implode($html ? '<br>' : ', ', $lines);
+        return implode($html ? '<br>' : "\n", array_filter($parts));
     }
 }
