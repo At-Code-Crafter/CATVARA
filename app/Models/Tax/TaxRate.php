@@ -2,6 +2,8 @@
 
 namespace App\Models\Tax;
 
+use App\Models\Common\Country;
+use App\Models\Common\State;
 use App\Models\Company\Company;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -39,5 +41,15 @@ class TaxRate extends Model
     public function group(): BelongsTo
     {
         return $this->belongsTo(TaxGroup::class, 'tax_group_id');
+    }
+
+    public function country(): BelongsTo
+    {
+        return $this->belongsTo(Country::class, 'country_id');
+    }
+
+    public function state(): BelongsTo
+    {
+        return $this->belongsTo(State::class, 'state_id');
     }
 }

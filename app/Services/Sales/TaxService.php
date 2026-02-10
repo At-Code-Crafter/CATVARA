@@ -33,13 +33,17 @@ class TaxService
             return $variant->product->category->tax_group_id;
         }
 
-        // 4. Priority: Customer
+        // 4. Priority: Document Global
+        if ($documentTaxGroupId) {
+            return $documentTaxGroupId;
+        }
+
+        // 5. Priority: Customer
         if ($customer && $customer->tax_group_id) {
             return $customer->tax_group_id;
         }
 
-        // 5. Priority: Document Global
-        return $documentTaxGroupId;
+        return null;
     }
 
     /**

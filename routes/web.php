@@ -189,6 +189,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
                 Route::resource('company-banks', \App\Http\Controllers\Admin\Settings\CompanyBankController::class);
 
                 /**
+                 * Tax Groups & Tax Rates
+                 */
+                Route::resource('tax-groups', \App\Http\Controllers\Admin\Settings\TaxGroupController::class);
+                Route::resource('tax-rates', \App\Http\Controllers\Admin\Settings\TaxRateController::class);
+
+                /**
                  * User Login Activities
                  */
                 Route::get('users/{user}/login-activities', [\App\Http\Controllers\Admin\Company\CompanyUserController::class, 'loginActivities'])

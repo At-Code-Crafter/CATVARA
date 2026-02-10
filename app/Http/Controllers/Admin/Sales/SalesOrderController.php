@@ -721,7 +721,7 @@ class SalesOrderController extends Controller
             $dn->load('items.orderItem');
             $anyFulfilled = false;
 
-            if (!$order->is_fulfilled) {
+            if (! $order->is_fulfilled) {
                 foreach ($dn->items as $dnItem) {
                     $orderItem = $dnItem->orderItem;
                     if ($orderItem && $orderItem->product_variant_id) {
@@ -778,7 +778,7 @@ class SalesOrderController extends Controller
             }
 
             // Auto-mark as fulfilled if all items are delivered
-            if ($isFullyFulfilled && !$order->is_fulfilled) {
+            if ($isFullyFulfilled && ! $order->is_fulfilled) {
                 $order->is_fulfilled = true;
             }
 
@@ -911,7 +911,7 @@ class SalesOrderController extends Controller
 
         // Get default inventory location
         $inventoryLocation = InventoryLocation::where('company_id', $company->id)->first();
-        if (!$inventoryLocation) {
+        if (! $inventoryLocation) {
             return response()->json([
                 'success' => false,
                 'message' => 'No inventory location found. Please set up an inventory location first.',
