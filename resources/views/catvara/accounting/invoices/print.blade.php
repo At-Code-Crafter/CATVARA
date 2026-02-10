@@ -127,7 +127,7 @@
             </td>
             <td class="py-3 text-center text-sm text-slate-700">{{ (int) $item->quantity }}</td>
             <td class="py-3 text-right text-sm text-slate-700">{{ money($item->unit_price, $invoice->currency->code) }}</td>
-            <td class="py-3 text-center text-sm text-slate-700">{{ $item->tax_percentage ?? 20 }}%</td>
+            <td class="py-3 text-center text-sm text-slate-700">{{ number_format($item->tax_rate, 0) }}%</td>
             <td class="py-3 text-right text-sm text-slate-900">
               {{ money($item->line_total, $invoice->currency->code) }}
               @if ($item->discount_amount > 0)
