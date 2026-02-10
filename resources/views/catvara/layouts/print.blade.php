@@ -50,9 +50,36 @@
       max-width: 210mm;
       margin: 0 auto;
       padding: 20mm;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .print-content {
+      flex: 1;
+    }
+
+    .print-footer {
+      margin-top: auto;
     }
 
     @media print {
+      .print-container {
+        min-height: 100%;
+      }
+
+      .print-footer {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        padding: 10mm 20mm;
+        background: white;
+      }
+
+      .print-content {
+        padding-bottom: 25mm; /* Space for fixed footer */
+      }
       .no-print {
         display: none !important;
       }
