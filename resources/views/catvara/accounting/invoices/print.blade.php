@@ -174,7 +174,8 @@
 
 @section('scripts')
 <script>
-  function generatePDF() {
+  function generatePDF(mode) {
+    mode = mode || 'save';
     const element = document.getElementById('invoice-content');
 
     const options = {
@@ -224,7 +225,21 @@
         pdf.text(dateStr, pageWidth - 15, footerY, { align: 'right' });
         pdf.text(pageStr, pageWidth - 15, footerY + 5, { align: 'right' });
       }
-    }).save();
+
+      if (mode === 'print') {
+        const blob = pdf.output('blob');
+        const url = URL.createObjectURL(blob);
+        const iframe = document.createElement('iframe');
+        iframe.style.display = 'none';
+        iframe.src = url;
+        document.body.appendChild(iframe);
+        iframe.onload = function() {
+          iframe.contentWindow.print();
+        };
+      } else {
+        pdf.save('Invoice_{{ $invoice->invoice_number }}.pdf');
+      }
+    });
   }
 </script>
 @endsection

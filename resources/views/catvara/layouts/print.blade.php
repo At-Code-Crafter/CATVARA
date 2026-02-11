@@ -287,7 +287,7 @@
       <button onclick="generatePDF()" class="btn btn-primary">
         <i class="fas fa-download"></i> Download PDF
       </button>
-      <button onclick="window.print()" class="btn btn-secondary">
+      <button onclick="printPDF()" class="btn btn-secondary">
         <i class="fas fa-print"></i> Print
       </button>
       <button onclick="handleClosePreview()" class="btn btn-secondary">
@@ -315,20 +315,42 @@
 
     // Default generatePDF — can be overridden by child templates
     if (typeof generatePDF === 'undefined') {
-      function generatePDF() {
+      function generatePDF(mode) {
+        mode = mode || 'save';
         const el = document.querySelector('.invoice-container') || document.querySelector('.print-container');
         if (!el) { alert('Nothing to export'); return; }
 
         const title = document.title.split('|')[0].trim().replace(/\s+/g, '_');
 
-        html2pdf().set({
+        const worker = html2pdf().set({
           margin: [10, 0, 10, 0],
           filename: title + '.pdf',
           image: { type: 'jpeg', quality: 1.0 },
           html2canvas: { scale: 2, useCORS: true, scrollY: 0 },
           jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-        }).from(el).save();
+        }).from(el);
+
+        if (mode === 'print') {
+          worker.toPdf().get('pdf').then(function(pdf) {
+            const blob = pdf.output('blob');
+            const url = URL.createObjectURL(blob);
+            const iframe = document.createElement('iframe');
+            iframe.style.display = 'none';
+            iframe.src = url;
+            document.body.appendChild(iframe);
+            iframe.onload = function() {
+              iframe.contentWindow.print();
+            };
+          });
+        } else {
+          worker.save();
+        }
       }
+    }
+
+    // Print uses the same PDF pipeline
+    function printPDF() {
+      generatePDF('print');
     }
   </script>
 
