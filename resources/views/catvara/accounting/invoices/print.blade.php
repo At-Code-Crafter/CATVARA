@@ -229,13 +229,7 @@
       if (mode === 'print') {
         const blob = pdf.output('blob');
         const url = URL.createObjectURL(blob);
-        const iframe = document.createElement('iframe');
-        iframe.style.display = 'none';
-        iframe.src = url;
-        document.body.appendChild(iframe);
-        iframe.onload = function() {
-          iframe.contentWindow.print();
-        };
+        window.open(url, '_self');
       } else {
         pdf.save('Invoice_{{ $invoice->invoice_number }}.pdf');
       }

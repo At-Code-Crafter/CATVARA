@@ -334,13 +334,7 @@
           worker.toPdf().get('pdf').then(function(pdf) {
             const blob = pdf.output('blob');
             const url = URL.createObjectURL(blob);
-            const iframe = document.createElement('iframe');
-            iframe.style.display = 'none';
-            iframe.src = url;
-            document.body.appendChild(iframe);
-            iframe.onload = function() {
-              iframe.contentWindow.print();
-            };
+            window.open(url, '_self');
           });
         } else {
           worker.save();

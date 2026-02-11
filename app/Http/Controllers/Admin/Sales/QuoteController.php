@@ -562,8 +562,10 @@ class QuoteController extends Controller
                 'shippingCustomer',
                 'billingAddress.country',
                 'shippingAddress.country',
-                'company',
+                'company.banks',
+                'company.detail',
                 'currency',
+                'paymentTerm',
             ])
             ->firstOrFail();
 
