@@ -235,7 +235,7 @@
                     <span class="text-[10px] font-black uppercase tracking-[0.2em] text-brand-400 mb-1">Grand
                       Total</span>
                     <span
-                      class="text-4xl font-black tracking-tight text-white">{{ money($invoice->grand_total, $invoice->currency->code) }}</span>
+                      class="text-4xl font-black tracking-tight text-brand-500">{{ money($invoice->grand_total, $invoice->currency->code) }}</span>
                   </div>
                   <div class="flex flex-col items-end">
                     <span class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-1">Status</span>

@@ -553,7 +553,8 @@ class SalesOrderController extends Controller
                 'customer',
                 'billingAddress',
                 'shippingAddress',
-                'company',
+                'company.banks',
+                'company.detail',
                 'currency',
                 'paymentTerm',
             ])

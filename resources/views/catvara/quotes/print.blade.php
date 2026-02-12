@@ -3,166 +3,236 @@
 @section('title', 'Quote ' . $quote->quote_number)
 
 @section('content')
-  <div class="print-container">
-    {{-- Document Header --}}
-    <div class="flex justify-between items-start mb-12">
-      <div>
-        <h1 class="text-3xl font-black text-slate-900 tracking-tight uppercase mb-1">Quotation</h1>
-        <div class="text-sm font-bold text-slate-500 tracking-widest uppercase">No: <span
-            class="text-slate-900">{{ $quote->quote_number }}</span></div>
-        <div class="text-sm font-bold text-slate-500 tracking-widest uppercase mt-1">Date: <span
-            class="text-slate-900">{{ $quote->created_at->format('d M, Y') }}</span>
-        </div>
-        @if ($quote->valid_until)
-          <div class="text-sm font-bold text-slate-500 tracking-widest uppercase mt-1">Valid Until: <span
-              class="text-slate-900">{{ $quote->valid_until->format('d M, Y') }}</span></div>
-        @endif
+  <div class="invoice-container" id="quote-content">
+    {{-- Header (hidden in HTML, rendered by JS on every PDF page) --}}
+    <div class="header-top">
+      <div class="invoice-title">QUOTATION</div>
+      <div class="meta-item">
+        <div class="label">Quote number</div>
+        <div class="value">{{ $quote->quote_number }}</div>
       </div>
-      <div class="text-right">
-        @if ($quote->company->logo)
-          <img src="{{ storage_url($quote->company->logo) }}" class="h-12 w-auto ml-auto mb-2">
-        @else
-          <div class="text-xl font-black text-brand-600 uppercase">{{ $quote->company->name }}</div>
-        @endif
-        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">
-          {!! $quote->company->address?->render() !!}<br>
-          {{ $quote->company->email }} | {{ $quote->company->phone }}
-        </div>
+      <div class="meta-item text-right">
+        <div class="label">Quote total</div>
+        <div class="value">{{ $quote->currency->symbol }}{{ number_format($quote->grand_total, 2) }}</div>
       </div>
     </div>
 
-    {{-- Addresses --}}
-    <div class="grid grid-cols-2 gap-12 mb-12">
-      @php
-        $billTo = $quote->billingAddress;
-        $shipTo = $quote->shippingAddress;
-      @endphp
-      <div>
-        <div class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Billed To</div>
-        <div class="text-sm font-bold text-slate-900 uppercase mb-1">
-          {{ $billTo->name ?? ($quote->customer->legal_name ?? $quote->customer->display_name) }}</div>
-        <div class="text-xs text-slate-500 leading-relaxed font-medium">
-          {!! $billTo?->render() !!}
+    {{-- Brand Row: Logo, Dates, Additional Details --}}
+    <div class="brand-row">
+      <div class="brand-block">
+        @if ($quote->company->logo)
+          <img src="{{ storage_url($quote->company->logo) }}" alt="{{ $quote->company->name }}">
+        @else
+          <div style="font-size: 20px; font-weight: 700; color: #333;">{{ $quote->company->name }}</div>
+        @endif
+      </div>
+      <div class="dates-block">
+        <div class="date-item">
+          <div class="label">Date of issue</div>
+          <div class="value">{{ $quote->created_at->format('F d, Y') }}</div>
         </div>
-        @if ($quote->customer->tax_number || ($billTo && $billTo->tax_number))
-          <div class="mt-2 pt-2 border-t border-slate-100">
-            <div class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">TRN: <span
-                class="text-slate-700">{{ $billTo->tax_number ?? $quote->customer->tax_number }}</span></div>
+        @if ($quote->valid_until)
+          <div class="date-item">
+            <div class="label">Valid until</div>
+            <div class="value">{{ $quote->valid_until->format('F d, Y') }}</div>
           </div>
         @endif
       </div>
-      <div>
-        <div class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Shipped To</div>
-        <div class="text-sm font-bold text-slate-900 uppercase mb-1">
-          {{ $shipTo->name ?? $quote->customer->display_name }}</div>
-        <div class="text-xs text-slate-500 leading-relaxed font-medium">
+      <div class="additional-details-block">
+        <div class="label text-right">Additional details</div>
+        @if ($quote->paymentTerm)
+          <div class="text-right" style="font-size: 11px; color: #333; margin-top: 8px;">
+            <strong>Payment Terms:</strong> {{ $quote->paymentTerm->name }}
+          </div>
+        @endif
+        @if ($quote->notes)
+          <div class="text-right" style="font-size: 11px; color: #555; margin-top: 8px;">{{ $quote->notes }}</div>
+        @endif
+      </div>
+    </div>
+
+    {{-- Addresses Row --}}
+    @php
+      $billTo = $quote->billingAddress;
+      $shipTo = $quote->shippingAddress;
+    @endphp
+    <div class="address-grid">
+      <div class="address-col">
+        <div class="label">Bill to</div>
+        <p>
+          {{ $billTo->name ?? ($quote->customer->legal_name ?? $quote->customer->display_name) }}<br>
+          {!! $billTo?->render() !!}
+        </p>
+      </div>
+      <div class="address-col">
+        <div class="label">Ship to</div>
+        <p>
+          {{ $shipTo->name ?? $quote->customer->display_name }}<br>
           {!! $shipTo?->render() ?? 'Same as Billing Address' !!}
-        </div>
+        </p>
+      </div>
+      <div class="address-col text-right">
+        <div class="label">Merchant</div>
+        <p>
+          {{ $quote->company->name }}<br>
+          @if ($quote->company->detail?->address)
+            {{ $quote->company->detail->address }}<br>
+          @endif
+          @if ($quote->company->detail?->email)
+            {{ $quote->company->detail->email }}<br>
+          @endif
+          @if ($quote->company->detail?->tax_number)
+            <br>{{ $quote->company->detail->tax_number }}
+          @endif
+        </p>
       </div>
     </div>
 
     {{-- Items Table --}}
-    <table class="w-full mb-12">
-      <thead>
-        <tr class="border-b-2 border-slate-900">
-          <th class="py-4 text-left text-[10px] font-black text-slate-900 uppercase tracking-widest w-12">#</th>
-          <th class="py-4 text-left text-[10px] font-black text-slate-900 uppercase tracking-widest">Description</th>
-          <th class="py-4 text-right text-[10px] font-black text-slate-900 uppercase tracking-widest w-24">Price</th>
-          <th class="py-4 text-center text-[10px] font-black text-slate-900 uppercase tracking-widest w-20">Qty</th>
-          <th class="py-4 text-right text-[10px] font-black text-slate-900 uppercase tracking-widest w-32">Total</th>
-        </tr>
-      </thead>
-      <tbody>
-        @foreach ($quote->items as $index => $item)
-          <tr class="border-b border-slate-100">
-            <td class="py-4 text-xs font-bold text-slate-400">{{ str_pad($index + 1, 2, '0', STR_PAD_LEFT) }}</td>
-            <td class="py-4">
-              <div class="text-sm font-bold text-slate-800 uppercase">{{ $item->product_name }}</div>
-              @if ($item->variant_description)
-                <div class="text-[10px] font-medium text-slate-400 mt-0.5 tracking-wide">{{ $item->variant_description }}
-                </div>
-              @endif
-            </td>
-            <td class="py-4 text-right text-sm font-bold text-slate-700">
-              {{ money($item->unit_price, $quote->currency->code) }}</td>
-            <td class="py-4 text-center text-sm font-bold text-slate-700">{{ $item->quantity }}</td>
-            <td class="py-4 text-right text-sm font-black text-slate-900">
-              {{ money($item->line_total, $quote->currency->code) }}</td>
+    <div class="table-grid">
+      <table class="items-table">
+        <thead>
+          <tr>
+            <th class="text-left">Description</th>
+            <th class="text-right">Quantity</th>
+            <th class="text-right">Unit price</th>
+            <th class="text-right">VAT rate</th>
+            <th class="text-right">Amount</th>
           </tr>
-        @endforeach
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          @foreach ($quote->items as $item)
+            <tr>
+              <td>
+                {{ $item->product_name }}
+                @if ($item->variant_description)
+                  <br><span style="font-size: 11px; color: #aaa;">{{ $item->variant_description }}</span>
+                @endif
+              </td>
+              <td class="text-right">{{ (int) $item->quantity }}</td>
+              <td class="text-right">{{ money($item->unit_price, $quote->currency->code) }}</td>
+              <td class="text-right">{{ number_format($item->tax_rate, 0) }}%</td>
+              <td class="text-right">
+                {{ money($item->line_total, $quote->currency->code) }}
+                @if ($item->discount_amount > 0)
+                  <br><span class="discount">-{{ money($item->discount_amount, $quote->currency->code) }}</span>
+                @endif
+              </td>
+            </tr>
+          @endforeach
+        </tbody>
+      </table>
+    </div>
 
-    {{-- Summary --}}
-    <div class="flex justify-end">
-      <div class="w-72">
-        <div class="flex justify-between py-2 border-b border-slate-50">
-          <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Subtotal</div>
-          <div class="text-sm font-bold text-slate-700">{{ money($quote->subtotal, $quote->currency->code) }}</div>
-        </div>
+    {{-- Totals --}}
+    <div class="totals-container">
+      <div class="totals-box">
+        <div class="total-line"><span>Subtotal</span><span>{{ money($quote->subtotal, $quote->currency->code) }}</span></div>
         @if ($quote->discount_total > 0)
-          <div class="flex justify-between py-2 border-b border-slate-50">
-            <div class="flex flex-col">
-              <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Discount</div>
-            </div>
-            <div class="text-sm font-bold text-emerald-600">
-              -{{ money($quote->discount_total, $quote->currency->code) }}</div>
-          </div>
+          <div class="total-line"><span>Discount</span><span style="color: #db2777;">-{{ money($quote->discount_total, $quote->currency->code) }}</span></div>
         @endif
+        <div class="total-line"><span>VAT ({{ number_format($quote->items->first()?->tax_rate ?? 20, 0) }}%)</span><span>{{ money($quote->tax_total, $quote->currency->code) }}</span></div>
         @if ($quote->shipping_total > 0)
-          <div class="flex justify-between py-2 border-b border-slate-50">
-            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Shipping</div>
-            <div class="text-sm font-bold text-slate-700">{{ money($quote->shipping_total, $quote->currency->code) }}
-            </div>
-          </div>
+          <div class="total-line"><span>Shipping</span><span>{{ money($quote->shipping_total, $quote->currency->code) }}</span></div>
         @endif
-        <div class="flex justify-between py-2 border-b border-slate-50">
-          <div class="flex flex-col">
-            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Tax Total</div>
-          </div>
-          <div class="text-sm font-bold text-slate-700">{{ money($quote->tax_total, $quote->currency->code) }}</div>
-        </div>
-        <div class="flex justify-between py-4 mt-2">
-          <div class="text-xs font-black text-slate-900 uppercase tracking-[0.2em]">Grand Total</div>
-          <div class="text-xl font-black text-brand-600">{{ money($quote->grand_total, $quote->currency->code) }}
-          </div>
-        </div>
+        <div class="total-line grand-total"><span>Total</span><span>{{ money($quote->grand_total, $quote->currency->code) }}</span></div>
       </div>
     </div>
 
-    {{-- Footer/Notes --}}
-    <div class="mt-16 pt-12 border-t-2 border-slate-900">
-      <div class="grid grid-cols-2 gap-12">
-        <div>
-          <div class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Notes</div>
-          <div class="text-[10px] font-medium text-slate-500 leading-relaxed uppercase tracking-wider">
-            {!! nl2br(e($quote->notes ?? 'Thank you for your business.')) !!}
+    {{-- Bank Details --}}
+    @if ($quote->company->banks->count() > 0)
+      <div class="bank-details">
+        <div class="label" style="margin-bottom: 8px;">Bank Details</div>
+        @foreach ($quote->company->banks->take(1) as $bank)
+          <div style="font-size: 12px; line-height: 1.6; color: #555;">
+            <span style="font-weight: 600;">{{ $bank->bank_name }}</span><br>
+            A/C Name: {{ $bank->account_name ?? $quote->company->name }}<br>
+            A/C No: {{ $bank->account_number }}
+            @if ($bank->iban) | IBAN: {{ $bank->iban }} @endif
+            @if ($bank->swift_code) | SWIFT: {{ $bank->swift_code }} @endif
           </div>
-        </div>
-        <div class="text-right">
-          <div class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Payment Info</div>
-          <div class="text-[10px] font-bold text-slate-900 uppercase tracking-widest">
-            Payment Term: {{ $quote->paymentTerm->name ?? 'Standard' }}<br>
-          </div>
+        @endforeach
+      </div>
+    @endif
 
-          @if ($quote->company->banks->count() > 0)
-            <div class="mt-4 pt-4 border-t border-slate-100">
-              @foreach ($quote->company->banks as $bank)
-                <div class="text-[9px] text-slate-500 mb-2 leading-relaxed">
-                  <span class="font-bold text-slate-900">{{ $bank->bank_name }}</span><br>
-                  Account: {{ $bank->account_number }}<br>
-                  @if ($bank->iban)
-                    IBAN: {{ $bank->iban }}<br>
-                  @endif
-                  @if ($bank->swift_code)
-                    SWIFT: {{ $bank->swift_code }}
-                  @endif
-                </div>
-              @endforeach
-            </div>
-          @endif
-        </div>
+    {{-- Footer (hidden in HTML, rendered by JS on every PDF page) --}}
+    <div class="footer">
+      <div class="footer-left">
+        Provided by: {{ $quote->company->name }}<br>
+        @if ($quote->company->detail?->tax_number)
+          VAT ID: {{ $quote->company->detail->tax_number }}
+        @endif
+      </div>
+      <div class="footer-right">
+        {{ $quote->created_at->format('F d, Y') }}<br>
+        {{ $quote->quote_number }}
       </div>
     </div>
   </div>
+@endsection
+
+@section('scripts')
+<script>
+  function generatePDF(mode) {
+    mode = mode || 'save';
+    const element = document.getElementById('quote-content');
+
+    const options = {
+      margin: [25, 0, 30, 0],
+      filename: 'Quote_{{ $quote->quote_number }}.pdf',
+      image: { type: 'jpeg', quality: 1.0 },
+      html2canvas: { scale: 2, useCORS: true, scrollY: 0 },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+
+    html2pdf().set(options).from(element).toPdf().get('pdf').then(function (pdf) {
+      const totalPages = pdf.internal.getNumberOfPages();
+      const pageWidth = pdf.internal.pageSize.getWidth();
+
+      for (let i = 1; i <= totalPages; i++) {
+        pdf.setPage(i);
+
+        // --- HEADER (Repeats on every page) ---
+        pdf.setFontSize(22);
+        pdf.setTextColor(51, 51, 51);
+        pdf.setFont("helvetica", "bold");
+        pdf.text('QUOTATION', 10, 15);
+
+        pdf.setFontSize(9);
+        pdf.setTextColor(102, 102, 102);
+        pdf.text('Quote number', 85, 12);
+        pdf.text('Quote total', pageWidth - 10, 12, { align: 'right' });
+
+        pdf.setTextColor(0, 0, 0);
+        pdf.setFontSize(10);
+        pdf.text('{{ $quote->quote_number }}', 85, 17);
+        pdf.text('{{ $quote->currency->symbol }}{{ number_format($quote->grand_total, 2) }}', pageWidth - 10, 17, { align: 'right' });
+
+        // --- FOOTER (Repeats on every page) ---
+        pdf.setFontSize(9);
+        pdf.setTextColor(128, 128, 128);
+
+        const footerY = 285;
+        pdf.text('Provided by: {{ $quote->company->name }}', 15, footerY);
+        @if ($quote->company->detail?->tax_number)
+          pdf.text('VAT ID: {{ $quote->company->detail->tax_number }}', 15, footerY + 5);
+        @endif
+
+        const dateStr = '{{ $quote->created_at->format("F d, Y") }}';
+        const pageStr = `Page ${i} of ${totalPages} for {{ $quote->quote_number }}`;
+
+        pdf.text(dateStr, pageWidth - 15, footerY, { align: 'right' });
+        pdf.text(pageStr, pageWidth - 15, footerY + 5, { align: 'right' });
+      }
+
+      if (mode === 'print') {
+        const blob = pdf.output('blob');
+        const url = URL.createObjectURL(blob);
+        window.open(url, '_self');
+      } else {
+        pdf.save('Quote_{{ $quote->quote_number }}.pdf');
+      }
+    });
+  }
+</script>
 @endsection
