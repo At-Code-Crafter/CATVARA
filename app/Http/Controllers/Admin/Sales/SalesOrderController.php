@@ -910,12 +910,14 @@ class SalesOrderController extends Controller
             ], 400);
         }
 
-        // Get all inventory locations for the company
-        $inventoryLocations = InventoryLocation::where('company_id', $company->id)->get();
+        // Get only warehouse inventory locations for the company (exclude stores)
+        $inventoryLocations = InventoryLocation::where('company_id', $company->id)
+            ->where('type', 'warehouse')
+            ->get();
         if ($inventoryLocations->isEmpty()) {
             return response()->json([
                 'success' => false,
-                'message' => 'No inventory location found. Please set up an inventory location first.',
+                'message' => 'No warehouse location found. Please set up a warehouse first.',
             ], 400);
         }
 
@@ -926,46 +928,55 @@ class SalesOrderController extends Controller
                 $pendingQty = $orderItem->quantity - ($orderItem->fulfilled_quantity ?? 0);
 
                 if ($orderItem->product_variant_id && $pendingQty > 0) {
-                    // Find a location that has sufficient stock for this variant
-                    $locationWithStock = null;
+                    // Collect available stock from all warehouses (stores excluded)
+                    $locationStocks = [];
+                    $totalAvailable = 0;
                     foreach ($inventoryLocations as $location) {
                         $availableStock = $this->inventoryService->getAvailableStock(
                             $company->id,
                             $location->id,
                             $orderItem->product_variant_id
                         );
-                        if ($availableStock >= $pendingQty) {
-                            $locationWithStock = $location;
+                        if ($availableStock > 0) {
+                            $locationStocks[] = [
+                                'location' => $location,
+                                'available' => $availableStock,
+                            ];
+                            $totalAvailable += $availableStock;
+                        }
+                    }
+
+                    // Check if total stock across all warehouses is sufficient
+                    if ($totalAvailable < $pendingQty) {
+                        throw new \Exception("Insufficient stock for item: {$orderItem->product_name}. Required: {$pendingQty}, Available (across all warehouses): {$totalAvailable}");
+                    }
+
+                    // Deduct from multiple warehouses as needed
+                    $remainingQty = $pendingQty;
+                    foreach ($locationStocks as $locStock) {
+                        if ($remainingQty <= 0) {
                             break;
                         }
-                    }
 
-                    if (!$locationWithStock) {
-                        // Check total stock across all locations for better error message
-                        $totalStock = 0;
-                        foreach ($inventoryLocations as $location) {
-                            $totalStock += $this->inventoryService->getAvailableStock(
-                                $company->id,
-                                $location->id,
-                                $orderItem->product_variant_id
-                            );
+                        // Deduct as much as available from this location
+                        $deductQty = min($remainingQty, $locStock['available']);
+
+                        try {
+                            $this->inventoryService->postMovement([
+                                'company_id' => $company->id,
+                                'inventory_location_id' => $locStock['location']->id,
+                                'product_variant_id' => $orderItem->product_variant_id,
+                                'reason_code' => 'SALE',
+                                'quantity' => $deductQty,
+                                'reference_type' => 'order_fulfillment',
+                                'reference_id' => $order->id,
+                                'performed_by' => Auth::id(),
+                            ]);
+                        } catch (\Exception $e) {
+                            throw new \Exception("Failed to deduct stock for item: {$orderItem->product_name}");
                         }
-                        throw new \Exception("Insufficient stock for item: {$orderItem->product_name}. Required: {$pendingQty}, Available (across all locations): {$totalStock}");
-                    }
 
-                    try {
-                        $this->inventoryService->postMovement([
-                            'company_id' => $company->id,
-                            'inventory_location_id' => $locationWithStock->id,
-                            'product_variant_id' => $orderItem->product_variant_id,
-                            'reason_code' => 'SALE',
-                            'quantity' => $pendingQty,
-                            'reference_type' => 'order_fulfillment',
-                            'reference_id' => $order->id,
-                            'performed_by' => Auth::id(),
-                        ]);
-                    } catch (\Exception $e) {
-                        throw new \Exception("Insufficient stock for item: {$orderItem->product_name}");
+                        $remainingQty -= $deductQty;
                     }
                 }
             }
