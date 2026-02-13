@@ -527,21 +527,21 @@
         `);
       });
 
-      const shipping = parseFloat($('#finalShipping').val() || 0);
-      const globalDiscP = parseFloat($('#finalGlobalDiscountPercent').val() || 0);
-      const globalDiscExtra = parseFloat($('#finalGlobalDiscountAmount').val() || 0);
+      const shipping = parseFloat($('#finalShipping').val()) || 0;
+      const globalDiscP = parseFloat($('#finalGlobalDiscountPercent').val()) || 0;
+      const globalDiscExtra = parseFloat($('#finalGlobalDiscountAmount').val()) || 0;
 
       // Estimate taxable base for global discount
-      const lineDiscTotal = cart.reduce((acc, i) => acc + ((parseFloat(i.qty) * parseFloat(i.unit_price)) * (parseFloat(i
-        .discount_percent) / 100)), 0);
-      const itemsGross = cart.reduce((acc, i) => acc + (parseFloat(i.qty) * parseFloat(i.unit_price)), 0);
+      const lineDiscTotal = cart.reduce((acc, i) => acc + (((parseFloat(i.qty) || 0) * (parseFloat(i.unit_price) || 0)) * ((parseFloat(i
+        .discount_percent) || 0) / 100)), 0);
+      const itemsGross = cart.reduce((acc, i) => acc + ((parseFloat(i.qty) || 0) * (parseFloat(i.unit_price) || 0)), 0);
       const taxableBase = Math.max(0, itemsGross - lineDiscTotal);
 
       const globalDiscFromPct = taxableBase * (globalDiscP / 100);
       const totalGlobalDisc = globalDiscFromPct + globalDiscExtra;
 
-      // Note: Full tax calculation is complex here without knowing rates per group, 
-      // so we rely on the backend for exact figures on save. 
+      // Note: Full tax calculation is complex here without knowing rates per group,
+      // so we rely on the backend for exact figures on save.
       // For preview, we show a simplified estimate if possible or just use existing totals.
       // But we'll try to estimate based on currentOrder.tax_total or similar if nothing changed.
       let taxEstimate = (currentOrder.tax_total || 0);
