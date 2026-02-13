@@ -910,26 +910,53 @@ class SalesOrderController extends Controller
             ], 400);
         }
 
-        // Get default inventory location
-        $inventoryLocation = InventoryLocation::where('company_id', $company->id)->first();
-        if (!$inventoryLocation) {
+        // Get all inventory locations for the company
+        $inventoryLocations = InventoryLocation::where('company_id', $company->id)->get();
+        if ($inventoryLocations->isEmpty()) {
             return response()->json([
                 'success' => false,
                 'message' => 'No inventory location found. Please set up an inventory location first.',
             ], 400);
         }
 
-        return DB::transaction(function () use ($order, $company, $inventoryLocation) {
+        return DB::transaction(function () use ($order, $company, $inventoryLocations) {
             // Update stock for each item - only for PENDING quantity (not already delivered)
             foreach ($order->items as $orderItem) {
                 // Calculate pending quantity: order qty - already fulfilled via delivery notes
                 $pendingQty = $orderItem->quantity - ($orderItem->fulfilled_quantity ?? 0);
 
                 if ($orderItem->product_variant_id && $pendingQty > 0) {
+                    // Find a location that has sufficient stock for this variant
+                    $locationWithStock = null;
+                    foreach ($inventoryLocations as $location) {
+                        $availableStock = $this->inventoryService->getAvailableStock(
+                            $company->id,
+                            $location->id,
+                            $orderItem->product_variant_id
+                        );
+                        if ($availableStock >= $pendingQty) {
+                            $locationWithStock = $location;
+                            break;
+                        }
+                    }
+
+                    if (!$locationWithStock) {
+                        // Check total stock across all locations for better error message
+                        $totalStock = 0;
+                        foreach ($inventoryLocations as $location) {
+                            $totalStock += $this->inventoryService->getAvailableStock(
+                                $company->id,
+                                $location->id,
+                                $orderItem->product_variant_id
+                            );
+                        }
+                        throw new \Exception("Insufficient stock for item: {$orderItem->product_name}. Required: {$pendingQty}, Available (across all locations): {$totalStock}");
+                    }
+
                     try {
                         $this->inventoryService->postMovement([
                             'company_id' => $company->id,
-                            'inventory_location_id' => $inventoryLocation->id,
+                            'inventory_location_id' => $locationWithStock->id,
                             'product_variant_id' => $orderItem->product_variant_id,
                             'reason_code' => 'SALE',
                             'quantity' => $pendingQty,
