@@ -567,9 +567,9 @@
         variant_id: item.variant_id || item.variantId || null,
         custom_name: item.custom_name || item.customName || null,
         custom_sku: item.custom_sku || item.customSku || null,
-        qty: parseFloat(item.qty),
-        unit_price: parseFloat(item.unit_price ?? item.unitPrice),
-        discount_percent: parseFloat(item.discount_percent ?? item.discountPercent ?? 0),
+        qty: parseFloat(item.qty) || 0,
+        unit_price: parseFloat(item.unit_price ?? item.unitPrice) || 0,
+        discount_percent: parseFloat(item.discount_percent ?? item.discountPercent) || 0,
         tax_group_id: item.tax_group_id || null,
         temp_init: true
       }));
@@ -586,14 +586,30 @@
       }
     } else if (currentOrder.items && currentOrder.items.length > 0) {
       cart = currentOrder.items.map(item => ({
-        type: 'variant',
+        type: item.type || 'variant',
         // IMPORTANT: prefer uuid if present
         variant_id: item.product_variant?.uuid || item.product_variant_uuid || item.product_variant_id || null,
-        qty: parseFloat(item.quantity),
-        unit_price: parseFloat(item.unit_price),
-        discount_percent: parseFloat(item.discount_percent || 0),
+        custom_name: item.custom_name || item.product_name || null,
+        custom_sku: item.custom_sku || item.sku || null,
+        qty: parseFloat(item.quantity) || 0,
+        unit_price: parseFloat(item.unit_price) || 0,
+        discount_percent: parseFloat(item.discount_percent) || 0,
+        tax_group_id: item.tax_group_id || null,
         temp_init: true
       }));
+
+      // Populate form fields from currentOrder
+      $('#shippingInput').val(parseFloat(currentOrder.shipping_total) || 0);
+      $('#globalDiscountPercentInput').val(parseFloat(currentOrder.global_discount_percent) || 0);
+      if (currentOrder.tax_group_id) {
+        $('#taxGroupSelect').val(currentOrder.tax_group_id);
+      }
+      if (currentOrder.notes) {
+        $('#commentsInput').val(currentOrder.notes);
+      }
+      if (currentOrder.currency_id) {
+        $('#currencySelect').val(currentOrder.currency_id);
+      }
     }
 
     $(document).ready(function() {
@@ -1158,15 +1174,15 @@
 
       let itemTaxTotal = 0;
       cart.forEach(item => {
-        const qty = parseFloat(item.qty || 0);
-        const unit = parseFloat(item.unit_price || 0);
-        const discP = parseFloat(item.discount_percent || 0);
+        const qty = parseFloat(item.qty) || 0;
+        const unit = parseFloat(item.unit_price) || 0;
+        const discP = parseFloat(item.discount_percent) || 0;
         const lineNet = (qty * unit) * (1 - discP / 100);
 
         let lineTaxRate = globalTaxRate;
         if (item.tax_group_id) {
           const foundTg = allTaxGroups.find(tg => tg.id == item.tax_group_id);
-          if (foundTg) lineTaxRate = parseFloat(foundTg.rate);
+          if (foundTg) lineTaxRate = parseFloat(foundTg.rate) || 0;
         }
         itemTaxTotal += lineNet * (lineTaxRate / 100);
       });
