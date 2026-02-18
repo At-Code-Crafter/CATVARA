@@ -224,8 +224,20 @@
           @endif
           @if ($companyBank->swift_code)
             <div class="bg-amber-50 rounded-xl p-4">
-              <p class="text-[10px] font-bold text-amber-500 uppercase tracking-widest mb-1">SWIFT / BIC</p>
+              <p class="text-[10px] font-bold text-amber-500 uppercase tracking-widest mb-1">SWIFT Code</p>
               <p class="font-bold text-amber-700 font-mono">{{ $companyBank->swift_code }}</p>
+            </div>
+          @endif
+          @if ($companyBank->bic_code)
+            <div class="bg-amber-50 rounded-xl p-4">
+              <p class="text-[10px] font-bold text-amber-500 uppercase tracking-widest mb-1">BIC Code</p>
+              <p class="font-bold text-amber-700 font-mono">{{ $companyBank->bic_code }}</p>
+            </div>
+          @endif
+          @if ($companyBank->sort_code)
+            <div class="bg-purple-50 rounded-xl p-4">
+              <p class="text-[10px] font-bold text-purple-500 uppercase tracking-widest mb-1">Sort Code</p>
+              <p class="font-bold text-purple-700 font-mono">{{ $companyBank->sort_code }}</p>
             </div>
           @endif
           @if ($companyBank->branch)

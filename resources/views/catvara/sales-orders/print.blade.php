@@ -145,6 +145,8 @@
             A/C No: {{ $bank->account_number }}
             @if ($bank->iban) | IBAN: {{ $bank->iban }} @endif
             @if ($bank->swift_code) | SWIFT: {{ $bank->swift_code }} @endif
+            @if ($bank->bic_code) | BIC: {{ $bank->bic_code }} @endif
+            @if ($bank->sort_code) | Sort Code: {{ $bank->sort_code }} @endif
           </div>
         @endforeach
       </div>

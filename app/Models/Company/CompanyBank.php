@@ -17,6 +17,8 @@ class CompanyBank extends Model
         'account_number',
         'iban',
         'swift_code',
+        'bic_code',
+        'sort_code',
         'branch',
         'currency_id',
         'is_active',
