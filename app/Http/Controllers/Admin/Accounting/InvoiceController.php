@@ -53,11 +53,18 @@ class InvoiceController extends Controller
             ->addColumn('actions', function ($i) {
                 $showUrl = company_route('accounting.invoices.show', ['invoice' => $i->uuid]);
                 $printUrl = company_route('accounting.invoices.print', ['invoice' => $i->uuid]);
+                $deleteUrl = company_route('accounting.invoices.destroy', ['invoice' => $i->uuid]);
+
+                $deleteBtn = '';
+                if (auth()->user()->isSuperAdmin()) {
+                    $deleteBtn = '<button type="button" class="btn btn-xs btn-danger delete-invoice" data-url="' . $deleteUrl . '" data-name="' . e($i->invoice_number) . '"><i class="fas fa-trash"></i></button>';
+                }
 
                 return '
                     <div class="flex items-center gap-2">
                         <a href="' . $showUrl . '" class="btn btn-xs btn-white"><i class="fas fa-eye"></i></a>
                         <a href="' . $printUrl . '" target="_blank" class="btn btn-xs btn-white"><i class="fas fa-print"></i></a>
+                        ' . $deleteBtn . '
                     </div>
                 ';
             })
@@ -181,7 +188,7 @@ class InvoiceController extends Controller
         $hideVariants = $request->has('hide_variants');
 
         // Prepare PDF if we want it to be saveable or just for consistent layout
-        // For now, we keep the web view for standard browser printing, 
+        // For now, we keep the web view for standard browser printing,
         // but we can generate and save the PDF version in the background or for the "save" requirement.
 
         // Save PDF to storage
@@ -201,5 +208,31 @@ class InvoiceController extends Controller
         }
 
         return view('catvara.accounting.invoices.print', compact('invoice', 'hideVariants'));
+    }
+
+    /**
+     * Soft delete an invoice (Superadmin only)
+     */
+    public function destroy(Company $company, $uuid)
+    {
+        // Check if user is superadmin
+        if (!auth()->user()->isSuperAdmin()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Only Super Admin can delete invoices.'
+            ], 403);
+        }
+
+        $invoice = Invoice::where('company_id', $company->id)
+            ->where('uuid', $uuid)
+            ->firstOrFail();
+
+        // Soft delete the invoice
+        $invoice->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Invoice deleted successfully.'
+        ]);
     }
 }

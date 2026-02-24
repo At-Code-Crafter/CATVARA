@@ -61,6 +61,11 @@
         <a href="{{ company_route('accounting.invoices.index') }}" class="btn btn-white">
           <i class="fas fa-arrow-left mr-2 text-slate-500"></i> Back
         </a>
+        @if(auth()->user()->isSuperAdmin())
+          <button type="button" id="deleteInvoiceBtn" class="btn btn-danger">
+            <i class="fas fa-trash mr-2"></i> Delete
+          </button>
+        @endif
       </div>
     </div>
 
@@ -318,6 +323,51 @@
             btn.disabled = false;
             btn.innerHTML = '<i class="fas fa-file-export mr-2"></i> Post Invoice';
           });
+      });
+
+      // Delete Invoice Handler
+      document.getElementById('deleteInvoiceBtn')?.addEventListener('click', function () {
+        Swal.fire({
+          title: 'Delete Invoice?',
+          text: 'Are you sure you want to delete invoice #{{ $invoice->invoice_number }}?',
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonColor: '#dc2626',
+          cancelButtonColor: '#64748b',
+          confirmButtonText: 'Yes, delete it!'
+        }).then((result) => {
+          if (result.isConfirmed) {
+            const btn = document.getElementById('deleteInvoiceBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Deleting...';
+
+            fetch("{{ company_route('accounting.invoices.destroy', ['invoice' => $invoice->uuid]) }}", {
+              method: 'DELETE',
+              headers: {
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Accept': 'application/json'
+              }
+            })
+              .then(response => response.json())
+              .then(data => {
+                if (data.success) {
+                  Swal.fire('Deleted!', data.message, 'success').then(() => {
+                    window.location.href = "{{ company_route('accounting.invoices.index') }}";
+                  });
+                } else {
+                  Swal.fire('Error!', data.message || 'Error deleting invoice', 'error');
+                  btn.disabled = false;
+                  btn.innerHTML = '<i class="fas fa-trash mr-2"></i> Delete';
+                }
+              })
+              .catch(error => {
+                console.error('Error:', error);
+                Swal.fire('Error!', 'An error occurred while deleting the invoice.', 'error');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-trash mr-2"></i> Delete';
+              });
+          }
+        });
       });
     </script>
   @endif

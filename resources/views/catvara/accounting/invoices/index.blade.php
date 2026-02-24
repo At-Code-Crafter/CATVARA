@@ -34,7 +34,7 @@
   @push('scripts')
     <script>
       $(function() {
-        $('#invoicesTable').DataTable({
+        var table = $('#invoicesTable').DataTable({
           processing: true,
           serverSide: true,
           ajax: "{{ company_route('accounting.invoices.data') }}",
@@ -74,6 +74,44 @@
             processing: '<i class="fas fa-spinner fa-spin text-brand-500"></i>'
           },
           dom: '<"flex flex-col sm:flex-row items-center justify-between p-6 border-b border-slate-50"<"flex items-center"l><"flex items-center"f>>rt<"flex flex-col sm:flex-row items-center justify-between p-6 border-t border-slate-50"ip>'
+        });
+
+        // Delete invoice handler
+        $(document).on('click', '.delete-invoice', function() {
+          var deleteUrl = $(this).data('url');
+          var invoiceName = $(this).data('name');
+
+          Swal.fire({
+            title: 'Delete Invoice?',
+            text: 'Are you sure you want to delete invoice ' + invoiceName + '?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#dc2626',
+            cancelButtonColor: '#64748b',
+            confirmButtonText: 'Yes, delete it!'
+          }).then((result) => {
+            if (result.isConfirmed) {
+              $.ajax({
+                url: deleteUrl,
+                type: 'DELETE',
+                headers: {
+                  'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                success: function(response) {
+                  if (response.success) {
+                    Swal.fire('Deleted!', response.message, 'success');
+                    table.ajax.reload();
+                  } else {
+                    Swal.fire('Error!', response.message, 'error');
+                  }
+                },
+                error: function(xhr) {
+                  var message = xhr.responseJSON?.message || 'An error occurred while deleting the invoice.';
+                  Swal.fire('Error!', message, 'error');
+                }
+              });
+            }
+          });
         });
       });
     </script>
