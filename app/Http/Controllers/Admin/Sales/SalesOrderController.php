@@ -124,8 +124,11 @@ class SalesOrderController extends Controller
                 ->first();
         }
 
+        $countries = \App\Models\Common\Country::active()->ordered()->get();
+
         return view('catvara.sales-orders.create', [
             'editOrder' => $editOrder,
+            'countries' => $countries,
         ]);
     }
 

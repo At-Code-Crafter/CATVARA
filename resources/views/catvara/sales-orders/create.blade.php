@@ -88,6 +88,10 @@
                   <option value="INDIVIDUAL">Individuals Only</option>
                 </select>
               </div>
+              <button type="button" id="openCreateCustomerBtn"
+                class="btn bg-brand-500 hover:bg-brand-600 text-white border-0 h-[40px] px-4 shadow-sm hover:shadow-md transition-all duration-300">
+                <i class="fas fa-user-plus mr-2"></i> Add New Customer
+              </button>
             </div>
           </div>
         </div>
@@ -207,6 +211,134 @@
       <input type="hidden" name="ship_to" id="input_shipping_customer_id">
     </form>
   @endif
+
+  {{-- Sliding Customer Create Panel --}}
+  <div id="customerCreateOverlay" class="fixed inset-0 bg-black/50 z-40 hidden opacity-0 transition-opacity duration-300"></div>
+  <div id="customerCreatePanel" class="fixed top-0 right-0 h-full w-full max-w-lg bg-white shadow-2xl z-50 transform translate-x-full transition-transform duration-300 ease-out overflow-y-auto">
+    <div class="sticky top-0 bg-white border-b border-slate-100 px-6 py-4 flex items-center justify-between z-10">
+      <div>
+        <h3 class="text-lg font-bold text-slate-800">Create New Customer</h3>
+        <p class="text-xs text-slate-400 font-medium">Quick customer registration</p>
+      </div>
+      <button type="button" id="closeCreateCustomerBtn" class="h-8 w-8 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center transition-colors">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+
+    <form id="quickCustomerForm" class="p-6 space-y-5">
+      @csrf
+      {{-- Display Name --}}
+      <div class="space-y-1.5">
+        <label class="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Display Name <span class="text-rose-500">*</span></label>
+        <input type="text" name="display_name" required maxlength="255"
+          class="w-full h-10 rounded-lg border-slate-200 text-sm font-semibold focus:border-brand-400 focus:ring-4 focus:ring-brand-400/10"
+          placeholder="e.g. John Doe or Acme Corp">
+      </div>
+
+      {{-- Type --}}
+      <div class="space-y-1.5">
+        <label class="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Account Category <span class="text-rose-500">*</span></label>
+        <select name="type" id="quick_customer_type" required class="w-full h-10 rounded-lg border-slate-200 text-sm font-semibold">
+          <option value="INDIVIDUAL">Individual (B2C)</option>
+          <option value="COMPANY">Company (B2B)</option>
+        </select>
+      </div>
+
+      {{-- Legal Name (for Company) --}}
+      <div id="quick_legal_name_container" class="space-y-1.5 hidden">
+        <label class="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Legal Registered Name</label>
+        <input type="text" name="legal_name" maxlength="255"
+          class="w-full h-10 rounded-lg border-slate-200 text-sm font-semibold focus:border-brand-400 focus:ring-4 focus:ring-brand-400/10"
+          placeholder="Full legal entity name">
+      </div>
+
+      <div class="grid grid-cols-2 gap-4">
+        {{-- Email --}}
+        <div class="space-y-1.5">
+          <label class="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Email</label>
+          <input type="email" name="email" maxlength="255"
+            class="w-full h-10 rounded-lg border-slate-200 text-sm font-semibold focus:border-brand-400 focus:ring-4 focus:ring-brand-400/10"
+            placeholder="customer@example.com">
+        </div>
+
+        {{-- Phone --}}
+        <div class="space-y-1.5">
+          <label class="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Phone</label>
+          <input type="text" name="phone" maxlength="50"
+            class="w-full h-10 rounded-lg border-slate-200 text-sm font-semibold focus:border-brand-400 focus:ring-4 focus:ring-brand-400/10"
+            placeholder="+44 000 000 0000">
+        </div>
+      </div>
+
+      {{-- Tax Number --}}
+      <div class="space-y-1.5">
+        <label class="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Tax / Registration #</label>
+        <input type="text" name="tax_number" maxlength="100"
+          class="w-full h-10 rounded-lg border-slate-200 text-sm font-semibold focus:border-brand-400 focus:ring-4 focus:ring-brand-400/10"
+          placeholder="VAT, GST or Reg No">
+      </div>
+
+      {{-- Address --}}
+      <div class="space-y-1.5">
+        <label class="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Address</label>
+        <textarea name="address_line_1" rows="2" maxlength="1000"
+          class="w-full rounded-lg border-slate-200 text-sm font-semibold focus:border-brand-400 focus:ring-4 focus:ring-brand-400/10"
+          placeholder="Street name, building, unit number..."></textarea>
+      </div>
+
+      <div class="grid grid-cols-2 gap-4">
+        {{-- Country --}}
+        <div class="space-y-1.5">
+          <label class="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Country</label>
+          <select name="country_id" id="quick_country_id" class="w-full h-10 rounded-lg border-slate-200 text-sm font-semibold">
+            <option value="">Select country...</option>
+            @foreach ($countries as $country)
+              <option value="{{ $country->id }}" data-uuid="{{ $country->uuid }}">{{ $country->name }}</option>
+            @endforeach
+          </select>
+        </div>
+
+        {{-- State --}}
+        <div class="space-y-1.5">
+          <label class="text-[11px] font-bold text-slate-400 uppercase tracking-widest">State / Region</label>
+          <select name="state_id" id="quick_state_id" class="w-full h-10 rounded-lg border-slate-200 text-sm font-semibold" disabled>
+            <option value="">Select country first...</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-4">
+        {{-- City --}}
+        <div class="space-y-1.5">
+          <label class="text-[11px] font-bold text-slate-400 uppercase tracking-widest">City</label>
+          <input type="text" name="city" maxlength="100"
+            class="w-full h-10 rounded-lg border-slate-200 text-sm font-semibold focus:border-brand-400 focus:ring-4 focus:ring-brand-400/10"
+            placeholder="e.g. London">
+        </div>
+
+        {{-- Postal Code --}}
+        <div class="space-y-1.5">
+          <label class="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Postal Code</label>
+          <input type="text" name="zip_code" maxlength="20"
+            class="w-full h-10 rounded-lg border-slate-200 text-sm font-semibold focus:border-brand-400 focus:ring-4 focus:ring-brand-400/10"
+            placeholder="e.g. SW1E 5JL">
+        </div>
+      </div>
+
+      {{-- Active Status --}}
+      <input type="hidden" name="is_active" value="1">
+
+      {{-- Submit Button --}}
+      <div class="pt-4 border-t border-slate-100">
+        <button type="submit" id="quickCustomerSubmitBtn"
+          class="w-full btn bg-brand-500 hover:bg-brand-600 text-white border-0 py-3 h-auto shadow-lg shadow-brand-500/25 transition-all duration-300">
+          <span class="font-bold flex items-center justify-center gap-2">
+            <i class="fas fa-user-plus"></i> Create Customer
+          </span>
+        </button>
+      </div>
+    </form>
+  </div>
 @endsection
 
 @push('scripts')
@@ -535,5 +667,123 @@
       // Enable Continue only when billing selected
       $('#continueBtn').prop('disabled', !selectedBillTo);
     }
+
+    // ========================================
+    // Quick Customer Create Panel Functions
+    // ========================================
+    const $overlay = $('#customerCreateOverlay');
+    const $panel = $('#customerCreatePanel');
+
+    function openCustomerPanel() {
+      $overlay.removeClass('hidden');
+      setTimeout(() => {
+        $overlay.removeClass('opacity-0').addClass('opacity-100');
+        $panel.removeClass('translate-x-full');
+      }, 10);
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeCustomerPanel() {
+      $overlay.removeClass('opacity-100').addClass('opacity-0');
+      $panel.addClass('translate-x-full');
+      setTimeout(() => {
+        $overlay.addClass('hidden');
+        document.body.style.overflow = '';
+      }, 300);
+    }
+
+    // Open panel
+    $('#openCreateCustomerBtn').on('click', openCustomerPanel);
+
+    // Close panel
+    $('#closeCreateCustomerBtn').on('click', closeCustomerPanel);
+    $overlay.on('click', closeCustomerPanel);
+
+    // Toggle Legal Name for Company type
+    $('#quick_customer_type').on('change', function() {
+      if ($(this).val() === 'COMPANY') {
+        $('#quick_legal_name_container').removeClass('hidden').hide().fadeIn(200);
+      } else {
+        $('#quick_legal_name_container').fadeOut(150, function() {
+          $(this).addClass('hidden');
+        });
+      }
+    });
+
+    // Country -> State cascading for quick form
+    $('#quick_country_id').on('change', function() {
+      const countryUuid = $(this).find(':selected').data('uuid');
+      const $stateSelect = $('#quick_state_id');
+
+      $stateSelect.prop('disabled', true).html('<option value="">Loading...</option>');
+
+      if (countryUuid) {
+        $.get(`/settings/countries/${countryUuid}/states`, function(states) {
+          let options = '<option value="">Select state...</option>';
+          states.forEach(state => {
+            options += `<option value="${state.id}">${state.name}</option>`;
+          });
+          $stateSelect.html(options).prop('disabled', false);
+        });
+      } else {
+        $stateSelect.html('<option value="">Select country first...</option>').prop('disabled', true);
+      }
+    });
+
+    // Quick Customer Form Submission
+    $('#quickCustomerForm').on('submit', function(e) {
+      e.preventDefault();
+
+      const $form = $(this);
+      const $submitBtn = $('#quickCustomerSubmitBtn');
+      const originalBtnHtml = $submitBtn.html();
+
+      $submitBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-2"></i> Creating...');
+
+      $.ajax({
+        url: "{{ company_route('customers.store') }}",
+        method: 'POST',
+        data: $form.serialize(),
+        headers: {
+          'X-CSRF-TOKEN': '{{ csrf_token() }}'
+        },
+        success: function(response) {
+          if (response.status === 'success') {
+            Swal.fire({
+              icon: 'success',
+              title: 'Customer Created!',
+              text: response.message || 'The customer has been added successfully.',
+              timer: 1500,
+              showConfirmButton: false
+            }).then(() => {
+              window.location.reload();
+            });
+          } else {
+            Swal.fire('Error', response.message || 'Failed to create customer.', 'error');
+            $submitBtn.prop('disabled', false).html(originalBtnHtml);
+          }
+        },
+        error: function(xhr) {
+          let errorMessage = 'An error occurred while creating the customer.';
+
+          if (xhr.responseJSON) {
+            if (xhr.responseJSON.errors) {
+              const errors = Object.values(xhr.responseJSON.errors).flat();
+              errorMessage = errors.join('<br>');
+            } else if (xhr.responseJSON.message) {
+              errorMessage = xhr.responseJSON.message;
+            }
+          }
+
+          Swal.fire({
+            icon: 'error',
+            title: 'Validation Error',
+            html: errorMessage
+          });
+
+          $submitBtn.prop('disabled', false).html(originalBtnHtml);
+        }
+      });
+    });
   </script>
 @endpush
