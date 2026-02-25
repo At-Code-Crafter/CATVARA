@@ -131,7 +131,7 @@
               </div>
 
               <div class="space-y-1.5">
-                <label class="text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-1">SWIFT/BIC Code
+                <label class="text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-1">SWIFT Code
                   <span class="text-slate-300">(Optional)</span></label>
                 <div class="input-icon-group">
                   <i class="fas fa-exchange-alt"></i>
@@ -139,6 +139,32 @@
                     class="w-full py-2.5 font-semibold font-mono uppercase" placeholder="e.g. NWBKGB2L">
                 </div>
                 @error('swift_code')
+                  <p class="text-[10px] font-bold text-rose-500 mt-1">{{ $message }}</p>
+                @enderror
+              </div>
+
+              <div class="space-y-1.5">
+                <label class="text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-1">BIC Code
+                  <span class="text-slate-300">(Optional)</span></label>
+                <div class="input-icon-group">
+                  <i class="fas fa-barcode"></i>
+                  <input type="text" name="bic_code" value="{{ old('bic_code', $companyBank->bic_code ?? '') }}"
+                    class="w-full py-2.5 font-semibold font-mono uppercase" placeholder="e.g. DEUTDEFF">
+                </div>
+                @error('bic_code')
+                  <p class="text-[10px] font-bold text-rose-500 mt-1">{{ $message }}</p>
+                @enderror
+              </div>
+
+              <div class="space-y-1.5">
+                <label class="text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-1">Sort Code
+                  <span class="text-slate-300">(Optional)</span></label>
+                <div class="input-icon-group">
+                  <i class="fas fa-sort-numeric-down"></i>
+                  <input type="text" name="sort_code" value="{{ old('sort_code', $companyBank->sort_code ?? '') }}"
+                    class="w-full py-2.5 font-semibold font-mono" placeholder="e.g. 12-34-56">
+                </div>
+                @error('sort_code')
                   <p class="text-[10px] font-bold text-rose-500 mt-1">{{ $message }}</p>
                 @enderror
               </div>

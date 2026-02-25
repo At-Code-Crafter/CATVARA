@@ -910,6 +910,25 @@ class SalesOrderController extends Controller
             ], 400);
         }
 
+        // Simply mark the order as fulfilled without any stock operations
+        $order->update(['is_fulfilled' => true]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Order marked as fulfilled.',
+        ]);
+
+        /*
+        |--------------------------------------------------------------------------
+        | STOCK DEDUCTION CODE - COMMENTED FOR FUTURE USE
+        |--------------------------------------------------------------------------
+        | Uncomment the code below to enable stock validation and deduction
+        | when marking orders as fulfilled. This will:
+        | - Check stock across all warehouse locations
+        | - Deduct stock from multiple warehouses if needed
+        | - Throw error if insufficient stock
+        |--------------------------------------------------------------------------
+
         // Get only warehouse inventory locations for the company (exclude stores)
         $inventoryLocations = InventoryLocation::where('company_id', $company->id)
             ->where('type', 'warehouse')
@@ -989,5 +1008,6 @@ class SalesOrderController extends Controller
                 'message' => 'Order marked as fulfilled. Stock has been updated.',
             ]);
         });
+        */
     }
 }

@@ -292,6 +292,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
                 Route::get('invoices/data', [\App\Http\Controllers\Admin\Accounting\InvoiceController::class, 'data'])->name('invoices.data');
                 Route::get('invoices/{invoice}/print', [\App\Http\Controllers\Admin\Accounting\InvoiceController::class, 'print'])->name('invoices.print');
                 Route::post('invoices/{invoice}/post', [\App\Http\Controllers\Admin\Accounting\InvoiceController::class, 'post'])->name('invoices.post');
+                Route::delete('invoices/{invoice}', [\App\Http\Controllers\Admin\Accounting\InvoiceController::class, 'destroy'])->name('invoices.destroy');
                 Route::resource('invoices', \App\Http\Controllers\Admin\Accounting\InvoiceController::class)->only(['index', 'show']);
 
                 /**
