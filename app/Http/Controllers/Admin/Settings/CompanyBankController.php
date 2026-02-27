@@ -16,6 +16,8 @@ class CompanyBankController extends Controller
      */
     public function index(Request $request)
     {
+        $this->authorize('view', 'company-banks');
+
         if ($request->ajax()) {
             $companyId = active_company_id();
             $query = CompanyBank::where('company_id', $companyId)->with('currency');
@@ -77,6 +79,8 @@ class CompanyBankController extends Controller
      */
     public function create()
     {
+        $this->authorize('create', 'company-banks');
+
         $currencies = DB::table('currencies')->select('id', 'code', 'name')->get();
 
         return view('catvara.settings.company-banks.form', [
@@ -89,6 +93,8 @@ class CompanyBankController extends Controller
      */
     public function store(Request $request)
     {
+        $this->authorize('create', 'company-banks');
+
         $validated = $request->validate([
             'bank_name' => 'required|string|max:255',
             'account_name' => 'required|string|max:255',
@@ -124,6 +130,8 @@ class CompanyBankController extends Controller
      */
     public function edit(Company $company, $id)
     {
+        $this->authorize('edit', 'company-banks');
+
         $companyBank = CompanyBank::where('company_id', $company->id)->findOrFail($id);
         $currencies = DB::table('currencies')->select('id', 'code', 'name')->get();
 
@@ -138,6 +146,8 @@ class CompanyBankController extends Controller
      */
     public function update(Request $request, Company $company, $id)
     {
+        $this->authorize('edit', 'company-banks');
+
         $companyBank = CompanyBank::where('company_id', $company->id)->findOrFail($id);
 
         $validated = $request->validate([
@@ -174,6 +184,8 @@ class CompanyBankController extends Controller
      */
     public function destroy(Company $company, $id)
     {
+        $this->authorize('delete', 'company-banks');
+
         $companyBank = CompanyBank::where('company_id', $company->id)->findOrFail($id);
         $companyBank->delete();
 

@@ -16,6 +16,8 @@ class DashboardController extends Controller
     public function dashboard(Request $request)
     {
         $companyId = active_company_id();
+        $user = auth()->user();
+        $isSuperAdmin = $user->isSuperAdmin();
 
         // 1. GLOBAL DATE FILTER setup
         // Default to 'This Month' if not provided
@@ -24,6 +26,9 @@ class DashboardController extends Controller
 
         // Helper closures for cleaner code
         $applyDate = fn ($q, $col = 'created_at') => $q->whereBetween($col, [$dateFrom, $dateTo]);
+
+        // Helper: scope orders/quotes to current user if not super admin
+        $scopeByUser = fn ($q) => $isSuperAdmin ? $q : $q->where('created_by', $user->id);
 
         // 2. STATS CALCULATIONS
 
@@ -62,8 +67,9 @@ class DashboardController extends Controller
         $b2bCustomers = (clone $customerQuery)->where('type', 'company')->count();
         $b2cCustomers = (clone $customerQuery)->where('type', 'individual')->count();
 
-        // D. Orders (Date Filtered)
+        // D. Orders (Date Filtered, User Scoped for non-super-admin)
         $ordersBase = Order::where('company_id', $companyId)->whereBetween('created_at', [$dateFrom, $dateTo]);
+        $ordersBase = $scopeByUser($ordersBase);
         $totalOrders = (clone $ordersBase)->count();
 
         $draftStatus = OrderStatus::where('code', 'DRAFT')->first();
@@ -82,9 +88,13 @@ class DashboardController extends Controller
 
 
         // Expenses (Outgoing Payments)
-        $expensesTrend = \App\Models\Accounting\Payment::where('company_id', $companyId)
+        $expensesQuery = \App\Models\Accounting\Payment::where('company_id', $companyId)
             ->where('direction', 'OUT')
-            ->whereBetween('paid_at', [$dateFrom, $dateTo])
+            ->whereBetween('paid_at', [$dateFrom, $dateTo]);
+        if (!$isSuperAdmin) {
+            $expensesQuery->where('created_by', $user->id);
+        }
+        $expensesTrend = (clone $expensesQuery)
             ->select(
                 db_raw("DATE_FORMAT(paid_at, '$dateFormat') as date"),
                 db_raw('SUM(amount) as total')
@@ -94,21 +104,22 @@ class DashboardController extends Controller
             ->pluck('total', 'date');
 
         // B. Pie Chart: Total Sales vs Total Expenses (In selected range)
-        $totalExpensesAmount = \App\Models\Accounting\Payment::where('company_id', $companyId)
-            ->where('direction', 'OUT')
-            ->whereBetween('paid_at', [$dateFrom, $dateTo])
-            ->sum('amount');
+        $totalExpensesAmount = (clone $expensesQuery)->sum('amount');
 
         // 4. TABLES DATA
 
         // A. Top Selling Products (by Quantity in Confirmed Orders in Date Range)
-        $topProducts = DB::table('order_items')
+        $topProductsQuery = DB::table('order_items')
             ->join('orders', 'order_items.order_id', '=', 'orders.id')
             ->join('product_variants', 'order_items.product_variant_id', '=', 'product_variants.id')
             ->join('products', 'product_variants.product_id', '=', 'products.id')
             ->where('orders.company_id', $companyId)
             ->where('orders.status_id', $confirmedStatus?->id) // Only confirmed orders
-            ->whereBetween('orders.created_at', [$dateFrom, $dateTo])
+            ->whereBetween('orders.created_at', [$dateFrom, $dateTo]);
+        if (!$isSuperAdmin) {
+            $topProductsQuery->where('orders.created_by', $user->id);
+        }
+        $topProducts = $topProductsQuery
             ->select(
                 'products.name',
                 'products.image',
@@ -139,10 +150,12 @@ class DashboardController extends Controller
             ->limit(5)
             ->get();
 
-        // C. Recent Sales (Last 5 Confirmed Orders in Range)
-        $recentSales = Order::where('company_id', $companyId)
+        // C. Recent Sales (Last 5 Confirmed Orders in Range, User Scoped)
+        $recentSalesQuery = Order::where('company_id', $companyId)
             ->where('status_id', $confirmedStatus?->id)
-            ->whereBetween('created_at', [$dateFrom, $dateTo])
+            ->whereBetween('created_at', [$dateFrom, $dateTo]);
+        $recentSalesQuery = $scopeByUser($recentSalesQuery);
+        $recentSales = $recentSalesQuery
             ->with('customer')
             ->latest()
             ->limit(10)

@@ -8,6 +8,7 @@ use App\Http\Requests\Admin\Company\CompanyUserUpdateRequest;
 use App\Models\User;
 use App\Models\Company\Company;
 use App\Models\Auth\Role;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Yajra\DataTables\Facades\DataTables;
 
@@ -18,6 +19,8 @@ class CompanyUserController extends Controller
      */
     public function index(Request $request)
     {
+        $this->authorize('view', 'company-users');
+
         $company = active_company();
 
         if ($request->ajax()) {
@@ -90,6 +93,8 @@ class CompanyUserController extends Controller
      */
     public function create()
     {
+        $this->authorize('create', 'company-users');
+
         $company = active_company();
         $roles = Role::where('company_id', $company->id)->where('is_active', true)->orderBy('name')->get();
         return view('catvara.settings.users.form', compact('company', 'roles'));
@@ -100,6 +105,8 @@ class CompanyUserController extends Controller
      */
     public function store(CompanyUserStoreRequest $request)
     {
+        $this->authorize('create', 'company-users');
+
         $company = active_company();
         $validated = $request->validated();
 
@@ -115,7 +122,7 @@ class CompanyUserController extends Controller
 
             // Link to company
             $user->assignToCompany($company->id, false, true);
- 
+
             // Assign roles
             $user->syncRoles($validated['role_ids'], $company->id);
 
@@ -133,6 +140,8 @@ class CompanyUserController extends Controller
      */
     public function show(Company $company, string $id)
     {
+        $this->authorize('view', 'company-users');
+
         $user = User::query()
             ->join('company_user', 'company_user.user_id', '=', 'users.id')
             ->where('company_user.company_id', $company->id)
@@ -150,6 +159,8 @@ class CompanyUserController extends Controller
      */
     public function edit(Company $company, string $id)
     {
+        $this->authorize('edit', 'company-users');
+
         $user = User::query()
             ->join('company_user', 'company_user.user_id', '=', 'users.id')
             ->where('company_user.company_id', $company->id)
@@ -168,6 +179,8 @@ class CompanyUserController extends Controller
      */
     public function update(CompanyUserUpdateRequest $request, Company $company, string $id)
     {
+        $this->authorize('edit', 'company-users');
+
         $user = User::query()
             ->join('company_user', 'company_user.user_id', '=', 'users.id')
             ->where('company_user.company_id', $company->id)
@@ -208,6 +221,8 @@ class CompanyUserController extends Controller
      */
     public function destroy(Company $company, string $id)
     {
+        $this->authorize('delete', 'company-users');
+
         $user = User::query()
             ->join('company_user', 'company_user.user_id', '=', 'users.id')
             ->where('company_user.company_id', $company->id)
@@ -232,6 +247,8 @@ class CompanyUserController extends Controller
     }
     public function loginActivities(Company $company, User $user)
     {
+        $this->authorize('view', 'company-users');
+
         $activities = $user->loginActivities()
             ->where('logged_at', '>=', now()->subDays(10))
             ->orderBy('logged_at', 'desc')

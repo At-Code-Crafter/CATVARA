@@ -26,11 +26,15 @@ class InvoiceController extends Controller
 
     public function index(Company $company)
     {
+        $this->authorize('view', 'invoices');
+
         return view('catvara.accounting.invoices.index');
     }
 
     public function data(Request $request, Company $company)
     {
+        $this->authorize('view', 'invoices');
+
         $query = Invoice::where('company_id', $company->id)
             ->with(['customer', 'status', 'paymentStatus', 'currency']);
 
@@ -83,6 +87,8 @@ class InvoiceController extends Controller
 
     public function show(Company $company, $uuid)
     {
+        $this->authorize('view', 'invoices');
+
         $invoice = Invoice::where('company_id', $company->id)
             ->where('uuid', $uuid)
             ->with([
@@ -104,6 +110,8 @@ class InvoiceController extends Controller
 
     public function storeFromOrder(Request $request, Company $company, $orderUuid)
     {
+        $this->authorize('create', 'invoices');
+
         $order = Order::where('company_id', $company->id)
             ->where('uuid', $orderUuid)
             ->with(['status', 'invoice'])
@@ -155,6 +163,8 @@ class InvoiceController extends Controller
 
     public function post(Company $company, $uuid)
     {
+        $this->authorize('edit', 'invoices');
+
         $invoice = Invoice::where('company_id', $company->id)
             ->where('uuid', $uuid)
             ->firstOrFail();
@@ -176,6 +186,8 @@ class InvoiceController extends Controller
 
     public function print(Request $request, Company $company, $uuid)
     {
+        $this->authorize('view', 'invoices');
+
         $invoice = Invoice::where('company_id', $company->id)
             ->where('uuid', $uuid)
             ->with([
@@ -224,6 +236,8 @@ class InvoiceController extends Controller
      */
     public function edit(Company $company, $uuid)
     {
+        $this->authorize('edit', 'invoices');
+
         $invoice = Invoice::where('company_id', $company->id)
             ->where('uuid', $uuid)
             ->with([
@@ -262,6 +276,8 @@ class InvoiceController extends Controller
      */
     public function update(Request $request, Company $company, $uuid)
     {
+        $this->authorize('edit', 'invoices');
+
         $invoice = Invoice::where('company_id', $company->id)
             ->where('uuid', $uuid)
             ->with(['items'])
@@ -310,6 +326,8 @@ class InvoiceController extends Controller
      */
     public function destroy(Company $company, $uuid)
     {
+        $this->authorize('delete', 'invoices');
+
         // Check if user is superadmin
         if (!auth()->user()->isSuperAdmin()) {
             return response()->json([

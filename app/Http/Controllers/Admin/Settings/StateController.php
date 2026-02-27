@@ -17,6 +17,8 @@ class StateController extends Controller
      */
     public function index(Request $request)
     {
+        abort_unless(auth()->user()->isSuperAdmin(), 403);
+
         if ($request->ajax()) {
             $query = State::with('country')
                 ->select('states.*')
@@ -92,6 +94,8 @@ class StateController extends Controller
      */
     public function stats(Request $request)
     {
+        abort_unless(auth()->user()->isSuperAdmin(), 403);
+
         $query = State::query();
 
         if ($request->filled('country_id')) {
@@ -110,6 +114,8 @@ class StateController extends Controller
      */
     public function create(Request $request)
     {
+        abort_unless(auth()->user()->isSuperAdmin(), 403);
+
         $countries = Country::active()->ordered()->get();
         $selectedCountry = $request->country_id;
 
@@ -121,6 +127,8 @@ class StateController extends Controller
      */
     public function store(StateStoreRequest $request)
     {
+        abort_unless(auth()->user()->isSuperAdmin(), 403);
+
         $validated = $request->validated();
         $validated['is_active'] = $request->has('is_active');
 
@@ -135,6 +143,8 @@ class StateController extends Controller
      */
     public function edit(State $state)
     {
+        abort_unless(auth()->user()->isSuperAdmin(), 403);
+
         $countries = Country::active()->ordered()->get();
 
         return view('theme.adminlte.settings.states.edit', compact('state', 'countries'));
@@ -145,6 +155,8 @@ class StateController extends Controller
      */
     public function update(StateUpdateRequest $request, State $state)
     {
+        abort_unless(auth()->user()->isSuperAdmin(), 403);
+
         $validated = $request->validated();
         $validated['is_active'] = $request->has('is_active');
 
@@ -159,6 +171,8 @@ class StateController extends Controller
      */
     public function destroy(State $state)
     {
+        abort_unless(auth()->user()->isSuperAdmin(), 403);
+
         $state->delete();
 
         return response()->json([

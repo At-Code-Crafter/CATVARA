@@ -51,6 +51,8 @@ class SalesOrderController extends Controller
 
     public function data(Request $request)
     {
+        $this->authorize('view', 'orders');
+
         $companyId = active_company_id();
 
         $query = Order::query()
@@ -474,6 +476,8 @@ class SalesOrderController extends Controller
 
     public function show(Company $company, $id)
     {
+        $this->authorize('view', 'orders');
+
         $order = Order::where('company_id', $company->id)
             ->where('uuid', $id)
             ->with([
@@ -529,6 +533,8 @@ class SalesOrderController extends Controller
 
     public function updatePaymentStatus(UpdateSalesOrderPaymentStatusRequest $request, Company $company, $id)
     {
+        $this->authorize('edit', 'orders');
+
         $order = Order::where('company_id', $company->id)
             ->where('id', $id)
             ->firstOrFail();
@@ -549,6 +555,8 @@ class SalesOrderController extends Controller
 
     public function printOrder(Company $company, $uuid)
     {
+        $this->authorize('view', 'orders');
+
         $order = Order::where('company_id', $company->id)
             ->where('uuid', $uuid)
             ->with([
@@ -568,6 +576,8 @@ class SalesOrderController extends Controller
 
     public function printProforma(Company $company, $uuid)
     {
+        $this->authorize('view', 'orders');
+
         $order = Order::where('company_id', $company->id)
             ->where('uuid', $uuid)
             ->with([
@@ -589,6 +599,8 @@ class SalesOrderController extends Controller
 
     public function finalize(Company $company, string $sales_order)
     {
+        $this->authorize('edit', 'orders');
+
         $order = Order::query()
             ->where('company_id', $company->id)
             ->where('uuid', $sales_order)
@@ -634,6 +646,8 @@ class SalesOrderController extends Controller
 
     public function finalizeStore(FinalizeSalesOrderRequest $request, Company $company, string $sales_order)
     {
+        $this->authorize('edit', 'orders');
+
         $order = Order::query()
             ->where('uuid', $sales_order)
             ->with(['items'])
@@ -702,6 +716,8 @@ class SalesOrderController extends Controller
 
     public function generateDeliveryNote(GenerateDeliveryNoteRequest $request, Company $company, string $sales_order)
     {
+        $this->authorize('edit', 'orders');
+
         $order = Order::where('company_id', $company->id)
             ->where('uuid', $sales_order)
             ->with(['items'])
@@ -798,6 +814,8 @@ class SalesOrderController extends Controller
 
     public function printDeliveryNote(Company $company, string $delivery_note)
     {
+        $this->authorize('view', 'orders');
+
         $dn = DeliveryNote::where('company_id', $company->id)
             ->where('uuid', $delivery_note)
             ->with([
@@ -814,6 +832,8 @@ class SalesOrderController extends Controller
 
     public function printLabel(Company $company, string $delivery_note)
     {
+        $this->authorize('view', 'orders');
+
         $dn = DeliveryNote::where('company_id', $company->id)
             ->where('uuid', $delivery_note)
             ->with([
@@ -831,6 +851,8 @@ class SalesOrderController extends Controller
 
     public function markDeliveryNoteAsDelivered(Company $company, string $delivery_note)
     {
+        $this->authorize('edit', 'orders');
+
         $dn = DeliveryNote::where('company_id', $company->id)
             ->where('uuid', $delivery_note)
             ->firstOrFail();
@@ -845,6 +867,8 @@ class SalesOrderController extends Controller
 
     public function deleteDeliveryNote(Company $company, string $delivery_note)
     {
+        $this->authorize('delete', 'orders');
+
         $dn = DeliveryNote::where('company_id', $company->id)
             ->where('uuid', $delivery_note)
             ->with(['items.orderItem', 'order'])
@@ -901,6 +925,8 @@ class SalesOrderController extends Controller
      */
     public function markAsFulfillment(Request $request, Company $company, string $sales_order)
     {
+        $this->authorize('edit', 'orders');
+
         $order = Order::where('company_id', $company->id)
             ->where('uuid', $sales_order)
             ->with(['items'])

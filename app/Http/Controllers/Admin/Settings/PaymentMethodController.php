@@ -17,6 +17,8 @@ class PaymentMethodController extends Controller
      */
     public function index(Request $request)
     {
+        $this->authorize('view', 'payment-methods');
+
         if ($request->ajax()) {
             $companyId = active_company_id();
             $query = PaymentMethod::where('company_id', $companyId);
@@ -73,6 +75,8 @@ class PaymentMethodController extends Controller
      */
     public function create()
     {
+        $this->authorize('create', 'payment-methods');
+
         return view('catvara.settings.payment-methods.form');
     }
 
@@ -81,6 +85,8 @@ class PaymentMethodController extends Controller
      */
     public function store(PaymentMethodStoreRequest $request)
     {
+        $this->authorize('create', 'payment-methods');
+
         $validated = $request->validated();
 
         PaymentMethod::create([
@@ -102,6 +108,8 @@ class PaymentMethodController extends Controller
      */
     public function edit(Company $company, $id)
     {
+        $this->authorize('edit', 'payment-methods');
+
         $paymentMethod = PaymentMethod::where('company_id', $company->id)->findOrFail($id);
 
         return view('catvara.settings.payment-methods.form', [
@@ -114,6 +122,8 @@ class PaymentMethodController extends Controller
      */
     public function update(PaymentMethodUpdateRequest $request, Company $company, $id)
     {
+        $this->authorize('edit', 'payment-methods');
+
         $paymentMethod = PaymentMethod::where('company_id', $company->id)->findOrFail($id);
         $validated = $request->validated();
 
@@ -136,6 +146,8 @@ class PaymentMethodController extends Controller
      */
     public function destroy(PaymentMethod $paymentMethod)
     {
+        $this->authorize('delete', 'payment-methods');
+
         // Check if payment method is in use
         if ($paymentMethod->payments()->exists()) {
             return back()->with('error', 'Cannot delete payment method that has associated payments.');

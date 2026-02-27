@@ -128,6 +128,8 @@ class TransferController extends Controller
      */
     public function approve(Request $request, Company $company, $id)
     {
+        $this->authorize('edit', 'transfers');
+
         $transfer = InventoryTransfer::where('company_id', $request->company->id)->findOrFail($id);
         $this->transferService->approve($transfer, auth()->id());
 
@@ -139,6 +141,8 @@ class TransferController extends Controller
      */
     public function ship(Request $request, Company $company, $id)
     {
+        $this->authorize('edit', 'transfers');
+
         $transfer = InventoryTransfer::where('company_id', $request->company->id)->findOrFail($id);
         $this->transferService->ship($transfer, auth()->id());
 
@@ -150,6 +154,8 @@ class TransferController extends Controller
      */
     public function receive(Request $request, Company $company, $id)
     {
+        $this->authorize('edit', 'transfers');
+
         $transfer = InventoryTransfer::where('company_id', $request->company->id)->findOrFail($id);
 
         // For full receive, pass all items as received
