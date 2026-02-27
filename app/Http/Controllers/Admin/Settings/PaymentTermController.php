@@ -14,6 +14,8 @@ class PaymentTermController extends Controller
 {
     public function index(Request $request)
     {
+        $this->authorize('view', 'payment-terms');
+
         if ($request->ajax()) {
             $data = PaymentTerm::forCompany();
 
@@ -38,11 +40,15 @@ class PaymentTermController extends Controller
 
     public function create()
     {
+        $this->authorize('create', 'payment-terms');
+
         return view('catvara.settings.payment-terms.form');
     }
 
     public function store(StorePaymentTermRequest $request)
     {
+        $this->authorize('create', 'payment-terms');
+
         PaymentTerm::create($request->validated() + [
             'company_id' => active_company_id(),
             'is_active' => $request->has('is_active'),
@@ -53,6 +59,8 @@ class PaymentTermController extends Controller
 
     public function edit(Company $company, $id)
     {
+        $this->authorize('edit', 'payment-terms');
+
         $payment_term = PaymentTerm::where('company_id', $company->id)->findOrFail($id);
 
         return view('catvara.settings.payment-terms.form', compact('payment_term'));
@@ -60,6 +68,8 @@ class PaymentTermController extends Controller
 
     public function update(UpdatePaymentTermRequest $request, Company $company, $id)
     {
+        $this->authorize('edit', 'payment-terms');
+
         $payment_term = PaymentTerm::where('company_id', $company->id)->findOrFail($id);
         $payment_term->update($request->validated() + [
             'company_id' => $company->id,
@@ -71,6 +81,8 @@ class PaymentTermController extends Controller
 
     public function destroy(Company $company, $id)
     {
+        $this->authorize('delete', 'payment-terms');
+
         $payment_term = PaymentTerm::where('company_id', $company->id)->findOrFail($id);
         $payment_term->delete();
 

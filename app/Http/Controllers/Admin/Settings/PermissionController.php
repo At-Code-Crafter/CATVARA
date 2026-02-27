@@ -14,6 +14,8 @@ class PermissionController extends Controller
 {
     public function index(Request $request)
     {
+        abort_unless(auth()->user()->isSuperAdmin(), 403);
+
         if ($request->ajax()) {
 
             $query = Permission::query()
@@ -91,12 +93,16 @@ class PermissionController extends Controller
 
     public function create()
     {
+        abort_unless(auth()->user()->isSuperAdmin(), 403);
+
         $modules = Module::query()->orderBy('name')->get();
         return view('catvara.admin.permissions.form', compact('modules'));
     }
 
     public function store(PermissionStoreRequest $request)
     {
+        abort_unless(auth()->user()->isSuperAdmin(), 403);
+
         $data = $request->validated();
 
         Permission::create([
@@ -118,6 +124,8 @@ class PermissionController extends Controller
 
     public function edit(string $id)
     {
+        abort_unless(auth()->user()->isSuperAdmin(), 403);
+
         $permission = Permission::findOrFail($id);
         $modules = Module::query()->orderBy('name')->get();
 
@@ -126,6 +134,8 @@ class PermissionController extends Controller
 
     public function update(PermissionUpdateRequest $request, string $id)
     {
+        abort_unless(auth()->user()->isSuperAdmin(), 403);
+
         $permission = Permission::findOrFail($id);
         $data = $request->validated();
 

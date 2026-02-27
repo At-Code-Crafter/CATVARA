@@ -16,6 +16,8 @@ class CountryController extends Controller
      */
     public function index(Request $request)
     {
+        abort_unless(auth()->user()->isSuperAdmin(), 403);
+
         if ($request->ajax()) {
             $query = Country::withCount('states');
 
@@ -99,6 +101,8 @@ class CountryController extends Controller
      */
     public function stats(Request $request)
     {
+        abort_unless(auth()->user()->isSuperAdmin(), 403);
+
         $query = Country::query();
 
         if ($request->filled('region')) {
@@ -118,6 +122,8 @@ class CountryController extends Controller
      */
     public function create()
     {
+        abort_unless(auth()->user()->isSuperAdmin(), 403);
+
         return view('theme.adminlte.settings.countries.create');
     }
 
@@ -126,6 +132,8 @@ class CountryController extends Controller
      */
     public function store(CountryStoreRequest $request)
     {
+        abort_unless(auth()->user()->isSuperAdmin(), 403);
+
         $validated = $request->validated();
         $validated['is_active'] = $request->has('is_active');
 
@@ -140,6 +148,8 @@ class CountryController extends Controller
      */
     public function edit(Country $country)
     {
+        abort_unless(auth()->user()->isSuperAdmin(), 403);
+
         return view('theme.adminlte.settings.countries.edit', compact('country'));
     }
 
@@ -148,6 +158,8 @@ class CountryController extends Controller
      */
     public function update(CountryUpdateRequest $request, Country $country)
     {
+        abort_unless(auth()->user()->isSuperAdmin(), 403);
+
         $validated = $request->validated();
         $validated['is_active'] = $request->has('is_active');
 
@@ -162,6 +174,8 @@ class CountryController extends Controller
      */
     public function destroy(Country $country)
     {
+        abort_unless(auth()->user()->isSuperAdmin(), 403);
+
         // Check if country has states
         if ($country->states()->count() > 0) {
             return response()->json([
@@ -183,6 +197,8 @@ class CountryController extends Controller
      */
     public function getStates(Country $country)
     {
+        abort_unless(auth()->user()->isSuperAdmin(), 403);
+
         $states = $country->states()
             ->active()
             ->ordered()

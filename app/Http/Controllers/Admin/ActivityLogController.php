@@ -15,6 +15,8 @@ class ActivityLogController extends Controller
      */
     public function index(Request $request)
     {
+        $this->authorize('view', 'activity-logs');
+
         if ($request->ajax()) {
             $query = ActivityLog::query()
                 ->where('company_id', active_company_id())
@@ -37,7 +39,7 @@ class ActivityLogController extends Controller
                 ->addIndexColumn()
                 ->editColumn('causer', function ($row) {
                     if (!$row->causer) return '<span class="text-slate-400">System</span>';
-                    
+
                     return '
                         <div class="flex items-center gap-2">
                             <div class="h-7 w-7 rounded-lg bg-slate-100 flex items-center justify-center text-[10px] font-black text-slate-500">
@@ -53,7 +55,7 @@ class ActivityLogController extends Controller
                 ->editColumn('event', function ($row) {
                     $bg = 'bg-slate-100 text-slate-600';
                     $event = str_replace(['_', '.'], ' ', $row->event);
-                    
+
                     if (str_contains($row->event, 'created')) $bg = 'bg-emerald-50 text-emerald-600 border-emerald-100';
                     if (str_contains($row->event, 'updated')) $bg = 'bg-blue-50 text-blue-600 border-blue-100';
                     if (str_contains($row->event, 'deleted')) $bg = 'bg-rose-50 text-rose-600 border-rose-100';
@@ -73,7 +75,7 @@ class ActivityLogController extends Controller
                     $changes = $row->properties['changes'] ?? [];
                     $count = count($changes);
                     if ($count === 0) return '<span class="text-slate-300">—</span>';
-                    
+
                     return '<span class="badge badge-light-blue font-black text-[10px]">'.$count.' Fields</span>';
                 })
                 ->editColumn('created_at', function ($row) {
@@ -109,6 +111,8 @@ class ActivityLogController extends Controller
      */
     public function show(Company $company, $id)
     {
+        $this->authorize('view', 'activity-logs');
+
         $log = ActivityLog::where('company_id', $company->id)
             ->with(['causer'])
             ->findOrFail($id);

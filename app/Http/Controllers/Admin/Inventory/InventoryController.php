@@ -59,6 +59,8 @@ class InventoryController extends Controller
      */
     public function balancesData(Request $request)
     {
+        $this->authorize('view', 'inventory');
+
         $query = InventoryBalance::where('inventory_balances.company_id', $request->company->id)
             ->with(['variant.product', 'location.locatable']);
 
@@ -177,6 +179,8 @@ class InventoryController extends Controller
      */
     public function transfer(Requests\Inventory\CreateQuickTransferRequest $request)
     {
+        $this->authorize('adjust', 'inventory');
+
         try {
             // Ensure transfer reasons exist (company-scoped)
             InventoryReason::firstOrCreate(
@@ -215,6 +219,8 @@ class InventoryController extends Controller
      */
     public function movements(Request $request)
     {
+        $this->authorize('view', 'inventory');
+
         if ($request->ajax()) {
             $query = InventoryMovement::where('inventory_movements.company_id', $request->company->id)
                 ->with(['variant.product', 'location.locatable', 'reason', 'performer']);
@@ -256,6 +262,8 @@ class InventoryController extends Controller
      */
     public function variantDetails(Request $request, Company $company, $id)
     {
+        $this->authorize('view', 'inventory');
+
         // Using ID and finding manually to ensure company scope
         $variant = ProductVariant::where('company_id', $company->id)
             ->with(['product', 'attributeValues', 'prices.currency', 'prices.priceChannel'])

@@ -18,6 +18,8 @@ class CompanyProfileController extends Controller
      */
     public function edit()
     {
+        $this->authorize('view', 'company-profile');
+
         $company = Company::where('id', active_company()->id)->first();
         $company->load('detail');
 
@@ -31,18 +33,20 @@ class CompanyProfileController extends Controller
      */
     public function update(CompanyProfileUpdateRequest $request)
     {
+        $this->authorize('edit', 'company-profile');
+
         $company = Company::where('id', active_company()->id)->first();
 
         try {
             DB::beginTransaction();
-            
+
             // 1. Update Core
             $logoPath = $company->logo;
             if ($request->hasFile('logo')) {
                  if ($company->logo) Storage::disk('public')->delete($company->logo);
                  $logoPath = $request->file('logo')->store('companies', 'public');
             }
-            
+
             $company->update([
                 'name' => $request->name,
                 'legal_name' => $request->legal_name,
@@ -50,7 +54,7 @@ class CompanyProfileController extends Controller
                 'logo' => $logoPath,
                 'password_expiry_days' => $request->password_expiry_days,
             ]);
-            
+
             // 2. Update Details
             CompanyDetail::updateOrCreate(
                 ['company_id' => $company->id],
@@ -77,9 +81,9 @@ class CompanyProfileController extends Controller
                     );
                 }
             }
-            
+
             DB::commit();
-            
+
             if ($request->ajax()) {
                 return response()->json([
                     'message' => 'Company profile updated successfully.',
@@ -87,7 +91,7 @@ class CompanyProfileController extends Controller
             }
 
             return back()->with('success', 'Company profile updated successfully.');
-            
+
         } catch (\Exception $e) {
             DB::rollBack();
             if ($request->ajax()) {

@@ -22,8 +22,9 @@ class TenantController extends Controller
      */
     public function index(Request $request)
     {
-        if ($request->ajax()) {
+        abort_unless(auth()->user()->isSuperAdmin(), 403);
 
+        if ($request->ajax()) {
             $query = Company::query()
                 ->select(
                     'companies.id',
@@ -145,6 +146,8 @@ class TenantController extends Controller
      */
     public function stats(Request $request)
     {
+        abort_unless(auth()->user()->isSuperAdmin(), 403);
+
         $activeId = CompanyStatus::where('code', 'ACTIVE')->value('id');
         $suspendedId = CompanyStatus::where('code', 'SUSPENDED')->value('id');
 
@@ -170,6 +173,8 @@ class TenantController extends Controller
      */
     public function create()
     {
+        abort_unless(auth()->user()->isSuperAdmin(), 403);
+
         $statuses = CompanyStatus::query()->orderBy('name')->get();
 
         $data['statuses'] = $statuses;
@@ -182,6 +187,8 @@ class TenantController extends Controller
      */
     public function store(CompanyStoreRequest $request)
     {
+        abort_unless(auth()->user()->isSuperAdmin(), 403);
+
         $data = $request->validated();
 
         DB::beginTransaction();
@@ -264,6 +271,8 @@ class TenantController extends Controller
      */
     public function edit(string $id)
     {
+        abort_unless(auth()->user()->isSuperAdmin(), 403);
+
         $company = Company::with(['detail', 'baseCurrency', 'priceChannels'])->findOrFail($id);
         $statuses = CompanyStatus::query()->orderBy('name')->get();
         $currencies = \App\Models\Pricing\Currency::where('is_active', true)->get();
@@ -279,6 +288,8 @@ class TenantController extends Controller
      */
     public function update(CompanyUpdateRequest $request, string $id)
     {
+        abort_unless(auth()->user()->isSuperAdmin(), 403);
+
         $company = Company::with('detail')->findOrFail($id);
         $data = $request->validated();
 

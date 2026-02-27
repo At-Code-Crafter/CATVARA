@@ -252,6 +252,8 @@ class UserController extends Controller
      */
     public function rolesByCompany(UserRolesByCompanyRequest $request)
     {
+        $this->authorize('view', 'users');
+
         $roles = Role::query()
             ->select('id', 'name')
             ->where('company_id', $request->company_id)
@@ -267,6 +269,8 @@ class UserController extends Controller
      */
     public function assignCompany(UserAssignCompanyRequest $request, User $user)
     {
+        $this->authorize('edit', 'users');
+
         $data = $request->validated();
 
         DB::beginTransaction();
@@ -297,6 +301,8 @@ class UserController extends Controller
 
     public function removeCompany(UserRemoveCompanyRequest $request, User $user)
     {
+        $this->authorize('edit', 'users');
+
         DB::beginTransaction();
         try {
             // Remove from company (and its roles)

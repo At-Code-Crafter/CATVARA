@@ -44,6 +44,8 @@ class QuoteController extends Controller
 
     public function data(Request $request)
     {
+        $this->authorize('view', 'quotes');
+
         $companyId = active_company_id();
         $query = Quote::where('quotes.company_id', $companyId)
             ->with(['customer', 'status', 'currency']);
@@ -480,6 +482,8 @@ class QuoteController extends Controller
 
     public function show(Company $company, $id)
     {
+        $this->authorize('view', 'quotes');
+
         $quote = Quote::where('company_id', $company->id)
             ->where('id', $id)
             ->with([
@@ -554,6 +558,8 @@ class QuoteController extends Controller
 
     public function printQuote(Company $company, $uuid)
     {
+        $this->authorize('view', 'quotes');
+
         $quote = Quote::where('company_id', $company->id)
             ->where('uuid', $uuid)
             ->with([

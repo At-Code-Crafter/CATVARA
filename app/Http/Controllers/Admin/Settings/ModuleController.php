@@ -14,6 +14,8 @@ class ModuleController extends Controller
 {
     public function index(Request $request)
     {
+        abort_unless(auth()->user()->isSuperAdmin(), 403);
+
         if ($request->ajax()) {
 
             $query = Module::query()
@@ -77,11 +79,15 @@ class ModuleController extends Controller
 
     public function create()
     {
+        abort_unless(auth()->user()->isSuperAdmin(), 403);
+
         return view('catvara.admin.modules.form');
     }
 
     public function store(ModuleStoreRequest $request)
     {
+        abort_unless(auth()->user()->isSuperAdmin(), 403);
+
         $data = $request->validated();
 
         $slug = $data['slug'] ?? Str::slug($data['name']);
@@ -104,12 +110,16 @@ class ModuleController extends Controller
 
     public function edit(string $id)
     {
+        abort_unless(auth()->user()->isSuperAdmin(), 403);
+
         $module = Module::findOrFail($id);
         return view('catvara.admin.modules.form', compact('module'));
     }
 
     public function update(ModuleUpdateRequest $request, string $id)
     {
+        abort_unless(auth()->user()->isSuperAdmin(), 403);
+
         $module = Module::findOrFail($id);
         $data = $request->validated();
 

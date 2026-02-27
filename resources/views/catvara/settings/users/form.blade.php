@@ -94,7 +94,7 @@
               {{-- Password --}}
               <div class="space-y-1.5">
                 <label class="text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-1">
-                  Password {{ isset($user) ? '' : '<span class="text-rose-500">*</span>' }}
+                  Password @if(!isset($user))<span class="text-rose-500">*</span>@endif
                 </label>
                 <div class="input-icon-group">
                   <i class="fas fa-lock"></i>
