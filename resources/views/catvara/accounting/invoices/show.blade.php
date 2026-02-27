@@ -35,6 +35,10 @@
       </div>
       <div class="flex items-center gap-3 flex-wrap">
         @if (!$invoice->posted_at)
+          <a href="{{ company_route('accounting.invoices.edit', ['invoice' => $invoice->uuid]) }}"
+            class="btn btn-white">
+            <i class="fas fa-edit mr-2 text-slate-500"></i> Edit
+          </a>
           <button type="button" id="postInvoiceBtn"
             class="btn btn-primary bg-linear-to-r from-indigo-500 to-indigo-600 border-none shadow-lg shadow-indigo-500/25">
             <i class="fas fa-file-export mr-2"></i> Post Invoice

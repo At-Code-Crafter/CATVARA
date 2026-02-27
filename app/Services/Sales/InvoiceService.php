@@ -156,4 +156,115 @@ class InvoiceService
 
         // Future: trigger General Ledger entries or tax reporting integrations here.
     }
+
+    /**
+     * Update an existing DRAFT invoice
+     */
+    public function updateInvoice(Invoice $invoice, array $data): Invoice
+    {
+        return DB::transaction(function () use ($invoice, $data) {
+            // 1. Update header fields
+            $headerData = [];
+
+            if (array_key_exists('issued_at', $data)) {
+                $headerData['issued_at'] = $data['issued_at'] ? Carbon::parse($data['issued_at']) : null;
+            }
+
+            if (array_key_exists('due_date', $data)) {
+                $headerData['due_date'] = $data['due_date'] ? Carbon::parse($data['due_date']) : null;
+            }
+
+            if (array_key_exists('payment_term_id', $data)) {
+                $headerData['payment_term_id'] = $data['payment_term_id'];
+                if ($data['payment_term_id']) {
+                    $paymentTerm = \App\Models\Accounting\PaymentTerm::find($data['payment_term_id']);
+                    if ($paymentTerm) {
+                        $headerData['payment_term_name'] = $paymentTerm->name;
+                        $headerData['payment_due_days'] = $paymentTerm->due_days;
+                    }
+                }
+            }
+
+            if (array_key_exists('notes', $data)) {
+                $headerData['notes'] = $data['notes'];
+            }
+
+            $shippingTotal = (float) ($data['shipping_total'] ?? $invoice->shipping_total ?? 0);
+            $globalDiscountPercent = (float) ($data['global_discount_percent'] ?? $invoice->global_discount_percent ?? 0);
+
+            // 2. Update line items and recalculate
+            $subtotal = 0;
+            $discountTotal = 0;
+            $taxTotal = 0;
+
+            foreach ($data['items'] as $itemData) {
+                $item = $invoice->items()->find($itemData['id']);
+                if (!$item) {
+                    continue;
+                }
+
+                $quantity = (float) $itemData['quantity'];
+                $unitPrice = (float) $itemData['unit_price'];
+                $discountPercent = (float) ($itemData['discount_percent'] ?? 0);
+
+                // Resolve tax rate
+                $taxRate = (float) $item->tax_rate;
+                $taxGroupId = $item->tax_group_id;
+
+                if (array_key_exists('tax_group_id', $itemData) && $itemData['tax_group_id']) {
+                    $taxGroup = \App\Models\Tax\TaxGroup::with('rates')->find($itemData['tax_group_id']);
+                    if ($taxGroup) {
+                        $taxRate = $taxGroup->activeRateSum();
+                        $taxGroupId = $taxGroup->id;
+                    }
+                } elseif (array_key_exists('tax_group_id', $itemData) && !$itemData['tax_group_id']) {
+                    $taxRate = 0;
+                    $taxGroupId = null;
+                }
+
+                // Calculate line values
+                $lineSubtotal = round($quantity * $unitPrice, 6);
+                $lineDiscountAmount = round($lineSubtotal * ($discountPercent / 100), 6);
+                $taxableAmount = $lineSubtotal - $lineDiscountAmount;
+                $lineTaxAmount = round($taxableAmount * ($taxRate / 100), 6);
+                $lineTotal = round($taxableAmount + $lineTaxAmount, 6);
+
+                $item->update([
+                    'quantity' => $quantity,
+                    'unit_price' => $unitPrice,
+                    'line_subtotal' => $lineSubtotal,
+                    'discount_percent' => $discountPercent,
+                    'discount_amount' => $lineDiscountAmount,
+                    'line_discount_total' => $lineDiscountAmount,
+                    'tax_group_id' => $taxGroupId,
+                    'tax_rate' => $taxRate,
+                    'tax_amount' => $lineTaxAmount,
+                    'line_total' => $lineTotal,
+                ]);
+
+                $subtotal += $lineSubtotal;
+                $discountTotal += $lineDiscountAmount;
+                $taxTotal += $lineTaxAmount;
+            }
+
+            // 3. Apply global discount
+            $globalDiscountAmount = round($subtotal * ($globalDiscountPercent / 100), 6);
+            $discountTotal += $globalDiscountAmount;
+
+            // 4. Calculate grand total
+            $grandTotal = round($subtotal - $discountTotal + $shippingTotal + $taxTotal, 6);
+
+            $headerData['subtotal'] = $subtotal;
+            $headerData['discount_total'] = $discountTotal;
+            $headerData['global_discount_percent'] = $globalDiscountPercent;
+            $headerData['global_discount_amount'] = $globalDiscountAmount;
+            $headerData['shipping_total'] = $shippingTotal;
+            $headerData['tax_total'] = $taxTotal;
+            $headerData['grand_total'] = $grandTotal;
+
+            $invoice->update($headerData);
+
+            return $invoice->fresh();
+        });
+    }
 }

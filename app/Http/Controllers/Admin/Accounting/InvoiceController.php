@@ -5,9 +5,11 @@ namespace App\Http\Controllers\Admin\Accounting;
 use App\Http\Controllers\Controller;
 use App\Models\Accounting\Invoice;
 use App\Models\Accounting\InvoiceStatus;
+use App\Models\Accounting\PaymentTerm;
 use App\Models\Company\Company;
 use App\Models\Sales\Order;
 use App\Models\Sales\OrderStatus;
+use App\Models\Tax\TaxGroup;
 use App\Services\Sales\InvoiceService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -52,8 +54,14 @@ class InvoiceController extends Controller
             ->editColumn('created_at', fn($i) => $i->created_at->format('M d, Y'))
             ->addColumn('actions', function ($i) {
                 $showUrl = company_route('accounting.invoices.show', ['invoice' => $i->uuid]);
+                $editUrl = company_route('accounting.invoices.edit', ['invoice' => $i->uuid]);
                 $printUrl = company_route('accounting.invoices.print', ['invoice' => $i->uuid]);
                 $deleteUrl = company_route('accounting.invoices.destroy', ['invoice' => $i->uuid]);
+
+                $editBtn = '';
+                if (!$i->posted_at) {
+                    $editBtn = '<a href="' . $editUrl . '" class="btn btn-xs btn-white" title="Edit"><i class="fas fa-edit"></i></a>';
+                }
 
                 $deleteBtn = '';
                 if (auth()->user()->isSuperAdmin()) {
@@ -63,6 +71,7 @@ class InvoiceController extends Controller
                 return '
                     <div class="flex items-center gap-2">
                         <a href="' . $showUrl . '" class="btn btn-xs btn-white"><i class="fas fa-eye"></i></a>
+                        ' . $editBtn . '
                         <a href="' . $printUrl . '" target="_blank" class="btn btn-xs btn-white"><i class="fas fa-print"></i></a>
                         ' . $deleteBtn . '
                     </div>
@@ -208,6 +217,92 @@ class InvoiceController extends Controller
         }
 
         return view('catvara.accounting.invoices.print', compact('invoice', 'hideVariants'));
+    }
+
+    /**
+     * Show the form for editing an invoice (DRAFT only)
+     */
+    public function edit(Company $company, $uuid)
+    {
+        $invoice = Invoice::where('company_id', $company->id)
+            ->where('uuid', $uuid)
+            ->with([
+                'items.taxGroup',
+                'customer',
+                'currency',
+                'status',
+                'paymentStatus',
+                'paymentTerm',
+                'billingAddress.state',
+                'billingAddress.country',
+                'shippingAddress.state',
+                'shippingAddress.country'
+            ])
+            ->firstOrFail();
+
+        if ($invoice->posted_at) {
+            return redirect()
+                ->to(company_route('accounting.invoices.show', ['invoice' => $invoice->uuid]))
+                ->with('error', 'Posted invoices cannot be edited.');
+        }
+
+        $taxGroups = TaxGroup::where('company_id', $company->id)
+            ->where('is_active', true)
+            ->with('rates')
+            ->orderBy('name')
+            ->get();
+
+        $paymentTerms = PaymentTerm::where('is_active', true)->get();
+
+        return view('catvara.accounting.invoices.edit', compact('invoice', 'taxGroups', 'paymentTerms'));
+    }
+
+    /**
+     * Update an invoice (DRAFT only)
+     */
+    public function update(Request $request, Company $company, $uuid)
+    {
+        $invoice = Invoice::where('company_id', $company->id)
+            ->where('uuid', $uuid)
+            ->with(['items'])
+            ->firstOrFail();
+
+        if ($invoice->posted_at) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Posted invoices cannot be edited.'
+            ], 422);
+        }
+
+        $request->validate([
+            'issued_at' => 'nullable|date',
+            'due_date' => 'nullable|date',
+            'payment_term_id' => 'nullable|exists:payment_terms,id',
+            'notes' => 'nullable|string|max:2000',
+            'shipping_total' => 'nullable|numeric|min:0',
+            'global_discount_percent' => 'nullable|numeric|min:0|max:100',
+            'items' => 'required|array|min:1',
+            'items.*.id' => 'required|exists:invoice_items,id',
+            'items.*.quantity' => 'required|numeric|min:0.01',
+            'items.*.unit_price' => 'required|numeric|min:0',
+            'items.*.discount_percent' => 'nullable|numeric|min:0|max:100',
+            'items.*.tax_group_id' => 'nullable|exists:tax_groups,id',
+        ]);
+
+        try {
+            $updatedInvoice = $this->invoiceService->updateInvoice($invoice, $request->all());
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Invoice updated successfully.',
+                'redirect_url' => company_route('accounting.invoices.show', ['invoice' => $updatedInvoice->uuid]),
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update invoice: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
