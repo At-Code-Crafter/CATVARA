@@ -76,9 +76,9 @@ class SalesOrderController extends Controller
         }
 
         return DataTables::of($query)
-            ->editColumn('order_number', fn ($order) => '<span class="font-weight-bold">'.e($order->order_number).'</span>')
-            ->editColumn('created_at', fn ($order) => optional($order->created_at)->format('M d, Y'))
-            ->addColumn('customer_name', fn ($order) => $order->customer->display_name ?? 'N/A')
+            ->editColumn('order_number', fn($order) => '<span class="font-weight-bold">' . e($order->order_number) . '</span>')
+            ->editColumn('created_at', fn($order) => optional($order->created_at)->format('M d, Y'))
+            ->addColumn('customer_name', fn($order) => $order->customer->display_name ?? 'N/A')
             ->editColumn('status', function ($order) {
                 $code = $order->status->code ?? '';
                 $color = 'secondary';
@@ -92,13 +92,13 @@ class SalesOrderController extends Controller
                     $color = 'danger';
                 }
 
-                return '<span class="badge badge-'.$color.'">'.e($order->status->name ?? '—').'</span>';
+                return '<span class="badge badge-' . $color . '">' . e($order->status->name ?? '—') . '</span>';
             })
             ->editColumn('grand_total', function ($order) {
                 $amount = number_format((float) $order->grand_total, 2);
                 $cur = $order->currency->code ?? '';
 
-                return '<span class="font-weight-bold text-dark">'.e($cur).' '.$amount.'</span>';
+                return '<span class="font-weight-bold text-dark">' . e($cur) . ' ' . $amount . '</span>';
             })
             ->addColumn('actions', function ($order) {
                 $editUrl = company_route('sales-orders.edit', ['sales_order' => $order->uuid]);
@@ -514,9 +514,9 @@ class SalesOrderController extends Controller
             ? round(($totalQuantityFulfilled / $totalQuantityOrdered) * 100, 1)
             : 0;
 
-        $fullyFulfilledCount = $order->items->filter(fn ($i) => $i->fulfilled_quantity >= $i->quantity)->count();
-        $partialFulfilledCount = $order->items->filter(fn ($i) => $i->fulfilled_quantity > 0 && $i->fulfilled_quantity < $i->quantity)->count();
-        $notFulfilledCount = $order->items->filter(fn ($i) => $i->fulfilled_quantity <= 0)->count();
+        $fullyFulfilledCount = $order->items->filter(fn($i) => $i->fulfilled_quantity >= $i->quantity)->count();
+        $partialFulfilledCount = $order->items->filter(fn($i) => $i->fulfilled_quantity > 0 && $i->fulfilled_quantity < $i->quantity)->count();
+        $notFulfilledCount = $order->items->filter(fn($i) => $i->fulfilled_quantity <= 0)->count();
 
         $stats = [
             'total_items' => $totalItems,
@@ -939,25 +939,6 @@ class SalesOrderController extends Controller
             ], 400);
         }
 
-        // Simply mark the order as fulfilled without any stock operations
-        $order->update(['is_fulfilled' => true]);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Order marked as fulfilled.',
-        ]);
-
-        /*
-        |--------------------------------------------------------------------------
-        | STOCK DEDUCTION CODE - COMMENTED FOR FUTURE USE
-        |--------------------------------------------------------------------------
-        | Uncomment the code below to enable stock validation and deduction
-        | when marking orders as fulfilled. This will:
-        | - Check stock across all warehouse locations
-        | - Deduct stock from multiple warehouses if needed
-        | - Throw error if insufficient stock
-        |--------------------------------------------------------------------------
-
         // Get only warehouse inventory locations for the company (exclude stores)
         $inventoryLocations = InventoryLocation::where('company_id', $company->id)
             ->where('type', 'warehouse')
@@ -1037,6 +1018,5 @@ class SalesOrderController extends Controller
                 'message' => 'Order marked as fulfilled. Stock has been updated.',
             ]);
         });
-        */
     }
 }
