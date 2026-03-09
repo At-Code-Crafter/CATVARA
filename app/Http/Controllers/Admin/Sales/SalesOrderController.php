@@ -282,6 +282,54 @@ class SalesOrderController extends Controller
         });
     }
 
+    public function updateShippingAddress(Request $request, Company $company, $uuid)
+    {
+        $this->authorize('edit', 'orders');
+
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'phone' => 'nullable|string|max:50',
+            'address_line_1' => 'required|string|max:500',
+            'address_line_2' => 'nullable|string|max:500',
+            'city' => 'nullable|string|max:100',
+            'zip_code' => 'nullable|string|max:20',
+            'country_id' => 'nullable|integer|exists:countries,id',
+            'state_id' => 'nullable|integer|exists:states,id',
+        ]);
+
+        $order = Order::where('company_id', $company->id)
+            ->where('uuid', $uuid)
+            ->firstOrFail();
+
+        $shippingAddress = $order->shippingAddress;
+
+        if (!$shippingAddress) {
+            return response()->json(['success' => false, 'message' => 'Shipping address not found.'], 404);
+        }
+
+        $shippingAddress->update([
+            'name' => $request->name,
+            'phone' => $request->phone,
+            'address_line_1' => $request->address_line_1,
+            'address_line_2' => $request->address_line_2,
+            'city' => $request->city,
+            'zip_code' => $request->zip_code,
+            'country_id' => $request->country_id ?: null,
+            'state_id' => $request->state_id ?: null,
+        ]);
+
+        $shippingAddress->load(['state', 'country']);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Shipping address updated.',
+            'shipping_html' => view('catvara.sales-orders.partials._address_card_content', [
+                'address' => $shippingAddress,
+                'name' => $shippingAddress->name,
+            ])->render(),
+        ]);
+    }
+
     public function customerSwitcher(Request $request, Company $company, $uuid)
     {
         $this->authorize('edit', 'orders');
@@ -368,6 +416,8 @@ class SalesOrderController extends Controller
         $exchangeRates = $company->exchangeRates()->with('targetCurrency')->get();
         $enabledCurrencies = collect([$baseCurrency])->merge($exchangeRates->pluck('targetCurrency'))->filter()->unique('id');
 
+        $countries = \App\Models\Common\Country::active()->ordered()->get();
+
         return view('catvara.sales-orders.edit', compact(
             'billToCustomer',
             'shipToCustomer',
@@ -375,7 +425,8 @@ class SalesOrderController extends Controller
             'initialState',
             'customerDiscount',
             'taxGroups',
-            'enabledCurrencies'
+            'enabledCurrencies',
+            'countries'
         ));
     }
 
