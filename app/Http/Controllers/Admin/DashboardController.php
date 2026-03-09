@@ -25,24 +25,35 @@ class DashboardController extends Controller
         $dateTo = $request->filled('date_to') ? Carbon::parse($request->date_to)->endOfDay() : Carbon::now()->endOfDay();
 
         // Helper closures for cleaner code
-        $applyDate = fn ($q, $col = 'created_at') => $q->whereBetween($col, [$dateFrom, $dateTo]);
+        $applyDate = fn($q, $col = 'created_at') => $q->whereBetween($col, [$dateFrom, $dateTo]);
 
         // Helper: scope orders/quotes to current user if not super admin
-        $scopeByUser = fn ($q) => $isSuperAdmin ? $q : $q->where('created_by', $user->id);
+        $scopeByUser = fn($q) => $isSuperAdmin ? $q : $q->where('created_by', $user->id);
 
         // 2. STATS CALCULATIONS
 
         // A. Products & Inventory (Not date filtered usually, but Inventory counts reflect CURRENT state)
-        $totalProducts = Product::where('company_id', $companyId)->count();
-        $totalVariants = \App\Models\Catalog\ProductVariant::where('company_id', $companyId)->count();
+        $productQuery = Product::where('company_id', $companyId);
+        apply_brand_filter($productQuery);
+        $totalProducts = $productQuery->count();
+        $variantQuery = \App\Models\Catalog\ProductVariant::where('company_id', $companyId);
+        $brandIds = user_brand_ids();
+        if ($brandIds->isNotEmpty()) {
+            $variantQuery->whereHas('product', fn($q) => $q->whereIn('brand_id', $brandIds));
+        }
+        $totalVariants = $variantQuery->count();
 
         // Low Stock: Variants with SUM(inventory quantity) <= 5
-        $lowStockCount = \App\Models\Catalog\ProductVariant::where('company_id', $companyId)
+        $lowStockQuery = \App\Models\Catalog\ProductVariant::where('company_id', $companyId)
             ->whereHas('inventory', function ($q) {
                 $q->selectRaw('sum(quantity) as total_qty')
                     ->groupBy('product_variant_id')
                     ->havingRaw('sum(quantity) <= ?', [5]);
-            })->count();
+            });
+        if ($brandIds->isNotEmpty()) {
+            $lowStockQuery->whereHas('product', fn($q) => $q->whereIn('brand_id', $brandIds));
+        }
+        $lowStockCount = $lowStockQuery->count();
 
         // B. Categories
         $totalCategories = \App\Models\Catalog\Category::where('company_id', $companyId)->count();
@@ -137,12 +148,12 @@ class DashboardController extends Controller
         $variantTable = (new \App\Models\Catalog\ProductVariant)->getTable();
         $inventoryTable = (new \App\Models\Inventory\InventoryBalance)->getTable();
 
-        $lowStockProducts = \App\Models\Catalog\ProductVariant::where($variantTable.'.company_id', $companyId)
-            ->select($variantTable.'.*')
+        $lowStockProducts = \App\Models\Catalog\ProductVariant::where($variantTable . '.company_id', $companyId)
+            ->select($variantTable . '.*')
             ->selectSub(function ($q) use ($inventoryTable, $variantTable) {
                 $q->from($inventoryTable)
                     ->selectRaw('COALESCE(SUM(quantity), 0)')
-                    ->whereColumn($inventoryTable.'.product_variant_id', $variantTable.'.id');
+                    ->whereColumn($inventoryTable . '.product_variant_id', $variantTable . '.id');
             }, 'stock_sum')
             ->with(['product'])
             ->having('stock_sum', '<=', 5)

@@ -7,6 +7,7 @@ use App\Http\Requests\Admin\Catalog\AttributeStoreRequest;
 use App\Http\Requests\Admin\Catalog\AttributeUpdateRequest;
 use App\Models\Catalog\Attribute;
 use App\Models\Catalog\AttributeValue;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Yajra\DataTables\Facades\DataTables;

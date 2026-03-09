@@ -71,26 +71,30 @@ class OrderController extends Controller
         $companyId = $request->company->id;
 
         $products = Product::query()
-            ->where('company_id', $companyId)
-            ->with([
-                'category:id,name',
-                'variants' => function ($q) {
-                    $q->select(['id', 'uuid', 'product_id']) // keep product_id for relation
-                        ->with([
-                            'attributeValues:id,attribute_id,value',
-                            'attributeValues.attribute:id,name',
-                        ])
-                        // Inventory sum (change `quantity` if your column differs)
-                        ->withSum('inventory as stock', 'quantity')
-                        // Latest price (change `price` column if needed)
-                        ->with([
-                            'prices' => function ($pq) {
-                                $pq->select(['id', 'product_variant_id', 'price'])
-                                    ->latest('id');
-                            },
-                        ]);
-                },
-            ])
+            ->where('company_id', $companyId);
+
+        // Brand restriction filter
+        apply_brand_filter($products);
+
+        $products = $products->with([
+            'category:id,name',
+            'variants' => function ($q) {
+                $q->select(['id', 'uuid', 'product_id']) // keep product_id for relation
+                    ->with([
+                        'attributeValues:id,attribute_id,value',
+                        'attributeValues.attribute:id,name',
+                    ])
+                    // Inventory sum (change `quantity` if your column differs)
+                    ->withSum('inventory as stock', 'quantity')
+                    // Latest price (change `price` column if needed)
+                    ->with([
+                        'prices' => function ($pq) {
+                            $pq->select(['id', 'product_variant_id', 'price'])
+                                ->latest('id');
+                        },
+                    ]);
+            },
+        ])
             ->get()
             ->map(function ($product) {
 
@@ -99,8 +103,8 @@ class OrderController extends Controller
                 $variants = $product->variants->map(function ($variant) {
 
                     $attrs = $variant->attributeValues
-                        ->filter(fn ($av) => $av->attribute)
-                        ->mapWithKeys(fn ($av) => [$av->attribute->name => $av->value])
+                        ->filter(fn($av) => $av->attribute)
+                        ->mapWithKeys(fn($av) => [$av->attribute->name => $av->value])
                         ->all();
 
                     $priceRow = $variant->prices->first();
@@ -123,7 +127,7 @@ class OrderController extends Controller
                     'name' => (string) $product->name,
                     'category' => (string) optional($product->category)->name,
                     'brand' => (string) ($product->brand ?? ''),
-                    'image_url' => $product->image ? asset('storage/'.$product->image) : null,
+                    'image_url' => $product->image ? asset('storage/' . $product->image) : null,
                     'variants' => $variants,
                 ];
             })

@@ -224,3 +224,34 @@ if (!function_exists('storage_url')) {
         return asset('storage/' . $path);
     }
 }
+
+/**
+ * Get restricted brand IDs for the current user in the active company.
+ * Returns empty collection if no restriction (full access).
+ */
+if (!function_exists('user_brand_ids')) {
+    function user_brand_ids(): \Illuminate\Support\Collection
+    {
+        $user = auth()->user();
+        if (!$user) {
+            return collect();
+        }
+        return $user->restrictedBrandIds(active_company_id());
+    }
+}
+
+/**
+ * Apply brand restriction to a product query.
+ * The query should be on a model that has a `brand_id` column (e.g. Product).
+ * No-op if user has no brand restrictions.
+ */
+if (!function_exists('apply_brand_filter')) {
+    function apply_brand_filter($query, string $brandColumn = 'brand_id')
+    {
+        $brandIds = user_brand_ids();
+        if ($brandIds->isNotEmpty()) {
+            $query->whereIn($brandColumn, $brandIds);
+        }
+        return $query;
+    }
+}
