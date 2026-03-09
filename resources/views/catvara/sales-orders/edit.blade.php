@@ -196,7 +196,7 @@
 
                 {{-- RIGHT: Cart side --}}
                 <div id="cartSection"
-                    class="lg:col-span-7 hidden lg:flex flex-col h-auto lg:h-full relative bg-slate-50 border-l border-slate-200 transition-all duration-300 overflow-y-auto lg:overflow-hidden">
+                    class="lg:col-span-7 hidden lg:flex flex-col h-auto lg:h-full relative bg-slate-50 border-l border-slate-200 transition-all duration-300 overflow-y-auto">
 
                     {{-- Customer Cards (Moved Here) --}}
                     <div
@@ -246,8 +246,8 @@
                     </div>
 
 
-                    {{-- Cart Items List (Scrolls after ~6 items on mobile, scrolls fully on desktop) --}}
-                    <div class="lg:flex-1 lg:overflow-y-auto p-3 bg-slate-50 min-h-[500px] max-h-[550px] lg:min-h-[420px] lg:max-h-none overflow-y-auto"
+                    {{-- Cart Items List --}}
+                    <div class="p-3 bg-slate-50 min-h-[400px] max-h-[550px] overflow-y-auto lg:min-h-[420px] lg:max-h-none lg:overflow-visible"
                         id="cartItemsContainer"></div>
 
                     {{-- Footer Controls (Redesigned) --}}
