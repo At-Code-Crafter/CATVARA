@@ -116,6 +116,11 @@ class Invoice extends Model
         return $this->morphOne(\App\Models\Common\Address::class, 'addressable')->where('type', 'SHIPPING');
     }
 
+    public function order()
+    {
+        return $this->belongsTo(\App\Models\Sales\Order::class, 'source_id');
+    }
+
     public function createdBy()
     {
         return $this->belongsTo(\App\Models\User::class, 'created_by');
