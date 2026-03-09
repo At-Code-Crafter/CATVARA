@@ -21,8 +21,7 @@ class InvoiceController extends Controller
 {
     public function __construct(
         protected InvoiceService $invoiceService
-    ) {
-    }
+    ) {}
 
     public function index(Company $company)
     {
@@ -101,7 +100,8 @@ class InvoiceController extends Controller
                 'billingAddress.state',
                 'billingAddress.country',
                 'shippingAddress.state',
-                'shippingAddress.country'
+                'shippingAddress.country',
+                'order.deliveryNotes.items.orderItem',
             ])
             ->firstOrFail();
 
@@ -152,7 +152,6 @@ class InvoiceController extends Controller
                 'invoice_uuid' => $invoice->uuid,
                 'redirect_url' => company_route('accounting.invoices.show', ['invoice' => $invoice->uuid]),
             ]);
-
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
