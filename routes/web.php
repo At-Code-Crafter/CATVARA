@@ -256,6 +256,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
                     Route::post('{sales_order}/generate-invoice', [\App\Http\Controllers\Admin\Accounting\InvoiceController::class, 'storeFromOrder'])->name('generate-invoice');
                     Route::post('{sales_order}/mark-as-fulfillment', 'markAsFulfillment')->name('mark-as-fulfillment');
                     Route::put('{sales_order}/update-customers', 'updateCustomers')->name('update-customers');
+                    Route::put('{sales_order}/update-shipping-address', 'updateShippingAddress')->name('update-shipping-address');
                     Route::get('{sales_order}/customer-switcher', 'customerSwitcher')->name('customer-switcher');
                     Route::get('{sales_order}/finalize', 'finalize')->name('finalize');
                     Route::post('{sales_order}/finalize', 'finalizeStore')->name('finalize.store');
@@ -342,4 +343,4 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('invoice-preview');
 });
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';

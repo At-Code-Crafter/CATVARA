@@ -231,10 +231,17 @@
                                     'name' => $order->shippingAddress->name,
                                 ])
                             </div>
-                            <button type="button" onclick="openCustomerSwitcher('SHIPPING')"
-                                class="absolute top-2 right-2 text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
-                                CHANGE
-                            </button>
+                            <div
+                                class="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <button type="button" onclick="openEditShippingAddress()"
+                                    class="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded">
+                                    EDIT
+                                </button>
+                                <button type="button" onclick="openCustomerSwitcher('SHIPPING')"
+                                    class="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-1 rounded">
+                                    CHANGE
+                                </button>
+                            </div>
                         </div>
                     </div>
 
@@ -536,6 +543,104 @@
                         </button>
                     </div>
 
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- Edit Shipping Address Modal --}}
+    <div id="editShippingModal" class="fixed inset-0 z-50 hidden" aria-modal="true">
+        <div class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity" onclick="closeEditShippingModal()">
+        </div>
+        <div class="fixed inset-0 z-10 overflow-y-auto flex items-center justify-center p-4">
+            <div class="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl">
+                <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+                    <h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center">
+                        <i class="fas fa-map-marker-alt mr-2 text-indigo-500"></i> Edit Shipping Address
+                    </h3>
+                    <button onclick="closeEditShippingModal()" class="text-slate-400 hover:text-slate-600">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="p-6 space-y-4">
+                    <div>
+                        <label
+                            class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Name</label>
+                        <input type="text" id="shipAddrName"
+                            class="w-full h-10 rounded-lg border border-slate-200 text-sm font-medium px-3 focus:border-brand-500 focus:ring-0"
+                            value="{{ $order->shippingAddress->name ?? '' }}">
+                    </div>
+                    <div>
+                        <label
+                            class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Phone</label>
+                        <input type="text" id="shipAddrPhone"
+                            class="w-full h-10 rounded-lg border border-slate-200 text-sm font-medium px-3 focus:border-brand-500 focus:ring-0"
+                            value="{{ $order->shippingAddress->phone ?? '' }}">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Address
+                            Line 1</label>
+                        <textarea id="shipAddrLine1" rows="2"
+                            class="w-full rounded-lg border border-slate-200 text-sm font-medium px-3 py-2 focus:border-brand-500 focus:ring-0">{{ $order->shippingAddress->address_line_1 ?? '' }}</textarea>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Address
+                            Line 2</label>
+                        <input type="text" id="shipAddrLine2"
+                            class="w-full h-10 rounded-lg border border-slate-200 text-sm font-medium px-3 focus:border-brand-500 focus:ring-0"
+                            value="{{ $order->shippingAddress->address_line_2 ?? '' }}">
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label
+                                class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">City</label>
+                            <input type="text" id="shipAddrCity"
+                                class="w-full h-10 rounded-lg border border-slate-200 text-sm font-medium px-3 focus:border-brand-500 focus:ring-0"
+                                value="{{ $order->shippingAddress->city ?? '' }}">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Zip
+                                Code</label>
+                            <input type="text" id="shipAddrZip"
+                                class="w-full h-10 rounded-lg border border-slate-200 text-sm font-medium px-3 focus:border-brand-500 focus:ring-0"
+                                value="{{ $order->shippingAddress->zip_code ?? '' }}">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label
+                                class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Country</label>
+                            <select id="shipAddrCountry"
+                                class="w-full h-10 rounded-lg border border-slate-200 text-sm font-medium px-3 focus:border-brand-500 focus:ring-0">
+                                <option value="">Select Country</option>
+                                @foreach ($countries as $country)
+                                    <option value="{{ $country->id }}"
+                                        {{ ($order->shippingAddress->country_id ?? '') == $country->id ? 'selected' : '' }}>
+                                        {{ $country->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div>
+                            <label
+                                class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">State</label>
+                            <select id="shipAddrState"
+                                class="w-full h-10 rounded-lg border border-slate-200 text-sm font-medium px-3 focus:border-brand-500 focus:ring-0">
+                                <option value="">Select State</option>
+                                @if ($order->shippingAddress->state)
+                                    <option value="{{ $order->shippingAddress->state_id }}" selected>
+                                        {{ $order->shippingAddress->state->name }}</option>
+                                @endif
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="px-6 py-4 border-t border-slate-100 flex justify-end gap-3">
+                    <button type="button" onclick="closeEditShippingModal()"
+                        class="btn btn-white text-sm">Cancel</button>
+                    <button type="button" onclick="saveShippingAddress()" id="saveShipAddrBtn"
+                        class="btn btn-primary bg-indigo-600 hover:bg-indigo-700 text-white border-none text-sm">
+                        <i class="fas fa-save mr-1"></i> Save Address
+                    </button>
                 </div>
             </div>
         </div>
@@ -1344,6 +1449,89 @@
                 selectedCartIndex = -1;
                 renderCart();
             }
+        };
+
+        // ---- Edit Shipping Address Logic
+        window.openEditShippingAddress = function() {
+            $('#editShippingModal').removeClass('hidden');
+        };
+
+        window.closeEditShippingModal = function() {
+            $('#editShippingModal').addClass('hidden');
+        };
+
+        // Country -> State cascade for shipping address modal
+        $('#shipAddrCountry').on('change', function() {
+            const countryId = $(this).val();
+            const $stateSelect = $('#shipAddrState');
+            $stateSelect.html('<option value="">Loading...</option>').prop('disabled', true);
+
+            if (!countryId) {
+                $stateSelect.html('<option value="">Select State</option>').prop('disabled', false);
+                return;
+            }
+
+            $.get("{{ url('settings/countries') }}/" + countryId + "/states", function(data) {
+                let options = '<option value="">Select State</option>';
+                (data.states || data).forEach(function(s) {
+                    options += `<option value="${s.id}">${s.name}</option>`;
+                });
+                $stateSelect.html(options).prop('disabled', false);
+            }).fail(function() {
+                $stateSelect.html('<option value="">Select State</option>').prop('disabled', false);
+            });
+        });
+
+        window.saveShippingAddress = function() {
+            const btn = $('#saveShipAddrBtn');
+            btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i> Saving...');
+
+            $.ajax({
+                url: "{{ company_route('sales-orders.update-shipping-address', ['sales_order' => $order->uuid]) }}",
+                method: 'POST',
+                data: {
+                    _method: 'PUT',
+                    _token: "{{ csrf_token() }}",
+                    name: $('#shipAddrName').val(),
+                    phone: $('#shipAddrPhone').val(),
+                    address_line_1: $('#shipAddrLine1').val(),
+                    address_line_2: $('#shipAddrLine2').val(),
+                    city: $('#shipAddrCity').val(),
+                    zip_code: $('#shipAddrZip').val(),
+                    country_id: $('#shipAddrCountry').val(),
+                    state_id: $('#shipAddrState').val(),
+                },
+                success: function(resp) {
+                    if (resp.success) {
+                        $('#shippingAddressContainer').html(resp.shipping_html);
+                        closeEditShippingModal();
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Address Updated',
+                            toast: true,
+                            position: 'top-end',
+                            timer: 2000,
+                            showConfirmButton: false
+                        });
+                    }
+                },
+                error: function(xhr) {
+                    const errors = xhr.responseJSON?.errors;
+                    let msg = xhr.responseJSON?.message || 'Failed to update address.';
+                    if (errors) {
+                        msg = Object.values(errors).flat().join('\n');
+                    }
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: msg,
+                        confirmButtonColor: '#ef4444'
+                    });
+                },
+                complete: function() {
+                    btn.prop('disabled', false).html('<i class="fas fa-save mr-1"></i> Save Address');
+                }
+            });
         };
 
         // ---- Customer Switcher Logic
