@@ -36,12 +36,20 @@ class InventoryController extends Controller
         $companyId = $request->company->id;
         $locations = InventoryLocation::where('company_id', $companyId)->with('locatable')->get();
 
+        // Brand restriction for stats
+        $brandIds = user_brand_ids();
+        $brandFilter = function ($q) use ($brandIds) {
+            if ($brandIds->isNotEmpty()) {
+                $q->whereHas('variant.product', fn($pq) => $pq->whereIn('brand_id', $brandIds));
+            }
+        };
+
         // Stats
         $stats = [
-            'total_skus' => InventoryBalance::where('company_id', $companyId)->distinct('product_variant_id')->count(),
-            'total_units' => (int) InventoryBalance::where('company_id', $companyId)->sum('quantity'),
-            'low_stock' => InventoryBalance::where('company_id', $companyId)->where('quantity', '>', 0)->where('quantity', '<=', 10)->count(),
-            'out_of_stock' => InventoryBalance::where('company_id', $companyId)->where('quantity', '<=', 0)->count(),
+            'total_skus' => InventoryBalance::where('company_id', $companyId)->where($brandFilter)->distinct('product_variant_id')->count(),
+            'total_units' => (int) InventoryBalance::where('company_id', $companyId)->where($brandFilter)->sum('quantity'),
+            'low_stock' => InventoryBalance::where('company_id', $companyId)->where($brandFilter)->where('quantity', '>', 0)->where('quantity', '<=', 10)->count(),
+            'out_of_stock' => InventoryBalance::where('company_id', $companyId)->where($brandFilter)->where('quantity', '<=', 0)->count(),
         ];
 
         // Recent Transfers
@@ -64,16 +72,24 @@ class InventoryController extends Controller
         $query = InventoryBalance::where('inventory_balances.company_id', $request->company->id)
             ->with(['variant.product', 'location.locatable']);
 
+        // Brand restriction filter
+        $brandIds = user_brand_ids();
+        if ($brandIds->isNotEmpty()) {
+            $query->whereHas('variant.product', function ($q) use ($brandIds) {
+                $q->whereIn('brand_id', $brandIds);
+            });
+        }
+
         if ($request->filled('location_id')) {
             $query->where('inventory_balances.inventory_location_id', $request->location_id);
         }
 
         return DataTables::of($query)
-            ->addColumn('sku', fn ($r) => $r->variant->sku ?? '-')
-            ->addColumn('product_name', fn ($r) => $r->variant->product->name ?? '-')
-            ->addColumn('location_name', fn ($r) => $r->location->locatable->name ?? $r->location->type)
-            ->editColumn('quantity', fn ($r) => '<span class="badge badge-'.($r->quantity > 0 ? 'success' : 'danger').'">'.(float) $r->quantity.'</span>')
-            ->addColumn('last_movement', fn ($r) => $r->last_movement_at ? $r->last_movement_at->diffForHumans() : '-')
+            ->addColumn('sku', fn($r) => $r->variant->sku ?? '-')
+            ->addColumn('product_name', fn($r) => $r->variant->product->name ?? '-')
+            ->addColumn('location_name', fn($r) => $r->location->locatable->name ?? $r->location->type)
+            ->editColumn('quantity', fn($r) => '<span class="badge badge-' . ($r->quantity > 0 ? 'success' : 'danger') . '">' . (float) $r->quantity . '</span>')
+            ->addColumn('last_movement', fn($r) => $r->last_movement_at ? $r->last_movement_at->diffForHumans() : '-')
             ->addColumn('actions', function ($r) use ($request) {
                 // Link to Variant Details
                 $url = route('inventory.variant.details', [
@@ -88,7 +104,7 @@ class InventoryController extends Controller
                 // Let's use a generic generic class or the new one if we know it.
                 // But wait, the view will be new.
 
-                return '<a href="'.$url.'" class="text-brand-600 hover:text-brand-800 font-medium text-sm">Manage</a>';
+                return '<a href="' . $url . '" class="text-brand-600 hover:text-brand-800 font-medium text-sm">Manage</a>';
             })
             ->rawColumns(['quantity', 'actions'])
             ->make(true);
@@ -166,11 +182,10 @@ class InventoryController extends Controller
 
             return redirect(company_route('inventory.index'))
                 ->with('success', 'Stock adjusted successfully.');
-
         } catch (\Exception $e) {
             DB::rollBack();
 
-            return back()->with('error', 'Error adjusting stock: '.$e->getMessage());
+            return back()->with('error', 'Error adjusting stock: ' . $e->getMessage());
         }
     }
 
@@ -208,9 +223,8 @@ class InventoryController extends Controller
             }
 
             return back()->with('success', 'Stock transferred successfully.');
-
         } catch (\Exception $e) {
-            return back()->with('error', 'Transfer failed: '.$e->getMessage());
+            return back()->with('error', 'Transfer failed: ' . $e->getMessage());
         }
     }
 
@@ -234,9 +248,9 @@ class InventoryController extends Controller
             }
 
             return DataTables::of($query)
-                ->addColumn('sku', fn ($r) => $r->variant->sku ?? '-')
-                ->addColumn('location_name', fn ($r) => $r->location->locatable->name ?? $r->location->type ?? '-')
-                ->addColumn('reason_name', fn ($r) => $r->reason->name ?? '-')
+                ->addColumn('sku', fn($r) => $r->variant->sku ?? '-')
+                ->addColumn('location_name', fn($r) => $r->location->locatable->name ?? $r->location->type ?? '-')
+                ->addColumn('reason_name', fn($r) => $r->reason->name ?? '-')
                 ->addColumn('reference', function ($r) {
                     // Basic formatting of reference
                     if ($r->reference_type === 'inventory_transfer') {
@@ -245,9 +259,9 @@ class InventoryController extends Controller
 
                     return $r->reference_type ? class_basename($r->reference_type) : '-';
                 })
-                ->editColumn('quantity', fn ($r) => '<span class="badge badge-'.($r->quantity > 0 ? 'success' : 'danger').'">'.($r->quantity > 0 ? '+' : '').(float) $r->quantity.'</span>')
-                ->addColumn('performed_by_name', fn ($r) => $r->performer->name ?? '-')
-                ->addColumn('date', fn ($r) => $r->occurred_at ? $r->occurred_at->format('M d, Y H:i') : '-')
+                ->editColumn('quantity', fn($r) => '<span class="badge badge-' . ($r->quantity > 0 ? 'success' : 'danger') . '">' . ($r->quantity > 0 ? '+' : '') . (float) $r->quantity . '</span>')
+                ->addColumn('performed_by_name', fn($r) => $r->performer->name ?? '-')
+                ->addColumn('date', fn($r) => $r->occurred_at ? $r->occurred_at->format('M d, Y H:i') : '-')
                 ->rawColumns(['quantity'])
                 ->make(true);
         }

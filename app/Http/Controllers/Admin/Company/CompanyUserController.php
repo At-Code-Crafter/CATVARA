@@ -8,6 +8,8 @@ use App\Http\Requests\Admin\Company\CompanyUserUpdateRequest;
 use App\Models\User;
 use App\Models\Company\Company;
 use App\Models\Auth\Role;
+use App\Models\Auth\CompanyUserBrand;
+use App\Models\Catalog\Brand;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Yajra\DataTables\Facades\DataTables;
@@ -97,7 +99,8 @@ class CompanyUserController extends Controller
 
         $company = active_company();
         $roles = Role::where('company_id', $company->id)->where('is_active', true)->orderBy('name')->get();
-        return view('catvara.settings.users.form', compact('company', 'roles'));
+        $brands = Brand::where('company_id', $company->id)->where('is_active', true)->orderBy('name')->get();
+        return view('catvara.settings.users.form', compact('company', 'roles', 'brands'));
     }
 
     /**
@@ -125,6 +128,9 @@ class CompanyUserController extends Controller
 
             // Assign roles
             $user->syncRoles($validated['role_ids'], $company->id);
+
+            // Sync brand restrictions
+            $this->syncUserBrands($company->id, $user->id, $request->input('brand_ids', []));
 
             DB::commit();
             return redirect()->route('settings.users.index', ['company' => $company->uuid])
@@ -170,8 +176,10 @@ class CompanyUserController extends Controller
 
         $roles = Role::where('company_id', $company->id)->where('is_active', true)->orderBy('name')->get();
         $userRoleIds = $user->rolesForCompany($company->id)->pluck('roles.id')->toArray();
+        $brands = Brand::where('company_id', $company->id)->where('is_active', true)->orderBy('name')->get();
+        $userBrandIds = CompanyUserBrand::where('company_id', $company->id)->where('user_id', $user->id)->pluck('brand_id')->toArray();
 
-        return view('catvara.settings.users.form', compact('company', 'user', 'roles', 'userRoleIds'));
+        return view('catvara.settings.users.form', compact('company', 'user', 'roles', 'userRoleIds', 'brands', 'userBrandIds'));
     }
 
     /**
@@ -204,6 +212,9 @@ class CompanyUserController extends Controller
 
             // Update roles for this company
             $user->syncRoles($validated['role_ids'], $company->id);
+
+            // Sync brand restrictions
+            $this->syncUserBrands($company->id, $user->id, $request->input('brand_ids', []));
 
             DB::commit();
             $user->forgetCompanyPermissionsCache($company->id);
@@ -255,5 +266,25 @@ class CompanyUserController extends Controller
             ->get();
 
         return view('catvara.settings.users.login-activities', compact('company', 'user', 'activities'));
+    }
+
+    /**
+     * Sync brand restrictions for a user in a company.
+     */
+    private function syncUserBrands(int $companyId, int $userId, array $brandIds): void
+    {
+        CompanyUserBrand::where('company_id', $companyId)->where('user_id', $userId)->delete();
+
+        $rows = collect($brandIds)->filter()->map(fn($brandId) => [
+            'company_id' => $companyId,
+            'user_id' => $userId,
+            'brand_id' => $brandId,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ])->toArray();
+
+        if (!empty($rows)) {
+            CompanyUserBrand::insert($rows);
+        }
     }
 }
