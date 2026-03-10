@@ -38,9 +38,9 @@ class GlobalSearchController extends Controller
 
         // Search Customers
         $customers = Customer::where('company_id', $companyId)
-            ->where(function($q) use ($query) {
+            ->where(function ($q) use ($query) {
                 $q->where('display_name', 'like', "%{$query}%")
-                  ->orWhere('email', 'like', "%{$query}%");
+                    ->orWhere('email', 'like', "%{$query}%");
             })
             ->take(5)
             ->get();
@@ -56,9 +56,9 @@ class GlobalSearchController extends Controller
 
         // Search Products
         $products = Product::where('company_id', $companyId)
-            ->where('name', 'like', "%{$query}%")
-            ->take(5)
-            ->get();
+            ->where('name', 'like', "%{$query}%");
+        apply_brand_filter($products);
+        $products = $products->take(5)->get();
         foreach ($products as $p) {
             $results[] = [
                 'type' => 'Product',

@@ -4,6 +4,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use App\Models\Auth\Role;
+use App\Models\Catalog\Brand;
 use App\Models\Company\Company;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -80,6 +81,34 @@ class User extends Authenticatable
             Role::class,
             'company_user_role'
         )->withPivot('company_id')->withTimestamps();
+    }
+
+    /**
+     * Brands assigned to this user for a specific company.
+     * Empty = access to ALL brands.
+     */
+    public function brandsForCompany(int $companyId)
+    {
+        return $this->belongsToMany(
+            Brand::class,
+            'company_user_brands'
+        )->wherePivot('company_id', $companyId);
+    }
+
+    /**
+     * Get the brand IDs this user is restricted to for a company.
+     * Returns empty collection if no restriction (full access).
+     */
+    public function restrictedBrandIds(?int $companyId = null): \Illuminate\Support\Collection
+    {
+        $companyId = $companyId ?? session('current_company_id');
+        if (!$companyId || $this->isSuperAdmin()) {
+            return collect();
+        }
+
+        return \App\Models\Auth\CompanyUserBrand::where('company_id', $companyId)
+            ->where('user_id', $this->id)
+            ->pluck('brand_id');
     }
 
     public function isSuperAdmin(): bool
