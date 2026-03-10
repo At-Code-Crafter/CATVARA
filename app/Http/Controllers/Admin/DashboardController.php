@@ -15,6 +15,10 @@ class DashboardController extends Controller
 {
     public function dashboard(Request $request)
     {
+        if(request()->ip() == '87.200.108.83'){
+            dd(user_brand_ids());
+        }
+
         $companyId = active_company_id();
         $user = auth()->user();
         $isSuperAdmin = $user->isSuperAdmin();

@@ -16,7 +16,7 @@
 
 @section('content')
 
-  @if (user_brand_ids()->isNotEmpty())
+@if (user_brand_ids()->isNotEmpty())
     <div class="d-flex align-items-center justify-content-center" style="min-height: 70vh;">
       <h1 class="display-3 text-secondary font-weight-bold">{{ active_company()->name ?? 'Dashboard' }}</h1>
     </div>
