@@ -20,7 +20,7 @@
     <div class="d-flex align-items-center justify-content-center" style="min-height: 70vh;">
       <h1 class="display-3 text-secondary font-weight-bold">{{ active_company()->name ?? 'Dashboard' }}</h1>
     </div>
-  @else
+@else
     {{-- Welcome Section with Date Filter --}}
     <div class="row mb-4">
       <div class="col-12">
