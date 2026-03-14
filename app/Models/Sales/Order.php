@@ -110,6 +110,11 @@ class Order extends Model
         return $this->hasMany(DeliveryNote::class);
     }
 
+    public function boxItems()
+    {
+        return $this->hasMany(OrderItemBox::class);
+    }
+
     public function status()
     {
         return $this->belongsTo(OrderStatus::class, 'status_id');
@@ -200,7 +205,7 @@ class Order extends Model
     public function getTotalPaidAttribute(): float
     {
         $applications = $this->paymentApplications()
-            ->whereHas('payment', fn ($q) => $q->whereHas('status', fn ($s) => $s->where('code', 'CONFIRMED')))
+            ->whereHas('payment', fn($q) => $q->whereHas('status', fn($s) => $s->where('code', 'CONFIRMED')))
             ->get();
 
         return (float) $applications->sum(function ($app) {
@@ -253,5 +258,4 @@ class Order extends Model
     {
         return (float) $this->grand_total * (float) $this->fx_rate;
     }
-
 }

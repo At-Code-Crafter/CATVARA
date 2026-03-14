@@ -55,6 +55,16 @@ class DeliveryNote extends Model
         return $this->hasMany(DeliveryNoteItem::class);
     }
 
+    public function boxItems()
+    {
+        return $this->hasMany(OrderItemBox::class);
+    }
+
+    public function inventoryLocation()
+    {
+        return $this->belongsTo(\App\Models\Inventory\InventoryLocation::class);
+    }
+
     public function addresses()
     {
         return $this->morphMany(Address::class, 'addressable');

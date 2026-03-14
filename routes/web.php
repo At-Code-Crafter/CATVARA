@@ -264,6 +264,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
                     Route::post('{sales_order}/finalize', 'finalizeStore')->name('finalize.store');
 
                     // Delivery Notes
+                    Route::get('{sales_order}/create-delivery-note', 'createDeliveryNote')->name('delivery-note.create');
                     Route::post('{sales_order}/delivery-note', 'generateDeliveryNote')->name('delivery-note.generate');
                     Route::patch('delivery-notes/{delivery_note}/delivered', 'markDeliveryNoteAsDelivered')->name('delivery-note.delivered');
                     Route::get('delivery-notes/{delivery_note}/print', 'printDeliveryNote')->name('delivery-note.print');

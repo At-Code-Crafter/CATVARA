@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Admin\Sales;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Sales\FinalizeSalesOrderRequest;
-use App\Http\Requests\Sales\GenerateDeliveryNoteRequest;
 use App\Http\Requests\Sales\StoreSalesOrderRequest;
 use App\Http\Requests\Sales\UpdateSalesOrderCustomersRequest;
 use App\Http\Requests\Sales\UpdateSalesOrderPaymentStatusRequest;
@@ -16,6 +15,7 @@ use App\Models\Inventory\InventoryLocation;
 use App\Models\Pricing\Currency;
 use App\Models\Sales\DeliveryNote;
 use App\Models\Sales\Order;
+use App\Models\Sales\OrderItemBox;
 use App\Models\Sales\OrderStatus;
 use App\Services\Inventory\InventoryPostingService;
 use App\Services\Sales\SalesCalculationService;
@@ -658,13 +658,17 @@ class SalesOrderController extends Controller
                 'shippingAddress.country',
                 'company.detail',
                 'currency',
+                'boxItems.orderItem.productVariant',
             ])
             ->firstOrFail();
 
-        return view('catvara.sales-orders.box-labels', compact('order'));
+        // Group box items by box_number
+        $boxes = $order->boxItems->groupBy('box_number')->sortKeys();
+
+        return view('catvara.sales-orders.box-labels', compact('order', 'boxes'));
     }
 
-    public function boxLabelPreview(Company $company, $uuid, $boxIndex)
+    public function boxLabelPreview(Company $company, $uuid, $boxNumber)
     {
         $this->authorize('view', 'orders');
 
@@ -680,14 +684,52 @@ class SalesOrderController extends Controller
             ])
             ->firstOrFail();
 
-        $boxIndex = (int) $boxIndex;
-        $items = $order->items->values();
+        $boxNumber = (int) $boxNumber;
 
-        abort_if($boxIndex < 1 || $boxIndex > $items->count(), 404);
+        $boxItems = OrderItemBox::where('order_id', $order->id)
+            ->where('box_number', $boxNumber)
+            ->with('orderItem.productVariant')
+            ->get();
 
-        $item = $items[$boxIndex - 1];
+        abort_if($boxItems->isEmpty(), 404);
 
-        return view('catvara.sales-orders.box-label-print', compact('order', 'item', 'boxIndex'));
+        // Count total boxes for this order
+        $totalBoxes = OrderItemBox::where('order_id', $order->id)
+            ->distinct('box_number')
+            ->count('box_number');
+
+        return view('catvara.sales-orders.box-label-print', compact('order', 'boxItems', 'boxNumber', 'totalBoxes'));
+    }
+
+    public function createDeliveryNote(Company $company, $uuid)
+    {
+        $this->authorize('edit', 'orders');
+
+        $order = Order::where('company_id', $company->id)
+            ->where('uuid', $uuid)
+            ->with([
+                'items.productVariant.product',
+                'items.productVariant.inventory',
+                'customer',
+                'shippingAddress.state',
+                'shippingAddress.country',
+                'company.detail',
+                'currency',
+            ])
+            ->firstOrFail();
+
+        $locations = InventoryLocation::where('company_id', $company->id)
+            ->where('is_active', true)
+            ->with(['locatable'])
+            ->get()
+            ->map(function ($loc) {
+                return [
+                    'id' => $loc->id,
+                    'name' => $loc->locatable->name ?? ucfirst($loc->type),
+                ];
+            });
+
+        return view('catvara.sales-orders.create-delivery-note', compact('order', 'locations'));
     }
 
     /* ===================== HELPERS ===================== */
@@ -810,21 +852,54 @@ class SalesOrderController extends Controller
         ]);
     }
 
-    public function generateDeliveryNote(GenerateDeliveryNoteRequest $request, Company $company, string $sales_order)
+    public function generateDeliveryNote(Request $request, Company $company, string $sales_order)
     {
         $this->authorize('edit', 'orders');
+
+        $request->validate([
+            'inventory_location_id' => ['required', 'exists:inventory_locations,id'],
+            'reference_number' => ['nullable', 'string', 'max:100'],
+            'vehicle_number' => ['nullable', 'string', 'max:50'],
+            'notes' => ['nullable', 'string', 'max:1000'],
+            'boxes' => ['required', 'array', 'min:1'],
+            'boxes.*.box_number' => ['required', 'integer', 'min:1'],
+            'boxes.*.items' => ['required', 'array', 'min:1'],
+            'boxes.*.items.*.order_item_id' => ['required', 'exists:order_items,id'],
+            'boxes.*.items.*.quantity' => ['required', 'numeric', 'min:0.000001'],
+        ]);
 
         $order = Order::where('company_id', $company->id)
             ->where('uuid', $sales_order)
             ->with(['items'])
             ->firstOrFail();
 
-        $validated = $request->validated();
+        $validated = $request->all();
 
         return DB::transaction(function () use ($order, $company, $validated) {
-            $dn = $this->deliveryNoteService->createFromOrder($order, $validated['items']);
+            // Aggregate quantities per order_item_id from all boxes
+            $aggregatedItems = [];
+            foreach ($validated['boxes'] as $box) {
+                foreach ($box['items'] as $boxItem) {
+                    $itemId = $boxItem['order_item_id'];
+                    $qty = (float) $boxItem['quantity'];
+                    if (! isset($aggregatedItems[$itemId])) {
+                        $aggregatedItems[$itemId] = 0;
+                    }
+                    $aggregatedItems[$itemId] += $qty;
+                }
+            }
 
-            // Handle additional fields not managed by createFromOrder directly if any
+            // Convert to items array for DN service
+            $itemsData = [];
+            foreach ($aggregatedItems as $orderItemId => $totalQty) {
+                $itemsData[] = [
+                    'order_item_id' => $orderItemId,
+                    'quantity' => $totalQty,
+                ];
+            }
+
+            $dn = $this->deliveryNoteService->createFromOrder($order, $itemsData);
+
             $dn->update([
                 'inventory_location_id' => $validated['inventory_location_id'],
                 'reference_number' => $validated['reference_number'] ?? null,
@@ -832,8 +907,21 @@ class SalesOrderController extends Controller
                 'notes' => $validated['notes'] ?? null,
             ]);
 
-            // 3. Inventory Integration & Safety Check
-            // Skip inventory posting if order is already marked as fulfilled
+            // Save box assignments
+            foreach ($validated['boxes'] as $box) {
+                foreach ($box['items'] as $boxItem) {
+                    OrderItemBox::create([
+                        'company_id' => $company->id,
+                        'order_id' => $order->id,
+                        'delivery_note_id' => $dn->id,
+                        'order_item_id' => $boxItem['order_item_id'],
+                        'box_number' => $box['box_number'],
+                        'quantity' => $boxItem['quantity'],
+                    ]);
+                }
+            }
+
+            // Inventory posting
             $dn->load('items.orderItem');
             $anyFulfilled = false;
 
@@ -861,7 +949,6 @@ class SalesOrderController extends Controller
                     }
                 }
             } else {
-                // Order already fulfilled, just check if any items were selected
                 foreach ($dn->items as $dnItem) {
                     if ($dnItem->quantity > 0) {
                         $anyFulfilled = true;
@@ -918,8 +1005,10 @@ class SalesOrderController extends Controller
                 'order.customer',
                 'order.billingAddress.country',
                 'order.shippingAddress.country',
-                'order.company',
+                'order.company.detail',
+                'inventoryLocation.locatable',
                 'items.orderItem',
+                'boxItems.orderItem',
             ])
             ->firstOrFail();
 

@@ -6,6 +6,7 @@ use App\Models\Sales\DeliveryNote;
 use App\Models\Sales\DeliveryNoteItem;
 use App\Models\Sales\Order;
 use App\Models\Sales\OrderItem;
+use App\Models\Sales\OrderItemBox;
 use App\Services\Common\DocumentNumberService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -93,9 +94,12 @@ class DeliveryNoteService
                 }
             }
 
+            // Delete box assignments
+            OrderItemBox::where('delivery_note_id', $dn->id)->delete();
+
             // Sync addresses deletion if they are HasMany
             $dn->addresses()->delete();
-            
+
             return $dn->delete();
         });
     }

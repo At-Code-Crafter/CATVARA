@@ -1,13 +1,8 @@
 @extends('catvara.layouts.print')
 
-@section('title', 'Box ' . $boxIndex . ' — ' . $order->order_number)
+@section('title', 'Box ' . $boxNumber . ' — ' . $order->order_number)
 
 @php
-    $desc = $item->product_name;
-    if ($item->variant_description) {
-        $desc .= ' — ' . $item->variant_description;
-    }
-    $boxAmount = (float) $item->line_total;
     $company = $order->company;
 @endphp
 
@@ -53,7 +48,7 @@
         {{-- Box Number --}}
         <div style="text-align: center; margin-bottom: 40px;">
             <div style="font-size: 20px; font-weight: 800; color: #333; letter-spacing: 2px;">
-                BOX &ndash; {{ $boxIndex }}
+                BOX &ndash; {{ $boxNumber }}
             </div>
         </div>
 
@@ -72,18 +67,28 @@
                 </tr>
             </thead>
             <tbody>
-                <tr>
-                    <td style="padding: 10px 12px; font-weight: 600; font-size: 13px; color: #333; border: 1px solid #999;">
-                        {{ $desc }}
-                        @if ($item->productVariant?->sku)
-                            <br><span style="font-size: 11px; color: #888;">[{{ $item->productVariant->sku }}]</span>
-                        @endif
-                    </td>
-                    <td
-                        style="padding: 10px 12px; text-align: center; font-weight: 800; font-size: 15px; color: #333; border: 1px solid #999;">
-                        {{ (int) $item->quantity }}
-                    </td>
-                </tr>
+                @foreach ($boxItems as $bi)
+                    @php
+                        $item = $bi->orderItem;
+                        $desc = $item->product_name;
+                        if ($item->variant_description) {
+                            $desc .= ' — ' . $item->variant_description;
+                        }
+                    @endphp
+                    <tr>
+                        <td
+                            style="padding: 10px 12px; font-weight: 600; font-size: 13px; color: #333; border: 1px solid #999;">
+                            {{ $desc }}
+                            @if ($item->productVariant?->sku)
+                                <br><span style="font-size: 11px; color: #888;">[{{ $item->productVariant->sku }}]</span>
+                            @endif
+                        </td>
+                        <td
+                            style="padding: 10px 12px; text-align: center; font-weight: 800; font-size: 15px; color: #333; border: 1px solid #999;">
+                            {{ (float) $bi->quantity }}
+                        </td>
+                    </tr>
+                @endforeach
             </tbody>
         </table>
 
@@ -92,7 +97,6 @@
 
 @section('scripts')
     <script>
-        // Override the default generatePDF to use a better filename
         function generatePDF(mode) {
             mode = mode || 'save';
             const el = document.getElementById('label-content');
@@ -101,9 +105,10 @@
                 return;
             }
 
+            const filename = 'Label_Box{{ $boxNumber }}_{{ $order->order_number }}.pdf';
             const worker = html2pdf().set({
-                margin: [5, 5, 5, 5],
-                filename: 'Label_Box{{ $boxIndex }}_{{ $order->order_number }}.pdf',
+                margin: [10, 0, 10, 0],
+                filename: filename,
                 image: {
                     type: 'jpeg',
                     quality: 1.0

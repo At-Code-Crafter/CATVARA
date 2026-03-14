@@ -1,0 +1,275 @@
+/* 1. Global Reset & Print Fixes */
+html, body {
+    margin: 0;
+    padding: 0;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    font-family: Arial, sans-serif;
+    background-color: #f0f0f0;
+    font-size: 14px;
+}
+
+p {
+    margin: 0;
+}
+
+/* 2. Main Container (A4 Settings) */
+.invoice-container {
+    width: 210mm;
+    background: white;
+    box-sizing: border-box;
+    position: relative;
+    color: #333;
+    padding:5mm;
+}
+
+/* 3. PAGE 1 HEADER - Logo, Company Info, Delivery Note */
+.page-1-header {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.logo-header {
+    flex-shrink: 0;
+    text-align: center;
+}
+
+.logo-text {
+    font-size: 18px;
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+
+.logo-subtext {
+    font-size: 28px;
+    font-weight: bold;
+    color: #e91e63;
+    margin-top: -5px;
+}
+
+.company-info {
+    flex: 1;
+    font-size: 12px;
+    line-height: 1.4;
+    text-align: center;
+    margin-bottom: 10px;
+    color: #000;
+}
+
+.delivery-header {
+    flex-shrink: 0;
+    text-align: left;
+    width: 100%;
+}
+
+.header-item {
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    font-size: 16px;
+}
+
+.header-item .label {
+    font-weight: normal;
+    font-size: 14px;
+    margin: 0;
+}
+
+.header-item .value {
+    font-weight: normal;
+    font-size: 14px;
+}
+
+.label {
+    color: #000;
+    font-weight: bold;
+    margin-bottom: 3px;
+}
+
+.value {
+    font-size: 14px;
+    font-weight: 500;
+}
+
+/* 4. Deliver To Section */
+.deliver-to-section {
+    margin-bottom: 20px;
+    margin-top: 10px;
+    
+}
+
+.deliver-to-section .label {
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.deliver-to-section p {
+    font-size: 14px;
+    line-height: 1.5;
+    margin: 0;
+}
+
+/* 5. Table Styling */
+.table-section {
+    margin: 20px 0;
+    page-break-after: auto;
+}
+
+.items-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+}
+
+.items-table th {
+    border: 1px solid #999;
+    padding: 6px;
+    font-weight: bold;
+    text-align: left;
+    font-size: 14px;
+    text-align: center;
+}
+.items-table th:first-child {
+    text-align: left;
+}
+.items-table td {
+    border: 1px solid #999;
+    padding: 6px;
+    vertical-align: top;
+    color: #000;
+}
+
+/* Column Widths */
+.col-description {
+    width: 40%;
+}
+
+.col-qty {
+    width: 8%;
+    text-align: center;
+}
+
+.col-remark {
+    width: 12%;
+}
+
+.col-weight {
+    width: 10%;
+    text-align: center;
+}
+
+.col-amount {
+    width: 13%;
+    text-align: right;
+}
+
+.text-center {
+    text-align: center;
+}
+
+.text-right {
+    text-align: right;
+}
+
+/* Row Break Prevention */
+.items-table tr {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+}
+
+/* 6. PAGE 2 HEADER - Minimal (Logo + Company only) */
+.page-2-header {
+    display: none;
+    margin-bottom: 15px;
+    page-break-before: always;
+    padding-top: 0;
+}
+
+.logo-header-minimal {
+    text-align: center;
+    margin-bottom: 5px;
+}
+
+.logo-header-minimal .logo-text {
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.logo-header-minimal .logo-subtext {
+    font-size: 22px;
+    font-weight: bold;
+    color: #e91e63;
+    margin-top: -3px;
+}
+
+.company-info-minimal {
+    text-align: center;
+    font-size: 9px;
+    line-height: 1.4;
+    margin-bottom: 15px;
+}
+
+.page-2-table {
+    /* page break handled by .page-2-header */
+}
+
+/* 7. Footer - Delivery Service Info */
+.delivery-footer {
+    margin-top: 30px;
+    padding: 20px 0;
+    font-size: 12px;
+    line-height: 1.8;
+    page-break-inside: avoid;
+}
+
+.footer-line{
+    color: #000;
+}
+.footer-spacing {
+    height: 25px;
+}
+
+/* 8. Print & PDF Settings */
+@media print {
+    @page {
+        margin: 10mm;
+        size: A4;
+    }
+
+    body {
+        background: none;
+        margin: 0;
+        padding: 0;
+    }
+
+    .invoice-container {
+        margin: 0;
+        padding: 10mm;
+        box-shadow: none;
+        width: 100%;
+    }
+
+    button {
+        display: none;
+    }
+
+    /* Show page 2 header on print only */
+    .page-2-header {
+        display: block !important;
+    }
+}
+
+button {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    z-index: 100;
+    padding: 10px 20px;
+    cursor: pointer;
+    background: #333;
+    color: white;
+    border: none;
+    border-radius: 4px;
+}
