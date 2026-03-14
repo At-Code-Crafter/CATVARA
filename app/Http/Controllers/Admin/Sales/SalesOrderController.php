@@ -645,6 +645,51 @@ class SalesOrderController extends Controller
         return view('catvara.sales-orders.print-proforma', compact('order'));
     }
 
+    public function boxLabels(Company $company, $uuid)
+    {
+        $this->authorize('view', 'orders');
+
+        $order = Order::where('company_id', $company->id)
+            ->where('uuid', $uuid)
+            ->with([
+                'items.productVariant.product',
+                'customer',
+                'shippingAddress.state',
+                'shippingAddress.country',
+                'company.detail',
+                'currency',
+            ])
+            ->firstOrFail();
+
+        return view('catvara.sales-orders.box-labels', compact('order'));
+    }
+
+    public function boxLabelPreview(Company $company, $uuid, $boxIndex)
+    {
+        $this->authorize('view', 'orders');
+
+        $order = Order::where('company_id', $company->id)
+            ->where('uuid', $uuid)
+            ->with([
+                'items.productVariant.product',
+                'customer',
+                'shippingAddress.state',
+                'shippingAddress.country',
+                'company.detail',
+                'currency',
+            ])
+            ->firstOrFail();
+
+        $boxIndex = (int) $boxIndex;
+        $items = $order->items->values();
+
+        abort_if($boxIndex < 1 || $boxIndex > $items->count(), 404);
+
+        $item = $items[$boxIndex - 1];
+
+        return view('catvara.sales-orders.box-label-print', compact('order', 'item', 'boxIndex'));
+    }
+
     /* ===================== HELPERS ===================== */
     // Helper methods moved to SalesDocumentService
 

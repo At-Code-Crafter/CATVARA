@@ -253,6 +253,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
                 ->group(function () {
                     Route::get('{sales_order}/print', 'printOrder')->name('print');
                     Route::get('{sales_order}/print-proforma', 'printProforma')->name('print-proforma');
+                    Route::get('{sales_order}/box-labels', 'boxLabels')->name('box-labels');
+                    Route::get('{sales_order}/box-label/{boxIndex}', 'boxLabelPreview')->name('box-label-preview');
                     Route::post('{sales_order}/generate-invoice', [\App\Http\Controllers\Admin\Accounting\InvoiceController::class, 'storeFromOrder'])->name('generate-invoice');
                     Route::post('{sales_order}/mark-as-fulfillment', 'markAsFulfillment')->name('mark-as-fulfillment');
                     Route::put('{sales_order}/update-customers', 'updateCustomers')->name('update-customers');
