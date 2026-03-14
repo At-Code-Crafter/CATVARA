@@ -201,7 +201,8 @@ class InvoiceController extends Controller
                 'billingAddress.state',
                 'billingAddress.country',
                 'shippingAddress.state',
-                'shippingAddress.country'
+                'shippingAddress.country',
+                'order',
             ])
             ->firstOrFail();
 
