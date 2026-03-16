@@ -1285,7 +1285,8 @@
               </div>
 
               <div class="flex items-center gap-2 mt-1">
-                <span class="text-[10px] font-bold text-slate-500">${qty} x ${unit.toFixed(2)}</span>
+                <input type="number" min="1" step="1" value="${qty}" onclick="event.stopPropagation()" onchange="posSetQty(${index}, this.value)" class="w-14 text-[10px] font-bold text-slate-500 border border-slate-200 rounded px-1 py-0.5 text-left focus:outline-none focus:border-brand-400" />
+                <span class="text-[10px] font-bold text-slate-500">x ${unit.toFixed(2)}</span>
                 ${discP > 0 ? `<span class="text-[9px] font-black text-brand-700 bg-brand-50 px-1.5 py-0.5 rounded-lg">(-${discP}%)</span>` : ''}
                 ${isCustom ? `<span class="text-[9px] font-black text-slate-700 bg-slate-100 px-1.5 py-0.5 rounded-lg">CUSTOM</span>` : ''}
               </div>
@@ -1383,6 +1384,20 @@
                     cart.splice(selectedCartIndex, 1);
                     selectedCartIndex = -1;
                 }
+                renderCart();
+            }
+        };
+
+        window.posSetQty = function(index, value) {
+            if (!cart[index]) return;
+            const newQty = parseFloat(value) || 0;
+            if (newQty <= 0) {
+                cart.splice(index, 1);
+                if (selectedCartIndex === index) selectedCartIndex = -1;
+                else if (selectedCartIndex > index) selectedCartIndex--;
+                renderCart();
+            } else {
+                cart[index].qty = newQty;
                 renderCart();
             }
         };
