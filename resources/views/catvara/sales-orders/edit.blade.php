@@ -196,7 +196,7 @@
 
                 {{-- RIGHT: Cart side --}}
                 <div id="cartSection"
-                    class="lg:col-span-7 hidden lg:flex flex-col h-auto lg:h-full relative bg-slate-50 border-l border-slate-200 transition-all duration-300 overflow-y-auto">
+                    class="lg:col-span-7 hidden lg:flex flex-col h-auto lg:h-full relative bg-slate-50 border-l border-slate-200 transition-all duration-300 overflow-hidden">
 
                     {{-- Customer Cards (Moved Here) --}}
                     <div
@@ -247,7 +247,7 @@
 
 
                     {{-- Cart Items List --}}
-                    <div class="p-3 bg-slate-50 min-h-[400px] max-h-[550px] overflow-y-auto lg:min-h-[420px] lg:max-h-none lg:overflow-visible"
+                    <div class="p-3 bg-slate-50 min-h-[400px] max-h-[550px] overflow-y-auto lg:min-h-0 lg:flex-1 lg:max-h-none"
                         id="cartItemsContainer"></div>
 
                     {{-- Footer Controls (Redesigned) --}}
