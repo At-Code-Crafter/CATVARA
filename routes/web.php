@@ -98,6 +98,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
                     ->name('products.import.process');
 
                 Route::resource('products', \App\Http\Controllers\Admin\Catalog\ProductController::class);
+
+                // Product Variant CRUD (AJAX)
+                Route::post('products/{product}/variants', [\App\Http\Controllers\Admin\Catalog\ProductController::class, 'storeVariant'])
+                    ->name('products.variants.store');
+                Route::put('products/{product}/variants/{variant}', [\App\Http\Controllers\Admin\Catalog\ProductController::class, 'updateVariant'])
+                    ->name('products.variants.update');
+                Route::delete('products/{product}/variants/{variant}', [\App\Http\Controllers\Admin\Catalog\ProductController::class, 'destroyVariant'])
+                    ->name('products.variants.destroy');
             });
 
             /*

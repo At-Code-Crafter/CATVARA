@@ -13,11 +13,11 @@ use App\Models\Catalog\ProductVariant;
 use App\Models\Inventory\InventoryLocation;
 use App\Models\Pricing\Currency;
 use App\Models\Pricing\PriceChannel;
-// use App\Models\Inventory\InventoryBalance; // Removed for separation
 use App\Models\Pricing\VariantPrice;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use Maatwebsite\Excel\Facades\Excel;
 use Yajra\DataTables\Facades\DataTables;
 
@@ -156,7 +156,7 @@ class ProductController extends Controller
         $product = Product::where('company_id', $company->id)->with(['variants.attributeValues', 'variants.prices', 'variants.inventory'])->findOrFail($id);
         $categories = Category::where('company_id', $company->id)->get();
         $brands = \App\Models\Catalog\Brand::where('company_id', $company->id)->get();
-        $attributes = Attribute::where('company_id', $company->id)->get();
+        $attributes = Attribute::where('company_id', $company->id)->with('values')->get();
 
         $channels = PriceChannel::get(); // Global channels
         $locations = InventoryLocation::where('company_id', $company->id)->with('locatable')->get();
@@ -422,6 +422,197 @@ class ProductController extends Controller
 
         // It's an existing ID
         return is_numeric($value) ? (int) $value : null;
+    }
+
+    /**
+     * Add a new variant to an existing product (AJAX).
+     */
+    public function storeVariant(Request $request, \App\Models\Company\Company $company, $productId)
+    {
+        $this->authorize('edit', 'products');
+
+        $product = Product::where('company_id', $company->id)->findOrFail($productId);
+
+        $request->validate([
+            'sku'              => 'required|string|max:255',
+            'cost_price'       => 'nullable|numeric|min:0',
+            'attribute_values' => 'nullable|array',
+            'attribute_values.*' => 'integer|exists:attribute_values,id',
+            'prices'           => 'nullable|array',
+            'prices.*'         => 'nullable|numeric|min:0',
+        ]);
+
+        // Duplicate SKU check within company
+        $skuExists = ProductVariant::where('company_id', $company->id)
+            ->where('sku', $request->sku)
+            ->exists();
+
+        if ($skuExists) {
+            throw ValidationException::withMessages(['sku' => 'A variant with this SKU already exists.']);
+        }
+
+        // Duplicate attribute combination check within same product
+        $attrIds = collect($request->attribute_values)->filter()->sort()->values()->toArray();
+        if (!empty($attrIds)) {
+            $existingVariants = $product->variants()->with('attributeValues')->get();
+            foreach ($existingVariants as $existing) {
+                $existingAttrIds = $existing->attributeValues->pluck('id')->sort()->values()->toArray();
+                if ($existingAttrIds === $attrIds) {
+                    throw ValidationException::withMessages([
+                        'attribute_values' => 'A variant with this exact attribute combination already exists.',
+                    ]);
+                }
+            }
+        }
+
+        try {
+            DB::beginTransaction();
+
+            $variant = ProductVariant::create([
+                'company_id' => $company->id,
+                'product_id' => $product->id,
+                'sku'        => $request->sku,
+                'cost_price' => $request->cost_price ?? 0,
+                'is_active'  => true,
+            ]);
+
+            // Attach attribute values
+            if (!empty($attrIds)) {
+                $variant->attributeValues()->attach($attrIds);
+            }
+
+            // Create prices per channel
+            if (!empty($request->prices)) {
+                $currency = Currency::where('code', 'GBP')->first() ?? Currency::first();
+                foreach ($request->prices as $channelId => $priceVal) {
+                    if (is_numeric($priceVal) && $priceVal > 0) {
+                        VariantPrice::create([
+                            'company_id'         => $company->id,
+                            'product_variant_id'  => $variant->id,
+                            'price_channel_id'    => $channelId,
+                            'currency_id'         => $currency->id,
+                            'price'               => $priceVal,
+                            'valid_from'          => now(),
+                            'is_active'           => true,
+                        ]);
+                    }
+                }
+            }
+
+            DB::commit();
+
+            return response()->json(['success' => true, 'message' => 'Variant added successfully.']);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Update a single variant inline (AJAX).
+     */
+    public function updateVariant(Request $request, \App\Models\Company\Company $company, $productId, $variantId)
+    {
+        $this->authorize('edit', 'products');
+
+        $product = Product::where('company_id', $company->id)->findOrFail($productId);
+        $variant = ProductVariant::where('product_id', $product->id)->findOrFail($variantId);
+
+        $request->validate([
+            'sku'        => 'required|string|max:255',
+            'cost_price' => 'nullable|numeric|min:0',
+            'is_active'  => 'nullable|boolean',
+            'prices'     => 'nullable|array',
+            'prices.*'   => 'nullable|numeric|min:0',
+        ]);
+
+        // Duplicate SKU check (exclude self)
+        $skuExists = ProductVariant::where('company_id', $company->id)
+            ->where('sku', $request->sku)
+            ->where('id', '!=', $variant->id)
+            ->exists();
+
+        if ($skuExists) {
+            throw ValidationException::withMessages(['sku' => 'A variant with this SKU already exists.']);
+        }
+
+        try {
+            DB::beginTransaction();
+
+            $variant->update([
+                'sku'        => $request->sku,
+                'cost_price' => $request->cost_price ?? 0,
+                'is_active'  => $request->boolean('is_active', $variant->is_active),
+            ]);
+
+            // Update prices per channel
+            if (!empty($request->prices)) {
+                $currency = Currency::where('code', 'GBP')->first() ?? Currency::first();
+                foreach ($request->prices as $channelId => $priceVal) {
+                    if (is_numeric($priceVal)) {
+                        VariantPrice::updateOrCreate(
+                            [
+                                'company_id'         => $company->id,
+                                'product_variant_id'  => $variant->id,
+                                'price_channel_id'    => $channelId,
+                                'currency_id'         => $currency->id,
+                            ],
+                            [
+                                'price'      => $priceVal,
+                                'valid_from' => now(),
+                                'is_active'  => true,
+                            ]
+                        );
+                    }
+                }
+            }
+
+            DB::commit();
+
+            return response()->json(['success' => true, 'message' => 'Variant updated successfully.']);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Delete a variant (AJAX, super-admin only).
+     */
+    public function destroyVariant(Request $request, \App\Models\Company\Company $company, $productId, $variantId)
+    {
+        $this->authorize('edit', 'products');
+
+        if (!auth()->user()->isSuperAdmin()) {
+            return response()->json(['success' => false, 'message' => 'Only super admins can delete variants.'], 403);
+        }
+
+        $product = Product::where('company_id', $company->id)->findOrFail($productId);
+        $variant = ProductVariant::where('product_id', $product->id)->findOrFail($variantId);
+
+        // Prevent deletion if variant has inventory or order history
+        $hasInventory = $variant->inventory()->where('quantity', '!=', 0)->exists();
+        if ($hasInventory) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Cannot delete variant with non-zero inventory. Adjust stock first.',
+            ], 422);
+        }
+
+        try {
+            DB::beginTransaction();
+
+            $variant->prices()->delete();
+            $variant->attributeValues()->detach();
+            $variant->delete();
+
+            DB::commit();
+
+            return response()->json(['success' => true, 'message' => 'Variant deleted successfully.']);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
     }
 
     /**
