@@ -39,8 +39,10 @@ class InventoryController extends Controller
         // Brand restriction for stats
         $brandIds = user_brand_ids();
         $brandFilter = function ($q) use ($brandIds) {
+            // Hide variants whose brand is inactive
+            $q->whereHas('variant.product.brand', fn($bq) => $bq->where('is_active', true));
             if ($brandIds->isNotEmpty()) {
-                $q->whereHas('variant.product', fn ($pq) => $pq->whereIn('brand_id', $brandIds));
+                $q->whereHas('variant.product', fn($pq) => $pq->whereIn('brand_id', $brandIds));
             }
         };
 
@@ -72,6 +74,9 @@ class InventoryController extends Controller
         $query = InventoryBalance::where('inventory_balances.company_id', $request->company->id)
             ->with(['variant.product', 'location.locatable']);
 
+        // Hide variants whose brand is inactive
+        $query->whereHas('variant.product.brand', fn($q) => $q->where('is_active', true));
+
         // Brand restriction filter
         $brandIds = user_brand_ids();
         if ($brandIds->isNotEmpty()) {
@@ -85,11 +90,11 @@ class InventoryController extends Controller
         }
 
         return DataTables::of($query)
-            ->addColumn('sku', fn ($r) => $r->variant->sku ?? '-')
-            ->addColumn('product_name', fn ($r) => $r->variant->product->name ?? '-')
-            ->addColumn('location_name', fn ($r) => $r->location->locatable->name ?? $r->location->type)
-            ->editColumn('quantity', fn ($r) => (float) $r->quantity)
-            ->addColumn('last_movement', fn ($r) => $r->last_movement_at ? $r->last_movement_at->diffForHumans() : '-')
+            ->addColumn('sku', fn($r) => $r->variant->sku ?? '-')
+            ->addColumn('product_name', fn($r) => $r->variant->product->name ?? '-')
+            ->addColumn('location_name', fn($r) => $r->location->locatable->name ?? $r->location->type)
+            ->editColumn('quantity', fn($r) => (float) $r->quantity)
+            ->addColumn('last_movement', fn($r) => $r->last_movement_at ? $r->last_movement_at->diffForHumans() : '-')
             ->addColumn('actions', function ($r) use ($request) {
                 // Link to Variant Details
                 $url = route('inventory.variant.details', [
@@ -104,7 +109,7 @@ class InventoryController extends Controller
                 // Let's use a generic generic class or the new one if we know it.
                 // But wait, the view will be new.
 
-                return '<a href="'.$url.'" class="text-brand-600 hover:text-brand-800 font-medium text-sm">Manage</a>';
+                return '<a href="' . $url . '" class="text-brand-600 hover:text-brand-800 font-medium text-sm">Manage</a>';
             })
             ->rawColumns(['actions'])
             ->make(true);
@@ -119,8 +124,9 @@ class InventoryController extends Controller
 
         $locations = InventoryLocation::where('company_id', request()->company->id)->with('locatable')->get();
 
-        // Simple list of products for dropdown - in real app might need AJAX search
+        // Simple list of products for dropdown - exclude inactive brands
         $variants = ProductVariant::where('company_id', request()->company->id)
+            ->whereHas('product.brand', fn($q) => $q->where('is_active', true))
             ->with(['product', 'attributeValues'])
             ->get();
 
@@ -185,7 +191,7 @@ class InventoryController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
 
-            return back()->with('error', 'Error adjusting stock: '.$e->getMessage());
+            return back()->with('error', 'Error adjusting stock: ' . $e->getMessage());
         }
     }
 
@@ -224,7 +230,7 @@ class InventoryController extends Controller
 
             return back()->with('success', 'Stock transferred successfully.');
         } catch (\Exception $e) {
-            return back()->with('error', 'Transfer failed: '.$e->getMessage());
+            return back()->with('error', 'Transfer failed: ' . $e->getMessage());
         }
     }
 
@@ -248,9 +254,9 @@ class InventoryController extends Controller
             }
 
             return DataTables::of($query)
-                ->addColumn('sku', fn ($r) => $r->variant->sku ?? '-')
-                ->addColumn('location_name', fn ($r) => $r->location->locatable->name ?? $r->location->type ?? '-')
-                ->addColumn('reason_name', fn ($r) => $r->reason->name ?? '-')
+                ->addColumn('sku', fn($r) => $r->variant->sku ?? '-')
+                ->addColumn('location_name', fn($r) => $r->location->locatable->name ?? $r->location->type ?? '-')
+                ->addColumn('reason_name', fn($r) => $r->reason->name ?? '-')
                 ->addColumn('reference', function ($r) {
                     // Basic formatting of reference
                     if ($r->reference_type === 'inventory_transfer') {
@@ -259,9 +265,9 @@ class InventoryController extends Controller
 
                     return $r->reference_type ? class_basename($r->reference_type) : '-';
                 })
-                ->editColumn('quantity', fn ($r) => '<span class="badge badge-'.($r->quantity > 0 ? 'success' : 'danger').'">'.($r->quantity > 0 ? '+' : '').(float) $r->quantity.'</span>')
-                ->addColumn('performed_by_name', fn ($r) => $r->performer->name ?? '-')
-                ->addColumn('date', fn ($r) => $r->occurred_at ? $r->occurred_at->format('M d, Y H:i') : '-')
+                ->editColumn('quantity', fn($r) => '<span class="badge badge-' . ($r->quantity > 0 ? 'success' : 'danger') . '">' . ($r->quantity > 0 ? '+' : '') . (float) $r->quantity . '</span>')
+                ->addColumn('performed_by_name', fn($r) => $r->performer->name ?? '-')
+                ->addColumn('date', fn($r) => $r->occurred_at ? $r->occurred_at->format('M d, Y H:i') : '-')
                 ->rawColumns(['quantity'])
                 ->make(true);
         }
