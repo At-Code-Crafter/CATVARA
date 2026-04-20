@@ -70,9 +70,17 @@
         <div class="address-grid">
             <div class="address-col">
                 <div class="label">Bill to</div>
-                <p>
+                {{-- Original dynamic bill to address --}}
+                {{-- <p>
                     {{ $billTo->name ?? ($invoice->customer->legal_name ?? $invoice->customer->display_name) }}<br>
                     {!! $billTo?->render() !!}
+                </p> --}}
+                <p>
+                    AHZTRADERS LTD<br>
+                    210 MARLBOROUGH STREET<br>
+                    ASHTON UNDER LYNE<br>
+                    OL7 0HH<br>
+                    ahztradersltd1@gmail.com
                 </p>
             </div>
             <div class="address-col">
@@ -140,7 +148,8 @@
         <div class="totals-container">
             <div class="totals-box">
                 <div class="total-line">
-                    <span>Subtotal</span><span>{{ money($invoice->subtotal, $invoice->currency->code) }}</span></div>
+                    <span>Subtotal</span><span>{{ money($invoice->subtotal, $invoice->currency->code) }}</span>
+                </div>
                 @if ($invoice->discount_total > 0)
                     <div class="total-line"><span>Discount</span><span
                             style="color: #db2777;">-{{ money($invoice->discount_total, $invoice->currency->code) }}</span>
@@ -155,7 +164,8 @@
                     </div>
                 @endif
                 <div class="total-line grand-total">
-                    <span>Total</span><span>{{ money($invoice->grand_total, $invoice->currency->code) }}</span></div>
+                    <span>Total</span><span>{{ money($invoice->grand_total, $invoice->currency->code) }}</span>
+                </div>
             </div>
         </div>
 
