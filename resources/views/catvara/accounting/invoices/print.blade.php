@@ -70,17 +70,12 @@
         <div class="address-grid">
             <div class="address-col">
                 <div class="label">Bill to</div>
-                {{-- Original dynamic bill to address --}}
-                {{-- <p>
+                <p>
                     {{ $billTo->name ?? ($invoice->customer->legal_name ?? $invoice->customer->display_name) }}<br>
                     {!! $billTo?->render() !!}
-                </p> --}}
-                <p>
-                    AHZTRADERS LTD<br>
-                    210 MARLBOROUGH STREET<br>
-                    ASHTON UNDER LYNE<br>
-                    OL7 0HH<br>
-                    ahztradersltd1@gmail.com
+                    @if ($billTo?->email)
+                        <br>{{ $billTo->email }}
+                    @endif
                 </p>
             </div>
             <div class="address-col">

@@ -82,17 +82,23 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <!-- Billing Details -->
                     <div class="card overflow-hidden border-none shadow-sm h-full flex flex-col">
-                        <div class="bg-linear-to-r from-slate-50 to-slate-100/50 px-6 py-4 border-b border-slate-100">
+                        <div
+                            class="bg-linear-to-r from-slate-50 to-slate-100/50 px-6 py-4 border-b border-slate-100 flex items-center justify-between">
                             <h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center">
                                 <i class="fas fa-file-invoice-dollar mr-3 text-brand-500"></i> Billed To
                             </h3>
+                            <button type="button" id="editBillingBtn"
+                                class="text-slate-400 hover:text-brand-600 transition-colors" title="Edit Billing Address">
+                                <i class="fas fa-pencil-alt text-sm"></i>
+                            </button>
                         </div>
                         <div class="p-6 space-y-4 flex-grow bg-white">
                             @php $billTo = $invoice->billingAddress; @endphp
                             <div class="flex flex-col">
                                 <span
                                     class="text-lg font-bold text-slate-900">{{ $billTo->name ?? ($invoice->customer->legal_name ?? $invoice->customer->display_name) }}</span>
-                                <span class="text-slate-500 font-medium">{{ $invoice->customer->email }}</span>
+                                <span
+                                    class="text-slate-500 font-medium">{{ $billTo->email ?? $invoice->customer->email }}</span>
                             </div>
                             <div class="space-y-1 text-slate-600 bg-slate-50/50 p-4 rounded-xl border border-slate-100">
                                 <p class="flex items-start gap-3">
@@ -110,6 +116,12 @@
                                     <p class="flex items-center gap-3 pt-2">
                                         <i class="fas fa-phone text-slate-400"></i>
                                         <span>{{ $billTo->phone }}</span>
+                                    </p>
+                                @endif
+                                @if ($billTo->email)
+                                    <p class="flex items-center gap-3 pt-2">
+                                        <i class="fas fa-envelope text-slate-400"></i>
+                                        <span>{{ $billTo->email }}</span>
                                     </p>
                                 @endif
                             </div>
@@ -394,7 +406,7 @@
             document.getElementById('postInvoiceBtn')?.addEventListener('click', function() {
                 if (!confirm(
                         'Are you sure you want to POST this invoice? This will finalize the document and cannot be undone.'
-                        ))
+                    ))
                     return;
 
                 const btn = this;
@@ -474,4 +486,143 @@
             });
         </script>
     @endif
+
+    {{-- Billing Address Edit Modal --}}
+    <div id="billingAddressModal" class="fixed inset-0 z-50 hidden">
+        <div class="fixed inset-0 bg-black/40" id="billingModalOverlay"></div>
+        <div class="fixed inset-0 flex items-center justify-center p-4">
+            <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg relative animate-fade-in">
+                <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+                    <h3 class="text-lg font-bold text-slate-800">
+                        <i class="fas fa-edit mr-2 text-brand-500"></i> Edit Billing Address
+                    </h3>
+                    <button type="button" id="closeBillingModal" class="text-slate-400 hover:text-slate-600">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <form id="billingAddressForm">
+                    <div class="p-6 space-y-4">
+                        <div>
+                            <label class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1 block">Name
+                                <span class="text-rose-500">*</span></label>
+                            <input type="text" name="name" value="{{ $invoice->billingAddress->name ?? '' }}"
+                                class="w-full rounded-lg border-slate-200 text-sm" required>
+                        </div>
+                        <div>
+                            <label
+                                class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1 block">Address
+                                Line 1 <span class="text-rose-500">*</span></label>
+                            <input type="text" name="address_line_1"
+                                value="{{ $invoice->billingAddress->address_line_1 ?? '' }}"
+                                class="w-full rounded-lg border-slate-200 text-sm" required>
+                        </div>
+                        <div>
+                            <label
+                                class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1 block">Address
+                                Line 2</label>
+                            <input type="text" name="address_line_2"
+                                value="{{ $invoice->billingAddress->address_line_2 ?? '' }}"
+                                class="w-full rounded-lg border-slate-200 text-sm">
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label
+                                    class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1 block">City</label>
+                                <input type="text" name="city" value="{{ $invoice->billingAddress->city ?? '' }}"
+                                    class="w-full rounded-lg border-slate-200 text-sm">
+                            </div>
+                            <div>
+                                <label
+                                    class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1 block">Postcode</label>
+                                <input type="text" name="zip_code"
+                                    value="{{ $invoice->billingAddress->zip_code ?? '' }}"
+                                    class="w-full rounded-lg border-slate-200 text-sm">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label
+                                    class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1 block">Phone</label>
+                                <input type="text" name="phone" value="{{ $invoice->billingAddress->phone ?? '' }}"
+                                    class="w-full rounded-lg border-slate-200 text-sm">
+                            </div>
+                            <div>
+                                <label
+                                    class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1 block">Email</label>
+                                <input type="email" name="email" value="{{ $invoice->billingAddress->email ?? '' }}"
+                                    class="w-full rounded-lg border-slate-200 text-sm">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="px-6 py-4 border-t border-slate-100 flex justify-end gap-3">
+                        <button type="button" id="cancelBillingModal" class="btn btn-white">Cancel</button>
+                        <button type="submit" id="saveBillingBtn" class="btn btn-primary">
+                            <i class="fas fa-save mr-2"></i> Save
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Billing Address Modal
+        (function() {
+            const modal = document.getElementById('billingAddressModal');
+            const openBtn = document.getElementById('editBillingBtn');
+            const closeBtn = document.getElementById('closeBillingModal');
+            const cancelBtn = document.getElementById('cancelBillingModal');
+            const overlay = document.getElementById('billingModalOverlay');
+            const form = document.getElementById('billingAddressForm');
+
+            function openModal() {
+                modal.classList.remove('hidden');
+            }
+
+            function closeModal() {
+                modal.classList.add('hidden');
+            }
+
+            openBtn?.addEventListener('click', openModal);
+            closeBtn?.addEventListener('click', closeModal);
+            cancelBtn?.addEventListener('click', closeModal);
+            overlay?.addEventListener('click', closeModal);
+
+            form?.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const btn = document.getElementById('saveBillingBtn');
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Saving...';
+
+                const formData = new FormData(form);
+                const data = Object.fromEntries(formData.entries());
+
+                fetch("{{ company_route('accounting.invoices.update-billing-address', ['invoice' => $invoice->uuid]) }}", {
+                        method: 'PUT',
+                        headers: {
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify(data)
+                    })
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data.success) {
+                            Swal.fire('Saved!', data.message, 'success').then(() => window.location
+                                .reload());
+                        } else {
+                            Swal.fire('Error', data.message || 'Failed to save', 'error');
+                            btn.disabled = false;
+                            btn.innerHTML = '<i class="fas fa-save mr-2"></i> Save';
+                        }
+                    })
+                    .catch(() => {
+                        Swal.fire('Error', 'An error occurred', 'error');
+                        btn.disabled = false;
+                        btn.innerHTML = '<i class="fas fa-save mr-2"></i> Save';
+                    });
+            });
+        })();
+    </script>
 @endsection

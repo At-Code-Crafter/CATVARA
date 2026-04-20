@@ -116,37 +116,23 @@
 
                     <div class="inv-addresses">
                         @php
+                            $billTo = $invoice->addresses->where('type', 'BILLING')->first();
                             $shipTo = $invoice->addresses->where('type', 'SHIPPING')->first();
                         @endphp
                         <div class="addr">
                             <h4>Bill to</h4>
-                            {{-- Original dynamic bill to address --}}
-                            {{-- @php
-                                $billTo = $invoice->addresses->where('type', 'BILLING')->first();
-                            @endphp
                             <div class="lines">
                                 <div class="label">
                                     {{ $billTo->name ?? $invoice->customer->display_name }}
                                 </div>
                                 @if ($billTo)
-                                <div class="value">
-                                    {{ $billTo->address_line_1 }}
-                                    {{ $billTo->address_line_2 }}
-                                    {{ $billTo->city }} {{ $billTo->zip_code }}
-                                    {{ $billTo->country->name ?? '' }}
-                                </div>
+                                    <div class="value">
+                                        {{ $billTo->address_line_1 }}
+                                        {{ $billTo->address_line_2 }}
+                                        {{ $billTo->city }} {{ $billTo->zip_code }}
+                                        {{ $billTo->country->name ?? '' }}
+                                    </div>
                                 @endif
-                            </div> --}}
-                            <div class="lines">
-                                <div class="label">
-                                    AHZTRADERS LTD
-                                </div>
-                                <div class="value">
-                                    210 MARLBOROUGH STREET<br>
-                                    ASHTON UNDER LYNE<br>
-                                    OL7 0HH<br>
-                                    ahztradersltd1@gmail.com
-                                </div>
                             </div>
                         </div>
 

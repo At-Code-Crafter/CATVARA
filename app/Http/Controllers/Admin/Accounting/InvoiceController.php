@@ -272,6 +272,51 @@ class InvoiceController extends Controller
     }
 
     /**
+     * Update billing address on an invoice.
+     */
+    public function updateBillingAddress(Request $request, Company $company, $uuid)
+    {
+        $this->authorize('edit', 'invoices');
+
+        $invoice = Invoice::where('company_id', $company->id)
+            ->where('uuid', $uuid)
+            ->firstOrFail();
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'address_line_1' => 'required|string|max:255',
+            'address_line_2' => 'nullable|string|max:255',
+            'city' => 'nullable|string|max:100',
+            'zip_code' => 'nullable|string|max:20',
+            'phone' => 'nullable|string|max:50',
+            'email' => 'nullable|email|max:255',
+        ]);
+
+        try {
+            $billing = $invoice->billingAddress;
+
+            if ($billing) {
+                $billing->update($validated);
+            } else {
+                $invoice->addresses()->create(array_merge($validated, [
+                    'type' => 'BILLING',
+                    'company_id' => $company->id,
+                ]));
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Billing address updated successfully.',
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update billing address: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
      * Update an invoice (DRAFT only)
      */
     public function update(Request $request, Company $company, $uuid)
