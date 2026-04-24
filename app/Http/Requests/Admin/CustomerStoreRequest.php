@@ -36,8 +36,6 @@ class CustomerStoreRequest extends FormRequest
                 'nullable',
                 'string',
                 'max:50',
-                Rule::unique('customers', 'phone')
-                    ->where('company_id', $companyId),
             ],
             'legal_name' => ['nullable', 'string', 'max:255'],
             'tax_number' => ['nullable', 'string', 'max:100'],
