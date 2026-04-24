@@ -3,6 +3,7 @@
 @section('title', 'Invoice ' . $invoice->invoice_number)
 
 @section('content')
+
     <div class="invoice-container" id="invoice-content">
         {{-- Header (hidden in HTML, rendered by JS on every PDF page) --}}
         <div class="header-top">
@@ -110,7 +111,6 @@
                         <th class="text-left">Description</th>
                         <th class="text-right">Quantity</th>
                         <th class="text-right">Unit price</th>
-                        <th class="text-right">VAT rate</th>
                         <th class="text-right">Amount</th>
                     </tr>
                 </thead>
@@ -125,9 +125,8 @@
                             </td>
                             <td class="text-right">{{ (int) $item->quantity }}</td>
                             <td class="text-right">{{ money($item->unit_price, $invoice->currency->code) }}</td>
-                            <td class="text-right">{{ number_format($item->tax_rate, 0) }}%</td>
                             <td class="text-right">
-                                {{ money($item->line_total, $invoice->currency->code) }}
+                                {{ money((float) $item->line_total - (float) $item->tax_amount, $invoice->currency->code) }}
                                 @if ($item->discount_amount > 0)
                                     <br><span
                                         class="discount">-{{ money($item->discount_amount, $invoice->currency->code) }}</span>
@@ -150,12 +149,14 @@
                             style="color: #db2777;">-{{ money($invoice->discount_total, $invoice->currency->code) }}</span>
                     </div>
                 @endif
-                <div class="total-line"><span>VAT
-                        ({{ number_format($invoice->items->first()?->tax_rate ?? 20, 0) }}%)</span><span>{{ money($invoice->tax_total, $invoice->currency->code) }}</span>
-                </div>
                 @if ($invoice->shipping_total > 0)
                     <div class="total-line">
                         <span>Shipping</span><span>{{ money($invoice->shipping_total, $invoice->currency->code) }}</span>
+                    </div>
+                @endif
+                @if ($invoice->tax_total > 0)
+                    <div class="total-line">
+                        <span>VAT</span><span>{{ money($invoice->tax_total, $invoice->currency->code) }}</span>
                     </div>
                 @endif
                 <div class="total-line grand-total">

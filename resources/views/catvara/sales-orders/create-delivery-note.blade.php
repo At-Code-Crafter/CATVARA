@@ -39,7 +39,7 @@
             <h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider mb-4 flex items-center gap-2">
                 <i class="fas fa-cog text-brand-400"></i> Delivery Details
             </h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
                 <div class="space-y-1.5">
                     <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Dispatch From <span
                             class="text-red-400">*</span></label>
@@ -56,6 +56,13 @@
                         class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-hidden"
                         placeholder="LPO / Job No.">
                 </div>
+                <div class="space-y-1.5">
+                    <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">PO Number</label>
+                    <input type="text" id="dn-po-number"
+                        class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-hidden"
+                        placeholder="Customer PO Number">
+                </div>
+
                 <div class="space-y-1.5">
                     <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Vehicle No.</label>
                     <input type="text" id="dn-vehicle"
@@ -204,7 +211,7 @@
         const SAVE_URL = "{{ company_route('sales-orders.delivery-note.generate', ['sales_order' => $order->uuid]) }}";
         const REDIRECT_URL = "{{ company_route('sales-orders.show', ['sales_order' => $order->uuid]) }}";
 
-        let boxes = []; // [{box_number, items: [{order_item_id, quantity}]}]
+        let boxes = []; // [{box_number, items: [{order_item_id, quantity, weight}]}]
         let nextBoxNumber = 1;
 
         function addBox() {
@@ -226,7 +233,8 @@
             if (available.length === 0) return;
             boxes[boxIdx].items.push({
                 order_item_id: available[0].id,
-                quantity: ''
+                quantity: '',
+                weight: ''
             });
             renderBoxes();
         }
@@ -244,6 +252,10 @@
         function updateBoxItemQty(boxIdx, itemIdx, value) {
             boxes[boxIdx].items[itemIdx].quantity = value;
             updateSummary();
+        }
+
+        function updateBoxItemWeight(boxIdx, itemIdx, value) {
+            boxes[boxIdx].items[itemIdx].weight = value;
         }
 
         function getAssignedQtyForItem(itemId) {
@@ -299,10 +311,11 @@
                         <table class="w-full text-sm mb-3">
                             <thead>
                                 <tr>
-                                    <th class="text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest pb-2 w-[55%]">Item</th>
-                                    <th class="text-center text-[10px] font-bold text-slate-400 uppercase tracking-widest pb-2 w-[15%]">Available</th>
-                                    <th class="text-right text-[10px] font-bold text-slate-400 uppercase tracking-widest pb-2 w-[20%]">Qty in Box</th>
-                                    <th class="pb-2 w-[10%]"></th>
+                                    <th class="text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest pb-2 w-[45%]">Item</th>
+                                    <th class="text-center text-[10px] font-bold text-slate-400 uppercase tracking-widest pb-2 w-[12%]">Available</th>
+                                    <th class="text-right text-[10px] font-bold text-slate-400 uppercase tracking-widest pb-2 w-[18%]">Qty in Box</th>
+                                    <th class="text-right text-[10px] font-bold text-slate-400 uppercase tracking-widest pb-2 w-[18%]">Weight (kg)</th>
+                                    <th class="pb-2 w-[7%]"></th>
                                 </tr>
                             </thead>
                             <tbody id="box-${boxIdx}-items">
@@ -348,6 +361,15 @@
                             oninput="updateBoxItemQty(${boxIdx}, ${itemIdx}, this.value)"
                             class="w-full px-3 py-2 rounded-lg border border-slate-200 text-left text-xs font-bold text-indigo-600 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-hidden">
                     </td>
+                    <td class="py-2 px-2">
+                        <input type="number"
+                            value="${bi.weight}"
+                            min="0"
+                            step="0.001"
+                            placeholder="0.000"
+                            oninput="updateBoxItemWeight(${boxIdx}, ${itemIdx}, this.value)"
+                            class="w-full px-3 py-2 rounded-lg border border-slate-200 text-left text-xs font-bold text-slate-600 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-hidden">
+                    </td>
                     <td class="py-2 text-center">
                         <button type="button" onclick="removeItemFromBox(${boxIdx}, ${itemIdx})" class="text-red-300 hover:text-red-500 transition-colors p-1">
                             <i class="fas fa-times text-xs"></i>
@@ -366,7 +388,8 @@
                         box_number: nextBoxNumber++,
                         items: [{
                             order_item_id: item.id,
-                            quantity: item.remaining
+                            quantity: item.remaining,
+                            weight: ''
                         }]
                     });
                 }
@@ -422,13 +445,15 @@
                     _token: CSRF_TOKEN,
                     inventory_location_id: document.getElementById('dn-location').value,
                     reference_number: document.getElementById('dn-reference').value || null,
+                    po_number: document.getElementById('dn-po-number').value || null,
                     vehicle_number: document.getElementById('dn-vehicle').value || null,
                     notes: document.getElementById('dn-notes').value || null,
                     boxes: boxes.map(box => ({
                         box_number: box.box_number,
                         items: box.items.map(bi => ({
                             order_item_id: bi.order_item_id,
-                            quantity: parseFloat(bi.quantity) || 0
+                            quantity: parseFloat(bi.quantity) || 0,
+                            weight: bi.weight ? parseFloat(bi.weight) : null
                         }))
                     }))
                 }),

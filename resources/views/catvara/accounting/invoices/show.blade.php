@@ -168,6 +168,7 @@
                         <h3 class="font-bold text-slate-800 text-lg">Invoiced Items</h3>
                         <span class="badge badge-secondary">{{ $invoice->items->count() }} Items</span>
                     </div>
+
                     <div class="overflow-x-auto">
                         <table class="table-premium w-full text-sm">
                             <thead
@@ -176,8 +177,7 @@
                                     <th class="px-6 py-4 text-left">Product</th>
                                     <th class="px-6 py-4 text-center">Qty</th>
                                     <th class="px-6 py-4 text-right">Unit Price</th>
-                                    <th class="px-6 py-4 text-right">Tax</th>
-                                    <th class="px-6 py-4 text-right">Total</th>
+                                    <th class="px-6 py-4 text-right">Amount</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-slate-50">
@@ -197,11 +197,8 @@
                                         <td class="px-6 py-4 text-right font-medium text-slate-600">
                                             {{ money($item->unit_price, $invoice->currency->code) }}
                                         </td>
-                                        <td class="px-6 py-4 text-right font-medium text-slate-600">
-                                            {{ money($item->tax_amount, $invoice->currency->code) }}
-                                        </td>
                                         <td class="px-6 py-4 text-right font-bold text-slate-900">
-                                            {{ money($item->line_total, $invoice->currency->code) }}
+                                            {{ money((float) $item->line_total - (float) $item->tax_amount, $invoice->currency->code) }}
                                         </td>
                                     </tr>
                                 @endforeach
@@ -248,18 +245,13 @@
                                 </div>
                             @endif
 
-                            <div class="flex justify-between items-center text-slate-400">
-                                <div class="flex flex-col">
-                                    <span class="text-sm font-bold uppercase tracking-widest">Tax Amount</span>
-                                    @if ($invoice->shipping_tax_total > 0)
-                                        <span class="text-[9px] font-black uppercase tracking-tighter opacity-70">Incl.
-                                            {{ money($invoice->shipping_tax_total, $invoice->currency->code) }} Shipping
-                                            Tax</span>
-                                    @endif
+                            @if ($invoice->tax_total > 0)
+                                <div class="flex justify-between items-center text-slate-400">
+                                    <span class="text-sm font-bold uppercase tracking-widest">VAT</span>
+                                    <span
+                                        class="text-lg font-bold">{{ money($invoice->tax_total, $invoice->currency->code) }}</span>
                                 </div>
-                                <span
-                                    class="text-lg font-bold">{{ money($invoice->tax_total, $invoice->currency->code) }}</span>
-                            </div>
+                            @endif
 
                             <div class="pt-6 mt-6 border-t border-slate-800">
                                 <div class="flex justify-between items-end">

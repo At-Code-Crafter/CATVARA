@@ -60,6 +60,7 @@
 
         $totalPages = count($pages);
         $logo = $invoice->company->logo ? asset('storage/' . $invoice->company->logo) : asset('assets/images/logo.png');
+
     @endphp
 
     <div id="invoicePages">
@@ -177,18 +178,16 @@
                 @if (count($page['items']) > 0)
                     <table class="inv-table">
                         <colgroup>
-                            <col style="width:70mm" />
+                            <col style="width:76mm" />
                             <col style="width:10mm" />
-                            <col style="width:23mm" />
-                            <col style="width:22mm" />
-                            <col style="width:26mm" />
+                            <col style="width:27mm" />
+                            <col style="width:28mm" />
                         </colgroup>
                         <thead>
                             <tr>
                                 <th class="desc">Description</th>
                                 <th class="qty">Quantity</th>
                                 <th class="unit">Unit price</th>
-                                <th class="vat">VAT rate</th>
                                 <th class="amount">Amount</th>
                             </tr>
                         </thead>
@@ -200,9 +199,8 @@
                                     </td>
                                     <td class="qty">{{ (float) $item->quantity }}</td>
                                     <td class="unit">{{ number_format($item->unit_price, 2) }}</td>
-                                    <td class="vat">{{ $item->tax_rate ?? '0' }}%</td>
                                     <td class="amount">
-                                        {{ number_format($item->line_total, 2) }}
+                                        {{ number_format((float) $item->line_total - (float) $item->tax_amount, 2) }}
                                         @if ($item->discount_amount > 0)
                                             <br><span
                                                 style="color:#444">-{{ number_format($item->discount_amount, 2) }}</span>
@@ -228,14 +226,16 @@
                                     <div class="val text-danger">-{{ number_format($invoice->discount_total, 2) }}</div>
                                 </div>
                             @endif
-                            <div class="trow">
-                                <div class="lbl">VAT</div>
-                                <div class="val">{{ number_format($invoice->tax_total, 2) }}</div>
-                            </div>
                             @if ($invoice->shipping_amount > 0)
                                 <div class="trow">
                                     <div class="lbl">Shipping</div>
                                     <div class="val">{{ number_format($invoice->shipping_amount, 2) }}</div>
+                                </div>
+                            @endif
+                            @if ($invoice->tax_total > 0)
+                                <div class="trow">
+                                    <div class="lbl">VAT</div>
+                                    <div class="val">{{ number_format($invoice->tax_total, 2) }}</div>
                                 </div>
                             @endif
                             <div class="trow total">

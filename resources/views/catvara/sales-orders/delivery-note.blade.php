@@ -35,6 +35,7 @@
             'quantity' => (float) $bi->quantity,
             'box_number' => $boxNum,
             'amount' => $lineAmount,
+            'weight' => $bi->weight,
         ]);
     }
 
@@ -246,6 +247,13 @@
                         <div class="label">DATE:</div>
                         <div>{{ $dn->created_at->format('d/m/Y') }}</div>
                     </div>
+                    @if ($dn->po_number)
+                        <div class="dn-meta-item">
+                            <div class="label">PO NUMBER:</div>
+                            <div>{{ $dn->po_number }}</div>
+                        </div>
+                    @endif
+
                 </div>
             </div>
 
@@ -298,7 +306,9 @@
                             </td>
                             <td class="text-center">{{ (int) $row['quantity'] }}</td>
                             <td>{{ $remarkDisplay }}</td>
-                            <td class="text-center">-</td>
+                            <td class="text-center">
+                                {{ !is_null($row['weight']) ? number_format((float) $row['weight'], 3) . ' kg' : '-' }}
+                            </td>
                             <td class="text-right">{{ $boxAmountDisplay }}</td>
                         </tr>
                     @endforeach

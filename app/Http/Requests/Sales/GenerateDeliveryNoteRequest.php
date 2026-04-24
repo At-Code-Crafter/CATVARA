@@ -23,6 +23,8 @@ class GenerateDeliveryNoteRequest extends FormRequest
                 Rule::exists('inventory_locations', 'id')->where('company_id', active_company_id()),
             ],
             'reference_number' => ['nullable', 'string', 'max:100'],
+            'po_number' => ['nullable', 'string', 'max:100'],
+            'weight' => ['nullable', 'numeric', 'min:0'],
             'vehicle_number' => ['nullable', 'string', 'max:50'],
             'notes' => ['nullable', 'string', 'max:1000'],
         ];

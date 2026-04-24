@@ -14,10 +14,12 @@ class OrderItemBox extends Model
         'order_item_id',
         'box_number',
         'quantity',
+        'weight',
     ];
 
     protected $casts = [
         'quantity' => 'decimal:6',
+        'weight' => 'decimal:3',
     ];
 
     public function company()

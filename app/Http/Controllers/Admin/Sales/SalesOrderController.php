@@ -859,6 +859,8 @@ class SalesOrderController extends Controller
         $request->validate([
             'inventory_location_id' => ['required', 'exists:inventory_locations,id'],
             'reference_number' => ['nullable', 'string', 'max:100'],
+            'po_number' => ['nullable', 'string', 'max:100'],
+            'weight' => ['nullable', 'numeric', 'min:0'],
             'vehicle_number' => ['nullable', 'string', 'max:50'],
             'notes' => ['nullable', 'string', 'max:1000'],
             'boxes' => ['required', 'array', 'min:1'],
@@ -866,6 +868,7 @@ class SalesOrderController extends Controller
             'boxes.*.items' => ['required', 'array', 'min:1'],
             'boxes.*.items.*.order_item_id' => ['required', 'exists:order_items,id'],
             'boxes.*.items.*.quantity' => ['required', 'numeric', 'min:0.000001'],
+            'boxes.*.items.*.weight' => ['nullable', 'numeric', 'min:0'],
         ]);
 
         $order = Order::where('company_id', $company->id)
@@ -903,6 +906,8 @@ class SalesOrderController extends Controller
             $dn->update([
                 'inventory_location_id' => $validated['inventory_location_id'],
                 'reference_number' => $validated['reference_number'] ?? null,
+                'po_number' => $validated['po_number'] ?? null,
+                'weight' => $validated['weight'] ?? null,
                 'vehicle_number' => $validated['vehicle_number'] ?? null,
                 'notes' => $validated['notes'] ?? null,
             ]);
@@ -917,6 +922,7 @@ class SalesOrderController extends Controller
                         'order_item_id' => $boxItem['order_item_id'],
                         'box_number' => $box['box_number'],
                         'quantity' => $boxItem['quantity'],
+                        'weight' => $boxItem['weight'] ?? null,
                     ]);
                 }
             }

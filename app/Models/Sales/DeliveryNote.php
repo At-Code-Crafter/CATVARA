@@ -23,6 +23,8 @@ class DeliveryNote extends Model
         'delivery_note_number',
         'status',
         'reference_number',
+        'po_number',
+        'weight',
         'vehicle_number',
         'notes',
         'shipped_at',
@@ -31,6 +33,7 @@ class DeliveryNote extends Model
     ];
 
     protected $casts = [
+        'weight' => 'decimal:3',
         'shipped_at' => 'datetime',
         'delivered_at' => 'datetime',
     ];
