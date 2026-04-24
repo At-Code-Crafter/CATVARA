@@ -79,7 +79,7 @@
             <!-- Left Column: Details & Items -->
             <div class="lg:col-span-2 space-y-8">
                 <!-- Addresses & Info -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <!-- Billing Details -->
                     <div class="card overflow-hidden border-none shadow-sm h-full flex flex-col">
                         <div
@@ -125,6 +125,50 @@
                                     </p>
                                 @endif
                             </div>
+                        </div>
+                    </div>
+
+                    <!-- Shipping Details -->
+                    <div class="card overflow-hidden border-none shadow-sm h-full flex flex-col">
+                        <div
+                            class="bg-linear-to-r from-slate-50 to-slate-100/50 px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+                            <h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center">
+                                <i class="fas fa-truck mr-3 text-brand-500"></i> Shipped To
+                            </h3>
+                        </div>
+                        <div class="p-6 space-y-4 flex-grow bg-white">
+                            @php $shipTo = $invoice->shippingAddress; @endphp
+                            @if ($shipTo)
+                                <div class="flex flex-col">
+                                    <span
+                                        class="text-lg font-bold text-slate-900">{{ $shipTo->name ?? ($invoice->customer->legal_name ?? $invoice->customer->display_name) }}</span>
+                                    @if ($shipTo->email)
+                                        <span class="text-slate-500 font-medium">{{ $shipTo->email }}</span>
+                                    @endif
+                                </div>
+                                <div
+                                    class="space-y-1 text-slate-600 bg-slate-50/50 p-4 rounded-xl border border-slate-100">
+                                    <p class="flex items-start gap-3">
+                                        <i class="fas fa-map-marker-alt mt-1 text-slate-400"></i>
+                                        <span>
+                                            {{ $shipTo->address_line_1 ?? '' }}<br>
+                                            @if ($shipTo->address_line_2)
+                                                {{ $shipTo->address_line_2 }}<br>
+                                            @endif
+                                            {{ $shipTo->city ?? '' }}{{ $shipTo->zip_code ? ', ' . $shipTo->zip_code : '' }}<br>
+                                            {{ $shipTo->state->name ?? '' }}{{ $shipTo->country->name ?? null ? ', ' . $shipTo->country->name : '' }}
+                                        </span>
+                                    </p>
+                                    @if ($shipTo->phone)
+                                        <p class="flex items-center gap-3 pt-2">
+                                            <i class="fas fa-phone text-slate-400"></i>
+                                            <span>{{ $shipTo->phone }}</span>
+                                        </p>
+                                    @endif
+                                </div>
+                            @else
+                                <div class="text-slate-500 italic text-sm">Same as Billing Address</div>
+                            @endif
                         </div>
                     </div>
 
