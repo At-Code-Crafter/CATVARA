@@ -715,6 +715,7 @@ class SalesOrderController extends Controller
                 'shippingAddress.country',
                 'company.detail',
                 'currency',
+                'invoice',
             ])
             ->firstOrFail();
 

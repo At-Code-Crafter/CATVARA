@@ -60,7 +60,8 @@
                     <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">PO Number</label>
                     <input type="text" id="dn-po-number"
                         class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-hidden"
-                        placeholder="Customer PO Number">
+                        placeholder="Customer PO Number"
+                        value="{{ $order->invoice?->po_number ?? '' }}">
                 </div>
 
                 <div class="space-y-1.5">
