@@ -264,7 +264,7 @@ class CustomerController extends Controller
                 ->with('success', 'Customer Updated Successfully');
 
         } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::error('CUSTOMER_UPDATE_ERROR', [
+            \Illuminate\Support\Facades\Log::error('Customer update failed', [
                 'message' => $e->getMessage(),
                 'customer_id' => $id,
             ]);
