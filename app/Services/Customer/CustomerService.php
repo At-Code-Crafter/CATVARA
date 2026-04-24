@@ -240,7 +240,7 @@ class CustomerService
      */
     protected function hasAddressData(array $data): bool
     {
-        return isset($data['address_line_1']) || isset($data['country_id']);
+        return array_key_exists('address_line_1', $data) || array_key_exists('country_id', $data);
     }
 
     /**
