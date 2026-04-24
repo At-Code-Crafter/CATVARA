@@ -70,9 +70,7 @@ class CustomerService
                 'tax_exempt_reason' => $data['tax_exempt_reason'] ?? null,
             ]);
 
-            if ($this->hasAddressData($data)) {
-                $this->customerRepository->updateOrCreateAddress($customer, $data);
-            }
+            $this->customerRepository->updateOrCreateAddress($customer, $data);
 
             return $customer;
         });

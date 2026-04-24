@@ -264,6 +264,11 @@ class CustomerController extends Controller
                 ->with('success', 'Customer Updated Successfully');
 
         } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('CUSTOMER_UPDATE_ERROR', [
+                'message' => $e->getMessage(),
+                'customer_id' => $id,
+            ]);
+
             if ($request->ajax()) {
                 return response()->json([
                     'message' => $e->getMessage(),
