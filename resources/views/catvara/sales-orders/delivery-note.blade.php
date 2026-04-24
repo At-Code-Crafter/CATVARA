@@ -253,6 +253,12 @@
                             <div>{{ $dn->po_number }}</div>
                         </div>
                     @endif
+                    @if ($dn->tracking_number)
+                        <div class="dn-meta-item">
+                            <div class="label">TRACKING NO:</div>
+                            <div>{{ $dn->tracking_number }}</div>
+                        </div>
+                    @endif
 
                 </div>
             </div>
@@ -318,10 +324,14 @@
             {{-- Footer --}}
             <div class="dn-footer">
                 <div>
-                    <strong>DELIVERY SERVICE:</strong> {{ $company->name }} [SELF]
+                    <strong>DELIVERY SERVICE:</strong>
+                    {{ $dn->deliveryService?->name ?? $company->name . ' [SELF]' }}
                 </div>
                 <div>
                     <strong>VEHICLE NO.:</strong> {{ $dn->vehicle_number ?? '___________________' }}
+                </div>
+                <div>
+                    <strong>TRACKING NO.:</strong> {{ $dn->tracking_number ?? '___________________' }}
                 </div>
                 <div>
                     <strong>DRIVER NAME:</strong> {{ $dn->reference_number ?? '___________________' }}

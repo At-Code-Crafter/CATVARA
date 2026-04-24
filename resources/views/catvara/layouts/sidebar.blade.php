@@ -293,6 +293,12 @@
                 <span class="sidebar-text">Payment Terms</span>
               </a>
             @endcan
+            @can('view', 'orders')
+              <a href="{{ company_route('settings.delivery-services.index') }}"
+                class="flex items-center py-2 pl-12 pr-4 text-xs font-medium {{ $isActive(['settings.delivery-services.*']) ? 'text-brand-400' : 'text-slate-500 hover:text-brand-400' }}">
+                <span class="sidebar-text">Delivery Services</span>
+              </a>
+            @endcan
             @can('view', 'activity-logs')
               <a href="{{ company_route('activity-logs.index') }}"
                 class="flex items-center py-2 pl-12 pr-4 text-xs font-medium {{ $isActive(['activity-logs.*']) ? 'text-brand-400' : 'text-slate-500 hover:text-brand-400' }}">

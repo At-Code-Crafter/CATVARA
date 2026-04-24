@@ -71,6 +71,22 @@
                         placeholder="AE-12345">
                 </div>
                 <div class="space-y-1.5">
+                    <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Delivery Service</label>
+                    <select id="dn-delivery-service"
+                        class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm font-bold text-slate-700 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-hidden">
+                        <option value="">-- Select Service --</option>
+                        @foreach ($deliveryServices as $svc)
+                            <option value="{{ $svc->id }}">{{ $svc->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="space-y-1.5">
+                    <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Tracking Number</label>
+                    <input type="text" id="dn-tracking-number"
+                        class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-hidden"
+                        placeholder="e.g. 1Z999AA10123456784">
+                </div>
+                <div class="space-y-1.5">
                     <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Notes</label>
                     <input type="text" id="dn-notes"
                         class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-hidden"
@@ -448,6 +464,8 @@
                     reference_number: document.getElementById('dn-reference').value || null,
                     po_number: document.getElementById('dn-po-number').value || null,
                     vehicle_number: document.getElementById('dn-vehicle').value || null,
+                    delivery_service_id: document.getElementById('dn-delivery-service').value || null,
+                    tracking_number: document.getElementById('dn-tracking-number').value || null,
                     notes: document.getElementById('dn-notes').value || null,
                     boxes: boxes.map(box => ({
                         box_number: box.box_number,

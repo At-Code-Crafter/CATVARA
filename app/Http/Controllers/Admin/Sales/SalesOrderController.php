@@ -730,7 +730,12 @@ class SalesOrderController extends Controller
                 ];
             });
 
-        return view('catvara.sales-orders.create-delivery-note', compact('order', 'locations'));
+        $deliveryServices = \App\Models\Sales\DeliveryService::where('company_id', $company->id)
+            ->active()
+            ->ordered()
+            ->get(['id', 'name']);
+
+        return view('catvara.sales-orders.create-delivery-note', compact('order', 'locations', 'deliveryServices'));
     }
 
     /* ===================== HELPERS ===================== */
@@ -863,6 +868,8 @@ class SalesOrderController extends Controller
             'po_number' => ['nullable', 'string', 'max:100'],
             'weight' => ['nullable', 'numeric', 'min:0'],
             'vehicle_number' => ['nullable', 'string', 'max:50'],
+            'delivery_service_id' => ['nullable', 'exists:delivery_services,id'],
+            'tracking_number' => ['nullable', 'string', 'max:100'],
             'notes' => ['nullable', 'string', 'max:1000'],
             'boxes' => ['required', 'array', 'min:1'],
             'boxes.*.box_number' => ['required', 'integer', 'min:1'],
@@ -910,6 +917,8 @@ class SalesOrderController extends Controller
                 'po_number' => $validated['po_number'] ?? null,
                 'weight' => $validated['weight'] ?? null,
                 'vehicle_number' => $validated['vehicle_number'] ?? null,
+                'delivery_service_id' => $validated['delivery_service_id'] ?? null,
+                'tracking_number' => $validated['tracking_number'] ?? null,
                 'notes' => $validated['notes'] ?? null,
             ]);
 
@@ -1014,6 +1023,7 @@ class SalesOrderController extends Controller
                 'order.shippingAddress.country',
                 'order.company.detail',
                 'inventoryLocation.locatable',
+                'deliveryService',
                 'items.orderItem',
                 'boxItems.orderItem',
             ])

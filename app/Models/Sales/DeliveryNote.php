@@ -26,6 +26,8 @@ class DeliveryNote extends Model
         'po_number',
         'weight',
         'vehicle_number',
+        'delivery_service_id',
+        'tracking_number',
         'notes',
         'shipped_at',
         'delivered_at',
@@ -66,6 +68,11 @@ class DeliveryNote extends Model
     public function inventoryLocation()
     {
         return $this->belongsTo(\App\Models\Inventory\InventoryLocation::class);
+    }
+
+    public function deliveryService()
+    {
+        return $this->belongsTo(DeliveryService::class);
     }
 
     public function addresses()

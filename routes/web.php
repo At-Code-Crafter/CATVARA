@@ -179,6 +179,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
                 Route::resource('roles', RoleController::class)->except(['show', 'destroy']);
                 Route::resource('payment-terms', PaymentTermController::class);
                 Route::resource('payment-methods', \App\Http\Controllers\Admin\Settings\PaymentMethodController::class);
+                Route::resource('delivery-services', \App\Http\Controllers\Admin\Settings\DeliveryServiceController::class);
                 Route::resource('users', \App\Http\Controllers\Admin\Company\CompanyUserController::class);
                 Route::resource('exchange-rates', \App\Http\Controllers\Admin\Settings\ExchangeRateController::class);
 
