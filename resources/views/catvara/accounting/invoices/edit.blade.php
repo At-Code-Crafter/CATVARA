@@ -168,7 +168,19 @@
                                 <i class="fas fa-sticky-note mr-3 text-amber-500"></i> Internal Notes
                             </h3>
                         </div>
-                        <div class="p-6">
+                        <div class="p-6 space-y-4">
+                            <div class="space-y-1.5">
+                                <label class="text-[11px] font-bold text-slate-400 uppercase tracking-widest">PO
+                                    Number</label>
+                                <input type="text" name="po_number"
+                                    value="{{ $invoice->order?->order_number ?? $invoice->po_number }}"
+                                    placeholder="Customer purchase order number"
+                                    class="w-full h-10 rounded-lg border-slate-200 text-sm font-semibold focus:border-brand-400 focus:ring-4 focus:ring-brand-400/10">
+                                <p class="text-[10px] text-slate-400 mt-1">
+                                    <i class="fas fa-sync-alt mr-1"></i>
+                                    Synced with order number and all delivery notes for this order.
+                                </p>
+                            </div>
                             <textarea name="notes" rows="3"
                                 class="w-full rounded-lg border-slate-200 text-sm font-semibold focus:border-brand-400 focus:ring-4 focus:ring-brand-400/10"
                                 placeholder="Internal notes for this invoice...">{{ $invoice->notes }}</textarea>
@@ -360,6 +372,7 @@
                 data.due_date = formData.get('due_date');
                 data.payment_term_id = formData.get('payment_term_id');
                 data.notes = formData.get('notes');
+                data.po_number = formData.get('po_number');
                 data.global_discount_percent = formData.get('global_discount_percent');
                 data.shipping_total = formData.get('shipping_total');
                 data.items = [];

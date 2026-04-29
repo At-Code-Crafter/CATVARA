@@ -340,6 +340,7 @@ class InvoiceController extends Controller
             'due_date' => 'nullable|date',
             'payment_term_id' => 'nullable|exists:payment_terms,id',
             'notes' => 'nullable|string|max:2000',
+            'po_number' => 'nullable|string|max:100',
             'shipping_total' => 'nullable|numeric|min:0',
             'global_discount_percent' => 'nullable|numeric|min:0|max:100',
             'items' => 'required|array|min:1',

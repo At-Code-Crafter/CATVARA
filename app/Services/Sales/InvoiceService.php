@@ -19,8 +19,7 @@ class InvoiceService
         protected DocumentNumberService $docNumberService,
         protected SalesDocumentService $salesDocService,
         protected InventoryPostingService $inventoryService
-    ) {
-    }
+    ) {}
 
     /**
      * Create an Invoice from a Sales Order
@@ -187,6 +186,10 @@ class InvoiceService
 
             if (array_key_exists('notes', $data)) {
                 $headerData['notes'] = $data['notes'];
+            }
+
+            if (array_key_exists('po_number', $data)) {
+                $headerData['po_number'] = $data['po_number'];
             }
 
             $shippingTotal = (float) ($data['shipping_total'] ?? $invoice->shipping_total ?? 0);

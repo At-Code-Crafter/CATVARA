@@ -38,6 +38,7 @@ class Invoice extends Model
         'rounding_total',
         'grand_total',
         'notes',
+        'po_number',
         'posted_at',
         'posted_by',
         'voided_at',

@@ -267,10 +267,10 @@
                         <div class="label">DATE:</div>
                         <div>{{ $dn->created_at->format('d/m/Y') }}</div>
                     </div>
-                    @if ($dn->po_number)
+                    @if ($order->order_number)
                         <div class="dn-meta-item">
                             <div class="label">PO NUMBER:</div>
-                            <div>{{ $dn->po_number }}</div>
+                            <div>{{ $order->order_number }}</div>
                         </div>
                     @endif
                     @if ($dn->tracking_number)

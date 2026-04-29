@@ -146,8 +146,7 @@
                                         <span class="text-slate-500 font-medium">{{ $shipTo->email }}</span>
                                     @endif
                                 </div>
-                                <div
-                                    class="space-y-1 text-slate-600 bg-slate-50/50 p-4 rounded-xl border border-slate-100">
+                                <div class="space-y-1 text-slate-600 bg-slate-50/50 p-4 rounded-xl border border-slate-100">
                                     <p class="flex items-start gap-3">
                                         <i class="fas fa-map-marker-alt mt-1 text-slate-400"></i>
                                         <span>
@@ -201,6 +200,13 @@
                                     <span
                                         class="font-bold text-slate-900">{{ $invoice->payment_term_name ?? 'N/A' }}</span>
                                 </div>
+                                @if ($invoice->order?->order_number)
+                                    <div
+                                        class="bg-slate-50/50 p-4 rounded-xl border border-slate-100 flex justify-between items-center text-sm">
+                                        <span class="text-slate-500 font-medium">PO Number</span>
+                                        <span class="font-bold text-slate-900">{{ $invoice->order->order_number }}</span>
+                                    </div>
+                                @endif
                             </div>
                         </div>
                     </div>
