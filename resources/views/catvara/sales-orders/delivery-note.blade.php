@@ -13,7 +13,10 @@
     // Build a flat list: each row = one DN item, with box number from order_item_boxes
     // If an item appears in multiple boxes, show separate rows per box assignment
     $rows = collect();
-    $boxTotals = []; // box_number => running total
+    $boxTotals = []; // box_number => running total (net)
+    $dnSubtotal = 0.0;
+    $dnTaxTotal = 0.0;
+    $currencyCode = $order->currency->code ?? ($company->detail?->currency?->code ?? '');
 
     foreach ($dn->boxItems->sortBy('box_number') as $bi) {
         $orderItem = $bi->orderItem;
@@ -21,18 +24,24 @@
             continue;
         }
 
-        $lineAmount = (float) $bi->quantity * (float) $orderItem->unit_price;
+        $shippedQty = (float) $bi->quantity;
+        $lineAmount = $shippedQty * (float) $orderItem->unit_price;
+        $orderQty = (float) $orderItem->quantity;
+        $lineTax = $orderQty > 0 ? (float) $orderItem->tax_amount * ($shippedQty / $orderQty) : 0.0;
+
         $boxNum = $bi->box_number;
 
         if (!isset($boxTotals[$boxNum])) {
             $boxTotals[$boxNum] = 0;
         }
         $boxTotals[$boxNum] += $lineAmount;
+        $dnSubtotal += $lineAmount;
+        $dnTaxTotal += $lineTax;
 
         $rows->push([
             'name' => $orderItem->product_name,
             'variant' => $orderItem->variant_description,
-            'quantity' => (float) $bi->quantity,
+            'quantity' => $shippedQty,
             'box_number' => $boxNum,
             'amount' => $lineAmount,
             'weight' => $bi->weight,
@@ -46,15 +55,26 @@
             if (!$orderItem) {
                 continue;
             }
+            $shippedQty = (float) $dnItem->quantity;
+            $lineAmount = $shippedQty * (float) $orderItem->unit_price;
+            $orderQty = (float) $orderItem->quantity;
+            $lineTax = $orderQty > 0 ? (float) $orderItem->tax_amount * ($shippedQty / $orderQty) : 0.0;
+
+            $dnSubtotal += $lineAmount;
+            $dnTaxTotal += $lineTax;
+
             $rows->push([
                 'name' => $orderItem->product_name,
                 'variant' => $orderItem->variant_description,
-                'quantity' => (float) $dnItem->quantity,
+                'quantity' => $shippedQty,
                 'box_number' => null,
-                'amount' => (float) $dnItem->quantity * (float) $orderItem->unit_price,
+                'amount' => $lineAmount,
+                'weight' => $dnItem->weight ?? null,
             ]);
         }
     }
+
+    $dnGrandTotal = $dnSubtotal + $dnTaxTotal;
 
     // For the "Remark" and "Box Amount" columns:
     // Show box number on first occurrence of each box, and box total only on first row of each box
@@ -318,6 +338,24 @@
                             <td class="text-right">{{ $boxAmountDisplay }}</td>
                         </tr>
                     @endforeach
+                    <tr class="dn-totals-row">
+                        <td colspan="4" class="text-right" style="border-right:none;"><strong>Subtotal</strong></td>
+                        <td class="text-right"><strong>{{ number_format($dnSubtotal, 2) }}</strong></td>
+                    </tr>
+                    @if ($dnTaxTotal > 0)
+                        <tr class="dn-totals-row">
+                            <td colspan="4" class="text-right" style="border-right:none;"><strong>VAT</strong></td>
+                            <td class="text-right"><strong>{{ number_format($dnTaxTotal, 2) }}</strong></td>
+                        </tr>
+                    @endif
+                    <tr class="dn-totals-row">
+                        <td colspan="4" class="text-right" style="border-right:none; background:#f5f5f5;">
+                            <strong>Total{{ $currencyCode ? ' (' . $currencyCode . ')' : '' }}</strong>
+                        </td>
+                        <td class="text-right" style="background:#f5f5f5;">
+                            <strong>{{ number_format($dnGrandTotal, 2) }}</strong>
+                        </td>
+                    </tr>
                 </tbody>
             </table>
 

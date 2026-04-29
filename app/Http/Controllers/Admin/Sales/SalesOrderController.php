@@ -1019,6 +1019,7 @@ class SalesOrderController extends Controller
             ->where('uuid', $delivery_note)
             ->with([
                 'order.customer',
+                'order.currency',
                 'order.billingAddress.country',
                 'order.shippingAddress.country',
                 'order.company.detail',
