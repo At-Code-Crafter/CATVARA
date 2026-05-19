@@ -95,6 +95,12 @@ class InventoryController extends Controller
             ->addColumn('location_name', fn($r) => $r->location->locatable->name ?? $r->location->type)
             ->editColumn('quantity', fn($r) => (float) $r->quantity)
             ->addColumn('last_movement', fn($r) => $r->last_movement_at ? $r->last_movement_at->diffForHumans() : '-')
+            ->filterColumn('variant.sku', function ($query, $keyword) {
+                $query->where(function ($q) use ($keyword) {
+                    $q->whereHas('variant', fn($sq) => $sq->where('sku', 'like', "%{$keyword}%"))
+                        ->orWhereHas('variant.product', fn($sq) => $sq->where('name', 'like', "%{$keyword}%"));
+                });
+            })
             ->addColumn('actions', function ($r) use ($request) {
                 // Link to Variant Details
                 $url = route('inventory.variant.details', [
