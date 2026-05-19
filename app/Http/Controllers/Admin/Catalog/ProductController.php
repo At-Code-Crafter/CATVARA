@@ -34,6 +34,9 @@ class ProductController extends Controller
             // Brand restriction filter
             apply_brand_filter($query);
 
+            // Hide products whose brand is inactive
+            $query->whereHas('brand', fn($q) => $q->where('is_active', true));
+
             if ($request->filled('category_id')) {
                 $query->where('category_id', $request->category_id);
             }
