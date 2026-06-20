@@ -228,18 +228,27 @@
         const REDIRECT_URL = "{{ company_route('sales-orders.show', ['sales_order' => $order->uuid]) }}";
 
         let boxes = []; // [{box_number, items: [{order_item_id, quantity, weight}]}]
-        let nextBoxNumber = 1;
+
+        // Box numbers are always sequential by position (1..N), so removing a
+        // box from the middle and adding a new one reuses the freed number.
+        function renumberBoxes() {
+            boxes.forEach((box, idx) => {
+                box.box_number = idx + 1;
+            });
+        }
 
         function addBox() {
             boxes.push({
-                box_number: nextBoxNumber++,
+                box_number: 0, // set by renumberBoxes()
                 items: []
             });
+            renumberBoxes();
             renderBoxes();
         }
 
         function removeBox(boxIdx) {
             boxes.splice(boxIdx, 1);
+            renumberBoxes();
             renderBoxes();
         }
 
@@ -397,11 +406,10 @@
 
         function autoAssign() {
             boxes = [];
-            nextBoxNumber = 1;
             ORDER_ITEMS.forEach(item => {
                 if (item.remaining > 0) {
                     boxes.push({
-                        box_number: nextBoxNumber++,
+                        box_number: 0, // set by renumberBoxes()
                         items: [{
                             order_item_id: item.id,
                             quantity: item.remaining,
@@ -410,6 +418,7 @@
                     });
                 }
             });
+            renumberBoxes();
             renderBoxes();
         }
 

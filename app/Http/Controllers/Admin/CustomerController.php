@@ -229,16 +229,17 @@ class CustomerController extends Controller
     {
         $this->authorize('edit', 'customers');
 
-        $customer = $this->customerRepository->findById((int) $id, $company->id, ['address']);
+        $customer = $this->customerRepository->findById((int) $id, $company->id, ['billingAddress', 'shippingAddress']);
         $countries = Country::active()->ordered()->get();
-        $states = $customer->address?->country_id ? State::where('country_id', $customer->address->country_id)->active()->ordered()->get() : collect();
+        $states = $customer->billingAddress?->country_id ? State::where('country_id', $customer->billingAddress->country_id)->active()->ordered()->get() : collect();
+        $shippingStates = $customer->shippingAddress?->country_id ? State::where('country_id', $customer->shippingAddress->country_id)->active()->ordered()->get() : collect();
         $paymentTerms = \App\Models\Accounting\PaymentTerm::where('is_active', true)->get();
         $taxGroups = TaxGroup::where('company_id', $company->id)
             ->where('is_active', true)
             ->orderBy('name')
             ->get();
 
-        return view('catvara.customers.edit', compact('company', 'customer', 'countries', 'states', 'paymentTerms', 'taxGroups'));
+        return view('catvara.customers.edit', compact('company', 'customer', 'countries', 'states', 'shippingStates', 'paymentTerms', 'taxGroups'));
     }
 
     /**

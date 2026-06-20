@@ -48,6 +48,16 @@ class CustomerUpdateRequest extends FormRequest
             'address_line_1' => ['nullable', 'string', 'max:1000'],
             'address_line_2' => ['nullable', 'string', 'max:1000'],
             'city' => ['nullable', 'string', 'max:100'],
+
+            // Shipping address
+            'shipping_same_as_billing' => ['nullable', 'boolean'],
+            'shipping_country_id' => ['nullable', 'exists:countries,id'],
+            'shipping_state_id' => ['nullable', 'exists:states,id'],
+            'shipping_zip_code' => ['nullable', 'string', 'max:20'],
+            'shipping_address_line_1' => ['nullable', 'string', 'max:1000'],
+            'shipping_address_line_2' => ['nullable', 'string', 'max:1000'],
+            'shipping_city' => ['nullable', 'string', 'max:100'],
+
             'is_active' => ['nullable', 'boolean'],
             'payment_term_id' => ['nullable', 'exists:payment_terms,id'],
             'percentage_discount' => ['nullable', 'numeric', 'min:0', 'max:100'],

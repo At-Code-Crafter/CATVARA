@@ -40,9 +40,29 @@ class Customer extends Model
         'is_tax_exempt' => 'boolean',
     ];
 
+    public function addresses()
+    {
+        return $this->morphMany(Address::class, 'addressable');
+    }
+
+    /**
+     * Primary (billing) address.
+     * Kept named `address` for backward compatibility with the sales bill-to
+     * mapping, customer export, and import flows that read $customer->address.
+     */
     public function address()
     {
-        return $this->morphOne(Address::class, 'addressable');
+        return $this->morphOne(Address::class, 'addressable')->where('type', 'BILLING');
+    }
+
+    public function billingAddress()
+    {
+        return $this->morphOne(Address::class, 'addressable')->where('type', 'BILLING');
+    }
+
+    public function shippingAddress()
+    {
+        return $this->morphOne(Address::class, 'addressable')->where('type', 'SHIPPING');
     }
 
     public function paymentTerm()

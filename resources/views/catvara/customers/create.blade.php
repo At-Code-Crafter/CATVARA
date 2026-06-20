@@ -131,13 +131,13 @@
               </div>
               <div>
                 <h3 class="text-lg font-black text-slate-800 tracking-tight">Localization</h3>
-                <p class="text-xs text-slate-400 font-bold uppercase tracking-widest">Primary Physical Address</p>
+                <p class="text-xs text-slate-400 font-bold uppercase tracking-widest">Billing &amp; Shipping Address</p>
               </div>
             </div>
 
             <div class="space-y-6">
               <div class="space-y-1.5">
-                <label class="text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-1">Billing / Shipping
+                <label class="text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-1">Billing
                   Address</label>
                 <textarea name="address_line_1" rows="3" class="w-full py-2.5 font-semibold bg-slate-50 border-slate-200"
                   placeholder="Street name, building, unit number...">{{ old('address_line_1') }}</textarea>
@@ -206,6 +206,71 @@
                       </optgroup>
                     @endforeach
                   </select>
+                </div>
+              </div>
+
+              {{-- Shipping Address --}}
+              <div class="pt-6 mt-2 border-t border-slate-100">
+                <div class="flex items-center justify-between mb-4">
+                  <label class="text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-1">Shipping
+                    Address</label>
+                  <label class="inline-flex items-center gap-2 cursor-pointer select-none">
+                    <input type="checkbox" name="shipping_same_as_billing" id="shipping_same_as_billing" value="1"
+                      {{ old('shipping_same_as_billing') ? 'checked' : '' }}
+                      class="rounded border-slate-300 text-brand-500 focus:ring-brand-400">
+                    <span class="text-xs font-bold text-slate-500">Same as billing</span>
+                  </label>
+                </div>
+
+                <div id="shipping_fields" class="space-y-6">
+                  <div class="space-y-1.5">
+                    <textarea name="shipping_address_line_1" rows="3"
+                      class="w-full py-2.5 font-semibold bg-slate-50 border-slate-200"
+                      placeholder="Street name, building, unit number...">{{ old('shipping_address_line_1') }}</textarea>
+                  </div>
+
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="space-y-1.5">
+                      <label class="text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-1">Country</label>
+                      <select name="shipping_country_id" id="shipping_country_id" class="w-full pt-1">
+                        <option value="">Select country...</option>
+                        @foreach ($countries as $country)
+                          <option value="{{ $country->id }}" data-uuid="{{ $country->uuid }}"
+                            {{ old('shipping_country_id') == $country->id ? 'selected' : '' }}>
+                            {{ $country->name }}
+                          </option>
+                        @endforeach
+                      </select>
+                    </div>
+
+                    <div class="space-y-1.5">
+                      <label class="text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-1">State /
+                        Region</label>
+                      <select name="shipping_state_id" id="shipping_state_id" class="w-full pt-1" disabled>
+                        <option value="">Select country first...</option>
+                      </select>
+                    </div>
+
+                    <div class="space-y-1.5">
+                      <label class="text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-1">Town /
+                        City</label>
+                      <div class="input-icon-group">
+                        <i class="fas fa-city"></i>
+                        <input type="text" name="shipping_city" value="{{ old('shipping_city') }}"
+                          class="w-full py-2.5 font-semibold placeholder:font-normal" placeholder="e.g. London">
+                      </div>
+                    </div>
+
+                    <div class="space-y-1.5">
+                      <label class="text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-1">Postal
+                        Code</label>
+                      <div class="input-icon-group">
+                        <i class="fas fa-mail-bulk"></i>
+                        <input type="text" name="shipping_zip_code" value="{{ old('shipping_zip_code') }}"
+                          class="w-full py-2.5 font-semibold placeholder:font-normal" placeholder="e.g. SW1E 5JL">
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -381,25 +446,44 @@
       toggleTaxExemptReason();
 
 
-      // Country -> State cascading
-      $('#country_id').on('change', function() {
-        const countryUuid = $(this).find(':selected').data('uuid');
-        const $stateSelect = $('#state_id');
+      // Country -> State cascading (reused for billing + shipping)
+      function bindCountryStateCascade(countrySelector, stateSelector) {
+        $(countrySelector).on('change', function() {
+          const countryUuid = $(this).find(':selected').data('uuid');
+          const $stateSelect = $(stateSelector);
 
-        $stateSelect.prop('disabled', true).html('<option value="">Loading...</option>');
+          $stateSelect.prop('disabled', true).html('<option value="">Loading...</option>');
 
-        if (countryUuid) {
-          $.get(`/settings/countries/${countryUuid}/states`, function(states) {
-            let options = '<option value="">Select state...</option>';
-            states.forEach(state => {
-              options += `<option value="${state.id}">${state.name}</option>`;
+          if (countryUuid) {
+            $.get(`/settings/countries/${countryUuid}/states`, function(states) {
+              let options = '<option value="">Select state...</option>';
+              states.forEach(state => {
+                options += `<option value="${state.id}">${state.name}</option>`;
+              });
+              $stateSelect.html(options).prop('disabled', false);
             });
-            $stateSelect.html(options).prop('disabled', false);
-          });
-        } else {
-          $stateSelect.html('<option value="">Select country first...</option>').prop('disabled', true);
-        }
-      });
+          } else {
+            $stateSelect.html('<option value="">Select country first...</option>').prop('disabled', true);
+          }
+        });
+      }
+
+      bindCountryStateCascade('#country_id', '#state_id');
+      bindCountryStateCascade('#shipping_country_id', '#shipping_state_id');
+
+      // Shipping "same as billing" toggle
+      function toggleShippingFields() {
+        const same = $('#shipping_same_as_billing').is(':checked');
+        const $fields = $('#shipping_fields');
+        $fields.css({
+          opacity: same ? 0.5 : 1,
+          'pointer-events': same ? 'none' : 'auto'
+        });
+        // Disabled inputs are not submitted; server mirrors billing when checked.
+        $fields.find('input, select, textarea').prop('disabled', same);
+      }
+      $('#shipping_same_as_billing').on('change', toggleShippingFields);
+      toggleShippingFields();
     });
   </script>
 @endpush

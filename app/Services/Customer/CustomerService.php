@@ -39,9 +39,7 @@ class CustomerService
                 'tax_exempt_reason' => $data['tax_exempt_reason'] ?? null,
             ]);
 
-            if ($this->hasAddressData($data)) {
-                $this->customerRepository->updateOrCreateAddress($customer, $data);
-            }
+            $this->syncAddresses($customer, $data);
 
             return $customer;
         });
@@ -70,10 +68,39 @@ class CustomerService
                 'tax_exempt_reason' => $data['tax_exempt_reason'] ?? null,
             ]);
 
-            $this->customerRepository->updateOrCreateAddress($customer, $data);
+            $this->syncAddresses($customer, $data);
 
             return $customer;
         });
+    }
+
+    /**
+     * Persist billing + shipping addresses for a customer.
+     * Billing uses the unprefixed fields; shipping uses `shipping_`-prefixed
+     * fields (or mirrors billing when "same as billing" is selected).
+     */
+    protected function syncAddresses(Customer $customer, array $data): void
+    {
+        if ($this->hasAddressData($data)) {
+            $this->customerRepository->updateOrCreateAddress($customer, $data, 'BILLING');
+        }
+
+        $sameAsBilling = filter_var($data['shipping_same_as_billing'] ?? false, FILTER_VALIDATE_BOOLEAN);
+
+        if ($sameAsBilling) {
+            // Mirror billing fields into the shipping address.
+            $mirrored = [
+                'shipping_address_line_1' => $data['address_line_1'] ?? null,
+                'shipping_address_line_2' => $data['address_line_2'] ?? null,
+                'shipping_city' => $data['city'] ?? null,
+                'shipping_state_id' => $data['state_id'] ?? null,
+                'shipping_country_id' => $data['country_id'] ?? null,
+                'shipping_zip_code' => $data['zip_code'] ?? null,
+            ];
+            $this->customerRepository->updateOrCreateAddress($customer, $mirrored, 'SHIPPING', 'shipping_');
+        } elseif ($this->hasShippingAddressData($data)) {
+            $this->customerRepository->updateOrCreateAddress($customer, $data, 'SHIPPING', 'shipping_');
+        }
     }
 
     /**
@@ -239,6 +266,14 @@ class CustomerService
     protected function hasAddressData(array $data): bool
     {
         return array_key_exists('address_line_1', $data) || array_key_exists('country_id', $data);
+    }
+
+    /**
+     * Check if shipping address data is present in the request.
+     */
+    protected function hasShippingAddressData(array $data): bool
+    {
+        return array_key_exists('shipping_address_line_1', $data) || array_key_exists('shipping_country_id', $data);
     }
 
     /**

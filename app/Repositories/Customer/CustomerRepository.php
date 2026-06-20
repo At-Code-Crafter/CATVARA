@@ -73,21 +73,25 @@ class CustomerRepository
     }
 
     /**
-     * Update or create associated address.
+     * Update or create an associated address of a given type.
+     *
+     * @param  string  $type    BILLING | SHIPPING
+     * @param  string  $prefix  Field-name prefix in $data (e.g. 'shipping_' for shipping fields)
      */
-    public function updateOrCreateAddress(Customer $customer, array $data): void
+    public function updateOrCreateAddress(Customer $customer, array $data, string $type = 'BILLING', string $prefix = ''): void
     {
         Address::updateOrCreate([
             'company_id' => $customer->company_id,
             'addressable_id' => $customer->id,
             'addressable_type' => Customer::class,
+            'type' => $type,
         ], [
-            'address_line_1' => $data['address_line_1'] ?? '',
-            'address_line_2' => $data['address_line_2'] ?? null,
-            'city' => $data['city'] ?? null,
-            'state_id' => $data['state_id'] ?? null,
-            'country_id' => $data['country_id'] ?? null,
-            'zip_code' => $data['zip_code'] ?? '',
+            'address_line_1' => $data[$prefix.'address_line_1'] ?? '',
+            'address_line_2' => $data[$prefix.'address_line_2'] ?? null,
+            'city' => $data[$prefix.'city'] ?? null,
+            'state_id' => $data[$prefix.'state_id'] ?? null,
+            'country_id' => $data[$prefix.'country_id'] ?? null,
+            'zip_code' => $data[$prefix.'zip_code'] ?? '',
         ]);
     }
 
