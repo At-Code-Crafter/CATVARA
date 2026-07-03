@@ -99,6 +99,21 @@
                         <span class="text-xs font-semibold text-slate-600">Inactive Brands</span>
                     </label>
                 </div>
+                <div class="space-y-1.5 flex flex-col justify-end">
+                    <label class="text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-1">Product Status</label>
+                    <label for="filter_show_inactive"
+                        class="inline-flex items-center gap-3 cursor-pointer h-[44px] px-3 rounded-xl border border-slate-200 bg-white hover:border-brand-300 transition-all">
+                        <div class="relative">
+                            <input type="checkbox" id="filter_show_inactive" class="sr-only peer">
+                            <div class="w-9 h-5 bg-slate-200 peer-checked:bg-brand-500 rounded-full transition-colors">
+                            </div>
+                            <div
+                                class="absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform peer-checked:translate-x-4">
+                            </div>
+                        </div>
+                        <span class="text-xs font-semibold text-slate-600">Show Inactive</span>
+                    </label>
+                </div>
             </div>
             <div class="filter-actions">
                 <button id="btn_reset_filters" class="btn btn-white min-w-[120px]">Clear Filter</button>
@@ -157,6 +172,7 @@
                         d.status = $('#filter_status').val();
                         d.stock_level = $('#filter_stock').val();
                         d.inactive_brand = $('#filter_inactive_brand').is(':checked') ? '1' : '';
+                        d.show_inactive = $('#filter_show_inactive').is(':checked') ? '1' : '';
 
                         const dateRange = $('#filter_date_range').val();
                         if (dateRange && dateRange.includes(' to ')) {
@@ -230,10 +246,19 @@
                         data: 'status',
                         name: 'status',
                         className: 'py-4',
-                        render: (data) => {
-                            return data ?
-                                `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 text-[10px] font-bold uppercase border border-emerald-100"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Active</span>` :
-                                `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 text-slate-600 text-[10px] font-bold uppercase border border-slate-200"><span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span> Inactive</span>`;
+                        render: (data, type, row) => {
+                            const checked = data ? 'checked' : '';
+                            const labelColor = data ? 'text-emerald-600' : 'text-slate-400';
+                            const labelText = data ? 'Active' : 'Inactive';
+                            return `
+                    <label class="js-status-toggle inline-flex items-center gap-2 cursor-pointer select-none" data-id="${row.id}" title="Click to toggle">
+                        <span class="relative">
+                            <input type="checkbox" class="sr-only peer" ${checked}>
+                            <span class="block w-9 h-5 bg-slate-200 peer-checked:bg-emerald-500 rounded-full transition-colors"></span>
+                            <span class="absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform peer-checked:translate-x-4"></span>
+                        </span>
+                        <span class="text-[10px] font-bold uppercase ${labelColor}">${labelText}</span>
+                    </label>`;
                         }
                     },
                     {
@@ -273,8 +298,38 @@
             $('#btn_reset_filters').on('click', function() {
                 $('#filter_category, #filter_brand, #filter_status, #filter_stock').val('');
                 $('#filter_inactive_brand').prop('checked', false);
+                $('#filter_show_inactive').prop('checked', false);
                 dateRangePicker.clear();
                 table.ajax.reload();
+            });
+
+            // Per-row activate/deactivate toggle
+            const toggleUrlTemplate = "{{ company_route('catalog.products.toggle-status', ['product' => '__ID__']) }}";
+            $('#productsTable tbody').on('click', '.js-status-toggle', function(e) {
+                e.preventDefault();
+                const id = $(this).data('id');
+                if (!id) return;
+                $.ajax({
+                    url: toggleUrlTemplate.replace('__ID__', id),
+                    method: 'PATCH',
+                    data: {
+                        _token: '{{ csrf_token() }}'
+                    },
+                    success: function() {
+                        // Reload keeps list truthful: a deactivated product drops out
+                        // of the default view unless "Show Inactive" is enabled.
+                        table.ajax.reload(null, false);
+                    },
+                    error: function(xhr) {
+                        const msg = (xhr.responseJSON && xhr.responseJSON.message) ||
+                            'Failed to update product status.';
+                        if (window.Swal) {
+                            Swal.fire('Error', msg, 'error');
+                        } else {
+                            alert(msg);
+                        }
+                    }
+                });
             });
         });
     </script>

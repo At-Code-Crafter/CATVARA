@@ -99,6 +99,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
                 Route::resource('products', \App\Http\Controllers\Admin\Catalog\ProductController::class);
 
+                // Toggle product active status (AJAX, from products list)
+                Route::patch('products/{product}/toggle-status', [\App\Http\Controllers\Admin\Catalog\ProductController::class, 'toggleStatus'])
+                    ->name('products.toggle-status');
+
                 // Product Variant CRUD (AJAX)
                 Route::post('products/{product}/variants', [\App\Http\Controllers\Admin\Catalog\ProductController::class, 'storeVariant'])
                     ->name('products.variants.store');

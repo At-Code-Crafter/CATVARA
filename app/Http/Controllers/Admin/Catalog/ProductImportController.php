@@ -294,13 +294,15 @@ class ProductImportController extends Controller
                 // Resolve Product
                 $product = null;
                 if (! empty($mapped['product_id'])) {
-                    $product = Product::where('company_id', '=', $companyId, 'and')->find($mapped['product_id']);
+                    $product = Product::withInactive()->where('company_id', '=', $companyId, 'and')->find($mapped['product_id']);
                 }
                 if (! $product && $variant) {
-                    $product = $variant->product;
+                    // Include inactive products so re-import updates them instead
+                    // of creating a duplicate.
+                    $product = $variant->product()->withInactive()->first();
                 }
                 if (! $product && ! empty($mapped['product_name'])) {
-                    $product = Product::where('company_id', '=', $companyId, 'and')
+                    $product = Product::withInactive()->where('company_id', '=', $companyId, 'and')
                         ->where('name', '=', $mapped['product_name'], 'and')
                         ->first(['*']);
                 }

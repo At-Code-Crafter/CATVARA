@@ -42,8 +42,9 @@ class ProductExport implements FromCollection, ShouldAutoSize, WithColumnFormatt
     {
         return ProductVariant::where('company_id', $this->companyId)
             ->with([
-                'product.category',
-                'product.brand',
+                // Export includes inactive products too, so bypass the ActiveScope
+                // (otherwise the product relation would be null for inactive ones).
+                'product' => fn ($q) => $q->withInactive()->with(['category', 'brand']),
                 'prices',
                 'inventory',
                 'attributeValues.attribute',

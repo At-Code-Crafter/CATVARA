@@ -5,6 +5,8 @@ namespace App\Models\Catalog;
 use App\Models\Catalog\Category;
 use App\Models\Common\Attachment;
 use App\Models\Catalog\ProductVariant;
+use App\Models\Scopes\ActiveScope;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 
@@ -15,6 +17,20 @@ class Product extends Model
         static::creating(function ($model) {
             $model->uuid ??= (string) Str::uuid();
         });
+
+        // Inactive products are hidden everywhere by default (lists, pickers,
+        // search, etc.). Historical documents (invoices, orders) read snapshot
+        // columns, so they keep showing the product regardless of this scope.
+        static::addGlobalScope(new ActiveScope);
+    }
+
+    /**
+     * Include inactive products in the query (removes the ActiveScope).
+     * Use in admin management / listing-with-toggle contexts.
+     */
+    public function scopeWithInactive(Builder $query): Builder
+    {
+        return $query->withoutGlobalScope(ActiveScope::class);
     }
 
     protected $fillable = [

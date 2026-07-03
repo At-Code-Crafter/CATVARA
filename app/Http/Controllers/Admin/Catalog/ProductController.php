@@ -28,7 +28,9 @@ class ProductController extends Controller
         $this->authorize('view', 'products');
 
         if ($request->ajax()) {
-            $query = Product::where('company_id', $request->company->id)
+            // Bypass the ActiveScope here so the list can reveal inactive
+            // products when the "Show Inactive" toggle (or status filter) is used.
+            $query = Product::withInactive()->where('products.company_id', $request->company->id)
                 ->with(['category', 'brand', 'variants.prices', 'variants.inventory', 'attachments']); // Eager load everything needed
 
             // Brand restriction filter
@@ -45,8 +47,16 @@ class ProductController extends Controller
                 $query->where('category_id', $request->category_id);
             }
 
+            // Product visibility:
+            //  - an explicit Status filter always wins;
+            //  - "Show Inactive" toggle shows ONLY inactive products;
+            //  - default shows only active products.
             if ($request->filled('status')) {
-                $query->where('is_active', $request->status);
+                $query->where('products.is_active', $request->status);
+            } elseif ($request->boolean('show_inactive')) {
+                $query->where('products.is_active', false);
+            } else {
+                $query->where('products.is_active', true);
             }
 
             if ($request->filled('brand_id')) {
@@ -160,7 +170,7 @@ class ProductController extends Controller
         $this->authorize('edit', 'products');
 
         // $company is passed via route model binding
-        $product = Product::where('company_id', $company->id)->with(['variants.attributeValues', 'variants.prices', 'variants.inventory'])->findOrFail($id);
+        $product = Product::withInactive()->where('company_id', $company->id)->with(['variants.attributeValues', 'variants.prices', 'variants.inventory'])->findOrFail($id);
         $categories = Category::where('company_id', $company->id)->get();
         $brands = \App\Models\Catalog\Brand::where('company_id', $company->id)->get();
         $attributes = Attribute::where('company_id', $company->id)->with('values')->get();
@@ -179,7 +189,7 @@ class ProductController extends Controller
         try {
             DB::beginTransaction();
 
-            $product = Product::where('company_id', $company->id)->findOrFail($id);
+            $product = Product::withInactive()->where('company_id', $company->id)->findOrFail($id);
 
             // Handle Category - create if new
             $categoryId = $this->resolveOrCreateCategory($request->category_id, $company->id);
@@ -333,6 +343,24 @@ class ProductController extends Controller
     }
 
     /**
+     * Toggle a product's active status (AJAX, from the products list).
+     */
+    public function toggleStatus(\App\Models\Company\Company $company, $id)
+    {
+        $this->authorize('edit', 'products');
+
+        $product = Product::withInactive()->where('company_id', $company->id)->findOrFail($id);
+
+        $product->update(['is_active' => ! $product->is_active]);
+
+        return response()->json([
+            'success' => true,
+            'is_active' => (bool) $product->is_active,
+            'message' => $product->is_active ? 'Product activated.' : 'Product deactivated.',
+        ]);
+    }
+
+    /**
      * Export products with variants to Excel
      */
     public function export(Request $request)
@@ -438,7 +466,7 @@ class ProductController extends Controller
     {
         $this->authorize('edit', 'products');
 
-        $product = Product::where('company_id', $company->id)->findOrFail($productId);
+        $product = Product::withInactive()->where('company_id', $company->id)->findOrFail($productId);
 
         $request->validate([
             'sku'              => 'required|string|max:255',
@@ -522,7 +550,7 @@ class ProductController extends Controller
     {
         $this->authorize('edit', 'products');
 
-        $product = Product::where('company_id', $company->id)->findOrFail($productId);
+        $product = Product::withInactive()->where('company_id', $company->id)->findOrFail($productId);
         $variant = ProductVariant::where('product_id', $product->id)->findOrFail($variantId);
 
         $request->validate([
@@ -594,7 +622,7 @@ class ProductController extends Controller
             return response()->json(['success' => false, 'message' => 'Only super admins can delete variants.'], 403);
         }
 
-        $product = Product::where('company_id', $company->id)->findOrFail($productId);
+        $product = Product::withInactive()->where('company_id', $company->id)->findOrFail($productId);
         $variant = ProductVariant::where('product_id', $product->id)->findOrFail($variantId);
 
         // Prevent deletion if variant has inventory or order history
