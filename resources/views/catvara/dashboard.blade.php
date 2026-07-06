@@ -255,7 +255,7 @@
               <div class="flex items-center gap-4 group p-2 rounded-xl hover:bg-rose-50/10 transition-colors">
                 <div
                   class="h-12 w-12 rounded-xl bg-white border border-slate-100 flex items-center justify-center overflow-hidden shrink-0">
-                  @if ($variant->product->image)
+                  @if ($variant->product?->image)
                     <img src="{{ Storage::url($variant->product->image) }}"
                       class="h-full w-full object-cover opacity-70">
                   @else
@@ -263,7 +263,7 @@
                   @endif
                 </div>
                 <div class="flex-1 min-w-0">
-                  <p class="text-sm font-black text-slate-700 truncate">{{ $variant->product->name }}</p>
+                  <p class="text-sm font-black text-slate-700 truncate">{{ $variant->product?->name ?? '—' }}</p>
                   <p class="text-[10px] text-slate-400 font-bold truncate">{{ $variant->name }}</p>
                 </div>
                 <div class="text-right">

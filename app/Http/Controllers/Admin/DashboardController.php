@@ -36,7 +36,9 @@ class DashboardController extends Controller
         $productQuery = Product::where('company_id', $companyId);
         apply_brand_filter($productQuery);
         $totalProducts = $productQuery->count();
-        $variantQuery = \App\Models\Catalog\ProductVariant::where('company_id', $companyId);
+        // Count only variants of active/visible products (ActiveScope via whereHas)
+        $variantQuery = \App\Models\Catalog\ProductVariant::where('company_id', $companyId)
+            ->whereHas('product');
         $brandIds = user_brand_ids();
         if ($brandIds->isNotEmpty()) {
             $variantQuery->whereHas('product', fn($q) => $q->whereIn('brand_id', $brandIds));
@@ -45,6 +47,7 @@ class DashboardController extends Controller
 
         // Low Stock: Variants with SUM(inventory quantity) <= 5
         $lowStockQuery = \App\Models\Catalog\ProductVariant::where('company_id', $companyId)
+            ->whereHas('product') // exclude variants of inactive/hidden products
             ->whereHas('inventory', function ($q) {
                 $q->selectRaw('sum(quantity) as total_qty')
                     ->groupBy('product_variant_id')
@@ -149,6 +152,7 @@ class DashboardController extends Controller
         $inventoryTable = (new \App\Models\Inventory\InventoryBalance)->getTable();
 
         $lowStockProducts = \App\Models\Catalog\ProductVariant::where($variantTable . '.company_id', $companyId)
+            ->whereHas('product') // exclude variants of inactive/hidden products (ActiveScope)
             ->select($variantTable . '.*')
             ->selectSub(function ($q) use ($inventoryTable, $variantTable) {
                 $q->from($inventoryTable)
