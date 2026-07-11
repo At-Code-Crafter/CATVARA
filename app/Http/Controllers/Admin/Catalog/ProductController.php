@@ -369,7 +369,11 @@ class ProductController extends Controller
 
         $filename = 'products_export_' . date('Y-m-d_His') . '.xlsx';
 
-        return Excel::download(new ProductExport($request->company->id), $filename);
+        // Respect the list's "Show Inactive" toggle: default exports active products only.
+        return Excel::download(
+            new ProductExport($request->company->id, $request->boolean('show_inactive')),
+            $filename
+        );
     }
 
     /**

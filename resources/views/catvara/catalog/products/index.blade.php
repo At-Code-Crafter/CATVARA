@@ -9,7 +9,7 @@
             <p class="text-slate-400 mt-1 font-medium">Manage your complete product catalog and variants.</p>
         </div>
         <div class="mt-4 sm:mt-0 flex gap-3">
-            <a href="{{ company_route('catalog.products.export') }}" class="btn btn-white text-slate-600">
+            <a href="{{ company_route('catalog.products.export') }}" id="btn_export" class="btn btn-white text-slate-600">
                 <i class="fas fa-file-export mr-2 text-slate-400"></i> Export
             </a>
             <a href="{{ company_route('catalog.products.import') }}" class="btn btn-white text-slate-600">
@@ -301,6 +301,14 @@
                 $('#filter_show_inactive').prop('checked', false);
                 dateRangePicker.clear();
                 table.ajax.reload();
+            });
+
+            // Export honors the "Show Inactive" toggle (default: active only)
+            const exportBaseUrl = "{{ company_route('catalog.products.export') }}";
+            $('#btn_export').on('click', function(e) {
+                e.preventDefault();
+                const showInactive = $('#filter_show_inactive').is(':checked');
+                window.location.href = exportBaseUrl + (showInactive ? '?show_inactive=1' : '');
             });
 
             // Per-row activate/deactivate toggle
