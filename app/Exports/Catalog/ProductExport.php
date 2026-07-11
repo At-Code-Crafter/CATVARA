@@ -16,13 +16,16 @@ class ProductExport implements FromCollection, ShouldAutoSize, WithColumnFormatt
 {
     protected $companyId;
 
+    protected $showInactive;
+
     protected $priceChannels;
 
     protected $locations;
 
-    public function __construct(int $companyId)
+    public function __construct(int $companyId, bool $showInactive = false)
     {
         $this->companyId = $companyId;
+        $this->showInactive = $showInactive;
 
         // Load dynamic columns once
         $this->priceChannels = PriceChannel::where('is_active', 1)
@@ -41,10 +44,17 @@ class ProductExport implements FromCollection, ShouldAutoSize, WithColumnFormatt
     public function collection()
     {
         return ProductVariant::where('company_id', $this->companyId)
+            // Only export variants of active products by default. When "Show
+            // Inactive" is requested, include inactive products too (bypass scope).
+            ->whereHas('product', function ($q) {
+                if ($this->showInactive) {
+                    $q->withInactive();
+                }
+            })
             ->with([
-                // Export includes inactive products too, so bypass the ActiveScope
-                // (otherwise the product relation would be null for inactive ones).
-                'product' => fn ($q) => $q->withInactive()->with(['category', 'brand']),
+                // Match the whereHas: load inactive products' data only when requested,
+                // otherwise the scoped relation would be null for inactive ones.
+                'product' => fn ($q) => ($this->showInactive ? $q->withInactive() : $q)->with(['category', 'brand']),
                 'prices',
                 'inventory',
                 'attributeValues.attribute',
