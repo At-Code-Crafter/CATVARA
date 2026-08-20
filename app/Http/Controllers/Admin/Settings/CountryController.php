@@ -195,9 +195,11 @@ class CountryController extends Controller
     /**
      * Get states for a country (API endpoint).
      */
-    public function getStates(Country $country)
+    public function getStates($idOrUuid)
     {
         abort_unless(auth()->user()->isSuperAdmin(), 403);
+
+        $country = Country::with('states')->where('id', $idOrUuid)->orWhere('uuid', $idOrUuid)->firstOrFail();
 
         $states = $country->states()
             ->active()
